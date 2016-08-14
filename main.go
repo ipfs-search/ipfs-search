@@ -85,7 +85,7 @@ func add(c *cli.Context) error {
 	}
 
 	task := signatures.TaskSignature{
-		Name: "crawl",
+		Name: "crawl_hash",
 		Args: []signatures.TaskArg{
 			signatures.TaskArg{
 				Type:  "string",
@@ -99,7 +99,16 @@ func add(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
+	// Block until done
+	result, err := asyncResult.Get()
+	if err != nil {
+		// getting result of a task failed
+		return cli.NewExitError(err.Error(), 1)
+	}
+	fmt.Println(result.Interface())
+
 	taskState := asyncResult.GetState()
+
 	fmt.Printf("Current state of %v task is:\n", taskState.TaskUUID)
 	fmt.Println(taskState.State)
 
@@ -123,8 +132,19 @@ func crawl(c *cli.Context) error {
 	id := indexer.NewIndexer(el)
 	crawli := crawler.NewCrawler(sh, id, server)
 
-	server.RegisterTask("crawl", func(hash string) error {
-		return crawli.CrawlHash(hash)
+	server.RegisterTask("crawl_hash", func(hash string) (int64, error) {
+		err := crawli.CrawlHash(hash)
+
+		// Note: this is here because only giving an error argument causes
+		// a runtime error with machinery
+		return 0, err
+	})
+	server.RegisterTask("crawl_file", func(hash string) (int64, error) {
+		err := crawli.CrawlFile(hash)
+
+		// Note: this is here because only giving an error argument causes
+		// a runtime error with machinery
+		return 0, err
 	})
 
 	worker := server.NewWorker("crawler")

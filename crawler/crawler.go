@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	machinery "github.com/RichardKnop/machinery/v1"
+	signatures "github.com/RichardKnop/machinery/v1/signatures"
 	"github.com/dokterbob/ipfs-search/indexer"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"net/http"
@@ -29,6 +30,7 @@ func hashUrl(hash string) string {
 
 // Given a particular hash, start crawling
 func (c Crawler) CrawlHash(hash string) error {
+	fmt.Println("Ging goed hoor!")
 	fmt.Printf("Crawling hash %s\n", hash)
 
 	url := hashUrl(hash)
@@ -53,22 +55,45 @@ func (c Crawler) CrawlHash(hash string) error {
 			switch link.Type {
 			case "File":
 				// Add file to crawl queue
-				err := c.CrawlFile(link.Hash)
 
+				// Add directory to crawl queue
+				task := signatures.TaskSignature{
+					Name: "crawl_file",
+					Args: []signatures.TaskArg{
+						signatures.TaskArg{
+							Type:  "string",
+							Value: link.Hash,
+						},
+					},
+				}
+				_, err := c.mac.SendTask(&task)
 				if err != nil {
+					// failed to send the task
 					return err
 				}
+
 			case "Directory":
 				// Add directory to crawl queue
-				err := c.CrawlHash(link.Hash)
-
+				task := signatures.TaskSignature{
+					Name: "crawl_hash",
+					Args: []signatures.TaskArg{
+						signatures.TaskArg{
+							Type:  "string",
+							Value: link.Hash,
+						},
+					},
+				}
+				_, err := c.mac.SendTask(&task)
 				if err != nil {
+					// failed to send the task
 					return err
 				}
+			default:
+				fmt.Printf("Type '%s' skipped for '%s'", list.Type, hash)
 			}
 		}
 	default:
-		fmt.Printf("Type not '%s' skipped for '%s'", list.Type, hash)
+		fmt.Printf("Type '%s' skipped for '%s'", list.Type, hash)
 	}
 
 	return nil
