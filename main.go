@@ -4,6 +4,7 @@ import (
 	"fmt"
 	machinery "github.com/RichardKnop/machinery/v1"
 	machinery_config "github.com/RichardKnop/machinery/v1/config"
+	signatures "github.com/RichardKnop/machinery/v1/signatures"
 	"github.com/dokterbob/ipfs-search/crawler"
 	"github.com/dokterbob/ipfs-search/indexer"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
@@ -80,16 +81,42 @@ func crawl(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	mac, err := get_machinery()
+	server, err := get_machinery()
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
 	id := indexer.NewIndexer(el)
-	crawli := crawler.NewCrawler(sh, id, mac)
+	crawli := crawler.NewCrawler(sh, id, server)
 
-	err = crawli.CrawlHash(start_hash)
+	server.RegisterTask("crawl", func(hash string) error {
+		return crawli.CrawlHash(hash)
+	})
+
+	task := signatures.TaskSignature{
+		Name: "crawl",
+		Args: []signatures.TaskArg{
+			signatures.TaskArg{
+				Type:  "string",
+				Value: start_hash,
+			},
+		},
+	}
+
+	asyncResult, err := server.SendTask(&task)
 	if err != nil {
+		// failed to send the task
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	taskState := asyncResult.GetState()
+	fmt.Printf("Current state of %v task is:\n", taskState.TaskUUID)
+	fmt.Println(taskState.State)
+
+	worker := server.NewWorker("cli_worker")
+	err = worker.Launch()
+	if err != nil {
+		// do something with the error
 		return cli.NewExitError(err.Error(), 1)
 	}
 
