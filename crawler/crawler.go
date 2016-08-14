@@ -124,34 +124,41 @@ func (c Crawler) CrawlHash(hash string) error {
 	return nil
 }
 
-// Crawl a single object, known to be a file
-func (c Crawler) CrawlFile(hash string) error {
-	fmt.Printf("Crawling file %s\n", hash)
-
+func (c Crawler) getMimeType(hash string) (string, error) {
 	url := hashUrl(hash)
 	response, err := c.sh.Cat(url)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var data []byte
 	data = make([]byte, 512)
 	numread, err := response.Read(data)
 	if err != nil && err.Error() != "EOF" {
-		return err
+		return "", err
 	}
 
 	if numread == 0 {
-		return errors.New("0 characters read, mime type detection failed")
+		return "", errors.New("0 characters read, mime type detection failed")
 	}
 
 	err = response.Close()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Sniffing only uses at most the first 512 bytes
-	mimetype := http.DetectContentType(data)
+	return http.DetectContentType(data), nil
+}
+
+// Crawl a single object, known to be a file
+func (c Crawler) CrawlFile(hash string) error {
+	fmt.Printf("Crawling file %s\n", hash)
+
+	mimetype, err := c.getMimeType(hash)
+	if err != nil {
+		return err
+	}
 
 	properties := map[string]interface{}{
 		"mimetype": mimetype,
