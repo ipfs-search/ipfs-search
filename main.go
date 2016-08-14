@@ -105,8 +105,11 @@ func add(c *cli.Context) error {
 		// getting result of a task failed
 		return cli.NewExitError(err.Error(), 1)
 	}
-	fmt.Println(result.Interface())
 
+	// Block for result
+	result.Interface()
+
+	// Display task state afterwards
 	taskState := asyncResult.GetState()
 
 	fmt.Printf("Current state of %v task is:\n", taskState.TaskUUID)
