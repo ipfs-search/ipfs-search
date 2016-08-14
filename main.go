@@ -99,16 +99,6 @@ func add(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	// Block until done
-	result, err := asyncResult.Get()
-	if err != nil {
-		// getting result of a task failed
-		return cli.NewExitError(err.Error(), 1)
-	}
-
-	// Block for result
-	result.Interface()
-
 	// Display task state afterwards
 	taskState := asyncResult.GetState()
 
