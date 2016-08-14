@@ -1,9 +1,11 @@
 package crawler
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dokterbob/ipfs-search/indexer"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
+	"net/http"
 )
 
 type Crawler struct {
@@ -18,11 +20,15 @@ func NewCrawler(sh *shell.Shell, id *indexer.Indexer) *Crawler {
 	return c
 }
 
+func hashUrl(hash string) string {
+	return fmt.Sprintf("/ipfs/%s", hash)
+}
+
 // Given a particular hash, start crawling
 func (c Crawler) CrawlHash(hash string) error {
 	fmt.Printf("Crawling hash %s\n", hash)
 
-	url := fmt.Sprintf("/ipfs/%s", hash)
+	url := hashUrl(hash)
 
 	list, err := c.sh.FileList(url)
 	if err != nil {
@@ -68,6 +74,33 @@ func (c Crawler) CrawlHash(hash string) error {
 // Crawl a single object, known to be a file
 func (c Crawler) CrawlFile(hash string) error {
 	fmt.Printf("Crawling file %s\n", hash)
+
+	url := hashUrl(hash)
+	response, err := c.sh.Cat(url)
+	if err != nil {
+		return err
+	}
+
+	var data []byte
+	data = make([]byte, 512)
+	numread, err := response.Read(data)
+	if err != nil && err.Error() != "EOF" {
+		return err
+	}
+
+	if numread == 0 {
+		return errors.New("0 characters read, mime type detection failed")
+	}
+
+	err = response.Close()
+	if err != nil {
+		return err
+	}
+
+	// Sniffing only uses at most the first 512 bytes
+	mimetype := http.DetectContentType(data)
+
+	fmt.Println(mimetype)
 
 	return nil
 }
