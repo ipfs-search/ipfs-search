@@ -2,17 +2,14 @@ package main
 
 import (
 	"fmt"
+	machinery "github.com/RichardKnop/machinery/v1"
+	machinery_config "github.com/RichardKnop/machinery/v1/config"
 	"github.com/dokterbob/ipfs-search/crawler"
 	"github.com/dokterbob/ipfs-search/indexer"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"gopkg.in/olivere/elastic.v3"
 	"gopkg.in/urfave/cli.v1"
 	"os"
-)
-
-const (
-	// IPFS README
-	examplesHash = "QmVtU7ths96fMgZ8YSZAbKghyieq7AjxNdcqyVzxTt3qVe"
 )
 
 func main() {
@@ -49,6 +46,23 @@ func get_elastic() (*elastic.Client, error) {
 	return el, nil
 }
 
+func get_machinery() (*machinery.Server, error) {
+	cnf := machinery_config.Config{
+		Broker:        "redis://127.0.0.1:6379",
+		ResultBackend: "redis://127.0.0.1:6379",
+		// 	Exchange:      *exchange,
+		// 	ExchangeType:  *exchangeType,
+		// 	DefaultQueue:  *defaultQueue,
+		// 	BindingKey:    *bindingKey,
+	}
+	server, err := machinery.NewServer(&cnf)
+	if err != nil {
+		return nil, err
+	}
+
+	return server, nil
+}
+
 func crawl(c *cli.Context) error {
 	if c.NArg() != 1 {
 		return cli.NewExitError("Please supply one hash as argument.", 1)
@@ -66,8 +80,13 @@ func crawl(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
+	mac, err := get_machinery()
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
 	id := indexer.NewIndexer(el)
-	crawli := crawler.NewCrawler(sh, id)
+	crawli := crawler.NewCrawler(sh, id, mac)
 
 	err = crawli.CrawlHash(start_hash)
 	if err != nil {

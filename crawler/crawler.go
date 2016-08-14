@@ -3,20 +3,23 @@ package crawler
 import (
 	"errors"
 	"fmt"
+	machinery "github.com/RichardKnop/machinery/v1"
 	"github.com/dokterbob/ipfs-search/indexer"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"net/http"
 )
 
 type Crawler struct {
-	sh *shell.Shell
-	id *indexer.Indexer
+	sh  *shell.Shell
+	id  *indexer.Indexer
+	mac *machinery.Server
 }
 
-func NewCrawler(sh *shell.Shell, id *indexer.Indexer) *Crawler {
+func NewCrawler(sh *shell.Shell, id *indexer.Indexer, mac *machinery.Server) *Crawler {
 	c := new(Crawler)
 	c.sh = sh
 	c.id = id
+	c.mac = mac
 	return c
 }
 
