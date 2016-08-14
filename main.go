@@ -55,12 +55,12 @@ func get_elastic() (*elastic.Client, error) {
 
 func get_machinery() (*machinery.Server, error) {
 	cnf := machinery_config.Config{
-		Broker:        "redis://127.0.0.1:6379",
-		ResultBackend: "redis://127.0.0.1:6379",
-		// 	Exchange:      *exchange,
-		// 	ExchangeType:  *exchangeType,
-		// 	DefaultQueue:  *defaultQueue,
-		// 	BindingKey:    *bindingKey,
+		Broker:        "amqp://guest:guest@localhost:5672/",
+		ResultBackend: "amqp://guest:guest@localhost:5672/",
+		Exchange:      "machinery_exchange",
+		ExchangeType:  "direct",
+		DefaultQueue:  "machinery_tasks",
+		BindingKey:    "machinery_task",
 	}
 	server, err := machinery.NewServer(&cnf)
 	if err != nil {
