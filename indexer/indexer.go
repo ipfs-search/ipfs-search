@@ -17,11 +17,15 @@ func NewIndexer(el *elastic.Client) *Indexer {
 
 // Create directory index based on hash
 func (i Indexer) IndexDirectory(list *shell.UnixLsObject) error {
+	properties := map[string]interface{}{
+		"links": list.Links,
+	}
+
 	_, err := i.el.Index().
 		Index("ipfs").
 		Type("directory").
 		Id(list.Hash).
-		BodyJson(list.Links).
+		BodyJson(properties).
 		Refresh(true).
 		Do()
 	if err != nil {
@@ -47,4 +51,10 @@ func (i Indexer) IndexFile(hash string, properties map[string]string) error {
 	}
 
 	return nil
+}
+
+// Whether or not an object exists in index
+func (i Indexer) IsIndexed(hash string) (bool, error) {
+	return i.el.Exists().
+		Index("ipfs").Type("directory").Id(hash).Do()
 }

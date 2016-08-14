@@ -30,8 +30,17 @@ func hashUrl(hash string) string {
 
 // Given a particular hash, start crawling
 func (c Crawler) CrawlHash(hash string) error {
-	fmt.Println("Ging goed hoor!")
-	fmt.Printf("Crawling hash %s\n", hash)
+	indexed, err := c.id.IsIndexed(hash)
+	if err != nil {
+		return err
+	}
+
+	if indexed {
+		fmt.Printf("Already indexed '%s', skipping\n", hash)
+		return nil
+	}
+
+	fmt.Printf("Crawling hash '%s'\n", hash)
 
 	url := hashUrl(hash)
 
@@ -43,8 +52,22 @@ func (c Crawler) CrawlHash(hash string) error {
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
-		err := c.CrawlFile(hash)
+		task := signatures.TaskSignature{
+			Name: "crawl_file",
+			Args: []signatures.TaskArg{
+				signatures.TaskArg{
+					Type:  "string",
+					Value: hash,
+				},
+				signatures.TaskArg{
+					Type:  "string",
+					Value: nil,
+				},
+			},
+		}
+		_, err := c.mac.SendTask(&task)
 		if err != nil {
+			// failed to send the task
 			return err
 		}
 	case "Directory":
@@ -55,8 +78,6 @@ func (c Crawler) CrawlHash(hash string) error {
 			switch link.Type {
 			case "File":
 				// Add file to crawl queue
-
-				// Add directory to crawl queue
 				task := signatures.TaskSignature{
 					Name: "crawl_file",
 					Args: []signatures.TaskArg{
