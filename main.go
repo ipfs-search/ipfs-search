@@ -19,7 +19,15 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "ipfs-search"
 	app.Usage = "IPFS search engine."
-	app.Action = crawl
+
+	app.Commands = []cli.Command{
+		{
+			Name:    "crawl",
+			Aliases: []string{"c"},
+			Usage:   "start crawler",
+			Action:  crawl,
+		},
+	}
 	app.Run(os.Args)
 }
 
