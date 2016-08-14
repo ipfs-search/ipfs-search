@@ -24,10 +24,11 @@ func main() {
 		{
 			Name:    "crawl",
 			Aliases: []string{"c"},
-			Usage:   "start crawler",
+			Usage:   "start crawling at `HASH`",
 			Action:  crawl,
 		},
 	}
+
 	app.Run(os.Args)
 }
 
@@ -49,7 +50,13 @@ func get_elastic() (*elastic.Client, error) {
 }
 
 func crawl(c *cli.Context) error {
-	fmt.Println("Crawling links")
+	if c.NArg() != 1 {
+		return cli.NewExitError("Please supply one hash as argument.", 1)
+	}
+
+	start_hash := c.Args().Get(0)
+
+	fmt.Printf("Starting crawling with %s\n", start_hash)
 
 	// For now, assume gateway running on default host:port
 	sh := shell.NewShell("localhost:5001")
@@ -62,7 +69,7 @@ func crawl(c *cli.Context) error {
 	id := indexer.NewIndexer(el)
 	crawli := crawler.NewCrawler(sh, id)
 
-	err = crawli.CrawlHash(examplesHash)
+	err = crawli.CrawlHash(start_hash)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
