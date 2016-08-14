@@ -35,5 +35,5 @@ func (i Indexer) IndexItem(doctype string, hash string, properties map[string]in
 // Whether or not an object exists in index
 func (i Indexer) IsIndexed(hash string) (bool, error) {
 	return i.el.Exists().
-		Index("ipfs").Type("directory").Id(hash).Do()
+		Index("ipfs").Type("_all").Id(hash).Do()
 }
