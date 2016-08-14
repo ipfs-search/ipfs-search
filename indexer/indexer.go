@@ -31,3 +31,20 @@ func (i Indexer) IndexDirectory(list *shell.UnixLsObject) error {
 
 	return nil
 }
+
+// Create file index based on hash
+func (i Indexer) IndexFile(hash string, properties map[string]string) error {
+	_, err := i.el.Index().
+		Index("ipfs").
+		Type("file").
+		Id(hash).
+		BodyJson(properties).
+		Refresh(true).
+		Do()
+	if err != nil {
+		// Handle error
+		return err
+	}
+
+	return nil
+}

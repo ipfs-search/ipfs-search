@@ -128,7 +128,11 @@ func (c Crawler) CrawlFile(hash string) error {
 	// Sniffing only uses at most the first 512 bytes
 	mimetype := http.DetectContentType(data)
 
-	fmt.Println(mimetype)
+	properties := map[string]string{
+		"mimetype": mimetype,
+	}
+
+	c.id.IndexFile(hash, properties)
 
 	return nil
 }
