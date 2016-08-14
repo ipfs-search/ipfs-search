@@ -1,7 +1,6 @@
 package indexer
 
 import (
-	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"gopkg.in/olivere/elastic.v3"
 )
 
@@ -15,36 +14,16 @@ func NewIndexer(el *elastic.Client) *Indexer {
 	return i
 }
 
-// Create directory index based on hash
-func (i Indexer) IndexDirectory(list *shell.UnixLsObject) error {
-	properties := map[string]interface{}{
-		"links": list.Links,
-	}
-
+// Add file or directory to index
+func (i Indexer) IndexItem(doctype string, hash string, properties map[string]interface{}) error {
 	_, err := i.el.Index().
 		Index("ipfs").
-		Type("directory").
-		Id(list.Hash).
-		BodyJson(properties).
-		Refresh(true).
-		Do()
-	if err != nil {
-		// Handle error
-		return err
-	}
-
-	return nil
-}
-
-// Create file index based on hash
-func (i Indexer) IndexFile(hash string, properties map[string]string) error {
-	_, err := i.el.Index().
-		Index("ipfs").
-		Type("file").
+		Type(doctype).
 		Id(hash).
 		BodyJson(properties).
 		Refresh(true).
 		Do()
+
 	if err != nil {
 		// Handle error
 		return err

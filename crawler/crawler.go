@@ -72,7 +72,11 @@ func (c Crawler) CrawlHash(hash string) error {
 		}
 	case "Directory":
 		// Index name and size for items
-		c.id.IndexDirectory(list)
+		properties := map[string]interface{}{
+			"links": list.Links,
+		}
+
+		c.id.IndexItem("directory", hash, properties)
 
 		for _, link := range list.Links {
 			switch link.Type {
@@ -149,11 +153,11 @@ func (c Crawler) CrawlFile(hash string) error {
 	// Sniffing only uses at most the first 512 bytes
 	mimetype := http.DetectContentType(data)
 
-	properties := map[string]string{
+	properties := map[string]interface{}{
 		"mimetype": mimetype,
 	}
 
-	c.id.IndexFile(hash, properties)
+	c.id.IndexItem("file", hash, properties)
 
 	return nil
 }
