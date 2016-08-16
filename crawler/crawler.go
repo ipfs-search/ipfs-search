@@ -131,6 +131,8 @@ func (c Crawler) getMimeType(hash string) (string, error) {
 		return "", err
 	}
 
+	defer response.Close()
+
 	var data []byte
 	data = make([]byte, 512)
 	numread, err := response.Read(data)
@@ -140,11 +142,6 @@ func (c Crawler) getMimeType(hash string) (string, error) {
 
 	if numread == 0 {
 		return "", errors.New("0 characters read, mime type detection failed")
-	}
-
-	err = response.Close()
-	if err != nil {
-		return "", err
 	}
 
 	// Sniffing only uses at most the first 512 bytes
