@@ -74,6 +74,7 @@ func (c Crawler) CrawlHash(hash string) error {
 		// Index name and size for items
 		properties := map[string]interface{}{
 			"links": list.Links,
+			"size":  list.Size,
 		}
 
 		c.id.IndexItem("Directory", hash, properties)
