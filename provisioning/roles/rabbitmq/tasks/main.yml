@@ -8,6 +8,14 @@
       apt: pkg=rabbitmq-server state=latest
     - name: Enable required services
       service: name=rabbitmq-server enabled=yes state=started
+    - name: Setup rabbitmq admin user
+      rabbitmq_user: user=admin
+                     password=admin
+                     configure_priv=.*
+                     read_priv=.*
+                     write_priv=.*
+                     state=present
+                     tags=administrator
     - name: Enable rabbitmq plugins
       rabbitmq_plugin: names=rabbitmq_management state=enabled
       notify:
