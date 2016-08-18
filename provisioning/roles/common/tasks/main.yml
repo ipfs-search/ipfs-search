@@ -6,8 +6,6 @@
       apt: upgrade=dist
     - name: install unattended upgrades
       apt: name=unattended-upgrades state=present
-    - name: install systemd utils
-      apt: name=sysvinit-utils state=present
     - name: enable unattended upgrades
       debconf: name=unattended-upgrades question=enable_auto_updates value=true vtype=boolean
     # Note: new in 2.2.0
