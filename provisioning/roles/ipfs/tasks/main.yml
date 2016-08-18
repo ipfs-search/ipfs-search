@@ -6,7 +6,7 @@
     - name: extract go-ipfs archive
       unarchive: copy=no src=/tmp/go-ipfs.tar.gz dest=/tmp/
     - name: install go-ipfs
-      copy: remote_src=True src=/tmp/go-ipfs/ipfs dest="{{ ipfs_binary }}"
+      copy: remote_src=True src=/tmp/go-ipfs/ipfs dest="{{ ipfs_binary }}" mode=755
       become: true
       notify:
       - restart ipfs
@@ -22,8 +22,9 @@
       args:
         creates: "{{ ipfs_path }}/version"
       environment:
-        ipfs_path: "{{ ipfs_path }}"
-      become: ipfs
+        IPFS_PATH: "{{ ipfs_path }}"
+      become: true
+      become_user: ipfs
     - template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
       register: service
     # Note: new in 2.2
