@@ -1,7 +1,15 @@
 ---
 - block:
+    - name: Install repository key
+      apt_key: url=https://www.rabbitmq.com/rabbitmq-release-signing-key.asc state=present id=6026DFCA
+    - name: Add repository
+      apt_repository: repo='deb http://www.rabbitmq.com/debian/ testing main' state=present update_cache=yes
     - name: Install required packages
-      apt: pkg=rabbitmq-server state=present
+      apt: pkg=rabbitmq-server state=latest
     - name: Enable required services
       service: name=rabbitmq-server enabled=yes state=started
+    - name: Enable rabbitmq plugins
+      rabbitmq_plugin: names=rabbitmq_management state=enabled
+      notify:
+      - restart rabbitmq
   become: true
