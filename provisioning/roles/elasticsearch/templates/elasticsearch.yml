@@ -1,0 +1,2 @@
+# Expose elasticsearch to local (non-global) IP's
+network.host: [_site_, _local_]

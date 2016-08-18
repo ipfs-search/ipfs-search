@@ -23,8 +23,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # RabbitMQ admin
   config.vm.network "forwarded_port", guest: 15672, host: 15672
-  # Elasticsearch frontend
-  # config.vm.network "forwarded_port", guest: 15672, host: 15672
+  # Elasticsearch
+  config.vm.network "forwarded_port", guest: 9200, host: 9200
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
