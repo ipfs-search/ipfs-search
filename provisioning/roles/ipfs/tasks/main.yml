@@ -18,15 +18,12 @@
     - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}"
     - file: path="{{ ipfs_path }}" owner=ipfs group=ipfs mode=750 state=directory
     - name: initialize IPFS repository
-      # Workaround for IPFS issue, solved in 0.4.3
-      # https://github.com/ipfs/go-ipfs/issues/3029
-      # command: "{{ ipfs_binary }} init"
-      shell: "{{ ipfs_binary }} init < /dev/null"
+      command: "{{ ipfs_binary }} init"
       args:
         creates: "{{ ipfs_path }}/version"
       environment:
-        IPFS_PATH: "{{ ipfs_path }}"
-      become_user: ipfs
+        ipfs_path: "{{ ipfs_path }}"
+      become: ipfs
     - template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
       register: service
     # Note: new in 2.2
