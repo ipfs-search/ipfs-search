@@ -1,33 +1,7 @@
 ---
 - hosts: all
-  become: true
-  tasks:
-    - name: update apt cache
-      apt: update_cache=yes cache_valid_time=3600
-    - name: install apt upgrades
-      apt: upgrade=dist
-    - name: install unattended upgrades
-      apt: name=unattended-upgrades state=present
-    - name: enable unattended upgrades
-      debconf: name=unattended-upgrades question=enable_auto_updates value=true vtype=boolean
-    # Note: new in 2.2.0
-    # - name: set timezone to Europe/Amsterdam
-    #   timezone: name=Europe/Amsterdam
-    - name: Set timezone area
-      debconf: name=tzdata question='tzdata/Areas' value='Europe' vtype='select'
-    - name: Set timezone
-      debconf: name=tzdata question='tzdata/Zones/Europe' value='Amsterdam' vtype='select'
-    - name: Install elasticsearch repository key
-      apt_key: url=https://packages.elastic.co/GPG-KEY-elasticsearch state=present id=D88E42B4
-    - name: Add elasticsearch repository
-      apt_repository: repo='deb http://packages.elastic.co/elasticsearch/2.x/debian stable main' state=present update_cache=yes
-    - name: Install required packages
-      apt: pkg={{ item }} state=present
-      with_items:
-         - rabbitmq-server
-         - elasticsearch
-    - name: Enable required services
-      service: name={{ item }} enabled=yes
-      with_items:
-         - rabbitmq-server
-         - elasticsearch
+  roles:
+    - { role: common, become: true }
+    - { role: elasticsearch, become: true }
+    - { role: rabbitmq, become: true }
+    - ipfs

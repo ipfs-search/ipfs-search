@@ -1,0 +1,11 @@
+---
+- name: download go-ipfs binary
+  get_url: url=https://dist.ipfs.io/go-ipfs/v0.4.2/go-ipfs_v0.4.2_linux-amd64.tar.gz checksum=sha256:f9802fd8f793ac65ced66153d0159596e4ea6181def17c087c90d421e274e52e dest=/tmp/go-ipfs.tar.gz
+  register: ipfs
+- name: extract go-ipfs archive
+  unarchive: copy=no src=/tmp/go-ipfs.tar.gz dest=/tmp/
+  when: ipfs.changed
+- name: installing go-ipfs
+  shell: /tmp/go-ipfs/install.sh
+  become: true
+  when: ipfs.changed

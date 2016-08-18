@@ -1,0 +1,17 @@
+---
+- name: update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+- name: install apt upgrades
+  apt: upgrade=dist
+- name: install unattended upgrades
+  apt: name=unattended-upgrades state=present
+- name: enable unattended upgrades
+  debconf: name=unattended-upgrades question=enable_auto_updates value=true vtype=boolean
+# Note: new in 2.2.0
+# - name: set timezone to Europe/Amsterdam
+#   timezone: name=Europe/Amsterdam
+- name: Set timezone area
+  debconf: name=tzdata question='tzdata/Areas' value='Europe' vtype='select'
+- name: Set timezone
+  debconf: name=tzdata question='tzdata/Zones/Europe' value='Amsterdam' vtype='select'
+

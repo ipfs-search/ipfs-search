@@ -1,0 +1,5 @@
+---
+- name: Install required packages
+  apt: pkg=rabbitmq-server state=present
+- name: Enable required services
+  service: name=rabbitmq-server enabled=yes
