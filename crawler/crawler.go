@@ -76,9 +76,11 @@ func (c Crawler) CrawlHash(hash string) error {
 			"links": list.Links,
 		}
 
-		c.id.IndexItem("directory", hash, properties)
+		c.id.IndexItem("Directory", hash, properties)
 
 		for _, link := range list.Links {
+			c.id.IndexReference(link.Type, link.Hash, link.Name, hash)
+
 			switch link.Type {
 			case "File":
 				// Add file to crawl queue
@@ -161,7 +163,7 @@ func (c Crawler) CrawlFile(hash string) error {
 		"mimetype": mimetype,
 	}
 
-	c.id.IndexItem("file", hash, properties)
+	c.id.IndexItem("File", hash, properties)
 
 	return nil
 }

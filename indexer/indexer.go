@@ -16,11 +16,64 @@ func NewIndexer(el *elastic.Client) *Indexer {
 
 // Add file or directory to index
 func (i Indexer) IndexItem(doctype string, hash string, properties map[string]interface{}) error {
-	_, err := i.el.Index().
+	_, err := i.el.Update().
 		Index("ipfs").
 		Type(doctype).
 		Id(hash).
-		BodyJson(properties).
+		Doc(properties).
+		DocAsUpsert(true).
+		Refresh(true).
+		Do()
+
+	if err != nil {
+		// Handle error
+		return err
+	}
+
+	return nil
+}
+
+// Add parent references to indexed item
+func (i Indexer) IndexReference(doctype string, hash string, name string, parent_hash string) error {
+	/*
+		'<hash>': {
+			'references': {
+				'<parent_hash>': {
+					'name': '<name>'
+				}
+			}
+		}
+
+		if (document_exists) {
+			if (references_exists) {
+				add_parent_hash to references
+			} else {
+				add references to document
+			}
+		} else {
+			create document with references as only information
+		}
+	*/
+	reference := map[string]interface{}{
+		parent_hash: map[string]interface{}{
+			"name": name,
+		},
+	}
+
+	properties := map[string]interface{}{
+		"references": reference,
+	}
+
+	// TODO: Use smart scripted update to allow for multiple files per object
+	_, err := i.el.Update().
+		Index("ipfs").
+		Type(doctype).
+		Id(hash).
+		Doc(properties).
+		DocAsUpsert(true).
+		// Script(NewScript("if (ctx._source.references) {ctx._source.references += reference } else { references = [reference, ] }").
+		// Params(reference).
+		// Upsert(properties).
 		Refresh(true).
 		Do()
 
