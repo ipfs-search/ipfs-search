@@ -10,9 +10,14 @@ Environment="IPFS_PATH={{ ipfs_path }}"
 DevicePolicy=closed
 ProtectSystem=true
 ProtectHome=true
-#PrivateUser=true
 PrivateDevices=true
 PrivateTmp=true
+MemoryLimit=256M
+# As yet unsupported security options
+#PrivateUser=true
+#ReadOnlyPaths=*
+#ReadWritePaths={{ ipfs_path }}
+#MemoryMax=512M
 
 [Install]
 WantedBy=default.target
