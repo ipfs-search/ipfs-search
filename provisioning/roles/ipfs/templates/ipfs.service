@@ -1,0 +1,18 @@
+[Unit]
+Description=IPFS daemon
+
+[Service]
+ExecStart={{ ipfs_binary }} daemon --manage-fdlimit --enable-gc
+Restart=on-failure
+User=ipfs
+Group=ipfs
+Environment="IPFS_PATH={{ ipfs_path }}"
+DevicePolicy=closed
+ProtectSystem=true
+ProtectHome=true
+#PrivateUser=true
+PrivateDevices=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

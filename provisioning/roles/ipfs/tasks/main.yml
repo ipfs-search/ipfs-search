@@ -1,18 +1,39 @@
 ---
 - name: download go-ipfs binary
   get_url: url={{ binary_url }} checksum=sha256:{{ binary_hash }} dest=/tmp/go-ipfs.tar.gz
-  register: ipfs
+  register: binary
 - block:
     - name: extract go-ipfs archive
       unarchive: copy=no src=/tmp/go-ipfs.tar.gz dest=/tmp/
-    - name: installing go-ipfs
-      shell: /tmp/go-ipfs/install.sh
+    - name: install go-ipfs
+      copy: remote_src=True src=/tmp/go-ipfs/ipfs dest="{{ ipfs_binary }}"
       become: true
+      notify:
+      - restart ipfs
     - name: remove temporary files
       file: state=absent path=/tmp/go-ipfs
-  when: ipfs.changed
+  when: binary.changed
 - block:
     - group: name=ipfs system=true state=present
-    - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home={{ ipfs_path }}
-    - file: path={{ ipfs_path }} owner=ipfs group=ipfs mode=750 state=directory
+    - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}"
+    - file: path="{{ ipfs_path }}" owner=ipfs group=ipfs mode=750 state=directory
+    - name: initialize IPFS repository
+      # Workaround for IPFS issue, solved in 0.4.3
+      # https://github.com/ipfs/go-ipfs/issues/3029
+      # command: "{{ ipfs_binary }} init"
+      shell: "{{ ipfs_binary }} init < /dev/null"
+      args:
+        creates: "{{ ipfs_path }}/version"
+      environment:
+        IPFS_PATH: "{{ ipfs_path }}"
+      become_user: ipfs
+    - template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
+      register: service
+    # Note: new in 2.2
+    # - systemd: daemon_reload=yes state=started name=ipfs enabled=yes
+    - shell: systemctl daemon-reload
+      when: service.changed
+      notify:
+      - restart ipfs
+    - service: name=ipfs enabled=yes state=started
   become: true
