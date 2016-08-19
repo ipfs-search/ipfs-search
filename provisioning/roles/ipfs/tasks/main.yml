@@ -17,6 +17,8 @@
     - group: name=ipfs system=true state=present
     - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}"
     - file: path="{{ ipfs_path }}" owner=ipfs group=ipfs mode=750 state=directory
+    - include: fuse_mount.yml
+      when: ipfs_mount
     - name: initialize IPFS repository
       command: "{{ ipfs_binary }} init"
       args:
@@ -25,6 +27,9 @@
         IPFS_PATH: "{{ ipfs_path }}"
       become: true
       become_user: ipfs
+    - template: src=ipfs_config dest=/var/lib/ipfs/config
+      notify:
+      - restart ipfs
     - template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
       register: service
     # Note: new in 2.2

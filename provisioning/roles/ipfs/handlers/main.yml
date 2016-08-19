@@ -1,3 +1,6 @@
 - name: restart ipfs
+  # Note: this should be replaced by:
+  # include: restart_ipfs.yml
+  # (or a block) - but it's note working.
   service: name=ipfs state=restarted
   become: true

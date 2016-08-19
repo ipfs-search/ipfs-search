@@ -2,15 +2,17 @@
 Description=IPFS daemon
 
 [Service]
-ExecStart={{ ipfs_binary }} daemon --manage-fdlimit --enable-gc
+ExecStart={{ ipfs_binary }} daemon --manage-fdlimit --enable-gc {{ '--mount' if ipfs_mount }}
 Restart=on-failure
 User=ipfs
 Group=ipfs
 Environment="IPFS_PATH={{ ipfs_path }}"
 DevicePolicy=closed
+DeviceAllow=/dev/fuse
 ProtectSystem=true
 ProtectHome=true
-PrivateDevices=true
+# Gives problems with fuse
+#PrivateDevices=true
 PrivateTmp=true
 MemoryLimit=256M
 # As yet unsupported security options
