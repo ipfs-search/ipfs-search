@@ -5,3 +5,4 @@
     - elasticsearch
     - rabbitmq
     - ipfs
+    - crawler

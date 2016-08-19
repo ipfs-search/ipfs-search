@@ -1,0 +1,4 @@
+---
+- name: Install GNU metadata extractor
+  apt: name=extract state=latest
+  become: true
