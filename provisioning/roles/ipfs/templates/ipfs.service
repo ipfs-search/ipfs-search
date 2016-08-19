@@ -9,11 +9,11 @@ Group=ipfs
 Environment="IPFS_PATH={{ ipfs_path }}"
 DevicePolicy=closed
 DeviceAllow=/dev/fuse
-ProtectSystem=true
-ProtectHome=true
-# Gives problems with fuse
+# Some or all of these give problems with fuse
+#ProtectHome=true
+#ProtectSystem=true
 #PrivateDevices=true
-PrivateTmp=true
+#PrivateTmp=true
 MemoryLimit=256M
 # As yet unsupported security options
 #PrivateUser=true
