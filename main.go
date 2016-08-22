@@ -136,7 +136,7 @@ func crawl(c *cli.Context) error {
 	for {
 		select {
 		case err = <-errc:
-			log.Println(err.Error())
+			log.Printf("%T: %v", err, err)
 		}
 	}
 
