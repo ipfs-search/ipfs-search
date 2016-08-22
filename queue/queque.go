@@ -110,8 +110,8 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 
 			err = worker(params)
 			if err != nil {
-				// Reject but do retry
-				d.Reject(true)
+				// Reject, don't retry (for now)
+				d.Reject(false)
 				errc <- err
 			}
 
