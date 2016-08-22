@@ -6,6 +6,7 @@ import (
 	"github.com/dokterbob/ipfs-search/indexer"
 	"github.com/dokterbob/ipfs-search/queue"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
+	"io"
 	"log"
 	"net/http"
 )
@@ -118,7 +119,7 @@ func (c Crawler) getMimeType(hash string) (string, error) {
 	var data []byte
 	data = make([]byte, 512)
 	numread, err := response.Read(data)
-	if err != nil && err.Error() != "EOF" {
+	if err == io.EOF {
 		return "", err
 	}
 
