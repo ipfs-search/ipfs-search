@@ -11,6 +11,14 @@ import (
 	"net/http"
 )
 
+type CrawlerArgs struct {
+	Hash       string
+	Name       string
+	Size       uint64
+	ParentHash string
+	ParentName string
+}
+
 type Crawler struct {
 	sh *shell.Shell
 	id *indexer.Indexer
@@ -31,19 +39,54 @@ func hashUrl(hash string) string {
 	return fmt.Sprintf("/ipfs/%s", hash)
 }
 
-// Given a particular hash, start crawling
-func (c Crawler) CrawlHash(hash string) error {
+// Helper function for creating reference structure
+/*
+	'<hash>': {
+		'references': {
+			'<parent_hash>': {
+				'name': '<name>'
+			}
+		}
+	}
+
+	if (document_exists) {
+		if (references_exists) {
+			add_parent_hash to references
+		} else {
+			add references to document
+		}
+	} else {
+		create document with references as only information
+	}
+*/
+func construct_references(name string, parent_hash string, parent_name string) map[string]interface{} {
+	references := map[string]interface{}{}
+
+	if name != "" {
+		references = map[string]interface{}{
+			parent_hash: map[string]interface{}{
+				"name":        name,
+				"parent_name": parent_name,
+			},
+		}
+	}
+
+	return references
+}
+
+// Given a particular hash (file or directory), start crawling
+func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_name string) error {
 	indexed, err := c.id.IsIndexed(hash)
 	if err != nil {
 		return err
 	}
 
 	if indexed {
-		log.Printf("Already indexed '%s', skipping\n", hash)
+		log.Printf("Already indexed '%s', skipping", hash)
 		return nil
 	}
 
-	log.Printf("Crawling hash '%s'\n", hash)
+	log.Printf("Crawling hash '%s' (%s)", hash, name)
 
 	url := hashUrl(hash)
 
@@ -55,31 +98,41 @@ func (c Crawler) CrawlHash(hash string) error {
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
-		err = c.fq.AddTask(map[string]interface{}{
-			"hash": hash,
-		})
+		// Note: we're expecting no references here, see comment below
+		args := CrawlerArgs{
+			Hash: hash,
+			Name: name,
+			Size: list.Size,
+		}
+
+		err = c.fq.AddTask(args)
 		if err != nil {
 			// failed to send the task
 			return err
 		}
 	case "Directory":
-		// Index name and size for items
+		// Index name and size for directory and directory items
 		properties := map[string]interface{}{
-			"links": list.Links,
-			"size":  list.Size,
+			"links":      list.Links,
+			"size":       list.Size,
+			"references": construct_references(name, parent_hash, parent_name),
 		}
 
 		c.id.IndexItem("Directory", hash, properties)
 
 		for _, link := range list.Links {
-			c.id.IndexReference(link.Type, link.Hash, link.Name, hash)
+			args := CrawlerArgs{
+				Hash:       link.Hash,
+				Name:       link.Name,
+				Size:       link.Size,
+				ParentHash: hash,
+				ParentName: name,
+			}
 
 			switch link.Type {
 			case "File":
 				// Add file to crawl queue
-				err = c.fq.AddTask(map[string]interface{}{
-					"hash": link.Hash,
-				})
+				err = c.fq.AddTask(args)
 				if err != nil {
 					// failed to send the task
 					return err
@@ -87,9 +140,7 @@ func (c Crawler) CrawlHash(hash string) error {
 
 			case "Directory":
 				// Add directory to crawl queue
-				c.hq.AddTask(map[string]interface{}{
-					"hash": link.Hash,
-				})
+				c.hq.AddTask(args)
 				if err != nil {
 					// failed to send the task
 					return err
@@ -132,7 +183,7 @@ func (c Crawler) getMimeType(hash string) (string, error) {
 }
 
 // Crawl a single object, known to be a file
-func (c Crawler) CrawlFile(hash string) error {
+func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_name string, size uint64) error {
 	log.Printf("Crawling file %s\n", hash)
 
 	mimetype, err := c.getMimeType(hash)
@@ -141,7 +192,9 @@ func (c Crawler) CrawlFile(hash string) error {
 	}
 
 	properties := map[string]interface{}{
-		"mimetype": mimetype,
+		"mimetype":   mimetype,
+		"size":       size,
+		"references": construct_references(name, parent_hash, parent_name),
 	}
 
 	c.id.IndexItem("File", hash, properties)

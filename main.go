@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/dokterbob/ipfs-search/crawler"
 	"github.com/dokterbob/ipfs-search/indexer"
@@ -110,23 +111,46 @@ func crawl(c *cli.Context) error {
 
 	id := indexer.NewIndexer(el)
 
-	crawler := crawler.NewCrawler(sh, id, fq, hq)
+	crawli := crawler.NewCrawler(sh, id, fq, hq)
 
 	errc := make(chan error, 1)
 
 	for i := 0; i < HASH_WORKERS; i++ {
-		hq.StartConsumer(func(params map[string]interface{}) error {
-			// TODO: Assert hash in map, ideally by using custom type
-			return crawler.CrawlHash(params["hash"].(string))
+		hq.StartConsumer(func(params []byte) error {
+			var args crawler.CrawlerArgs
+
+			err := json.Unmarshal(params, &args)
+			if err != nil {
+				return err
+			}
+
+			return crawli.CrawlHash(
+				args.Hash,
+				args.Name,
+				args.ParentHash,
+				args.ParentName,
+			)
 		}, errc)
 	}
 
-	// for i := 0; i < FILE_WORKERS; i++ {
-	// 	fq.StartConsumer(func(params map[string]interface{}) error {
-	// 		// TODO: Assert hash in map, ideally by using custom type
-	// 		return crawler.CrawlFile(params["hash"].(string))
-	// 	}, errc)
-	// }
+	for i := 0; i < FILE_WORKERS; i++ {
+		fq.StartConsumer(func(params []byte) error {
+			var args crawler.CrawlerArgs
+
+			err := json.Unmarshal(params, &args)
+			if err != nil {
+				return err
+			}
+
+			return crawli.CrawlFile(
+				args.Hash,
+				args.Name,
+				args.ParentHash,
+				args.ParentName,
+				args.Size,
+			)
+		}, errc)
+	}
 
 	// sigs := make(chan os.Signal, 1)
 	// signal.Notify(sigs, syscall.SIGQUIT)

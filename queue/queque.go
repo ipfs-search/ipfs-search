@@ -79,9 +79,7 @@ func NewTaskQueue(c *TaskChannel, queue_name string) (*TaskQueue, error) {
 	return &tq, nil
 }
 
-func (t TaskQueue) StartConsumer(worker func(map[string]interface{}) error, errc chan error) error {
-	var params map[string]interface{}
-
+func (t TaskQueue) StartConsumer(worker func([]byte) error, errc chan error) error {
 	msgs, err := t.c.ch.Consume(
 		t.q.Name, // queue
 		"",       // consumer
@@ -99,14 +97,7 @@ func (t TaskQueue) StartConsumer(worker func(map[string]interface{}) error, errc
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
 
-			err := json.Unmarshal(d.Body, &params)
-			if err != nil {
-				// Message is fucked up, don't retry
-				d.Reject(false)
-				errc <- err
-			}
-
-			err = worker(params)
+			err = worker(d.Body)
 			if err != nil {
 				// Reject but do retry
 				d.Reject(true)
@@ -122,7 +113,7 @@ func (t TaskQueue) StartConsumer(worker func(map[string]interface{}) error, errc
 	return nil
 }
 
-func (t TaskQueue) AddTask(params map[string]interface{}) error {
+func (t TaskQueue) AddTask(params interface{}) error {
 	body, err := json.Marshal(params)
 	if err != nil {
 		return err
