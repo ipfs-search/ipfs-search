@@ -121,12 +121,12 @@ func crawl(c *cli.Context) error {
 		}, errc)
 	}
 
-	for i := 0; i < FILE_WORKERS; i++ {
-		fq.StartConsumer(func(params map[string]interface{}) error {
-			// TODO: Assert hash in map, ideally by using custom type
-			return crawler.CrawlFile(params["hash"].(string))
-		}, errc)
-	}
+	// for i := 0; i < FILE_WORKERS; i++ {
+	// 	fq.StartConsumer(func(params map[string]interface{}) error {
+	// 		// TODO: Assert hash in map, ideally by using custom type
+	// 		return crawler.CrawlFile(params["hash"].(string))
+	// 	}, errc)
+	// }
 
 	// sigs := make(chan os.Signal, 1)
 	// signal.Notify(sigs, syscall.SIGQUIT)
