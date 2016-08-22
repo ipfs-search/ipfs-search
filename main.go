@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/dokterbob/ipfs-search/crawler"
 	"github.com/dokterbob/ipfs-search/indexer"
@@ -116,12 +115,17 @@ func crawl(c *cli.Context) error {
 	errc := make(chan error, 1)
 
 	for i := 0; i < HASH_WORKERS; i++ {
-		hq.StartConsumer(func(params []byte) error {
-			var args crawler.CrawlerArgs
+		params := crawler.CrawlerArgs{}
 
-			err := json.Unmarshal(params, &args)
-			if err != nil {
-				return err
+		hq.StartConsumer(func(params map[string]interface{}) error {
+			// Oh how I would love automatic casting here...
+
+			// args crawler.CrawlerArgs
+			args := crawler.CrawlerArgs{
+				Hash:       params["Hash"].(string),
+				Name:       params["Name"].(string),
+				ParentHash: params["ParentHash"].(string),
+				ParentName: params["ParentName"].(string),
 			}
 
 			return crawli.CrawlHash(
@@ -130,27 +134,24 @@ func crawl(c *cli.Context) error {
 				args.ParentHash,
 				args.ParentName,
 			)
-		}, errc)
+		}, params, errc)
 	}
 
-	for i := 0; i < FILE_WORKERS; i++ {
-		fq.StartConsumer(func(params []byte) error {
-			var args crawler.CrawlerArgs
+	// for i := 0; i < FILE_WORKERS; i++ {
+	// 	params = make(crawler.CrawlerArgs)
 
-			err := json.Unmarshal(params, &args)
-			if err != nil {
-				return err
-			}
+	// 	fq.StartConsumer(func(params interface{}) error {
+	// 		args := params.(crawler.CrawlerArgs)
 
-			return crawli.CrawlFile(
-				args.Hash,
-				args.Name,
-				args.ParentHash,
-				args.ParentName,
-				args.Size,
-			)
-		}, errc)
-	}
+	// 		return crawli.CrawlFile(
+	// 			args.Hash,
+	// 			args.Name,
+	// 			args.ParentHash,
+	// 			args.ParentName,
+	// 			args.Size,
+	// 		)
+	// 	}, errc)
+	// }
 
 	// sigs := make(chan os.Signal, 1)
 	// signal.Notify(sigs, syscall.SIGQUIT)
