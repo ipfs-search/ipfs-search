@@ -6,6 +6,7 @@ import (
 	"github.com/dokterbob/ipfs-search/indexer"
 	"github.com/dokterbob/ipfs-search/queue"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
+	"log"
 	"net/http"
 )
 
@@ -37,11 +38,11 @@ func (c Crawler) CrawlHash(hash string) error {
 	}
 
 	if indexed {
-		fmt.Printf("Already indexed '%s', skipping\n", hash)
+		log.Printf("Already indexed '%s', skipping\n", hash)
 		return nil
 	}
 
-	fmt.Printf("Crawling hash '%s'\n", hash)
+	log.Printf("Crawling hash '%s'\n", hash)
 
 	url := hashUrl(hash)
 
@@ -93,11 +94,11 @@ func (c Crawler) CrawlHash(hash string) error {
 					return err
 				}
 			default:
-				fmt.Printf("Type '%s' skipped for '%s'", list.Type, hash)
+				log.Printf("Type '%s' skipped for '%s'", list.Type, hash)
 			}
 		}
 	default:
-		fmt.Printf("Type '%s' skipped for '%s'", list.Type, hash)
+		log.Printf("Type '%s' skipped for '%s'", list.Type, hash)
 	}
 
 	return nil
@@ -129,7 +130,7 @@ func (c Crawler) getMimeType(hash string) (string, error) {
 
 // Crawl a single object, known to be a file
 func (c Crawler) CrawlFile(hash string) error {
-	fmt.Printf("Crawling file %s\n", hash)
+	log.Printf("Crawling file %s\n", hash)
 
 	mimetype, err := c.getMimeType(hash)
 	if err != nil {
