@@ -14,8 +14,8 @@ import (
 
 const (
 	IPFS_API     = "localhost:5001"
-	HASH_WORKERS = 100
-	FILE_WORKERS = 200
+	HASH_WORKERS = 10
+	FILE_WORKERS = 10
 )
 
 func main() {
