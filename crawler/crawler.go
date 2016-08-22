@@ -42,9 +42,11 @@ func hashUrl(hash string) string {
 /*
 	'<hash>': {
 		'references': {
-			'<parent_hash>': {
-				'name': '<name>'
-			}
+			[{
+				'parent_hash'
+				'hash'
+				'name'
+			}, ]
 		}
 	}
 
@@ -58,13 +60,14 @@ func hashUrl(hash string) string {
 		create document with references as only information
 	}
 */
-func construct_references(name string, parent_hash string, parent_name string) map[string]interface{} {
-	references := map[string]interface{}{}
+func construct_references(name string, parent_hash string, parent_name string) []map[string]interface{} {
+	references := []map[string]interface{}{}
 
 	if name != "" {
-		references = map[string]interface{}{
-			parent_hash: map[string]interface{}{
+		references = []map[string]interface{}{
+			{
 				"name":        name,
+				"parent_hash": parent_hash,
 				"parent_name": parent_name,
 			},
 		}
