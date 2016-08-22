@@ -14,8 +14,8 @@ import (
 
 const (
 	IPFS_API     = "localhost:5001"
-	HASH_WORKERS = 10
-	FILE_WORKERS = 10
+	HASH_WORKERS = 100
+	FILE_WORKERS = 200
 )
 
 func main() {
@@ -104,7 +104,6 @@ func crawl(c *cli.Context) error {
 	hq, err := queue.NewTaskQueue(ch, "hashes")
 	fq, err := queue.NewTaskQueue(ch, "files")
 	if err != nil {
-		// do something with the error
 		return cli.NewExitError(err.Error(), 1)
 	}
 
@@ -115,6 +114,15 @@ func crawl(c *cli.Context) error {
 	errc := make(chan error, 1)
 
 	for i := 0; i < HASH_WORKERS; i++ {
+		// Now create queues and channel for workers
+		ch, err := queue.NewChannel()
+		if err != nil {
+			return cli.NewExitError(err.Error(), 1)
+		}
+		defer ch.Close()
+
+		hq, err := queue.NewTaskQueue(ch, "hashes")
+
 		hq.StartConsumer(func(params interface{}) error {
 			args := params.(*crawler.CrawlerArgs)
 
@@ -128,6 +136,17 @@ func crawl(c *cli.Context) error {
 	}
 
 	for i := 0; i < FILE_WORKERS; i++ {
+		ch, err := queue.NewChannel()
+		if err != nil {
+			return cli.NewExitError(err.Error(), 1)
+		}
+		defer ch.Close()
+
+		fq, err := queue.NewTaskQueue(ch, "files")
+		if err != nil {
+			return cli.NewExitError(err.Error(), 1)
+		}
+
 		fq.StartConsumer(func(params interface{}) error {
 			args := params.(*crawler.CrawlerArgs)
 

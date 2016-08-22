@@ -6,15 +6,20 @@ import (
 	"log"
 )
 
+var conn *amqp.Connection
+
 type TaskChannel struct {
-	conn *amqp.Connection
-	ch   *amqp.Channel
+	ch *amqp.Channel
 }
 
 func NewChannel() (*TaskChannel, error) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	if err != nil {
-		return nil, err
+	var err error
+
+	if conn == nil {
+		conn, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	ch, err := conn.Channel()
@@ -32,15 +37,14 @@ func NewChannel() (*TaskChannel, error) {
 	}
 
 	return &TaskChannel{
-		conn: conn,
-		ch:   ch,
+		ch: ch,
 	}, nil
 }
 
 func (c *TaskChannel) Close() error {
-	if c.conn != nil {
+	if conn != nil {
 		// Connection exists, defer close
-		defer c.conn.Close()
+		defer conn.Close()
 	}
 
 	if c.ch != nil {
