@@ -115,18 +115,8 @@ func crawl(c *cli.Context) error {
 	errc := make(chan error, 1)
 
 	for i := 0; i < HASH_WORKERS; i++ {
-		params := crawler.CrawlerArgs{}
-
-		hq.StartConsumer(func(params map[string]interface{}) error {
-			// Oh how I would love automatic casting here...
-
-			// args crawler.CrawlerArgs
-			args := crawler.CrawlerArgs{
-				Hash:       params["Hash"].(string),
-				Name:       params["Name"].(string),
-				ParentHash: params["ParentHash"].(string),
-				ParentName: params["ParentName"].(string),
-			}
+		hq.StartConsumer(func(params interface{}) error {
+			args := params.(*crawler.CrawlerArgs)
 
 			return crawli.CrawlHash(
 				args.Hash,
@@ -134,24 +124,22 @@ func crawl(c *cli.Context) error {
 				args.ParentHash,
 				args.ParentName,
 			)
-		}, params, errc)
+		}, &crawler.CrawlerArgs{}, errc)
 	}
 
-	// for i := 0; i < FILE_WORKERS; i++ {
-	// 	params = make(crawler.CrawlerArgs)
+	for i := 0; i < FILE_WORKERS; i++ {
+		fq.StartConsumer(func(params interface{}) error {
+			args := params.(*crawler.CrawlerArgs)
 
-	// 	fq.StartConsumer(func(params interface{}) error {
-	// 		args := params.(crawler.CrawlerArgs)
-
-	// 		return crawli.CrawlFile(
-	// 			args.Hash,
-	// 			args.Name,
-	// 			args.ParentHash,
-	// 			args.ParentName,
-	// 			args.Size,
-	// 		)
-	// 	}, errc)
-	// }
+			return crawli.CrawlFile(
+				args.Hash,
+				args.Name,
+				args.ParentHash,
+				args.ParentName,
+				args.Size,
+			)
+		}, &crawler.CrawlerArgs{}, errc)
+	}
 
 	// sigs := make(chan os.Signal, 1)
 	// signal.Notify(sigs, syscall.SIGQUIT)
