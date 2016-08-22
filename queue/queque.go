@@ -117,6 +117,8 @@ func (t TaskQueue) StartConsumer(worker func(map[string]interface{}) error, errc
 		}
 	}()
 
+	log.Printf("Started worker for queue '%s'", t.q.Name)
+
 	return nil
 }
 

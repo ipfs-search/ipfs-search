@@ -12,6 +12,12 @@ import (
 	"os"
 )
 
+const (
+	IPFS_API     = "localhost:5001"
+	HASH_WORKERS = 10
+	FILE_WORKERS = 10
+)
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "ipfs-search"
@@ -85,7 +91,7 @@ func add(c *cli.Context) error {
 
 func crawl(c *cli.Context) error {
 	// For now, assume gateway running on default host:port
-	sh := shell.NewShell("localhost:5001")
+	sh := shell.NewShell(IPFS_API)
 
 	el, err := get_elastic()
 
@@ -108,15 +114,19 @@ func crawl(c *cli.Context) error {
 
 	errc := make(chan error, 1)
 
-	hq.StartConsumer(func(params map[string]interface{}) error {
-		// TODO: Assert hash in map, ideally by using custom type
-		return crawler.CrawlHash(params["hash"].(string))
-	}, errc)
+	for i := 0; i < HASH_WORKERS; i++ {
+		hq.StartConsumer(func(params map[string]interface{}) error {
+			// TODO: Assert hash in map, ideally by using custom type
+			return crawler.CrawlHash(params["hash"].(string))
+		}, errc)
+	}
 
-	fq.StartConsumer(func(params map[string]interface{}) error {
-		// TODO: Assert hash in map, ideally by using custom type
-		return crawler.CrawlFile(params["hash"].(string))
-	}, errc)
+	for i := 0; i < FILE_WORKERS; i++ {
+		fq.StartConsumer(func(params map[string]interface{}) error {
+			// TODO: Assert hash in map, ideally by using custom type
+			return crawler.CrawlFile(params["hash"].(string))
+		}, errc)
+	}
 
 	// sigs := make(chan os.Signal, 1)
 	// signal.Notify(sigs, syscall.SIGQUIT)

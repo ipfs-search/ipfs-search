@@ -101,6 +101,8 @@ func (c Crawler) CrawlHash(hash string) error {
 		log.Printf("Type '%s' skipped for '%s'", list.Type, hash)
 	}
 
+	log.Printf("Finished hash %s", hash)
+
 	return nil
 }
 
@@ -142,6 +144,8 @@ func (c Crawler) CrawlFile(hash string) error {
 	}
 
 	c.id.IndexItem("File", hash, properties)
+
+	log.Printf("Finished file %s", hash)
 
 	return nil
 }
