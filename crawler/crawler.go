@@ -186,9 +186,16 @@ func (c Crawler) getMimeType(hash string) (string, error) {
 func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_name string, size uint64) error {
 	log.Printf("Crawling file %s\n", hash)
 
-	mimetype, err := c.getMimeType(hash)
-	if err != nil {
-		return err
+	var (
+		mimetype string
+		err      error
+	)
+
+	if size > 0 {
+		mimetype, err = c.getMimeType(hash)
+		if err != nil {
+			return err
+		}
 	}
 
 	properties := map[string]interface{}{
