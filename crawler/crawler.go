@@ -1,14 +1,13 @@
 package crawler
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 	"github.com/dokterbob/ipfs-search/indexer"
 	"github.com/dokterbob/ipfs-search/queue"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
-	"io"
 	"log"
-	"net/http"
+	"os/exec"
 )
 
 type CrawlerArgs struct {
@@ -158,53 +157,47 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 	return nil
 }
 
-func (c Crawler) getMimeType(hash string) (string, error) {
-	url := hashUrl(hash)
-	response, err := c.sh.Cat(url)
+func getMetadata(path string, metadata *map[string]interface{}) error {
+	cmd := exec.Command("tika", "-j", path)
+
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return "", err
+		return err
+	}
+	if err := cmd.Start(); err != nil {
+		return err
 	}
 
-	defer response.Close()
-
-	var data []byte
-	data = make([]byte, 512)
-	numread, err := response.Read(data)
-	if err == io.EOF {
-		return "", err
+	if err := json.NewDecoder(stdout).Decode(&metadata); err != nil {
+		return err
 	}
 
-	if numread == 0 {
-		return "", errors.New("0 characters read, mime type detection failed")
-	}
-
-	// Sniffing only uses at most the first 512 bytes
-	return http.DetectContentType(data), nil
+	return cmd.Wait()
 }
 
 // Crawl a single object, known to be a file
 func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_name string, size uint64) error {
 	log.Printf("Crawling file %s\n", hash)
 
-	var (
-		mimetype string
-		err      error
-	)
+	metadata := make(map[string]interface{})
 
 	if size > 0 {
-		mimetype, err = c.getMimeType(hash)
-		if err != nil {
+		var path string
+		if name != "" {
+			path = fmt.Sprintf("/ipfs/%s/%s", parent_hash, name)
+		} else {
+			path = fmt.Sprintf("/ipfs/%s", hash)
+		}
+
+		if err := getMetadata(path, &metadata); err != nil {
 			return err
 		}
 	}
 
-	properties := map[string]interface{}{
-		"mimetype":   mimetype,
-		"size":       size,
-		"references": construct_references(name, parent_hash, parent_name),
-	}
+	metadata["size"] = size
+	metadata["references"] = construct_references(name, parent_hash, parent_name)
 
-	c.id.IndexItem("File", hash, properties)
+	c.id.IndexItem("File", hash, metadata)
 
 	log.Printf("Finished file %s", hash)
 
