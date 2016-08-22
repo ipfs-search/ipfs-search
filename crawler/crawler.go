@@ -3,24 +3,25 @@ package crawler
 import (
 	"errors"
 	"fmt"
-	machinery "github.com/RichardKnop/machinery/v1"
-	signatures "github.com/RichardKnop/machinery/v1/signatures"
 	"github.com/dokterbob/ipfs-search/indexer"
+	"github.com/dokterbob/ipfs-search/queue"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"net/http"
 )
 
 type Crawler struct {
-	sh  *shell.Shell
-	id  *indexer.Indexer
-	mac *machinery.Server
+	sh *shell.Shell
+	id *indexer.Indexer
+	fq *queue.TaskQueue
+	hq *queue.TaskQueue
 }
 
-func NewCrawler(sh *shell.Shell, id *indexer.Indexer, mac *machinery.Server) *Crawler {
+func NewCrawler(sh *shell.Shell, id *indexer.Indexer, fq *queue.TaskQueue, hq *queue.TaskQueue) *Crawler {
 	c := new(Crawler)
 	c.sh = sh
 	c.id = id
-	c.mac = mac
+	c.fq = fq
+	c.hq = hq
 	return c
 }
 
@@ -52,20 +53,9 @@ func (c Crawler) CrawlHash(hash string) error {
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
-		task := signatures.TaskSignature{
-			Name: "crawl_file",
-			Args: []signatures.TaskArg{
-				signatures.TaskArg{
-					Type:  "string",
-					Value: hash,
-				},
-				signatures.TaskArg{
-					Type:  "string",
-					Value: nil,
-				},
-			},
-		}
-		_, err := c.mac.SendTask(&task)
+		err = c.fq.AddTask(map[string]interface{}{
+			"hash": hash,
+		})
 		if err != nil {
 			// failed to send the task
 			return err
@@ -85,16 +75,9 @@ func (c Crawler) CrawlHash(hash string) error {
 			switch link.Type {
 			case "File":
 				// Add file to crawl queue
-				task := signatures.TaskSignature{
-					Name: "crawl_file",
-					Args: []signatures.TaskArg{
-						signatures.TaskArg{
-							Type:  "string",
-							Value: link.Hash,
-						},
-					},
-				}
-				_, err := c.mac.SendTask(&task)
+				err = c.fq.AddTask(map[string]interface{}{
+					"hash": link.Hash,
+				})
 				if err != nil {
 					// failed to send the task
 					return err
@@ -102,16 +85,9 @@ func (c Crawler) CrawlHash(hash string) error {
 
 			case "Directory":
 				// Add directory to crawl queue
-				task := signatures.TaskSignature{
-					Name: "crawl_hash",
-					Args: []signatures.TaskArg{
-						signatures.TaskArg{
-							Type:  "string",
-							Value: link.Hash,
-						},
-					},
-				}
-				_, err := c.mac.SendTask(&task)
+				c.hq.AddTask(map[string]interface{}{
+					"hash": link.Hash,
+				})
 				if err != nil {
 					// failed to send the task
 					return err

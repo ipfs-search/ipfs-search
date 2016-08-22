@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	machinery "github.com/RichardKnop/machinery/v1"
-	machinery_config "github.com/RichardKnop/machinery/v1/config"
-	signatures "github.com/RichardKnop/machinery/v1/signatures"
 	"github.com/dokterbob/ipfs-search/crawler"
 	"github.com/dokterbob/ipfs-search/indexer"
+	"github.com/dokterbob/ipfs-search/queue"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"gopkg.in/olivere/elastic.v3"
 	"gopkg.in/urfave/cli.v1"
+	"log"
 	"os"
 )
 
@@ -53,23 +52,6 @@ func get_elastic() (*elastic.Client, error) {
 	return el, nil
 }
 
-func get_machinery() (*machinery.Server, error) {
-	cnf := machinery_config.Config{
-		Broker:        "amqp://guest:guest@localhost:5672/",
-		ResultBackend: "amqp://guest:guest@localhost:5672/",
-		Exchange:      "machinery_exchange",
-		ExchangeType:  "direct",
-		DefaultQueue:  "machinery_tasks",
-		BindingKey:    "machinery_task",
-	}
-	server, err := machinery.NewServer(&cnf)
-	if err != nil {
-		return nil, err
-	}
-
-	return server, nil
-}
-
 func add(c *cli.Context) error {
 	if c.NArg() != 1 {
 		return cli.NewExitError("Please supply one hash as argument.", 1)
@@ -79,31 +61,24 @@ func add(c *cli.Context) error {
 
 	fmt.Printf("Adding hash '%s' to queue\n", hash)
 
-	server, err := get_machinery()
+	ch, err := queue.NewChannel()
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	defer ch.Close()
+
+	queue, err := queue.NewTaskQueue(ch, "hashes")
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	task := signatures.TaskSignature{
-		Name: "crawl_hash",
-		Args: []signatures.TaskArg{
-			signatures.TaskArg{
-				Type:  "string",
-				Value: hash,
-			},
-		},
-	}
-	asyncResult, err := server.SendTask(&task)
+	err = queue.AddTask(map[string]interface{}{
+		"hash": hash,
+	})
+
 	if err != nil {
-		// failed to send the task
 		return cli.NewExitError(err.Error(), 1)
 	}
-
-	// Display task state afterwards
-	taskState := asyncResult.GetState()
-
-	fmt.Printf("Current state of %v task is:\n", taskState.TaskUUID)
-	fmt.Println(taskState.State)
 
 	return nil
 }
@@ -113,38 +88,46 @@ func crawl(c *cli.Context) error {
 	sh := shell.NewShell("localhost:5001")
 
 	el, err := get_elastic()
+
+	ch, err := queue.NewChannel()
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
+	defer ch.Close()
 
-	server, err := get_machinery()
+	hq, err := queue.NewTaskQueue(ch, "hashes")
+	fq, err := queue.NewTaskQueue(ch, "files")
 	if err != nil {
+		// do something with the error
 		return cli.NewExitError(err.Error(), 1)
 	}
 
 	id := indexer.NewIndexer(el)
-	crawli := crawler.NewCrawler(sh, id, server)
 
-	server.RegisterTask("crawl_hash", func(hash string) (int64, error) {
-		err := crawli.CrawlHash(hash)
+	crawler := crawler.NewCrawler(sh, id, fq, hq)
 
-		// Note: this is here because only giving an error argument causes
-		// a runtime error with machinery
-		return 0, err
-	})
-	server.RegisterTask("crawl_file", func(hash string) (int64, error) {
-		err := crawli.CrawlFile(hash)
+	errc := make(chan error, 1)
 
-		// Note: this is here because only giving an error argument causes
-		// a runtime error with machinery
-		return 0, err
-	})
+	hq.StartConsumer(func(params map[string]interface{}) error {
+		// TODO: Assert hash in map, ideally by using custom type
+		return crawler.CrawlHash(params["hash"].(string))
+	}, errc)
 
-	worker := server.NewWorker("crawler")
-	err = worker.Launch()
-	if err != nil {
-		// do something with the error
-		return cli.NewExitError(err.Error(), 1)
+	fq.StartConsumer(func(params map[string]interface{}) error {
+		// TODO: Assert hash in map, ideally by using custom type
+		return crawler.CrawlFile(params["hash"].(string))
+	}, errc)
+
+	// sigs := make(chan os.Signal, 1)
+	// signal.Notify(sigs, syscall.SIGQUIT)
+
+	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+
+	for {
+		select {
+		case err = <-errc:
+			log.Println(err.Error())
+		}
 	}
 
 	// No error
