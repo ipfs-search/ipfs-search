@@ -7,6 +7,7 @@ import (
 	"github.com/dokterbob/ipfs-search/queue"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"log"
+	"os"
 	"os/exec"
 )
 
@@ -167,6 +168,10 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	// Standard error to system standard error
+	cmd.Stderr = os.Stderr
+
 	if err := cmd.Start(); err != nil {
 		return err
 	}
