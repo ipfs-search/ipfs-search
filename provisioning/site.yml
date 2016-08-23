@@ -5,4 +5,5 @@
     - elasticsearch
     - rabbitmq
     - ipfs
+    - tika
     - crawler
