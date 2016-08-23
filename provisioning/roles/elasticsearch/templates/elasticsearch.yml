@@ -1,4 +1,4 @@
 # Expose elasticsearch to local (non-global) IP's
-network.host: [_site_, _local_]
-path.repo: ["/vagrant/backup", "/ipns/.local/backup"]
-repositories.url.allowed_urls: ["http://localhost:8080/ipns/QmfGgt5sixsEXRzkSm3Bk3moV3ciuoT7htcybtoen4zHmA/backup/*", "http://localhost:8080/ipns/QmfPZcnVAEjXABiA7StETRUKkS8FzNt968Z8HynbJR7oci/backup/*"]
+# network.host: [_site_, _local_]
+path.repo: ["/var/lib/elasticsearch/backup"]
+repositories.url.allowed_urls: ["http://localhost:8080/*"]

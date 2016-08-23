@@ -8,6 +8,8 @@
       apt: pkg=default-jre state=present
     - name: Install elasticsearch
       apt: pkg=elasticsearch state=latest
+    - name: Create snapshot directory
+      file: path=/var/lib/elasticsearch/backup state=directory owner=elasticsearch group=elasticsearch
     - template: src=elasticsearch.yml  dest=/etc/elasticsearch/elasticsearch.yml
       notify:
         - restart elasticsearch
