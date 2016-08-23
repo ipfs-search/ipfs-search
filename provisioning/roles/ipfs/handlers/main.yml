@@ -1,11 +1,11 @@
 - name: restart ipfs
-  service: name=ipfs state=stop
+  service: name=ipfs state=stopped
   notify:
     - unmount ipfs
     - unmount ipns
     - start ipfs
 - name: start ipfs
-  service: name=ipfs state=restarted
+  service: name=ipfs state=started
   become: true
 - name: unmount ipfs
   mount: name=/ipfs state=unmounted src=none fstype=none
