@@ -26,3 +26,5 @@ _testmain.go
 .vagrant
 
 build
+
+provisioning/*.retry
