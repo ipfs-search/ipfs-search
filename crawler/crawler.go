@@ -191,6 +191,16 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 
 // Crawl a single object, known to be a file
 func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_name string, size uint64) error {
+	indexed, err := c.id.IsIndexed(hash)
+	if err != nil {
+		return err
+	}
+
+	if indexed {
+		log.Printf("Already indexed '%s', skipping", hash)
+		return nil
+	}
+
 	log.Printf("Crawling file %s\n", hash)
 
 	metadata := make(map[string]interface{})
