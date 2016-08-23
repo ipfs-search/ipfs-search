@@ -6,4 +6,4 @@
     - rabbitmq
     - ipfs
     - tika
-    - crawler
+    - { name: crawler, tags: ['crawler'] }

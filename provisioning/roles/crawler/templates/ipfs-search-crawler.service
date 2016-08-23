@@ -1,0 +1,24 @@
+[Unit]
+Description=ipfs-search crawler daemon
+
+[Service]
+ExecStart=/usr/local/bin/ipfs-search c
+Restart=on-failure
+User=ipfs-search-crawler
+Group=ipfs-search-crawler
+DevicePolicy=closed
+DeviceAllow=/dev/fuse
+# Some or all of these give problems with fuse
+ProtectHome=true
+ProtectSystem=true
+PrivateDevices=true
+PrivateTmp=true
+MemoryLimit=64M
+# As yet unsupported security options
+#PrivateUser=true
+#ReadOnlyPaths=*
+#ReadWritePaths={{ ipfs_path }}
+#MemoryMax=512M
+
+[Install]
+WantedBy=default.target

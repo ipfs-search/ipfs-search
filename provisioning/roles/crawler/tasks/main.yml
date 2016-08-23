@@ -1,0 +1,19 @@
+---
+- name: Locally compile executable
+  local_action: >
+    command make args="chdir: ../../../"
+- block:
+  - name: Install crawler executable
+    synchronize: src=../../../build/ipfs-search.linux64 dest=/usr/local/bin/ipfs-search times=yes partial=yes archive=no
+  - template: src=ipfs-search-crawler.service dest=/etc/systemd/system/ipfs-search-crawler.service
+    register: service
+  - group: name=ipfs-search-crawler system=true state=present
+  - user: name=ipfs-search-crawler comment="ipfs-search-crawler daemon" group=ipfs-search-crawler system=true state=present home=/nonexistent shell=/usr/sbin/nologin
+  # Note: new in 2.2
+  # - systemd: daemon_reload=yes state=started name=ipfs-search-crawler enabled=yes
+  - shell: systemctl daemon-reload
+    when: service.changed
+    notify:
+    - restart ipfs-search-crawler
+  - service: name=ipfs-search-crawler enabled=yes state=started
+  become: true

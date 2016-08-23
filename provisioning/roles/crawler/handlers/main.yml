@@ -1,0 +1,4 @@
+---
+- name: restart ipfs-search-crawler
+  service: name=ipfs-search-crawler state=restarted
+  become: true
