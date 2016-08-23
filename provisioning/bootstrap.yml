@@ -1,0 +1,56 @@
+---
+- hosts: all
+
+  become: true
+
+  vars:
+  - remote_user: "{{ lookup('env','USER') }}"
+
+  tasks:
+  - name: Create user '{{ remote_user}}'
+    user: name="{{ remote_user }}" shell=/bin/bash state=present
+
+  - name: Add SSH public key to user remote
+    authorized_key:
+      user="{{ remote_user }}"
+      key="{{ lookup('file', "~/.ssh/id_rsa.pub") }}"
+
+  - name: Add remote user to sudoers
+    lineinfile:
+      "dest=/etc/sudoers
+      regexp='^{{ remote_user }} ALL'
+      line='{{ remote_user }} ALL=(ALL) NOPASSWD: ALL'
+      state=present"
+
+  - name: Disallow root SSH access
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp="^PermitRootLogin"
+      line="PermitRootLogin no"
+      state=present
+    notify:
+      - restart sshd
+
+  - name: Disallow SSH password authentication
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp="^PasswordAuthentication"
+      line="PasswordAuthentication no"
+      state=present
+    notify:
+      - restart sshd
+
+  - name: Disallow SSH GSS API authentication
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp="^GSSAPIAuthentication"
+      line="GSSAPIAuthentication no"
+      state=present
+    notify:
+      - restart sshd
+
+  handlers:
+  - name: restart sshd
+    service:
+      name=sshd
+      state=restarted
