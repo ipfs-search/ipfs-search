@@ -1,7 +1,7 @@
 ---
 - name: Locally compile executable
   local_action: >
-    command make args="chdir: ../../../"
+    command make linux64 args="chdir: ../../../"
 - block:
   - name: make sure rsync is available
     apt: name=rsync state=present
