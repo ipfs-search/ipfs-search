@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type CrawlerArgs struct {
@@ -94,6 +95,11 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 	url := hashUrl(hash)
 
 	list, err := c.sh.FileList(url)
+	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
+		// We're not recovering from protocol errors, so panic
+		panic(err)
+
+	}
 	if err != nil {
 		return err
 	}

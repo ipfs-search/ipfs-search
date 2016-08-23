@@ -2,6 +2,7 @@ package queue
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/streadway/amqp"
 	"log"
 )
@@ -83,6 +84,42 @@ func NewTaskQueue(c *TaskChannel, queue_name string) (*TaskQueue, error) {
 	return &tq, nil
 }
 
+func receive_message(worker func(interface{}) error, d *amqp.Delivery, params interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			// Reject message, don't retry
+			d.Reject(false)
+
+			var ok bool
+			err, ok = r.(error)
+
+			if !ok {
+				err = fmt.Errorf("receive panic - %T: %v", r)
+			}
+
+			return
+		}
+	}()
+
+	log.Printf("Received a message: %s", d.Body)
+
+	err = json.Unmarshal(d.Body, &params)
+	if err != nil {
+		panic(&err)
+	}
+
+	err = worker(params)
+	if err != nil {
+		// Reject, retry
+		d.Reject(true)
+		return
+	}
+
+	d.Ack(false)
+
+	return
+}
+
 func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan error) error {
 	msgs, err := t.c.ch.Consume(
 		t.q.Name, // queue
@@ -99,23 +136,10 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
-
-			err := json.Unmarshal(d.Body, &params)
+			err := receive_message(worker, &d, params)
 			if err != nil {
-				// Message is fucked up, don't retry
-				d.Reject(false)
 				errc <- err
 			}
-
-			err = worker(params)
-			if err != nil {
-				// Reject, retry
-				d.Reject(true)
-				errc <- err
-			}
-
-			d.Ack(false)
 		}
 	}()
 
