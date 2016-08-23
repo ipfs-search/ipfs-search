@@ -94,6 +94,9 @@ func crawl(c *cli.Context) error {
 	sh := shell.NewShell(IPFS_API)
 
 	el, err := get_elastic()
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
 
 	ch, err := queue.NewChannel()
 	if err != nil {
@@ -102,6 +105,10 @@ func crawl(c *cli.Context) error {
 	defer ch.Close()
 
 	hq, err := queue.NewTaskQueue(ch, "hashes")
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
 	fq, err := queue.NewTaskQueue(ch, "files")
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -122,6 +129,9 @@ func crawl(c *cli.Context) error {
 		defer ch.Close()
 
 		hq, err := queue.NewTaskQueue(ch, "hashes")
+		if err != nil {
+			return cli.NewExitError(err.Error(), 1)
+		}
 
 		hq.StartConsumer(func(params interface{}) error {
 			args := params.(*crawler.CrawlerArgs)
