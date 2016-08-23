@@ -9,9 +9,9 @@ type Indexer struct {
 }
 
 func NewIndexer(el *elastic.Client) *Indexer {
-	i := new(Indexer)
-	i.el = el
-	return i
+	return &Indexer{
+		el: el,
+	}
 }
 
 // Add file or directory to index

@@ -27,12 +27,12 @@ type Crawler struct {
 }
 
 func NewCrawler(sh *shell.Shell, id *indexer.Indexer, fq *queue.TaskQueue, hq *queue.TaskQueue) *Crawler {
-	c := new(Crawler)
-	c.sh = sh
-	c.id = id
-	c.fq = fq
-	c.hq = hq
-	return c
+	return &Crawler{
+		sh: sh,
+		id: id,
+		fq: fq,
+		hq: hq,
+	}
 }
 
 func hashUrl(hash string) string {
