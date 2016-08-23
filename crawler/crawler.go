@@ -197,7 +197,7 @@ func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_
 
 	if size > 0 {
 		var path string
-		if name != "" {
+		if name != "" && parent_hash != "" {
 			path = fmt.Sprintf("/ipfs/%s/%s", parent_hash, name)
 		} else {
 			path = fmt.Sprintf("/ipfs/%s", hash)
