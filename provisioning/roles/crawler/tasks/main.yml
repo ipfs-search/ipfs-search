@@ -3,6 +3,8 @@
   local_action: >
     command make args="chdir: ../../../"
 - block:
+  - name: make sure rsync is available
+    apt: name=rsync state=present
   - name: Install crawler executable
     synchronize: src=../../../build/ipfs-search.linux64 dest=/usr/local/bin/ipfs-search times=yes partial=yes archive=no
   - template: src=ipfs-search-crawler.service dest=/etc/systemd/system/ipfs-search-crawler.service
