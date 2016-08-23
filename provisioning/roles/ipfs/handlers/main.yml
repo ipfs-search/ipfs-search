@@ -1,6 +1,17 @@
 - name: restart ipfs
-  # Note: this should be replaced by:
-  # include: restart_ipfs.yml
-  # (or a block) - but it's note working.
+  service: name=ipfs state=stop
+  notify:
+    - unmount ipfs
+    - unmount ipns
+    - start ipfs
+- name: start ipfs
   service: name=ipfs state=restarted
   become: true
+- name: unmount ipfs
+  mount: name=/ipfs state=unmounted src=none fstype=none
+  become: true
+  when: ipfs_mount
+- name: unmount ipns
+  mount: name=/ipns state=unmounted src=none fstype=none
+  become: true
+  when: ipfs_mount

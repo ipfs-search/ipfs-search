@@ -3,11 +3,9 @@
   file: path=/ipfs owner=ipfs group=ipfs mode=775 state=directory
 - name: create /ipns mount point
   file: path=/ipns owner=ipfs group=ipfs mode=775 state=directory
-- include: fuse_unmount.yml
 - name: install fuse
   apt: name=fuse state=latest
 - name: fuse configuration
   template: src=fuse.conf dest=/etc/fuse.conf
   notify:
     - restart ipfs
-

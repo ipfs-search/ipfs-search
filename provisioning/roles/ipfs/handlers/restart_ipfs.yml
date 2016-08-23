@@ -1,8 +1,0 @@
----
-# Stub: this should be included from the restart ipfs handler but doesn't work
-- name: assure /ipfs is unmounted
-  mount: name=/ipfs state=unmounted src=none fstype=none
-- name: assure /ipns is unmounted
-  mount: name=/ipns state=unmounted src=none fstype=none
-- service: name=ipfs state=restarted
-
