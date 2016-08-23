@@ -111,7 +111,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Run Ansible from the Vagrant Host
   #
   config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "provisioning/site.yml"
+    ansible.playbook = "provisioning/ipfs-search.yml"
   end
 
   # Enable provisioning with chef server, specifying the chef server URL,
