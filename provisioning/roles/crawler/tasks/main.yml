@@ -7,6 +7,8 @@
     apt: name=rsync state=present
   - name: Install crawler executable
     synchronize: src=../../../build/ipfs-search.linux64 dest=/usr/local/bin/ipfs-search times=yes partial=yes archive=no
+    notify:
+    - restart ipfs-search-crawler
   - template: src=ipfs-search-crawler.service dest=/etc/systemd/system/ipfs-search-crawler.service
     register: service
   - group: name=ipfs-search-crawler system=true state=present
