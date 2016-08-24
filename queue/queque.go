@@ -84,45 +84,7 @@ func NewTaskQueue(c *TaskChannel, queue_name string) (*TaskQueue, error) {
 	return &tq, nil
 }
 
-func receive_message(worker func(interface{}) error, d *amqp.Delivery, params interface{}) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			// Reject message, don't retry
-			d.Reject(false)
-
-			log.Println("Panic in: %s", d.Body)
-
-			var ok bool
-			err, ok = r.(error)
-
-			if !ok {
-				err = fmt.Errorf("%T: %v", r)
-			}
-
-			return
-		}
-	}()
-
-	log.Printf("Received a message: %s", d.Body)
-
-	err = json.Unmarshal(d.Body, &params)
-	if err != nil {
-		panic(&err)
-	}
-
-	err = worker(params)
-	if err != nil {
-		// Reject, retry
-		d.Reject(true)
-		return
-	}
-
-	d.Ack(false)
-
-	return
-}
-
-func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan error) error {
+func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan error, retry bool, retry_ch *TaskChannel) error {
 	msgs, err := t.c.ch.Consume(
 		t.q.Name, // queue
 		"",       // consumer
@@ -136,12 +98,84 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 		return err
 	}
 
+	var (
+		retry_queue *TaskQueue
+		panic_queue *TaskQueue
+	)
+
+	if retry {
+		retry_queue, err = NewTaskQueue(retry_ch, t.q.Name+"-retry")
+		if err != nil {
+			return err
+		}
+
+		panic_queue, err = NewTaskQueue(retry_ch, t.q.Name+"-panic")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Task loop go routine
 	go func() {
 		for d := range msgs {
-			err := receive_message(worker, &d, params)
-			if err != nil {
-				errc <- err
-			}
+
+			// Anonymous function to catch panics without disrupting msgs loop
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						// Add to panic queue
+						if retry {
+							err := panic_queue.AddTask(params)
+							if err != nil {
+								panic(fmt.Errorf("Error '%v' requeueing after panic '%v'", err, r))
+							}
+
+							// Permanently remove message from original queue
+							d.Reject(false)
+						} else {
+							// We have no retry queue, so just add it back to the original queue
+							d.Reject(true)
+						}
+
+						log.Printf("Panic in: %s", d.Body)
+
+						var ok bool
+						err, ok = r.(error)
+
+						if !ok {
+							err = fmt.Errorf("%T: %v", r)
+						}
+
+						errc <- err
+						return
+					}
+				}()
+
+				log.Printf("Received a message: %s", d.Body)
+
+				err = json.Unmarshal(d.Body, &params)
+				if err != nil {
+					panic(&err)
+				}
+
+				err = worker(params)
+				if err != nil {
+					if retry {
+						retry_err := retry_queue.AddTask(params)
+						if retry_err != nil {
+							panic(fmt.Errorf("Error '%v' requeueing after error '%v'", retry_err, err))
+						}
+
+						d.Reject(false)
+					} else {
+						// We have not retry queue, so just add it back to the original queue
+						d.Reject(true)
+					}
+					errc <- err
+				}
+
+				d.Ack(false)
+			}()
 		}
 	}()
 

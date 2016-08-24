@@ -102,18 +102,18 @@ func crawl(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	ch, err := queue.NewChannel()
+	add_ch, err := queue.NewChannel()
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
-	defer ch.Close()
+	defer add_ch.Close()
 
-	hq, err := queue.NewTaskQueue(ch, "hashes")
+	hq, err := queue.NewTaskQueue(add_ch, "hashes")
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	fq, err := queue.NewTaskQueue(ch, "files")
+	fq, err := queue.NewTaskQueue(add_ch, "files")
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -146,7 +146,7 @@ func crawl(c *cli.Context) error {
 				args.ParentHash,
 				args.ParentName,
 			)
-		}, &crawler.CrawlerArgs{}, errc)
+		}, &crawler.CrawlerArgs{}, errc, true, add_ch)
 	}
 
 	for i := 0; i < FILE_WORKERS; i++ {
@@ -171,7 +171,7 @@ func crawl(c *cli.Context) error {
 				args.ParentName,
 				args.Size,
 			)
-		}, &crawler.CrawlerArgs{}, errc)
+		}, &crawler.CrawlerArgs{}, errc, true, add_ch)
 	}
 
 	// sigs := make(chan os.Signal, 1)
