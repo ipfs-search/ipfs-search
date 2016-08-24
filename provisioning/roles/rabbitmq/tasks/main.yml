@@ -17,7 +17,7 @@
                      state=present
                      tags=administrator
     - name: Enable rabbitmq plugins
-      rabbitmq_plugin: names=rabbitmq_management state=enabled
+      rabbitmq_plugin: names=rabbitmq_management,rabbitmq_shovel,rabbitmq_shovel_management state=enabled
       notify:
       - restart rabbitmq
   become: true
