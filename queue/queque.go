@@ -147,7 +147,6 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 						}
 
 						errc <- err
-						return
 					}
 				}()
 
