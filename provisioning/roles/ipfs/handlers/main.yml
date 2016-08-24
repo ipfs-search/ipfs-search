@@ -16,3 +16,6 @@
   mount: name=/ipns state=unmounted src=none fstype=none
   become: true
   when: ipfs_mount
+- name: update grub
+  command: update-grub
+  become: true
