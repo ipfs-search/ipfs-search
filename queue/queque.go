@@ -90,11 +90,13 @@ func receive_message(worker func(interface{}) error, d *amqp.Delivery, params in
 			// Reject message, don't retry
 			d.Reject(false)
 
+			log.Println("Panic in: %s", d.Body)
+
 			var ok bool
 			err, ok = r.(error)
 
 			if !ok {
-				err = fmt.Errorf("receive panic - %T: %v", r)
+				err = fmt.Errorf("%T: %v", r)
 			}
 
 			return
