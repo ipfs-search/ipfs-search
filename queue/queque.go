@@ -168,7 +168,7 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 
 						d.Reject(false)
 					} else {
-						// We have not retry queue, so just add it back to the original queue
+						// We have no retry queue, so just add it back to the original queue
 						d.Reject(true)
 					}
 					errc <- err
