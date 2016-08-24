@@ -123,6 +123,8 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
+						log.Printf("Panic in: %s", d.Body)
+
 						// Add to panic queue
 						if retry {
 							err := panic_queue.AddTask(params)
@@ -136,8 +138,6 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 							// We have no retry queue, so just add it back to the original queue
 							d.Reject(true)
 						}
-
-						log.Printf("Panic in: %s", d.Body)
 
 						var ok bool
 						err, ok = r.(error)
