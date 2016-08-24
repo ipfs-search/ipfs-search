@@ -1,5 +1,7 @@
 [Unit]
 Description=ipfs-search crawler daemon
+Requires=elasticsearch.service,rabbitmq-server.service
+After=elasticsearch.service,rabbitmq-server.service
 
 [Service]
 ExecStart=/usr/local/bin/ipfs-search c
