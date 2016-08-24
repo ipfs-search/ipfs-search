@@ -183,14 +183,16 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 		return err
 	}
 
+	// Timeout process after set time
+	timer := time.AfterFunc(2*time.Minute, func() {
+		log.Printf("tika timeout for '%s', killing", path)
+		cmd.Process.Kill()
+	})
+
+	// Parse resulting JSON
 	if err := json.NewDecoder(stdout).Decode(&metadata); err != nil {
 		return err
 	}
-
-	// Timeout process after set time
-	timer := time.AfterFunc(2*time.Minute, func() {
-		cmd.Process.Kill()
-	})
 
 	err = cmd.Wait()
 	timer.Stop()
