@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type CrawlerArgs struct {
@@ -186,7 +187,15 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 		return err
 	}
 
-	return cmd.Wait()
+	// Timeout process after set time
+	timer := time.AfterFunc(2*time.Minute, func() {
+		cmd.Process.Kill()
+	})
+
+	err = cmd.Wait()
+	timer.Stop()
+
+	return err
 }
 
 // Crawl a single object, known to be a file
