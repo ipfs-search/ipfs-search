@@ -4,6 +4,7 @@
     - unmount ipfs
     - unmount ipns
     - start ipfs
+  become: true
 - name: start ipfs
   service: name=ipfs state=started
   become: true
