@@ -158,7 +158,15 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 				}
 
 				err = worker(params)
-				if err != nil {
+
+				if err == nil {
+					// Everything went fine, ack the message
+					d.Ack(false)
+				} else {
+					// Send error through channel
+					errc <- err
+
+					// Requeue
 					if retry {
 						retry_err := retry_queue.AddTask(params)
 						if retry_err != nil {
@@ -170,10 +178,7 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 						// We have no retry queue, so just add it back to the original queue
 						d.Reject(true)
 					}
-					errc <- err
 				}
-
-				d.Ack(false)
 			}()
 		}
 	}()
