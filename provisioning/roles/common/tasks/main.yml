@@ -15,4 +15,7 @@
       debconf: name=tzdata question='tzdata/Areas' value='Europe' vtype='select'
     - name: Set timezone
       debconf: name=tzdata question='tzdata/Zones/Europe' value='Amsterdam' vtype='select'
+    - name: Enable memory cgroup in GRUB
+      lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX_DEFAULT' line='GRUB_CMDLINE_LINUX_DEFAULT="quiet cgroup_enable=memory swapaccount=1 "' backup=yes
+      notify: update grub
   become: true

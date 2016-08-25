@@ -35,8 +35,5 @@
     - shell: systemctl daemon-reload
       when: service.changed
       notify: restart ipfs
-    - name: enable memory cgroup in GRUB
-      lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX_DEFAULT' line='GRUB_CMDLINE_LINUX_DEFAULT="quiet cgroup_enable=memory swapaccount=1 "' backup=yes
-      notify: update grub
     - service: name=ipfs enabled=yes state=started
   become: true
