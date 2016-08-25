@@ -24,4 +24,11 @@
         value: 1
         state: present
         reload: yes
+    - name: Install misc utils
+      apt: name={{item}} state=installed
+      with_items:
+           - screen
+           - jq
+           - tree
+
   become: true
