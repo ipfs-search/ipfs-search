@@ -1,7 +1,7 @@
 [Unit]
 Description=ipfs-search crawler daemon
-Requires=elasticsearch.service,rabbitmq-server.service
-After=elasticsearch.service,rabbitmq-server.service
+Requires=elasticsearch.service rabbitmq-server.service
+After=elasticsearch.service rabbitmq-server.service
 
 [Service]
 ExecStart=/usr/local/bin/ipfs-search c
@@ -15,8 +15,10 @@ ProtectHome=true
 ProtectSystem=true
 PrivateDevices=true
 PrivateTmp=true
-MemoryLimit=64M
+MemoryAccounting=yes
+MemoryLimit=512M
 # As yet unsupported security options
+#ControlGroupAttribute=memory.swappiness 1
 #PrivateUser=true
 #ReadOnlyPaths=*
 #ReadWritePaths={{ ipfs_path }}
