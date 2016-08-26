@@ -94,8 +94,8 @@ func crawl(c *cli.Context) error {
 	// For now, assume gateway running on default host:port
 	sh := shell.NewShell(IPFS_API)
 
-	// Set 2 minute timeout on IPFS requests
-	sh.SetTimeout(2 * time.Duration(time.Minute))
+	// Set 1 minute timeout on IPFS requests
+	sh.SetTimeout(1 * time.Duration(time.Minute))
 
 	el, err := get_elastic()
 	if err != nil {
