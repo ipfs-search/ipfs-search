@@ -1,5 +1,7 @@
 ---
 - hosts: all
+  vars:
+    ipfs_mount: false
   roles:
     - { name: common, tags: ['common'] }
     - { name: elasticsearch, tags: ['elasticsearch'] }

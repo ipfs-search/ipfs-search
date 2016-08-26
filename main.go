@@ -16,7 +16,10 @@ import (
 const (
 	IPFS_API     = "localhost:5001"
 	HASH_WORKERS = 40
-	FILE_WORKERS = 4
+	FILE_WORKERS = 0
+	TIMEOUT      = 60 * time.Duration(time.Second)
+	HASH_WAIT    = time.Duration(time.Second)
+	FILE_WAIT    = HASH_WAIT
 )
 
 func main() {
@@ -95,7 +98,7 @@ func crawl(c *cli.Context) error {
 	sh := shell.NewShell(IPFS_API)
 
 	// Set 1 minute timeout on IPFS requests
-	sh.SetTimeout(1 * time.Duration(time.Minute))
+	sh.SetTimeout(TIMEOUT)
 
 	el, err := get_elastic()
 	if err != nil {
@@ -147,6 +150,10 @@ func crawl(c *cli.Context) error {
 				args.ParentName,
 			)
 		}, &crawler.CrawlerArgs{}, errc, true, add_ch)
+
+		// Start workers timeout/hash time apart
+		timer := time.NewTimer(HASH_WAIT)
+		<-timer.C
 	}
 
 	for i := 0; i < FILE_WORKERS; i++ {
@@ -172,6 +179,10 @@ func crawl(c *cli.Context) error {
 				args.Size,
 			)
 		}, &crawler.CrawlerArgs{}, errc, true, add_ch)
+
+		// Start workers timeout/hash time apart
+		timer := time.NewTimer(FILE_WAIT)
+		<-timer.C
 	}
 
 	// sigs := make(chan os.Signal, 1)

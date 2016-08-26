@@ -2,7 +2,7 @@
 Description=IPFS daemon
 
 [Service]
-ExecStart={{ ipfs_binary }} daemon --manage-fdlimit --enable-gc {{ '--mount' if ipfs_mount }}
+ExecStart={{ ipfs_binary }} daemon --manage-fdlimit --enable-gc {{ '--mount' if ipfs_mount else '' }}
 Restart=on-failure
 User=ipfs
 Group=ipfs
