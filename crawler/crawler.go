@@ -7,10 +7,18 @@ import (
 	"github.com/dokterbob/ipfs-search/queue"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"log"
+	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 	"time"
+)
+
+const (
+	// Reconnect time in seconds
+	RECONNECT_WAIT = 2
 )
 
 type CrawlerArgs struct {
@@ -79,6 +87,45 @@ func construct_references(name string, parent_hash string, parent_name string) [
 	return references
 }
 
+// Handle IPFS errors graceously, returns try again bool and original error
+func handleError(err error) (bool, error) {
+	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
+		// We're not recovering from protocol errors, so panic
+		panic(err)
+	}
+
+	if uerr, ok := err.(*url.Error); ok {
+		// URL errors
+
+		log.Printf("URL error %v", uerr)
+
+		if retry := uerr.Temporary(); retry {
+			log.Printf("Temporary error: %v", uerr)
+			return retry, nil
+		}
+
+		switch t := uerr.Err.(type) {
+		case *net.OpError:
+			if t.Op == "dial" {
+				log.Printf("Unknown host %v", t)
+				return true, nil
+
+			} else if t.Op == "read" {
+				log.Printf("Connection refused %v", t)
+				return true, nil
+			}
+
+		case syscall.Errno:
+			if t == syscall.ECONNREFUSED {
+				log.Printf("Connection refused %v", t)
+				return true, nil
+			}
+		}
+	}
+
+	return false, err
+}
+
 // Given a particular hash (file or directory), start crawling
 func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_name string) error {
 	indexed, err := c.id.IsIndexed(hash)
@@ -95,12 +142,20 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 
 	url := hashUrl(hash)
 
-	list, err := c.sh.FileList(url)
-	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
-		// We're not recovering from protocol errors, so panic
-		panic(err)
+	var list *shell.UnixLsObject
 
+	try_again := true
+	for try_again {
+		list, err = c.sh.FileList(url)
+
+		try_again, err = handleError(err)
+
+		if try_again {
+			log.Printf("Retrying in %d seconds", RECONNECT_WAIT)
+			time.Sleep(RECONNECT_WAIT * time.Duration(time.Second))
+		}
 	}
+
 	if err != nil {
 		return err
 	}
