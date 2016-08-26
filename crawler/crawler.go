@@ -99,11 +99,17 @@ func handleError(err error) (bool, error) {
 
 		log.Printf("URL error %v", uerr)
 
-		if retry := uerr.Temporary(); retry {
-			log.Printf("Temporary error: %v", uerr)
-			return retry, nil
+		if uerr.Timeout() {
+			// Fail on timeouts
+			return false, err
 		}
 
+		if uerr.Temporary() {
+			// Retry on other temp errors
+			return true, nil
+		}
+
+		// Somehow, the errors below are not temp errors !?
 		switch t := uerr.Err.(type) {
 		case *net.OpError:
 			if t.Op == "dial" {
