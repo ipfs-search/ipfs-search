@@ -152,8 +152,7 @@ func crawl(c *cli.Context) error {
 		}, &crawler.CrawlerArgs{}, errc, true, add_ch)
 
 		// Start workers timeout/hash time apart
-		timer := time.NewTimer(HASH_WAIT)
-		<-timer.C
+		time.Sleep(HASH_WAIT)
 	}
 
 	for i := 0; i < FILE_WORKERS; i++ {
@@ -181,8 +180,7 @@ func crawl(c *cli.Context) error {
 		}, &crawler.CrawlerArgs{}, errc, true, add_ch)
 
 		// Start workers timeout/hash time apart
-		timer := time.NewTimer(FILE_WAIT)
-		<-timer.C
+		time.Sleep(FILE_WAIT)
 	}
 
 	// sigs := make(chan os.Signal, 1)
