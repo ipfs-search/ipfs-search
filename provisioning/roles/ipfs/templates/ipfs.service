@@ -15,7 +15,7 @@ DeviceAllow=/dev/fuse
 #PrivateDevices=true
 #PrivateTmp=true
 MemoryAccounting=yes
-MemoryLimit=1024M
+MemoryLimit=512M
 # As yet unsupported security options
 #PrivateUser=true
 #ReadOnlyPaths=*
