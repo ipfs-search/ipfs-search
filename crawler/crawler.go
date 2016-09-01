@@ -189,7 +189,10 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 			"references": construct_references(name, parent_hash, parent_name),
 		}
 
-		c.id.IndexItem("directory", hash, properties)
+		err := c.id.IndexItem("directory", hash, properties)
+		if err != nil {
+			return err
+		}
 
 		for _, link := range list.Links {
 			args := CrawlerArgs{
@@ -293,7 +296,10 @@ func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_
 	metadata["size"] = size
 	metadata["references"] = construct_references(name, parent_hash, parent_name)
 
-	c.id.IndexItem("file", hash, metadata)
+	err = c.id.IndexItem("file", hash, metadata)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("Finished file %s", hash)
 
