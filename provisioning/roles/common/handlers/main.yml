@@ -2,3 +2,7 @@
 - name: update grub
   command: update-grub
   become: true
+- name: restart journald
+  service: name=journald state=restarted
+  become: true
+
