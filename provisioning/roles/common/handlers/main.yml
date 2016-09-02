@@ -3,6 +3,6 @@
   command: update-grub
   become: true
 - name: restart journald
-  service: name=journald state=restarted
+  service: name=systemd-journald state=restarted
   become: true
 
