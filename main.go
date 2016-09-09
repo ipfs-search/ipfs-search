@@ -23,6 +23,12 @@ const (
 )
 
 func main() {
+	// Prefix logging with filename and line number: "d.go:23"
+	// log.SetFlags(log.Lshortfile)
+
+	// Logging w/o prefix
+	log.SetFlags(0)
+
 	app := cli.NewApp()
 	app.Name = "ipfs-search"
 	app.Usage = "IPFS search engine."
