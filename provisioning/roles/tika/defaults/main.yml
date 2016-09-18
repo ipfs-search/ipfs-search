@@ -1,5 +1,0 @@
----
-tika_path: /usr/local/libexec
-tika_jar: tika-app-1.13.jar
-tika_sha1: e0649edcc26563f59f7fc37f223d83f4988d5566
-tika_mirror: http://apache.40b.nl/tika/

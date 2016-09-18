@@ -1,2 +1,0 @@
-#!/bin/bash
-exec java  -jar {{ tika_path }}/{{ tika_jar }} "$@"
