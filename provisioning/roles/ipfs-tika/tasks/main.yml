@@ -4,6 +4,7 @@
     file: path={{ ipfs_tika_path }} state=directory owner=root group=root mode=755
   - name: Download ipfs-tika
     get_url: url={{ ipfs_tika_mirror}}{{ ipfs_tika_jar }} dest={{ ipfs_tika_path }}/{{ ipfs_tika_jar }} owner=root group=root checksum="sha1:{{ ipfs_tika_sha1 }}"
+    notify: restart ipfs-tika
   - name: Create tika executable
     template: src=ipfs-tika dest=/usr/local/bin/ipfs-tika mode=755 owner=root group=root
   - group: name=ipfs-tika system=true state=present
