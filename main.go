@@ -15,10 +15,10 @@ import (
 
 const (
 	IPFS_API     = "localhost:5001"
-	HASH_WORKERS = 200
-	FILE_WORKERS = 0
-	TIMEOUT      = 120 * time.Duration(time.Second)
-	HASH_WAIT    = time.Duration(time.Second)
+	HASH_WORKERS = 100
+	FILE_WORKERS = 50
+	IPFS_TIMEOUT = 120 * time.Duration(time.Second)
+	HASH_WAIT    = time.Duration(100 * time.Millisecond)
 	FILE_WAIT    = HASH_WAIT
 )
 
@@ -104,7 +104,7 @@ func crawl(c *cli.Context) error {
 	sh := shell.NewShell(IPFS_API)
 
 	// Set 1 minute timeout on IPFS requests
-	sh.SetTimeout(TIMEOUT)
+	sh.SetTimeout(IPFS_TIMEOUT)
 
 	el, err := get_elastic()
 	if err != nil {

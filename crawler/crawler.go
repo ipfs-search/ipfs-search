@@ -8,9 +8,9 @@ import (
 	"gopkg.in/ipfs/go-ipfs-api.v1"
 	"log"
 	"net"
+	"net/http"
 	"net/url"
-	"os"
-	"os/exec"
+	// "path"
 	"strings"
 	"syscall"
 	"time"
@@ -19,6 +19,7 @@ import (
 const (
 	// Reconnect time in seconds
 	RECONNECT_WAIT = 2
+	TIKA_TIMEOUT   = 120
 )
 
 type CrawlerArgs struct {
@@ -233,33 +234,22 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 }
 
 func getMetadata(path string, metadata *map[string]interface{}) error {
-	cmd := exec.Command("tika", "-j", path)
+	const ipfs_tika_url = "http://localhost:8081"
 
-	stdout, err := cmd.StdoutPipe()
+	client := http.Client{
+		Timeout: TIKA_TIMEOUT * time.Duration(time.Second),
+	}
+
+	resp, err := client.Get(ipfs_tika_url + path)
 	if err != nil {
 		return err
 	}
-
-	// Standard error to system standard error
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	// Timeout process after set time
-	timer := time.AfterFunc(2*time.Minute, func() {
-		log.Printf("tika timeout for '%s', killing", path)
-		cmd.Process.Kill()
-	})
+	defer resp.Body.Close()
 
 	// Parse resulting JSON
-	if err := json.NewDecoder(stdout).Decode(&metadata); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&metadata); err != nil {
 		return err
 	}
-
-	err = cmd.Wait()
-	timer.Stop()
 
 	return err
 }
@@ -276,11 +266,16 @@ func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_
 		return nil
 	}
 
-	log.Printf("Crawling file %s\n", hash)
+	log.Printf("Crawling file %s (%s)\n", hash, name)
 
 	metadata := make(map[string]interface{})
 
 	if size > 0 {
+		if size > 10*1024*1024 {
+			// Fail hard for really large files, for now
+			return fmt.Errorf("%s (%s) too large, not indexing (for now).", hash, name)
+		}
+
 		var path string
 		if name != "" && parent_hash != "" {
 			path = fmt.Sprintf("/ipfs/%s/%s", parent_hash, name)
@@ -291,6 +286,29 @@ func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_
 		if err := getMetadata(path, &metadata); err != nil {
 			return err
 		}
+
+		// Check for IPFS links in content
+		/*
+			for raw_url := range metadata.urls {
+				url, err := URL.Parse(raw_url)
+
+				if err != nil {
+					return err
+				}
+
+				if strings.HasPrefix(url.Path, "/ipfs/") {
+					// Found IPFS link!
+					args := CrawlerArgs{
+						Hash:       link.Hash,
+						Name:       link.Name,
+						Size:       link.Size,
+						ParentHash: hash,
+						ParentName: name,
+					}
+
+				}
+			}
+		*/
 	}
 
 	metadata["size"] = size
