@@ -1,7 +1,7 @@
 [Unit]
 Description=ipfs-search crawler daemon
-Requires=elasticsearch.service rabbitmq-server.service
-After=elasticsearch.service rabbitmq-server.service
+Requires=elasticsearch.service rabbitmq-server.service ipfs.service ipfs-tika.service
+After=elasticsearch.service rabbitmq-server.service ipfs.service ipfs-tika.service
 
 [Service]
 ExecStart=/usr/local/bin/ipfs-search c
