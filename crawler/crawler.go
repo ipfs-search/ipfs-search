@@ -254,6 +254,10 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Undesired status '%s' from ipfs-tika.", resp.Status)
+	}
+
 	// Parse resulting JSON
 	if err := json.NewDecoder(resp.Body).Decode(&metadata); err != nil {
 		return err
