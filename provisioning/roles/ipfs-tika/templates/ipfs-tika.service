@@ -1,5 +1,7 @@
 [Unit]
 Description=IPFS Tika daemon
+Requires=ipfs.service
+After=ipfs.service
 
 [Service]
 ExecStart=/usr/bin/java -jar /usr/local/libexec/ipfs-tika-0.1-jar-with-dependencies.jar
