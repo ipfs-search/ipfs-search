@@ -1,0 +1,2 @@
+#!/bin/bash
+exec java  -jar {{ ipfs_tika_path }}/{{ ipfs_tika_jar }} "$@"

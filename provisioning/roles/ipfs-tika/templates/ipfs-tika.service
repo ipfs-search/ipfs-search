@@ -1,0 +1,11 @@
+[Unit]
+Description=IPFS Tika daemon
+
+[Service]
+ExecStart=/usr/bin/java -jar /usr/local/libexec/ipfs-tika-0.1-jar-with-dependencies.jar
+Restart=on-failure
+User=ipfs-tika
+Group=ipfs-tika
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,19 @@
+---
+- block:
+  - name: Create libexec directory
+    file: path={{ ipfs_tika_path }} state=directory owner=root group=root mode=755
+  - name: Download ipfs-tika
+    get_url: url={{ ipfs_tika_mirror}}{{ ipfs_tika_jar }} dest={{ ipfs_tika_path }}/{{ ipfs_tika_jar }} owner=root group=root checksum="sha1:{{ ipfs_tika_sha1 }}"
+  - name: Create tika executable
+    template: src=ipfs-tika dest=/usr/local/bin/ipfs-tika mode=755 owner=root group=root
+  - group: name=ipfs-tika system=true state=present
+  - user: name=ipfs-tika comment="IPFS tika daemon" group=ipfs system=true state=present home="/nonexistent" shell=/usr/sbin/nologin
+  - template: src=ipfs-tika.service dest=/etc/systemd/system/ipfs-tika.service
+    register: service
+  # Note: new in 2.2
+  # - systemd: daemon_reload=yes state=started name=ipfs enabled=yes
+  - shell: systemctl daemon-reload
+    when: service.changed
+    notify: restart ipfs-tika
+  - service: name=ipfs-tika enabled=yes state=started
+  become: true

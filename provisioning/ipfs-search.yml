@@ -7,4 +7,5 @@
     - { name: elasticsearch, tags: ['elasticsearch'] }
     - { name: rabbitmq, tags: ['rabbitmq'] }
     - { name: ipfs, tags: ['ipfs'] }
+    - { name: ipfs-tika, tags: ['ipfs-tika'] }
     - { name: crawler, tags: ['crawler'] }
