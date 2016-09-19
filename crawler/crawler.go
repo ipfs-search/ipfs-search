@@ -89,9 +89,17 @@ func construct_references(name string, parent_hash string, parent_name string) [
 }
 
 // Handle IPFS errors graceously, returns try again bool and original error
-func handleError(err error) (bool, error) {
+func (c Crawler) handleError(err error, hash string) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
 		// We're not recovering from protocol errors, so panic
+
+		// Attempt to index panic to prevent re-indexing
+		metadata := map[string]interface{}{
+			"error": err.Error(),
+		}
+
+		c.id.IndexItem("invalid", hash, metadata)
+
 		panic(err)
 	}
 
@@ -155,7 +163,7 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 	for try_again {
 		list, err = c.sh.FileList(url)
 
-		try_again, err = handleError(err)
+		try_again, err = c.handleError(err, hash)
 
 		if try_again {
 			log.Printf("Retrying in %d seconds", RECONNECT_WAIT)
@@ -283,7 +291,19 @@ func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_
 			path = fmt.Sprintf("/ipfs/%s", hash)
 		}
 
-		if err := getMetadata(path, &metadata); err != nil {
+		try_again := true
+		for try_again {
+			err = getMetadata(path, &metadata)
+
+			try_again, err = c.handleError(err, hash)
+
+			if try_again {
+				log.Printf("Retrying in %d seconds", RECONNECT_WAIT)
+				time.Sleep(RECONNECT_WAIT * time.Duration(time.Second))
+			}
+		}
+
+		if err != nil {
 			return err
 		}
 
