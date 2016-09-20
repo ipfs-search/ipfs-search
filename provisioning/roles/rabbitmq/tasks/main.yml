@@ -18,6 +18,8 @@
                      tags=administrator
     - name: Enable rabbitmq plugins
       rabbitmq_plugin: names=rabbitmq_management,rabbitmq_shovel,rabbitmq_shovel_management state=enabled
-      notify:
-      - restart rabbitmq
+      notify: restart rabbitmq
+    - name: Configuration file
+      template: src=rabbitmq.config dest=/etc/rabbitmq/rabbitmq.config
+      notify: restart rabbitmq
   become: true
