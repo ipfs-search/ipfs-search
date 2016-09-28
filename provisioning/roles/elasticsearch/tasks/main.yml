@@ -10,7 +10,10 @@
       apt: pkg=elasticsearch state=latest
     - name: Create snapshot directory
       file: path=/var/lib/elasticsearch/backup state=directory owner=elasticsearch group=elasticsearch
-    - template: src=elasticsearch.yml  dest=/etc/elasticsearch/elasticsearch.yml
+    - template: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml
+      notify:
+        - restart elasticsearch
+    - template: src=logging.yml dest=/etc/elasticsearch/logging.yml
       notify:
         - restart elasticsearch
     - name: Enable elasticsearch service
