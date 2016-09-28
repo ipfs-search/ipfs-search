@@ -15,8 +15,8 @@ import (
 
 const (
 	IPFS_API     = "localhost:5001"
-	HASH_WORKERS = 100
-	FILE_WORKERS = 50
+	HASH_WORKERS = 140
+	FILE_WORKERS = 70
 	IPFS_TIMEOUT = 120 * time.Duration(time.Second)
 	HASH_WAIT    = time.Duration(100 * time.Millisecond)
 	FILE_WAIT    = HASH_WAIT
