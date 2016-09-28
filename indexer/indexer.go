@@ -22,7 +22,7 @@ func (i Indexer) IndexItem(doctype string, hash string, properties map[string]in
 		Id(hash).
 		Doc(properties).
 		DocAsUpsert(true).
-		Refresh(true).
+		Refresh(false).
 		Do()
 
 	if err != nil {
