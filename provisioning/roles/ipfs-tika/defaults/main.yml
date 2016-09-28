@@ -1,5 +1,5 @@
 ---
 ipfs_tika_path: /usr/local/libexec
 ipfs_tika_jar: ipfs-tika-0.1-jar-with-dependencies.jar
-ipfs_tika_sha1: 96519bc5f6cfd751b782d13ef9c6536df980d0db
-ipfs_tika_mirror: http://localhost:8080/ipfs/QmeCYnWsgh5jmKMmVPNoDs8FiqZ9KQAZzZoF3fVC9H8Az7/
+ipfs_tika_sha1: 20b797b819085b68d97d9995ec7f0e0a1d733080
+ipfs_tika_mirror: http://localhost:8080/ipfs/QmeNVPUuRDqrZu1YEg4FnzKyHRyLXuSHRySKE4zrRiyXr5/
