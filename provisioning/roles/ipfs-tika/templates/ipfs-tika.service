@@ -8,6 +8,8 @@ ExecStart=/usr/bin/java -Xmx256m -jar /usr/local/libexec/ipfs-tika-0.1-jar-with-
 Restart=on-failure
 User=ipfs-tika
 Group=ipfs-tika
+MemoryAccounting=yes
+MemoryLimit=512M
 
 [Install]
 WantedBy=default.target
