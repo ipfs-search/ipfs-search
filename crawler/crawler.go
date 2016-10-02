@@ -127,13 +127,12 @@ func (c Crawler) handleError(err error, hash string) (bool, error) {
 	return false, err
 }
 
-// Given a particular hash (file or directory), start crawling
-func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_name string) error {
+func (c Crawler) index_references(hash string, name string, parent_hash string) ([]indexer.Reference, bool, error) {
 	var references []indexer.Reference
 
 	references, item_type, err := c.id.GetReferences(hash)
 	if err != nil {
-		return err
+		return nil, false, err
 	}
 
 	if references != nil {
@@ -150,13 +149,13 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 
 			err := c.id.IndexItem(item_type, hash, properties)
 			if err != nil {
-				return err
+				return nil, false, err
 			}
 		} else {
 			log.Printf("Not updating references for '%s'", hash)
 		}
 
-		return nil
+		return references, true, nil
 	} else {
 		// Initialize references
 		references = []indexer.Reference{
@@ -164,6 +163,21 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 				Name:       name,
 				ParentHash: parent_hash,
 			}}
+	}
+
+	return references, false, nil
+}
+
+// Given a particular hash (file or directory), start crawling
+func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_name string) error {
+	references, already_indexed, err := c.index_references(hash, name, parent_hash)
+
+	if err != nil {
+		return err
+	}
+
+	if already_indexed {
+		return nil
 	}
 
 	log.Printf("Crawling hash '%s' (%s)", hash, name)
@@ -280,42 +294,14 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 
 // Crawl a single object, known to be a file
 func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_name string, size uint64) error {
-	/* Note: huge duplicaiton with hash crawl code. */
-	var references []indexer.Reference
+	references, already_indexed, err := c.index_references(hash, name, parent_hash)
 
-	references, item_type, err := c.id.GetReferences(hash)
 	if err != nil {
 		return err
 	}
 
-	if references != nil {
-		log.Printf("Already indexed '%s'.", hash)
-
-		references, references_updated := update_references(references, name, parent_hash)
-
-		if references_updated {
-			log.Printf("Updating references for '%s'.", hash)
-
-			properties := map[string]interface{}{
-				"references": references,
-			}
-
-			err := c.id.IndexItem(item_type, hash, properties)
-			if err != nil {
-				return err
-			}
-		} else {
-			log.Printf("Not updating references for '%s'", hash)
-		}
-
+	if already_indexed {
 		return nil
-	} else {
-		// Initialize references
-		references = []indexer.Reference{
-			{
-				Name:       name,
-				ParentHash: parent_hash,
-			}}
 	}
 
 	log.Printf("Crawling file %s (%s)\n", hash, name)
