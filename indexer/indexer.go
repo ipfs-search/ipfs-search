@@ -50,7 +50,6 @@ func (i Indexer) GetReferences(hash string) ([]Reference, string, error) {
 
 	if err != nil {
 		if elastic.IsNotFound(err) {
-			log.Printf("%s not found, adding", hash)
 			return nil, "", nil
 		}
 		return nil, "", err
@@ -63,14 +62,4 @@ func (i Indexer) GetReferences(hash string) ([]Reference, string, error) {
 	}
 
 	return result["references"], res.Type, nil
-
-	// references, ok := result["references"]
-
-	// if !ok {
-	// 	return nil, "", fmt.Errorf("Field references not found for result: %s", res.Source)
-	// }
-
-	// fmt.Printf("References: %v", result)
-
-	// return references.([]Reference), res.Type, nil
 }
