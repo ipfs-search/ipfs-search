@@ -1,11 +1,18 @@
 package indexer
 
 import (
+	"encoding/json"
 	"gopkg.in/olivere/elastic.v3"
+	"log"
 )
 
 type Indexer struct {
 	el *elastic.Client
+}
+
+type Reference struct {
+	ParentHash string `json:"parent_hash"`
+	Name       string `json:"name"`
 }
 
 func NewIndexer(el *elastic.Client) *Indexer {
@@ -33,8 +40,37 @@ func (i Indexer) IndexItem(doctype string, hash string, properties map[string]in
 	return nil
 }
 
-// Whether or not an object exists in index
-func (i Indexer) IsIndexed(hash string) (bool, error) {
-	return i.el.Exists().
-		Index("ipfs").Type("_all").Id(hash).Do()
+// Return existing references for an object, or nil, and the type
+func (i Indexer) GetReferences(hash string) ([]Reference, string, error) {
+	fsc := elastic.NewFetchSourceContext(true)
+	fsc.Include("references")
+
+	res, err := i.el.Get().
+		Index("ipfs").Type("_all").FetchSourceContext(fsc).Id(hash).Do()
+
+	if err != nil {
+		if elastic.IsNotFound(err) {
+			log.Printf("%s not found, adding", hash)
+			return nil, "", nil
+		}
+		return nil, "", err
+	}
+
+	var result map[string][]Reference
+	err = json.Unmarshal(*res.Source, &result)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return result["references"], res.Type, nil
+
+	// references, ok := result["references"]
+
+	// if !ok {
+	// 	return nil, "", fmt.Errorf("Field references not found for result: %s", res.Source)
+	// }
+
+	// fmt.Printf("References: %v", result)
+
+	// return references.([]Reference), res.Type, nil
 }

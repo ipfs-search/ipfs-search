@@ -27,7 +27,7 @@ type CrawlerArgs struct {
 	Name       string
 	Size       uint64
 	ParentHash string
-	ParentName string
+	ParentName string // This is legacy, should be removed
 }
 
 type Crawler struct {
@@ -50,42 +50,28 @@ func hashUrl(hash string) string {
 	return fmt.Sprintf("/ipfs/%s", hash)
 }
 
-// Helper function for creating reference structure
-/*
-	'<hash>': {
-		'references': {
-			[{
-				'parent_hash'
-				'hash'
-				'name'
-			}, ]
+// Update references with name, parent_hash and parent_name. Returns true when updated
+func update_references(references []indexer.Reference, name string, parent_hash string) ([]indexer.Reference, bool) {
+	if parent_hash == "" {
+		// No parent hash, don't bother adding reference
+		return references, false
+	}
+
+	for i := range references {
+		if references[i].ParentHash == parent_hash {
+			log.Printf("Reference '%s' for %s exists, not updating", name, parent_hash)
+			return references, false
 		}
 	}
 
-	if (document_exists) {
-		if (references_exists) {
-			add_parent_hash to references
-		} else {
-			add references to document
-		}
-	} else {
-		create document with references as only information
-	}
-*/
-func construct_references(name string, parent_hash string, parent_name string) []map[string]interface{} {
-	references := []map[string]interface{}{}
+	log.Printf("Adding reference '%s' for %s", name, parent_hash)
 
-	if name != "" {
-		references = []map[string]interface{}{
-			{
-				"name":        name,
-				"parent_hash": parent_hash,
-				"parent_name": parent_name,
-			},
-		}
-	}
+	references = append(references, indexer.Reference{
+		Name:       name,
+		ParentHash: parent_hash,
+	})
 
-	return references
+	return references, true
 }
 
 // Handle IPFS errors graceously, returns try again bool and original error
@@ -143,14 +129,41 @@ func (c Crawler) handleError(err error, hash string) (bool, error) {
 
 // Given a particular hash (file or directory), start crawling
 func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_name string) error {
-	indexed, err := c.id.IsIndexed(hash)
+	var references []indexer.Reference
+
+	references, item_type, err := c.id.GetReferences(hash)
 	if err != nil {
 		return err
 	}
 
-	if indexed {
-		log.Printf("Already indexed '%s', skipping", hash)
+	if references != nil {
+		log.Printf("Already indexed '%s'.", hash)
+
+		references, references_updated := update_references(references, name, parent_hash)
+
+		if references_updated {
+			log.Printf("Updating references for '%s'.", hash)
+
+			properties := map[string]interface{}{
+				"references": references,
+			}
+
+			err := c.id.IndexItem(item_type, hash, properties)
+			if err != nil {
+				return err
+			}
+		} else {
+			log.Printf("Not updating references for '%s'", hash)
+		}
+
 		return nil
+	} else {
+		// Initialize references
+		references = []indexer.Reference{
+			{
+				Name:       name,
+				ParentHash: parent_hash,
+			}}
 	}
 
 	log.Printf("Crawling hash '%s' (%s)", hash, name)
@@ -195,7 +208,7 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 		properties := map[string]interface{}{
 			"links":      list.Links,
 			"size":       list.Size,
-			"references": construct_references(name, parent_hash, parent_name),
+			"references": references,
 		}
 
 		err := c.id.IndexItem("directory", hash, properties)
@@ -209,7 +222,6 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 				Name:       link.Name,
 				Size:       link.Size,
 				ParentHash: hash,
-				ParentName: name,
 			}
 
 			switch link.Type {
@@ -268,14 +280,42 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 
 // Crawl a single object, known to be a file
 func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_name string, size uint64) error {
-	indexed, err := c.id.IsIndexed(hash)
+	/* Note: huge duplicaiton with hash crawl code. */
+	var references []indexer.Reference
+
+	references, item_type, err := c.id.GetReferences(hash)
 	if err != nil {
 		return err
 	}
 
-	if indexed {
-		log.Printf("Already indexed '%s', skipping", hash)
+	if references != nil {
+		log.Printf("Already indexed '%s'.", hash)
+
+		references, references_updated := update_references(references, name, parent_hash)
+
+		if references_updated {
+			log.Printf("Updating references for '%s'.", hash)
+
+			properties := map[string]interface{}{
+				"references": references,
+			}
+
+			err := c.id.IndexItem(item_type, hash, properties)
+			if err != nil {
+				return err
+			}
+		} else {
+			log.Printf("Not updating references for '%s'", hash)
+		}
+
 		return nil
+	} else {
+		// Initialize references
+		references = []indexer.Reference{
+			{
+				Name:       name,
+				ParentHash: parent_hash,
+			}}
 	}
 
 	log.Printf("Crawling file %s (%s)\n", hash, name)
@@ -327,7 +367,6 @@ func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_
 						Name:       link.Name,
 						Size:       link.Size,
 						ParentHash: hash,
-						ParentName: name,
 					}
 
 				}
@@ -336,7 +375,7 @@ func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_
 	}
 
 	metadata["size"] = size
-	metadata["references"] = construct_references(name, parent_hash, parent_name)
+	metadata["references"] = references
 
 	err = c.id.IndexItem("file", hash, metadata)
 	if err != nil {
