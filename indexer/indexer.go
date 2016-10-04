@@ -3,7 +3,6 @@ package indexer
 import (
 	"encoding/json"
 	"gopkg.in/olivere/elastic.v3"
-	"log"
 )
 
 type Indexer struct {
