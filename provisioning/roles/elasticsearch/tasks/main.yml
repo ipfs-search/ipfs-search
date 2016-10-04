@@ -16,6 +16,10 @@
     - template: src=logging.yml dest=/etc/elasticsearch/logging.yml
       notify:
         - restart elasticsearch
+    - name: Increase elasticsearch heap size
+      lineinfile: dest=/etc/default/elasticsearch regexp='^#?ES_HEAP_SIZE' line='ES_HEAP_SIZE="2g"' backup=yes
+      notify:
+        - restart elasticsearch
     - name: Enable elasticsearch service
       service: name=elasticsearch enabled=yes state=started
   become: true
