@@ -18,8 +18,9 @@ import (
 
 const (
 	// Reconnect time in seconds
-	RECONNECT_WAIT = 2
-	TIKA_TIMEOUT   = 120
+	RECONNECT_WAIT    = 2
+	TIKA_TIMEOUT      = 120
+	METADATA_MAX_SIZE = 50 * 1024 * 1024
 )
 
 type CrawlerArgs struct {
@@ -309,7 +310,7 @@ func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_
 	metadata := make(map[string]interface{})
 
 	if size > 0 {
-		if size > 10*1024*1024 {
+		if size > METADATA_MAX_SIZE {
 			// Fail hard for really large files, for now
 			return fmt.Errorf("%s (%s) too large, not indexing (for now).", hash, name)
 		}
