@@ -36,5 +36,5 @@
       when: service.changed
       notify: restart ipfs
     - service: name=ipfs enabled=yes state=started
-    - cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="12" hour="*/6" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"
+    - cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="*/22" hour="*" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"
   become: true
