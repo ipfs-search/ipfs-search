@@ -1,0 +1,229 @@
+PUT /ipfs_v3
+{
+    "settings": {
+        "index": {
+            "codec": "best_compression",
+            "refresh_interval": 600
+        }
+    },
+    "mappings": {
+        "_default_": {
+            "_all": {
+                "enabled": true
+            },
+            "dynamic_templates": [
+                {
+                    "default_noindex": {
+                        "match": "*",
+                        "mapping": {
+                            "index": "no",
+                            "doc_values": false,
+                            "include_in_all": false
+                        }
+                    }
+                }
+            ]
+        },
+        "invalid": {
+            "properties": {
+               "error": {
+                  "type": "string",
+                  "index": "not_analyzed",
+                  "doc_values": true
+               }
+            }
+        },
+        "file": {
+            "dynamic":      "false",
+            "properties": {
+                "content":  {
+                    "type": "string",
+                    "index": "analyzed",
+                    "include_in_all": true
+                },
+                "metadata":  {
+                    "type":     "object",
+                    "dynamic":  true,
+                    "properties": {
+                        "title" : {
+                            "type": "string",
+                            "index": "analyzed",
+                            "boost": 2,
+                            "include_in_all": true
+                        },
+                        "name": {
+                            "type": "string",
+                            "index": "analyzed",
+                            "boost": 2,
+                            "include_in_all": true
+                        },
+                        "author": {
+                            "type": "string",
+                            "index": "analyzed",
+                            "include_in_all": true
+                        },
+                        "description": {
+                            "type": "string",
+                            "index": "analyzed",
+                            "boost": 1.5,
+                            "include_in_all": true
+                        },
+                        "producer": {
+                            "type": "string",
+                            "index": "analyzed",
+                            "include_in_all": true
+                        },
+                        "publisher": {
+                            "type": "string",
+                            "index": "analyzed",
+                            "include_in_all": true
+                        },
+                        "isbn": {
+                            "type": "string",
+                            "index": "not_analyzed",
+                            "include_in_all": true
+                        },
+                        "language": {
+                            "type": "string",
+                            "index": "not_analyzed",
+                            "include_in_all": true,
+                            "doc_values": true
+                        },
+                        "keywords": {
+                           "type": "string",
+                            "index": "analyzed",
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "xmpDM:album": {
+                           "type": "string",
+                            "index": "analyzed",
+                            "include_in_all": true,
+                            "boost": 1.5
+                        },
+                        "xmpDM:albumArtist": {
+                           "type": "string",
+                            "index": "analyzed",
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "xmpDM:artist": {
+                            "index": "analyzed",
+                            "type": "string",
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "xmpDM:composer": {
+                            "index": "analyzed",
+                           "type": "string",
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "Content-Type": {
+                            "type": "string",
+                            "index": "not_analyzed",
+                            "doc_values": true
+                        },
+                        "date": {
+                            "type": "date",
+                            "format": "strict_date_optional_time||epoch_millis",
+                            "index": "not_analyzed",
+                            "doc_values": true
+                        },
+                        "modified": {
+                            "type": "date",
+                            "format": "strict_date_optional_time||epoch_millis",
+                            "index": "not_analyzed",
+                            "doc_values": true
+                        }
+                    }
+                },
+                "urls": {
+                    "type": "string",
+                    "index": "not_analyzed",
+                    "include_in_all": true,
+                    "doc_values": true
+                },
+                "size": {
+                    "type": "long",
+                    "ignore_malformed": true,
+                    "index": "not_analyzed",
+                    "doc_values": true
+                },
+                "references":  {
+                    "type":     "object",
+                    "dynamic":  true,
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "index": "analyzed",
+                            "boost": 2,
+                            "include_in_all": true
+                        },
+                        "hash": {
+                            "type": "string",
+                            "index": "not_analyzed",
+                            "include_in_all": true
+                        }
+                    }
+                }
+            }
+        },
+        "directory": {
+            "dynamic":      "strict",
+            "properties": {
+                "links":  {
+                    "type":     "object",
+                    "dynamic":  true,
+                    "properties": {
+                        "Hash": {
+                           "type": "string",
+                            "include_in_all": true,
+                            "boost": 0.5,
+                            "index": "not_analyzed"
+                        },
+                        "Name": {
+                           "type": "string",
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "Size": {
+                           "type": "long",
+                           "doc_values": true,
+                           "include_in_all": false
+                        },
+                        "Type": {
+                           "type": "string",
+                           "doc_values": true,
+                           "include_in_all": false,
+                            "index": "not_analyzed"
+                        }
+                     }
+                },
+                "size": {
+                    "type": "long",
+                    "ignore_malformed": true,
+                    "index": "not_analyzed",
+                    "doc_values": true
+                },
+                "references":  {
+                    "type":     "object",
+                    "dynamic":  true,
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "index": "analyzed",
+                            "boost": 2,
+                            "include_in_all": true
+                        },
+                        "hash": {
+                            "type": "string",
+                            "index": "not_analyzed",
+                            "include_in_all": true
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
