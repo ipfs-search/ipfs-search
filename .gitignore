@@ -29,3 +29,4 @@ build
 
 provisioning/*.retry
 backup
+node_modules

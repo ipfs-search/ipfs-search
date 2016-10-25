@@ -1,0 +1,12 @@
+{
+  "name": "ipfs-search-front",
+  "version": "0.0.1",
+  "description": "Frontend for IPFS search.",
+  "main": "ipfs-search-front.js",
+  "author": "Mathijs de Bruin <mathijs@mathijsfietst.nl> (http://mathijsfietst.nl/)",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "elasticsearch": "^11.0.1",
+    "mustache": "^2.2.1"
+  }
+}
