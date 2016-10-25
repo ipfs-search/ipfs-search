@@ -155,7 +155,7 @@ func crawl(c *cli.Context) error {
 				args.ParentHash,
 				args.ParentName,
 			)
-		}, &crawler.CrawlerArgs{}, errc, true, add_ch)
+		}, &crawler.CrawlerArgs{}, errc)
 
 		// Start workers timeout/hash time apart
 		time.Sleep(HASH_WAIT)
@@ -183,7 +183,7 @@ func crawl(c *cli.Context) error {
 				args.ParentName,
 				args.Size,
 			)
-		}, &crawler.CrawlerArgs{}, errc, true, add_ch)
+		}, &crawler.CrawlerArgs{}, errc)
 
 		// Start workers timeout/hash time apart
 		time.Sleep(FILE_WAIT)

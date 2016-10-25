@@ -84,7 +84,7 @@ func NewTaskQueue(c *TaskChannel, queue_name string) (*TaskQueue, error) {
 	return &tq, nil
 }
 
-func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan error, retry bool, retry_ch *TaskChannel) error {
+func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan error) error {
 	msgs, err := t.c.ch.Consume(
 		t.q.Name, // queue
 		"",       // consumer
@@ -98,23 +98,6 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 		return err
 	}
 
-	var (
-		retry_queue *TaskQueue
-		panic_queue *TaskQueue
-	)
-
-	if retry {
-		retry_queue, err = NewTaskQueue(retry_ch, t.q.Name+"-retry")
-		if err != nil {
-			return err
-		}
-
-		panic_queue, err = NewTaskQueue(retry_ch, t.q.Name+"-panic")
-		if err != nil {
-			return err
-		}
-	}
-
 	// Task loop go routine
 	go func() {
 		for d := range msgs {
@@ -125,19 +108,8 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 					if r := recover(); r != nil {
 						log.Printf("Panic in: %s", d.Body)
 
-						// Add to panic queue
-						if retry {
-							err := panic_queue.AddTask(params)
-							if err != nil {
-								panic(fmt.Errorf("Error '%v' requeueing after panic '%v'", err, r))
-							}
-
-							// Permanently remove message from original queue
-							d.Reject(false)
-						} else {
-							// We have no retry queue, so just add it back to the original queue
-							d.Reject(true)
-						}
+						// Permanently remove message from original queue
+						d.Reject(false)
 
 						var ok bool
 						err, ok = r.(error)
@@ -166,18 +138,8 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 					// Send error through channel
 					errc <- err
 
-					// Requeue
-					if retry {
-						retry_err := retry_queue.AddTask(params)
-						if retry_err != nil {
-							panic(fmt.Errorf("Error '%v' requeueing after error '%v'", retry_err, err))
-						}
-
-						d.Reject(false)
-					} else {
-						// We have no retry queue, so just add it back to the original queue
-						d.Reject(true)
-					}
+					// Don't retry
+					d.Reject(false)
 				}
 			}()
 		}
