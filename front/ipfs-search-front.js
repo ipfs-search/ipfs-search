@@ -10,7 +10,7 @@ var client = new elasticsearch.Client({
   log: 'trace'
 });
 
-function query(q, page) {
+function query(q, page, page_size) {
   var body = {
       "query": {
           "query_string": {
@@ -34,13 +34,11 @@ function query(q, page) {
       ]
   }
 
-  const size = 15;
-
   return client.search({
     index: 'ipfs',
     body: body,
-    size: size,
-    from: page*size
+    size: page_size,
+    from: page*page_size
   });
 }
 
@@ -84,7 +82,7 @@ function get_title(result) {
 
     metadata_priority.forEach(function (item) {
       if (src.metadata[item]) {
-        titles.push(src.metadata[item]);
+        titles.push(src.metadata[item][0]);
       }
     });
   }
@@ -92,7 +90,7 @@ function get_title(result) {
   // Try references
   src.references.forEach(function (item) {
     if (item.name) {
-      titles.push(item.name);
+      titles.push(item.name[0]);
     }
   });
 
@@ -111,17 +109,17 @@ function get_description(result) {
   // Use highlights, if available
   if (result.highlight) {
     if (result.highlight.content) {
-      return result.highlight.content;
+      return result.highlight.content[0];
     }
 
     if (result.highlight["links.Name"]) {
       // Reference name matching
-      return "Links to &ldquo;"+result.highlight["links.Name"]+"&rdquo;";
+      return "Links to &ldquo;"+result.highlight["links.Name"][0]+"&rdquo;";
     }
 
     if (result.highlight["links.Hash"]) {
       // Reference name matching
-      return "Links to &ldquo;"+result.highlight["links.Hash"]+"&rdquo;";
+      return "Links to &ldquo;"+result.highlight["links.Hash"][0]+"&rdquo;";
     }
   }
 
@@ -129,7 +127,7 @@ function get_description(result) {
   if (metadata) {
     // Description, if available
     if (metadata.description) {
-      return htmlEncode.htmlEncode(metadata.description);
+      return htmlEncode.htmlEncode(metadata.description[0]);
     }
 
   }
@@ -156,6 +154,7 @@ function transform_results(results) {
 console.info("Starting server on http://localhost:"+port+"/");
 
 http.createServer(function(request, response) {
+  const page_size = 15;
   var parsed_url;
 
   try {
@@ -184,7 +183,7 @@ http.createServer(function(request, response) {
         }
       }
 
-      query(parsed_url.query.q, page).then(function (body) {
+      query(parsed_url.query.q, page, page_size).then(function (body) {
         console.info("200: Returning "+body.hits.hits.length+" results");
 
         transform_results(body.hits);
