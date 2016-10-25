@@ -10,7 +10,7 @@ var client = new elasticsearch.Client({
   log: 'trace'
 });
 
-function query(q) {
+function query(q, page) {
   var body = {
       "query": {
           "query_string": {
@@ -34,9 +34,13 @@ function query(q) {
       ]
   }
 
+  const size = 15;
+
   return client.search({
     index: 'ipfs',
-    body: body
+    body: body,
+    size: size,
+    from: page*size
   });
 }
 
@@ -168,7 +172,19 @@ http.createServer(function(request, response) {
         error_response(response, 422, "query argument missing");
       }
 
-      query(parsed_url.query['q']).then(function (body) {
+      var page = 0;
+      const max_page = 100;
+
+      if ("page" in parsed_url.query) {
+        var page = parseInt(parsed_url.query.page, 10);
+
+        // For performance reasons, don't allow paging too far down
+        if (page > 100) {
+          error_response(422, "paging not allowed beyond 100");
+        }
+      }
+
+      query(parsed_url.query.q, page).then(function (body) {
         console.info("200: Returning "+body.hits.hits.length+" results");
 
         transform_results(body.hits);
