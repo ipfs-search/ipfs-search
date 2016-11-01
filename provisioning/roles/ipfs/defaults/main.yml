@@ -1,6 +1,6 @@
 ---
-binary_url: "https://dist.ipfs.io/go-ipfs/v0.4.3/go-ipfs_v0.4.3_linux-amd64.tar.gz"
-binary_hash: "2f6abe6333cb6beabc2b7909c6c3e4a32080db4d94db0ec261a122fe8ee72a1a"
+binary_url: "https://dist.ipfs.io/go-ipfs/v0.4.4/go-ipfs_v0.4.4_linux-amd64.tar.gz"
+binary_hash: "32ea77ba170b86cafc62f9ad48f551a2a6db2f5792b678d048aeea50205e7a25"
 ipfs_path: "/var/lib/ipfs"
 ipfs_binary: "/usr/local/bin/ipfs"
 peer_id: "QmfPZcnVAEjXABiA7StETRUKkS8FzNt968Z8HynbJR7oci"
