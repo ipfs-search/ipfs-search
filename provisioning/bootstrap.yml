@@ -1,4 +1,5 @@
 ---
+- include: python2.yml
 - hosts: all
 
   become: true
@@ -54,3 +55,4 @@
     service:
       name=sshd
       state=restarted
+- include: ipfs-search.yml

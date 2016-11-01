@@ -1,3 +1,2 @@
 - name: restart ipfs
   systemd: name=ipfs daemon_reload=yes state=restarted
-  become: true

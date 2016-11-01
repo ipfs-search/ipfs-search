@@ -1,9 +1,10 @@
 ---
+- include: python2.yml
 - hosts: all
   become: true
   roles:
     - { name: common, tags: ['common'] }
-    - { name: elasticsearch, tags: ['elasticsearch'], es_heap_size: 2g }
+    - { name: elasticsearch, tags: ['elasticsearch'], es_heap_size: 1g}
     - { name: rabbitmq, tags: ['rabbitmq'] }
     - { name: ipfs, tags: ['ipfs'] }
     - { name: ipfs-tika, tags: ['ipfs-tika'] }

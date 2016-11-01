@@ -3,15 +3,14 @@
   local_action: command make linux64
   args:
     chdir: ../
-- block:
-  - name: make sure rsync is available
-    apt: name=rsync state=present
-  - name: Install crawler executable
-    synchronize: src=../../../build/ipfs-search.linux64 dest=/usr/local/bin/ipfs-search times=yes partial=yes archive=no
-    notify: restart ipfs-crawler
-  - template: src=ipfs-crawler.service dest=/etc/systemd/system/ipfs-crawler.service
-    notify: restart ipfs-crawler
-  - group: name=ipfs-crawler system=true state=present
-  - user: name=ipfs-crawler comment="ipfs-crawler daemon" group=ipfs-crawler system=true state=present home=/nonexistent shell=/usr/sbin/nologin
-  - service: name=ipfs-crawler enabled=yes state=started
-  become: true
+  become: false
+- name: make sure rsync is available
+  apt: name=rsync state=present
+- name: Install crawler executable
+  synchronize: src=../../../build/ipfs-search.linux64 dest=/usr/local/bin/ipfs-search times=yes partial=yes archive=no
+  notify: restart ipfs-crawler
+- template: src=ipfs-crawler.service dest=/etc/systemd/system/ipfs-crawler.service
+  notify: restart ipfs-crawler
+- group: name=ipfs-crawler system=true state=present
+- user: name=ipfs-crawler comment="ipfs-crawler daemon" group=ipfs-crawler system=true state=present home=/nonexistent shell=/usr/sbin/nologin
+- service: name=ipfs-crawler enabled=yes state=started

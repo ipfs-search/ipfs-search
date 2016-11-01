@@ -7,28 +7,25 @@
       unarchive: copy=no src=/tmp/go-ipfs.tar.gz dest=/tmp/
     - name: install go-ipfs
       copy: remote_src=True src=/tmp/go-ipfs/ipfs dest="{{ ipfs_binary }}" mode=755
-      become: true
       notify: restart ipfs
     - name: remove temporary files
       file: state=absent path=/tmp/go-ipfs
   when: binary.changed
-- block:
-    - group: name=ipfs system=true state=present
-    - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}" shell=/usr/sbin/nologin
-    - file: path="{{ ipfs_path }}" owner=ipfs group=ipfs mode=750 state=directory
-    - name: initialize IPFS repository
-      command: "{{ ipfs_binary }} init"
-      args:
-        creates: "{{ ipfs_path }}/version"
-      environment:
-        IPFS_PATH: "{{ ipfs_path }}"
-      become: true
-      become_user: ipfs
-    - template: src=ipfs_config dest=/var/lib/ipfs/config
-      notify: restart ipfs
-    - name: Configure IPFS service
-      template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
-      notify: restart ipfs
-    - service: name=ipfs enabled=yes state=started
-    - cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="*/9" hour="*" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"
+- group: name=ipfs system=true state=present
+- user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}" shell=/usr/sbin/nologin
+- file: path="{{ ipfs_path }}" owner=ipfs group=ipfs mode=750 state=directory
+- name: initialize IPFS repository
+  command: "{{ ipfs_binary }} init"
+  args:
+    creates: "{{ ipfs_path }}/version"
+  environment:
+    IPFS_PATH: "{{ ipfs_path }}"
   become: true
+  become_user: ipfs
+- template: src=ipfs_config dest=/var/lib/ipfs/config
+  notify: restart ipfs
+- name: Configure IPFS service
+  template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
+  notify: restart ipfs
+- service: name=ipfs enabled=yes state=started
+- cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="*/9" hour="*" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"

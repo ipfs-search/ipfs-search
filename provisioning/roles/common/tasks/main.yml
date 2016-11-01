@@ -1,36 +1,34 @@
 ---
-- block:
-    - name: update apt cache
-      apt: update_cache=yes cache_valid_time=3600
-    - name: install apt upgrades
-      apt: upgrade=dist
-    - name: install unattended upgrades
-      apt: name=unattended-upgrades state=present
-    - name: enable unattended upgrades
-      debconf: name=unattended-upgrades question=enable_auto_updates value=true vtype=boolean
-    # Note: new in 2.2.0
-    # - name: set timezone to Europe/Amsterdam
-    #   timezone: name=Europe/Amsterdam
-    - name: Set timezone area
-      debconf: name=tzdata question='tzdata/Areas' value='Europe' vtype='select'
-    - name: Set timezone
-      debconf: name=tzdata question='tzdata/Zones/Europe' value='Amsterdam' vtype='select'
-    - name: Enable memory cgroup in GRUB
-      lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX_DEFAULT' line='GRUB_CMDLINE_LINUX_DEFAULT="quiet cgroup_enable=memory swapaccount=1 "' backup=yes
-      notify: update grub
-    - name: Reduce swapiness
-      sysctl:
-        name: vm.swappiness
-        value: 1
-        state: present
-        reload: yes
-    - name: Install misc utils
-      apt: name={{item}} state=installed
-      with_items:
-           - screen
-           - jq
-           - tree
-    - name: Configure journald
-      copy: dest=/etc/systemd/journald.conf src=journald.conf owner=root group=root mode=644
-      notify: restart journald
-  become: true
+- name: update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+- name: install apt upgrades
+  apt: upgrade=dist
+- name: install unattended upgrades
+  apt: name=unattended-upgrades state=present
+- name: enable unattended upgrades
+  debconf: name=unattended-upgrades question=enable_auto_updates value=true vtype=boolean
+# Note: new in 2.2.0
+# - name: set timezone to Europe/Amsterdam
+#   timezone: name=Europe/Amsterdam
+- name: Set timezone area
+  debconf: name=tzdata question='tzdata/Areas' value='Europe' vtype='select'
+- name: Set timezone
+  debconf: name=tzdata question='tzdata/Zones/Europe' value='Amsterdam' vtype='select'
+- name: Enable memory cgroup in GRUB
+  lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX_DEFAULT' line='GRUB_CMDLINE_LINUX_DEFAULT="quiet cgroup_enable=memory swapaccount=1 "' backup=yes
+  notify: update grub
+- name: Reduce swapiness
+  sysctl:
+    name: vm.swappiness
+    value: 1
+    state: present
+    reload: yes
+- name: Install misc utils
+  apt: name={{item}} state=installed
+  with_items:
+       - screen
+       - jq
+       - tree
+- name: Configure journald
+  copy: dest=/etc/systemd/journald.conf src=journald.conf owner=root group=root mode=644
+  notify: restart journald

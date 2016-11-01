@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "bento/debian-8.5"
+  config.vm.box = "ubuntu/xenial64"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -111,7 +111,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Run Ansible from the Vagrant Host
   #
   config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "provisioning/ipfs-search.yml"
+    ansible.playbook = "provisioning/vagrant.yml"
   end
 
   # Enable provisioning with chef server, specifying the chef server URL,
