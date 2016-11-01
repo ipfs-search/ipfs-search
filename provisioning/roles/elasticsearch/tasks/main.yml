@@ -10,20 +10,20 @@
       apt: pkg=elasticsearch state=latest
     - name: Create snapshot directory
       file: path=/var/lib/elasticsearch/backup state=directory owner=elasticsearch group=elasticsearch
+    - elasticsearch_plugin: state=present name=org.codelibs/elasticsearch-reindexing version=2.3.0
+      notify: restart elasticsearch
     - template: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml
-      notify:
-        - restart elasticsearch
+      notify: restart elasticsearch
     - template: src=logging.yml dest=/etc/elasticsearch/logging.yml
-      notify:
-        - restart elasticsearch
+      notify: restart elasticsearch
     - name: Increase elasticsearch heap size
       lineinfile: dest=/etc/default/elasticsearch regexp='^#?ES_HEAP_SIZE' line='ES_HEAP_SIZE="2g"' backup=yes
-      notify:
-        - restart elasticsearch
+      notify: restart elasticsearch
     - name: Stretch elasticsearch memory limit
-      lineinfile: dest=/etc/systemd/system/elasticsearch.service.d/50-MemoryLimit.conf regexp='^MemoryLimit' line='MemoryLimit=2147483648'
+      lineinfile: dest=/etc/systemd/system/elasticsearch.service.d/50-MemoryLimit.conf regexp='^MemoryLimit' line='MemoryLimit=2684354560'
       notify:
         - restart elasticsearch
+        - reload elasticsearch daemon
     - name: Enable elasticsearch service
       service: name=elasticsearch enabled=yes state=started
   become: true
