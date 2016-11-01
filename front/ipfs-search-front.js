@@ -143,7 +143,8 @@ function transform_results(results) {
     hits.push({
       "hash": item._id,
       "title": get_title(item),
-      "description": get_description(item)
+      "description": get_description(item),
+      "type": item._type
     })
   });
 
