@@ -1,0 +1,8 @@
+---
+- name: Create snifloop user.
+  user: name=snifloop comment="ipfs-search snifloop" group=ipfs system=true state=present home="{{ ipfs_path }}" shell=/usr/sbin/nologin
+- name: Install snifloop service
+  template: src=snifloop.service dest=/etc/systemd/system/snifloop.service
+  notify: restart snifloop
+- name: Enable services
+  service: name=snifloop enabled=yes state=started

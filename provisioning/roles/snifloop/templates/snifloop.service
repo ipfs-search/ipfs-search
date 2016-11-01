@@ -1,0 +1,15 @@
+[Unit]
+Description=ipfs-search snifloop
+Requires=ipfs.service
+After=ipfs.service
+
+[Service]
+ExecStart=/bin/bash /usr/local/bin/dht-snifloop.sh
+Restart=on-failure
+User=snifloop
+Group=ipfs
+Environment="IPFS_PATH={{ ipfs_path }}"
+DevicePolicy=closed
+
+[Install]
+WantedBy=default.target
