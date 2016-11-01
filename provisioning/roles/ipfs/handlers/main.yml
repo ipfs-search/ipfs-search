@@ -1,18 +1,3 @@
 - name: restart ipfs
-  service: name=ipfs state=stopped
-  notify:
-    - unmount ipfs
-    - unmount ipns
-    - start ipfs
+  systemd: name=ipfs daemon_reload=yes state=restarted
   become: true
-- name: start ipfs
-  service: name=ipfs state=started
-  become: true
-- name: unmount ipfs
-  mount: name=/ipfs state=unmounted src=none fstype=none
-  become: true
-  when: ipfs_mount
-- name: unmount ipns
-  mount: name=/ipns state=unmounted src=none fstype=none
-  become: true
-  when: ipfs_mount

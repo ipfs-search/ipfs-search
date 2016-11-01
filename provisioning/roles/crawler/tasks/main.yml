@@ -8,17 +8,10 @@
     apt: name=rsync state=present
   - name: Install crawler executable
     synchronize: src=../../../build/ipfs-search.linux64 dest=/usr/local/bin/ipfs-search times=yes partial=yes archive=no
-    notify:
-    - restart ipfs-crawler
+    notify: restart ipfs-crawler
   - template: src=ipfs-crawler.service dest=/etc/systemd/system/ipfs-crawler.service
-    register: service
+    notify: restart ipfs-crawler
   - group: name=ipfs-crawler system=true state=present
   - user: name=ipfs-crawler comment="ipfs-crawler daemon" group=ipfs-crawler system=true state=present home=/nonexistent shell=/usr/sbin/nologin
-  # Note: new in 2.2
-  # - systemd: daemon_reload=yes state=started name=ipfs-crawler enabled=yes
-  - shell: systemctl daemon-reload
-    when: service.changed
-    notify:
-    - restart ipfs-crawler
   - service: name=ipfs-crawler enabled=yes state=started
   become: true

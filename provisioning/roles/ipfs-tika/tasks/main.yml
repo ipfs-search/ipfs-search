@@ -8,11 +8,6 @@
   - group: name=ipfs-tika system=true state=present
   - user: name=ipfs-tika comment="IPFS tika daemon" group=ipfs system=true state=present home="/nonexistent" shell=/usr/sbin/nologin
   - template: src=ipfs-tika.service dest=/etc/systemd/system/ipfs-tika.service
-    register: service
-  # Note: new in 2.2
-  # - systemd: daemon_reload=yes state=started name=ipfs enabled=yes
-  - shell: systemctl daemon-reload
-    when: service.changed
     notify: restart ipfs-tika
   - service: name=ipfs-tika enabled=yes state=started
   become: true

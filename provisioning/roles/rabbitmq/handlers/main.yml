@@ -1,4 +1,4 @@
 ---
-- name: restart rabbitmq
-  service: name=rabbitmq-server state=restarted
+- name: restart rabbitmq-server
+  systemd: daemon_reload=yes state=restarted name=rabbitmq-server
   become: true

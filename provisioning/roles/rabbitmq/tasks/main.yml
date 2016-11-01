@@ -6,6 +6,7 @@
       apt_repository: repo='deb http://www.rabbitmq.com/debian/ testing main' state=present update_cache=yes
     - name: Install required packages
       apt: pkg=rabbitmq-server state=latest
+      notify: restart rabbitmq
     - name: Configuration file
       template: src=rabbitmq.config dest=/etc/rabbitmq/rabbitmq.config
       notify: restart rabbitmq
@@ -19,6 +20,7 @@
                      write_priv=.*
                      state=present
                      tags=administrator
+      notify: restart rabbitmq
     - name: Enable rabbitmq plugins
       rabbitmq_plugin: names=rabbitmq_management,rabbitmq_shovel,rabbitmq_shovel_management state=enabled
       notify: restart rabbitmq

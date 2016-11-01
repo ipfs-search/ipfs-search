@@ -16,8 +16,6 @@
     - group: name=ipfs system=true state=present
     - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}" shell=/usr/sbin/nologin
     - file: path="{{ ipfs_path }}" owner=ipfs group=ipfs mode=750 state=directory
-    - include: fuse_mount.yml
-      when: ipfs_mount
     - name: initialize IPFS repository
       command: "{{ ipfs_binary }} init"
       args:
@@ -28,13 +26,9 @@
       become_user: ipfs
     - template: src=ipfs_config dest=/var/lib/ipfs/config
       notify: restart ipfs
-    - template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
-      register: service
-    # Note: new in 2.2
-    # - systemd: daemon_reload=yes state=started name=ipfs enabled=yes
-    - shell: systemctl daemon-reload
-      when: service.changed
+    - name: Configure IPFS service
+      template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
       notify: restart ipfs
     - service: name=ipfs enabled=yes state=started
-    - cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="*/22" hour="*" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"
+    - cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="*/9" hour="*" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"
   become: true
