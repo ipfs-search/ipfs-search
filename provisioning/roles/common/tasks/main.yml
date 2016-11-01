@@ -32,3 +32,5 @@
 - name: Configure journald
   copy: dest=/etc/systemd/journald.conf src=journald.conf owner=root group=root mode=644
   notify: restart journald
+- name: Install scripts
+  copy: dest=/usr/local/ src=bin owner=root group=root mode=755
