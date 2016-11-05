@@ -27,5 +27,7 @@
 - name: Configure IPFS service
   template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
   notify: restart ipfs
-- service: name=ipfs enabled=yes state=started
-- cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="*/9" hour="*" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"
+- name: Enable IPFS service
+  service: name=ipfs enabled=yes state=started
+- name: Enable IPFS garbage collection
+  cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="*/9" hour="*" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"
