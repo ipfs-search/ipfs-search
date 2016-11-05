@@ -4,6 +4,7 @@
   become: true
   roles:
     - { name: common, tags: ['common'] }
+    - { name: cgconfig, tags: ['cgconfig']}
     - { name: elasticsearch, tags: ['elasticsearch'], es_heap_size: 1g}
     - { name: rabbitmq, tags: ['rabbitmq'] }
     - { name: ipfs, tags: ['ipfs'] }
