@@ -111,6 +111,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Run Ansible from the Vagrant Host
   #
   config.vm.provision "ansible" do |ansible|
+    ansible.verbose = "v"
     ansible.playbook = "provisioning/vagrant.yml"
   end
 
