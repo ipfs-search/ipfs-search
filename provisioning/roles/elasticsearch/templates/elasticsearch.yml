@@ -2,4 +2,3 @@
 # network.host: [_site_, _local_]
 path.repo: ["/var/lib/elasticsearch/backup"]
 repositories.url.allowed_urls: ["http://localhost:8080/*"]
-bootstrap.mlockall: true
