@@ -1,9 +1,11 @@
-const elasticsearch = require('elasticsearch');
+/* jshint node: true, esnext: true */
+
+const elasticsearch = require('eslasticsearch');
 const http = require('http');
 const url = require('url');
 const htmlEncode = require('js-htmlencode');
 
-const port = 9615;
+const server_port = 9615;
 
 var client = new elasticsearch.Client({
   host: 'localhost:9201',
@@ -32,7 +34,7 @@ function query(q, page, page_size) {
         "metadata.title", "metadata.name", "metadata.description",
         "references"
       ]
-  }
+  };
 
   return client.search({
     index: 'ipfs',
@@ -61,7 +63,7 @@ function get_title(result) {
   if (hl) {
     const highlight_priority = [
       "metadata.title", "references.name"
-    ]
+    ];
 
     // Return the first one from the priority list
     for (var i=0; i<highlight_priority.length; i++) {
@@ -78,7 +80,7 @@ function get_title(result) {
   if ("metadata" in src) {
     const metadata_priority = [
       "title", "name"
-    ]
+    ];
 
     metadata_priority.forEach(function (item) {
       if (src.metadata[item]) {
@@ -96,7 +98,7 @@ function get_title(result) {
 
   // Pick longest title
   if (titles.length > 0) {
-    titles.sort(function (a, b) { return b.length - a.length });
+    titles.sort(function (a, b) { return b.length - a.length; });
 
     return htmlEncode.htmlEncode(titles[0]);
   } else {
@@ -145,14 +147,14 @@ function transform_results(results) {
       "title": get_title(item),
       "description": get_description(item),
       "type": item._type
-    })
+    });
   });
 
   // Overwrite existing list of hits
   results.hits = hits;
 }
 
-console.info("Starting server on http://localhost:"+port+"/");
+console.info("Starting server on http://localhost:"+server_port+"/");
 
 http.createServer(function(request, response) {
   const page_size = 15;
@@ -176,7 +178,7 @@ http.createServer(function(request, response) {
       const max_page = 100;
 
       if ("page" in parsed_url.query) {
-        var page = parseInt(parsed_url.query.page, 10);
+        page = parseInt(parsed_url.query.page, 10);
 
         // For performance reasons, don't allow paging too far down
         if (page > 100) {
@@ -206,5 +208,5 @@ http.createServer(function(request, response) {
   } finally {
 
   }
-}).listen(port);
+}).listen(server_port);
 
