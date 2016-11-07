@@ -206,11 +206,11 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
-		// Note: we're expecting no references here, see comment below
 		args := CrawlerArgs{
-			Hash: hash,
-			Name: name,
-			Size: list.Size,
+			Hash:       hash,
+			Name:       name,
+			Size:       list.Size,
+			ParentHash: parent_hash,
 		}
 
 		err = c.fq.AddTask(args)
@@ -295,6 +295,13 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 
 // Crawl a single object, known to be a file
 func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_name string, size uint64) error {
+	if size == 262144 && parent_hash == "" {
+		// Assertion error.
+		// REMOVE ME!
+		log.Printf("Skipping unreferenced partial content for %s", hash)
+		return nil
+	}
+
 	references, already_indexed, err := c.index_references(hash, name, parent_hash)
 
 	if err != nil {
