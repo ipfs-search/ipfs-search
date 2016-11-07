@@ -1,7 +1,7 @@
 [Unit]
 Description=ipfs-search snifloop
-Requires=ipfs.service
-After=ipfs.service
+Requires=ipfs.service rabbitmq-server.service
+After=ipfs.service rabbitmq-server.service
 
 [Service]
 ExecStart=/bin/bash /usr/local/bin/dht-snifloop.sh
