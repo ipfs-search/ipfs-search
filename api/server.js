@@ -1,6 +1,6 @@
 /* jshint node: true, esnext: true */
 
-const elasticsearch = require('eslasticsearch');
+const elasticsearch = require('elasticsearch');
 const http = require('http');
 const url = require('url');
 const htmlEncode = require('js-htmlencode');
