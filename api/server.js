@@ -192,7 +192,7 @@ http.createServer(function(request, response) {
         transform_results(body.hits);
 
         response.writeHead(200, {"Content-Type": "application/json"});
-        response.write(JSON.stringify(body.hits));
+        response.write(JSON.stringify(body.hits, null, 4));
         response.end();
       }, function (error) {
         throw(error);
