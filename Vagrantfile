@@ -25,6 +25,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network "forwarded_port", guest: 15672, host: 15672
   # Elasticsearch
   config.vm.network "forwarded_port", guest: 9200, host: 9200
+  # Search API
+  config.vm.network "forwarded_port", guest: 9615, host: 9615
+  # Search API (web)
+  config.vm.network "forwarded_port", guest: 80, host: 8881
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.

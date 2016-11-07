@@ -12,6 +12,7 @@
   become: false
 - name: Sync ipfs-search api
   synchronize: src=../../../api/ dest=/usr/local/libexec/ipfs-search-api times=yes partial=yes archive=no recursive=yes
+  notify: restart ipfs-search
 - name: Create ipfs-search group.
   group: name=ipfs-search system=true state=present
 - name: Create ipfs-search user.
@@ -23,5 +24,6 @@
   service: name=ipfs-search enabled=yes state=started
 - name: Install nginx configuration
   copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+  notify: restart nginx
 - name: Enable nginx service
   service: name=nginx enabled=yes state=started
