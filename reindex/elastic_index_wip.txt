@@ -1,4 +1,4 @@
-PUT /ipfs_v3
+PUT /ipfs_v4
 {
     "settings": {
         "index": {
@@ -115,11 +115,16 @@ PUT /ipfs_v3
                         },
                         "xmpDM:composer": {
                             "index": "analyzed",
-                           "type": "string",
+                            "type": "string",
                             "include_in_all": true,
                             "boost": 2
                         },
                         "Content-Type": {
+                            "type": "string",
+                            "index": "not_analyzed",
+                            "doc_values": true
+                        },
+                        "X-Parsed-By": {
                             "type": "string",
                             "index": "not_analyzed",
                             "doc_values": true
