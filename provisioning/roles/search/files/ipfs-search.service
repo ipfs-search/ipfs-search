@@ -1,0 +1,14 @@
+[Unit]
+Description=ipfs search api
+Requires=elasticsearch.service
+After=elasticsearch.service
+
+[Service]
+WorkingDirectory=/usr/local/libexec/ipfs-search-api
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+User=ipfs-search
+Group=ipfs-search
+
+[Install]
+WantedBy=default.target

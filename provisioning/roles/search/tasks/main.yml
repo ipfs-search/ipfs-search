@@ -1,0 +1,22 @@
+---
+- name: Install Node and NPM
+  apt: name={{item}} state=installed
+  with_items:
+       - nodejs-legacy
+       - npm
+- name: Locally install dependencies
+  local_action: command npm install
+  args:
+    chdir: ../api
+  become: false
+- name: Sync ipfs-search api
+  synchronize: src=../../../api/ dest=/usr/local/libexec/ipfs-search-api times=yes partial=yes archive=no recursive=yes
+- name: Create ipfs-search group.
+  group: name=ipfs-search system=true state=present
+- name: Create ipfs-search user.
+  user: name=ipfs-search comment="ipfs-search api" group=ipfs-search system=true state=present home=/nonexistent shell=/usr/sbin/nologin
+- name: Install ipfs-search service
+  copy: src=ipfs-search.service dest=/etc/systemd/system/ipfs-search.service
+  notify: restart ipfs-search
+- name: Enable services
+  service: name=ipfs-search enabled=yes state=started
