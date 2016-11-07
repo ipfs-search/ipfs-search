@@ -1,9 +1,10 @@
 ---
-- name: Install Node and NPM
+- name: Install Node, NPM and nginx
   apt: name={{item}} state=installed
   with_items:
        - nodejs-legacy
        - npm
+       - nginx-light
 - name: Locally install dependencies
   local_action: command npm install
   args:
@@ -18,5 +19,9 @@
 - name: Install ipfs-search service
   copy: src=ipfs-search.service dest=/etc/systemd/system/ipfs-search.service
   notify: restart ipfs-search
-- name: Enable services
+- name: Enable search service
   service: name=ipfs-search enabled=yes state=started
+- name: Install nginx configuration
+  copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+- name: Enable nginx service
+  service: name=nginx enabled=yes state=started
