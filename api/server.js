@@ -190,6 +190,8 @@ http.createServer(function(request, response) {
       query(parsed_url.query.q, page, page_size).then(function (body) {
         console.info("200: Returning "+body.hits.hits.length+" results");
 
+        body.hits.page_size = page_size;
+
         transform_results(body.hits);
 
         response.writeHead(200, {"Content-Type": "application/json"});
