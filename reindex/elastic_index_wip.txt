@@ -169,6 +169,11 @@ PUT /ipfs_v4
                             "type": "string",
                             "index": "not_analyzed",
                             "include_in_all": true
+                        },
+                        "parent_hash": {
+                            "type": "string",
+                            "index": "not_analyzed",
+                            "include_in_all": true
                         }
                     }
                 }
