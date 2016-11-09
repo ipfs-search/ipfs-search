@@ -2,7 +2,8 @@ package indexer
 
 import (
 	"encoding/json"
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 type Indexer struct {
@@ -28,8 +29,7 @@ func (i Indexer) IndexItem(doctype string, hash string, properties map[string]in
 		Id(hash).
 		Doc(properties).
 		DocAsUpsert(true).
-		Refresh(false).
-		Do()
+		Do(context.TODO())
 
 	if err != nil {
 		// Handle error
@@ -45,7 +45,7 @@ func (i Indexer) GetReferences(hash string) ([]Reference, string, error) {
 	fsc.Include("references")
 
 	res, err := i.el.Get().
-		Index("ipfs").Type("_all").FetchSourceContext(fsc).Id(hash).Do()
+		Index("ipfs").Type("_all").FetchSourceContext(fsc).Id(hash).Do(context.TODO())
 
 	if err != nil {
 		if elastic.IsNotFound(err) {

@@ -5,8 +5,9 @@ import (
 	"github.com/dokterbob/ipfs-search/crawler"
 	"github.com/dokterbob/ipfs-search/indexer"
 	"github.com/dokterbob/ipfs-search/queue"
+	"golang.org/x/net/context"
 	"gopkg.in/ipfs/go-ipfs-api.v1"
-	"gopkg.in/olivere/elastic.v3"
+	"gopkg.in/olivere/elastic.v5"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
@@ -56,7 +57,7 @@ func get_elastic() (*elastic.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	exists, err := el.IndexExists("ipfs").Do()
+	exists, err := el.IndexExists("ipfs").Do(context.TODO())
 	if err != nil {
 		return nil, err
 	}
