@@ -32,7 +32,7 @@ function query(q, page, page_size) {
       },
       "_source": [
         "metadata.title", "metadata.name", "metadata.description",
-        "references"
+        "references", "size"
       ]
   };
 
@@ -146,7 +146,8 @@ function transform_results(results) {
       "hash": item._id,
       "title": get_title(item),
       "description": get_description(item),
-      "type": item._type
+      "type": item._type,
+      "size": item._source.size
     });
   });
 
