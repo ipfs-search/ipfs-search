@@ -2,7 +2,7 @@
 - name: Install elasticsearch repository key
   apt_key: url=https://packages.elastic.co/GPG-KEY-elasticsearch state=present id=D88E42B4
 - name: Add elasticsearch repository
-  apt_repository: repo='deb http://packages.elastic.co/elasticsearch/2.x/debian stable main' state=present update_cache=yes
+  apt_repository: repo='deb http://packages.elastic.co/elasticsearch/5.x/debian stable main' state=present update_cache=yes
 - name: Install JRE
   apt: pkg=default-jre state=present
 - name: Install elasticsearch
@@ -13,8 +13,11 @@
   notify: restart elasticsearch
 - template: src=logging.yml dest=/etc/elasticsearch/logging.yml
   notify: restart elasticsearch
-- name: Increase elasticsearch heap size
-  lineinfile: dest=/etc/default/elasticsearch regexp='^#?ES_HEAP_SIZE' line='ES_HEAP_SIZE="{{ es_heap_size }}"' backup=yes
+- name: Increase elasticsearch heap size minimum
+  lineinfile: dest=/etc/elasticsearch/jvm.options regexp='-Xms' line='-Xms{{ es_heap_size }}'
+  notify: restart elasticsearch
+- name: Increase elasticsearch heap size maximum
+  lineinfile: dest=/etc/elasticsearch/jvm.options regexp='-Xmx' line='-Xms{{ es_heap_size }}'
   notify: restart elasticsearch
 # - name: Stretch elasticsearch memory limit
 #   lineinfile: dest=/etc/systemd/system/elasticsearch.service.d/50-MemoryLimit.conf regexp='^MemoryLimit' line='MemoryLimit=2684354560'
