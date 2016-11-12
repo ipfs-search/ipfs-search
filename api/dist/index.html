@@ -8,6 +8,9 @@
       <script id="result-template" type="text/x-handlebars-template">
         <div class="col-group">
           <div class="col-14 results">
+            <div class="paginator">
+              <a href="javascript:prev_page()">&lt;</a>&nbsp;<a href="javascript:next_page()">&gt;</a>
+            </div>
             {{#each hits}}
             <div>
               <h2>
@@ -22,6 +25,9 @@
               <div>{{ size }} bytes</div>
             </div>
             {{/each}}
+            <div class="paginator">
+              <a href="javascript:prev_page()">&lt;</a>&nbsp;<a href="javascript:next_page()">&gt;</a>
+            </div>
           </div>
         </div>
       </script>
@@ -46,6 +52,7 @@
                   <form class="form-horizontal pos" id="search-form" action="http://ipfs-search.com/api/v1/search">
                     <div class="form-group form-group-lg">
                       <input class="form-control" type="text" name="q" id="formGroupInputLarge" placeholder="Search...">
+                      <input type="hidden" name="page" value="0" id="page-number">
                       <span class="input-wrapper"></span>
                     </div>
                   </form>
