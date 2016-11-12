@@ -1,73 +1,63 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>ipfs-search alpha</title>
-    <style type="text/css">
-        body {
-          font-family: "Helvetica Neue", Geneva, Arial, Helvetica, sans-serif;
-          font-size: 12pt;
-          padding-top: 20pt;
-          padding-left: 8pt;
-          padding-right: 20pt;
-          padding-bottom: 0pt;
-          width: 45em;
-        }
-        p {
-          margin-top: 0pt;
-          margin-bottom: 1ex;
-        }
-        body>p {
-          text-align: justify;
-        }
-        h3 {
-          margin: 2.5ex 0pt 0.5ex 0pt;
-        }
-        h5 {
-          margin: 13pt 6pt 0pt;
-        }
-    </style>
-    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
-</head>
-<body>
-    <h1>ipfs-search alpha</h1>
-    <p>Not much here yet, but try:
-        <code>GET <a href="/v1/search?q=something">/v1/search?q=something</a></code>
-    </p>
+  <html>
+    <head>
+      <title>IPFS Search</title>
+      <!-- typekit javascripts -->
+      <script src="https://use.typekit.net/ypw3gpm.js"></script>
+      <script>try{Typekit.load({ async: true });}catch(e){}</script>
+      <script id="result-template" type="text/x-handlebars-template">
+        <div class="col-group">
+          <div class="col-14 results">
+            {{#each hits}}
+            <div>
+              <h2>
+                <a target="_blank" href="https://gateway.ipfs.io/ipfs/{{hash}}">
+                  <img height="24" width="24" src="assets/{{type}}.svg">
+                  {{{ title }}}
+                </a>
+              </h2>
+              {{#if description}}
+                <p>{{{description}}}</p>
+              {{/if}}
+              <div>{{ size }} bytes</div>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+      </script>
+      <link rel="stylesheet" type="text/css" href="style/style.css" />
+      <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    </head>
+    <body>
 
-    <h2>Example</h2>
-    <pre>{
-    "total": 54499,
-    "max_score": 3.8840022,
-    "page_size": 15,
-    "hits": [
-    {
-        "total": 29190,
-        "max_score": 8.913855,
-        "hits": [
-            {
-                "hash": "QmXy6pjgbDyE3sR7ZRuwAxQJEkF3MRtNQXMGZYoZLxgDEj",
-                "title": "<em>water</em>",
-                "description": null,
-                "type": "directory"
-            },
-            {
-                "hash": "Qmbn93PicijZm2fd6MFCi7jLPZKuJ8gHpELcxo7MRPZzfq",
-                "title": "<em>water</em>-year.png",
-                "description": null,
-                "type": "file"
-            }
-            ...
-        ]
-    }
-}</pre>
+      <div class="container header-wrapper">
+        <div class="col-group">
+          <div class="col-14 header">
+            <header class="col-mb-offset-2 col-offset-3 col-8">
+              <img src="assets/ipfs_logo.svg" alt="ipfs search" />
+            </header>
+          </div>
+        </div>
+      </div>
+      <div class="fix">
+        <div class="container">
+          <div class="col-group">
+            <div class="col-offset-2 col-10 search-box">
+                  <form class="form-horizontal pos" id="search-form" action="http://ipfs-search.com/api/v1/search">
+                    <div class="form-group form-group-lg">
+                      <input class="form-control" type="text" name="q" id="formGroupInputLarge" placeholder="Search...">
+                      <span class="input-wrapper"></span>
+                    </div>
+                  </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container results-wrapper" id="result-container"></div>
 
-    <h2>Code</h2>
-    <p><a href="https://github.com/dokterbob/ipfs-search">https://github.com/dokterbob/ipfs-search</a></p>
+      <div class="footer"><a href="http://ipfs-search.com/api/">API</a> | <a href="https://github.com/dokterbob/ipfs-search">Code</a> | <a href="mailto:info@ipfs-search.com">Contact</a></div>
 
-    <h2>Demo</h2>
-    <p><a href="https://youtu.be/jnpmCXuQ1WA?t=1h13m53s">Introduction during 'apps on IPFS' conference call.</a></p>
-
-    <h2>Contact</h2>
-    <p>Mathijs de Bruin <a href="mailto:info@ipfs-search.com">info@ipfs-search.com</a></p>
-</body>
+      <!-- local build javascripts -->
+      <script src="bundle.js"></script>
+    </body>
 </html>

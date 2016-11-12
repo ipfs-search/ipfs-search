@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ipfs-search alpha</title>
+    <style type="text/css">
+        body {
+          font-family: "Helvetica Neue", Geneva, Arial, Helvetica, sans-serif;
+          font-size: 12pt;
+          padding-top: 20pt;
+          padding-left: 8pt;
+          padding-right: 20pt;
+          padding-bottom: 0pt;
+          width: 45em;
+        }
+        p {
+          margin-top: 0pt;
+          margin-bottom: 1ex;
+        }
+        body>p {
+          text-align: justify;
+        }
+        h3 {
+          margin: 2.5ex 0pt 0.5ex 0pt;
+        }
+        h5 {
+          margin: 13pt 6pt 0pt;
+        }
+    </style>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+</head>
+<body>
+    <h1>ipfs-search alpha</h1>
+    <p>Not much here yet, but try:
+        <code>GET <a href="/api/v1/search?q=something">/api/v1/search?q=something</a></code>
+    </p>
+
+    <h2>Example</h2>
+    <pre>{
+    "total": 54499,
+    "max_score": 3.8840022,
+    "page_size": 15,
+    "hits": [
+    {
+        "total": 29190,
+        "max_score": 8.913855,
+        "hits": [
+            {
+                "hash": "QmXy6pjgbDyE3sR7ZRuwAxQJEkF3MRtNQXMGZYoZLxgDEj",
+                "title": "<em>water</em>",
+                "description": null,
+                "type": "directory"
+            },
+            {
+                "hash": "Qmbn93PicijZm2fd6MFCi7jLPZKuJ8gHpELcxo7MRPZzfq",
+                "title": "<em>water</em>-year.png",
+                "description": null,
+                "type": "file"
+            }
+            ...
+        ]
+    }
+}</pre>
+
+    <h2>Code</h2>
+    <p><a href="https://github.com/dokterbob/ipfs-search">https://github.com/dokterbob/ipfs-search</a></p>
+
+    <h2>Demo</h2>
+    <p><a href="https://youtu.be/jnpmCXuQ1WA?t=1h13m53s">Introduction during 'apps on IPFS' conference call.</a></p>
+
+    <h2>Contact</h2>
+    <p>Mathijs de Bruin <a href="mailto:info@ipfs-search.com">info@ipfs-search.com</a></p>
+</body>
+</html>
