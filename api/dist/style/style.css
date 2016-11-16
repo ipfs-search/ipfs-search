@@ -9978,3 +9978,15 @@ span.input-wrapper:after {
   margin-top: 20px;
   margin-bottom: 20px;
 }
+.footer .donate {
+  background-color: #494EA5;
+  color: #FFF6A6;
+  padding: 10pt;
+}
+.footer .donate a,
+.footer .donate a:link,
+.footer .donate a:visited,
+.footer .donate a:hover,
+.footer .donate a:active {
+  color: #FFF6A6;
+}

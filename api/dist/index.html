@@ -5,32 +5,6 @@
       <!-- typekit javascripts -->
       <script src="https://use.typekit.net/ypw3gpm.js"></script>
       <script>try{Typekit.load({ async: true });}catch(e){}</script>
-      <script id="result-template" type="text/x-handlebars-template">
-        <div class="col-group">
-          <div class="col-14 results">
-            <div class="paginator">
-              <a href="javascript:prev_page()">&lt;</a>&nbsp;<a href="javascript:next_page()">&gt;</a>
-            </div>
-            {{#each hits}}
-            <div>
-              <h2>
-                <a target="_blank" href="https://gateway.ipfs.io/ipfs/{{hash}}">
-                  <img height="24" width="24" src="assets/{{type}}.svg">
-                  {{{ title }}}
-                </a>
-              </h2>
-              {{#if description}}
-                <p>{{{description}}}</p>
-              {{/if}}
-              <div>{{ size }} bytes</div>
-            </div>
-            {{/each}}
-            <div class="paginator">
-              <a href="javascript:prev_page()">&lt;</a>&nbsp;<a href="javascript:next_page()">&gt;</a>
-            </div>
-          </div>
-        </div>
-      </script>
       <link rel="stylesheet" type="text/css" href="style/style.css" />
       <meta http-equiv="Access-Control-Allow-Origin" content="*">
     </head>
@@ -45,6 +19,7 @@
           </div>
         </div>
       </div>
+
       <div class="fix">
         <div class="container">
           <div class="col-group">
@@ -60,7 +35,14 @@
           </div>
         </div>
       </div>
+
       <div class="container results-wrapper" id="result-container"></div>
+
+      <div class="footer">
+        <span class="donate" title="Donations keep this project alive!">donate
+         <a href="bitcoin:1PkZTpGV6uYTKfNpng4Rri6DovxaMLTRwP?message=ipfs-search%20donation&amp;time=1479322967"><img src="assets/icon_bitcoin.png" alt="Bitcoin">1PkZTpGV6uYTKfNpng4Rri6DovxaMLTRwP</a>
+        </span>
+      </div>
 
       <div class="footer"><a href="http://ipfs-search.com/api/">API</a> | <a href="https://github.com/dokterbob/ipfs-search">Code</a> | <a href="mailto:info@ipfs-search.com">Contact</a></div>
 
