@@ -9928,7 +9928,7 @@ body {
 header {
   text-align: center;
   padding-top: 30%;
-  padding-bottom: 100px;
+  padding-bottom: 70px;
 }
 header img {
   width: 320px;
@@ -9958,11 +9958,18 @@ span.input-wrapper:after {
 }
 .results {
   display: block;
-  margin-top: 100px;
+  margin-top: 50px;
 }
 .results div {
-  background: #ccc;
+  background: #D9C72D;
   margin: 0 0 20px 0;
+  border-radius: 6px;
+}
+.results div.noresults {
+  text-align: center;
+  background: initial;
+}
+.results div.noresults img {
   border-radius: 6px;
 }
 .results .paginator {
@@ -9976,7 +9983,7 @@ span.input-wrapper:after {
 .footer {
   text-align: center;
   margin-top: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 .footer .donate {
   background-color: #494EA5;
