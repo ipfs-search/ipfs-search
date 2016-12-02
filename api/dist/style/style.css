@@ -9985,15 +9985,17 @@ span.input-wrapper:after {
   margin-top: 20px;
   margin-bottom: 30px;
 }
-.footer .donate {
-  background-color: #494EA5;
-  color: #FFF6A6;
-  padding: 10pt;
-}
-.footer .donate a,
-.footer .donate a:link,
-.footer .donate a:visited,
-.footer .donate a:hover,
-.footer .donate a:active {
-  color: #FFF6A6;
+a.donate {
+  background: #494EA5;
+  color: #fff;
+  text-decoration: none;
+  font-family: Verdana, sans-serif;
+  display: inline-block;
+  font-size: 16px;
+  padding: 13px 17px 13px 17px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+  box-shadow: 0 1px 0 0 #235580;
+  text-shadow: 0 1px rgba(0, 0, 0, 0.3);
 }
