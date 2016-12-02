@@ -1,51 +1,50 @@
 <!DOCTYPE html>
-  <html>
-    <head>
-      <title>IPFS Search</title>
-      <!-- typekit javascripts -->
-      <script src="https://use.typekit.net/ypw3gpm.js"></script>
-      <script>try{Typekit.load({ async: true });}catch(e){}</script>
-      <link rel="stylesheet" type="text/css" href="style/style.css" />
-      <meta http-equiv="Access-Control-Allow-Origin" content="*">
-    </head>
-    <body>
+<html>
+  <head>
+    <title>IPFS Search</title>
+    <script src="https://use.typekit.net/ypw3gpm.js"></script>
+    <script>try{Typekit.load({ async: true });}catch(e){}</script>
+    <link rel="stylesheet" type="text/css" href="style/style.css" />
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+  </head>
+  <body>
 
-      <div class="container header-wrapper">
+    <div class="container header-wrapper">
+      <div class="col-group">
+        <div class="col-14 header">
+          <header class="col-mb-offset-2 col-offset-3 col-8">
+            <img src="assets/ipfs_logo.svg" alt="ipfs search" />
+          </header>
+        </div>
+      </div>
+    </div>
+
+    <div class="fix">
+      <div class="container">
         <div class="col-group">
-          <div class="col-14 header">
-            <header class="col-mb-offset-2 col-offset-3 col-8">
-              <img src="assets/ipfs_logo.svg" alt="ipfs search" />
-            </header>
+          <div class="col-offset-2 col-10 search-box">
+                <form class="form-horizontal pos" id="search-form" action="http://ipfs-search.com/api/v1/search">
+                  <div class="form-group form-group-lg">
+                    <input class="form-control" type="text" name="q" id="formGroupInputLarge" placeholder="Search...">
+                    <input type="hidden" name="page" value="0" id="page-number">
+                    <span class="input-wrapper"></span>
+                  </div>
+                </form>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="fix">
-        <div class="container">
-          <div class="col-group">
-            <div class="col-offset-2 col-10 search-box">
-                  <form class="form-horizontal pos" id="search-form" action="http://ipfs-search.com/api/v1/search">
-                    <div class="form-group form-group-lg">
-                      <input class="form-control" type="text" name="q" id="formGroupInputLarge" placeholder="Search...">
-                      <input type="hidden" name="page" value="0" id="page-number">
-                      <span class="input-wrapper"></span>
-                    </div>
-                  </form>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="container results-wrapper" id="result-container"></div>
 
-      <div class="container results-wrapper" id="result-container"></div>
+    <div class="footer">
+      <a class="dbox-donation-button donate" href="https://donorbox.org/ipfs-search-com?recurring=true">donate</a>
+      <a class="donate" href="bitcoin:1PkZTpGV6uYTKfNpng4Rri6DovxaMLTRwP?message=ipfs-search%20donation&amp;time=1479322967"><img src="assets/icon_bitcoin.png" alt="Bitcoin"></a>
+    </div>
 
-      <div class="footer">
-        <a class="dbox-donation-button donate" href="https://donorbox.org/ipfs-search-com?recurring=true">donate</a>
-        <a class="donate" href="bitcoin:1PkZTpGV6uYTKfNpng4Rri6DovxaMLTRwP?message=ipfs-search%20donation&amp;time=1479322967"><img src="assets/icon_bitcoin.png" alt="Bitcoin"></a>
-      </div>
+    <div class="footer"><a href="/api/">API</a> | <a href="https://github.com/dokterbob/ipfs-search">Code</a> | <a href="mailto:info@ipfs-search.com">Contact</a></div>
 
-      <div class="footer"><a href="http://ipfs-search.com/api/">API</a> | <a href="https://github.com/dokterbob/ipfs-search">Code</a> | <a href="mailto:info@ipfs-search.com">Contact</a></div>
-
-      <!-- local build javascripts -->
-      <script src="bundle.js"></script>
-    </body>
+    <!-- local build javascripts -->
+    <script src="bundle.js"></script>
+  </body>
 </html>
