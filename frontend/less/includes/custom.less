@@ -1,0 +1,115 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  // background-color: rgb(139,203,203);
+  background-color: rgb(238,222,83);
+}
+
+.pos-relative {
+  position:relative;
+}
+
+.pos-absolute {
+  position:absolute;
+}
+
+header {
+  text-align: center;
+  padding-top: 30%;
+  padding-bottom: 70px;
+  // background-color: red;
+  // h1 {
+  //   font-family: "proxima-nova",sans-serif;
+  //   font-weight: bold;
+  //   font-size: 48px;
+  //   // background-color: yellow;
+
+  // }
+  // p {
+  //   font-family: "proxima-nova",sans-serif;
+  //   font-size: 24px;
+  //   font-weight: lighter;
+  //   -webkit-font-smoothing: antialiased;
+  //   // background-color: blue;
+  // }
+  img {
+    width:320px;
+    // height:75%;
+  }
+}
+
+
+.search-box {
+  padding-top: 10px;
+  padding-left:13px;
+  padding-right:13px;
+  // background-color: rgb(139,203,203);
+}
+
+.fixed {
+  position: fixed;
+  width:100%;
+  top:0;
+  // background-color: rgb(139,203,203);
+  background-color: rgb(238,222,83);
+}
+
+
+span.input-wrapper {
+  &:after {
+    font-family:'Glyphicons Regular';
+    background-color: transparent;
+    content: "\E028";
+    float:right;
+    font-size: 26px;
+    margin-top:-40px;
+    margin-right:5px;
+    height:30px;
+    width:30px;
+    color:#999;
+  }
+}
+
+.results-wrapper {
+
+}
+
+.results {
+  display: block;
+  margin-top:50px;
+  div {
+    background: #D9C72D;
+    margin: 0 0 20px 0;
+    border-radius: @border-radius-large;
+  }
+
+  div.noresults {
+    text-align: center;
+    background: initial;
+    img {
+      border-radius: @border-radius-large;
+    }
+  }
+
+.paginator {
+  text-align: center;
+  background: initial;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 40px;
+  cursor: pointer;
+}
+
+}
+
+.footer {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+a.donate {
+background:#494EA5; color: #fff;text-decoration: none;font-family: Verdana,sans-serif;display: inline-block;font-size: 16px;padding: 13px 17px 13px 17px; -webkit-border-radius: 2px; -moz-border-radius: 2px; border-radius: 2px; box-shadow: 0 1px 0 0 #235580; text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+}

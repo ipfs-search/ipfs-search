@@ -1,0 +1,33 @@
+// Fluidable overrides
+@columns:       14;
+@maxWidth:      100%;
+@gutterWidth:   0;
+
+@screenTablet:  768px;
+@screenDesktop: 1024px;
+@screenLarge:   1800px;
+
+@mobileGutter:  20px;
+@mobileInsightOverviewGutter: 4px;
+@insightOverviewGutter: 10px;
+
+
+/* afwijkingen t.o.v. grid */
+@media only screen and (max-width : 768px) {
+  .mobile-gutter {
+    padding-left: @mobileGutter !important;
+    padding-right: @mobileGutter !important;  
+  }
+
+  .mobile-insight-overview-gutter {
+    padding-left: @mobileInsightOverviewGutter !important;
+    padding-right: @mobileInsightOverviewGutter !important;  
+  }
+} 
+
+@media only screen and (min-width : 768px) {
+  .insight-overview-gutter {
+    padding-left: @insightOverviewGutter !important;
+    padding-right: @insightOverviewGutter !important;  
+  }
+}

@@ -1,0 +1,33 @@
+<div class="col-group">
+  <div class="col-14 results">
+    {{#if hits}}
+      <div class="paginator">
+        <a href="javascript:prev_page()">&lt;</a>&nbsp;<a href="javascript:next_page()">&gt;</a>
+      </div>
+      {{#each hits}}
+        <div>
+          <h2>
+            <a target="_blank" href="https://gateway.ipfs.io/ipfs/{{hash}}">
+              <img height="24" width="24" src="assets/{{type}}.svg">
+              {{{ title }}}
+            </a>
+          </h2>
+          {{#if description}}
+            <p>{{{description}}}</p>
+          {{/if}}
+          {{#if size}}
+            <div>{{ size }} bytes</div>
+          {{/if}}
+        </div>
+      {{/each}}
+      <div class="paginator">
+        <a href="javascript:prev_page()">&lt;</a>&nbsp;<a href="javascript:next_page()">&gt;</a>
+      </div>
+    {{else}}
+      <div class="noresults">
+        <h3>No results.</h3>
+        <img src="assets/sad_puppy.jpg" alt="No results." title="©2007 Dan Bennett (CC 2.0 Generic)">
+      </div>
+    {{/if}}
+  </div>
+</div>
