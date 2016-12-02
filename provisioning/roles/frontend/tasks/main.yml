@@ -1,0 +1,15 @@
+---
+- block:
+  - name: Locally install global dependencies
+    local_action: command npm -g install gulp
+  - name: Locally install local dependencies
+    local_action: command npm install
+    args:
+      chdir: ../frontend
+  - name: Locally build frontend
+    local_action: command gulp build
+    args:
+      chdir: ../frontend
+  become: false
+- name: Sync frontend
+  synchronize: src=../../../frontend/app/ dest=/usr/local/libexec/ipfs-search-api/dist/ times=yes partial=yes archive=no recursive=yes
