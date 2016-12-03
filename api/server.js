@@ -147,7 +147,8 @@ function transform_results(results) {
       "title": get_title(item),
       "description": get_description(item),
       "type": item._type,
-      "size": item._source.size
+      "size": item._source.size,
+      "references": item._source.references
     });
   });
 
