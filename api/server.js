@@ -163,8 +163,6 @@ http.createServer(function(request, response) {
   var parsed_url;
 
   try {
-    console.log(request.url);
-
     try {
       parsed_url = url.parse(request.url, true);
     } catch(err) {
@@ -189,7 +187,7 @@ http.createServer(function(request, response) {
       }
 
       query(parsed_url.query.q, page, page_size).then(function (body) {
-        console.info("200: Returning "+body.hits.hits.length+" results");
+        console.info(request.url + " 200: Returning " + body.hits.hits.length + " results");
 
         body.hits.page_size = page_size;
 
