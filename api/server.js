@@ -138,6 +138,31 @@ function get_description(result) {
   return null;
 }
 
+function get_url(result) {
+  // Return IPFS URL: /ipfs/<dir_hash>/<reference> or /ipfs/<file_hash>
+  var references = result._source.references;
+
+  // Pick the reference with the longest title, for consistency with get_title
+  if (references.length > 0) {
+    references.sort(function (a, b) { return b.name.length - a.name.length; });
+
+    // Longest one
+    var lref = references[0];
+
+    if (lref.parent_hash && lref.name) {
+      return htmlEncode.htmlEncode(
+        '/ipfs/' + lref.parent_hash + '/' + lref.name
+      );
+    } else {
+      console.warn('no parent_hash for reference to '+result._id);
+    }
+
+  }
+
+  // Fallback to id
+  return htmlEncode.htmlEncode('/ipfs/' + result._id);
+}
+
 function transform_results(results) {
   var hits = [];
 
@@ -148,6 +173,7 @@ function transform_results(results) {
       "description": get_description(item),
       "type": item._type,
       "size": item._source.size,
+      "url": get_url(item),
       "references": item._source.references
     });
   });
