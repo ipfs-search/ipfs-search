@@ -10,6 +10,8 @@
   args:
     chdir: ../api
   become: false
+- name: Create destination folder for search api
+  file: path=/usr/local/libexec/ipfs-search-api state=directory
 - name: Sync ipfs-search api
   synchronize: src=../../../api/ dest=/usr/local/libexec/ipfs-search-api times=yes partial=yes archive=no recursive=yes
   notify: restart ipfs-search
