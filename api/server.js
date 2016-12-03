@@ -8,8 +8,8 @@ const htmlEncode = require('js-htmlencode');
 const server_port = 9615;
 
 var client = new elasticsearch.Client({
-  host: 'localhost:9200',
-  log: 'trace'
+  host: 'localhost:9201',
+  log: 'info'
 });
 
 function query(q, page, page_size) {
