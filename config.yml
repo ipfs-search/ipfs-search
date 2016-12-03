@@ -5,7 +5,7 @@ types:
   - video:
     - video/*
     - application/mp4
-  - documents:
+  - document:
     - text/html
     - text/plain
     - application/pdf
@@ -17,7 +17,7 @@ types:
     - "*word"
     - "*powerpoint"
     - "*document*"
-  - images:
+  - image:
     - image/*
 analyzed_fields:
   - title
