@@ -70,8 +70,6 @@ func update_references(references []indexer.Reference, name string, parent_hash 
 		}
 	}
 
-	log.Printf("Adding reference '%s' for %s", name, parent_hash)
-
 	references = append(references, indexer.Reference{
 		Name:       name,
 		ParentHash: parent_hash,
@@ -152,7 +150,7 @@ func (c Crawler) index_references(hash string, name string, parent_hash string) 
 
 	if already_indexed {
 		if references_updated {
-			log.Printf("Found '%s', updating references.", hash)
+			log.Printf("Found %s, adding reference '%s' from %s", hash, name, parent_hash)
 
 			properties := map[string]interface{}{
 				"references": references,
@@ -163,7 +161,7 @@ func (c Crawler) index_references(hash string, name string, parent_hash string) 
 				return nil, false, err
 			}
 		} else {
-			log.Printf("Found '%s', not updating references.", hash)
+			log.Printf("Found %s, not updating references.", hash)
 		}
 	}
 
