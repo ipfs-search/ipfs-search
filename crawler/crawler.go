@@ -53,6 +53,11 @@ func hashUrl(hash string) string {
 
 // Update references with name, parent_hash and parent_name. Returns true when updated
 func update_references(references []indexer.Reference, name string, parent_hash string) ([]indexer.Reference, bool) {
+	if references == nil {
+		// Initialize empty references when none have been found
+		references = []indexer.Reference{}
+	}
+
 	if parent_hash == "" {
 		// No parent hash, don't bother adding reference
 		return references, false
@@ -129,20 +134,25 @@ func (c Crawler) handleError(err error, hash string) (bool, error) {
 }
 
 func (c Crawler) index_references(hash string, name string, parent_hash string) ([]indexer.Reference, bool, error) {
-	var references []indexer.Reference
+	var already_indexed bool
 
 	references, item_type, err := c.id.GetReferences(hash)
 	if err != nil {
 		return nil, false, err
 	}
 
-	if references != nil {
-		log.Printf("Already indexed '%s'.", hash)
+	// TODO: Handle this more explicitly, use and detect NotFound
+	if references == nil {
+		already_indexed = false
+	} else {
+		already_indexed = true
+	}
 
-		references, references_updated := update_references(references, name, parent_hash)
+	references, references_updated := update_references(references, name, parent_hash)
 
+	if already_indexed {
 		if references_updated {
-			log.Printf("Updating references for '%s'.", hash)
+			log.Printf("Found '%s', updating references.", hash)
 
 			properties := map[string]interface{}{
 				"references": references,
@@ -153,20 +163,11 @@ func (c Crawler) index_references(hash string, name string, parent_hash string) 
 				return nil, false, err
 			}
 		} else {
-			log.Printf("Not updating references for '%s'", hash)
+			log.Printf("Found '%s', not updating references.", hash)
 		}
-
-		return references, true, nil
-	} else {
-		// Initialize references
-		references = []indexer.Reference{
-			{
-				Name:       name,
-				ParentHash: parent_hash,
-			}}
 	}
 
-	return references, false, nil
+	return references, already_indexed, nil
 }
 
 // Given a particular hash (file or directory), start crawling
