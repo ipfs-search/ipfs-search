@@ -9,3 +9,4 @@
 - template: src=ipfs-tika.service dest=/etc/systemd/system/ipfs-tika.service
   notify: restart ipfs-tika
 - service: name=ipfs-tika enabled=yes state=started
+  notify: restart ipfs-tika
