@@ -17,7 +17,7 @@ DeviceAllow=/dev/fuse
 #PrivateDevices=true
 #PrivateTmp=true
 MemoryAccounting=yes
-MemoryLimit=1024M
+MemoryLimit={{ ipfs_memlimit }}
 # As yet unsupported security options
 #PrivateUser=true
 #ReadOnlyPaths=*
