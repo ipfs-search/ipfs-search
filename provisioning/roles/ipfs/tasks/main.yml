@@ -22,7 +22,7 @@
     IPFS_PATH: "{{ ipfs_path }}"
   become: true
   become_user: ipfs
-- template: src=ipfs_config dest=/var/lib/ipfs/config
+- template: src=ipfs_config.json dest=/var/lib/ipfs/config
   notify: restart ipfs
 - name: Configure IPFS service
   template: src=ipfs.service dest=/etc/systemd/system/ipfs.service
