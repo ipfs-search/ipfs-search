@@ -10,3 +10,13 @@
   notify: restart ipfs-tika
 - service: name=ipfs-tika enabled=yes state=started
   notify: restart ipfs-tika
+- name: Enable ipfs-tika stale temp removal
+  cron:
+    name: Delete stale temp files
+    minute: "23"
+    hour: "*"
+    job: "find /tmp -maxdepth 1 -user ipfs-tika -cmin +60 -name '*.tmp' -delete"
+    state: present
+    cron_file: /etc/crontab
+    user: ipfs-tika
+  become: true
