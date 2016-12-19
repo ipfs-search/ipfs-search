@@ -3,7 +3,8 @@
 
 var $ = require('jquery'),
     console = require('console-browserify'),
-    result_template = require('./templates/results');
+    result_template = require('./templates/results'),
+    SearchHistory = require('./searchhistory');
 
 module.exports = {
   init: function() {
@@ -13,12 +14,10 @@ module.exports = {
         result_container = $('#result-container'),
         page_number = $('#page-number');
 
-    function submit_form() {
-      console.log('Form submit requested.');
-
+    function get_results(params) {
       $.get(
         search_form.attr('action'),
-        search_form.serialize()
+        params
       ).done(function (results) {
 
         result_container.html(result_template(results));
@@ -29,6 +28,16 @@ module.exports = {
         }, 100);
         console.log(results);
       });
+    }
+
+    SearchHistory.init(get_results);
+
+    function submit_form() {
+      console.log('Form submit requested.');
+
+      var serialized_form = search_form.serialize();
+      SearchHistory.update(serialized_form);
+      get_results(serialized_form);
 
       return false;
     }
