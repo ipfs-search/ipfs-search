@@ -59,14 +59,16 @@ func update_references(references []indexer.Reference, name string, parent_hash 
 	}
 
 	if parent_hash == "" {
-		log.Printf("No parent hash for item, not adding reference")
+		// log.Printf("DEBUG: No parent hash for item, not adding reference")
 		return references, false
 	}
 
-	for i := range references {
-		if references[i].ParentHash == parent_hash {
-			log.Printf("Reference '%s' for %s exists, not updating", name, parent_hash)
+	for _, reference := range references {
+		if reference.ParentHash == parent_hash {
+			// log.Printf("DEBUG: Reference '%s' for %s exists, not updating", name, parent_hash)
 			return references, false
+		} else {
+			// log.Printf("DEBUG: Parent hash %s doesnt match %s, maybe adding reference '%s'", reference.ParentHash, parent_hash, name)
 		}
 	}
 
