@@ -24,6 +24,7 @@ MemoryLimit={{ ipfs_memlimit }}
 #ReadWritePaths={{ ipfs_path }}
 #MemoryMax=512M
 LimitNOFILE=65536
+Nice=10
 
 [Install]
 WantedBy=default.target

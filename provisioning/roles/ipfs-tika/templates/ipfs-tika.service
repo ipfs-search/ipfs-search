@@ -9,6 +9,7 @@ User=ipfs-tika
 Group=ipfs-tika
 MemoryAccounting=yes
 MemoryLimit=512M
+Nice=10
 
 [Install]
 WantedBy=default.target
