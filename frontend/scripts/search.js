@@ -63,8 +63,8 @@ module.exports = {
       console.log('Form submit requested.');
 
       var serialized_form = search_form.serialize();
-      form_history.update(serialized_form);
       get_results(serialized_form);
+      form_history.update(serialized_form);
 
       return false;
     }
