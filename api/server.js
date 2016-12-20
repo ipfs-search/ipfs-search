@@ -4,8 +4,10 @@ const elasticsearch = require('elasticsearch');
 const http = require('http');
 const url = require('url');
 const htmlEncode = require('js-htmlencode');
+const downsize = require('downsize');
 
 const server_port = 9615;
+const result_description_length = 250;
 
 var client = new elasticsearch.Client({
   host: 'localhost:9200',
@@ -27,7 +29,7 @@ function query(q, page, page_size) {
           "fields": {
               "*": {
                   "number_of_fragments" : 1,
-                  "fragment_size" : 200
+                  "fragment_size" : result_description_length
               }
           }
       },
@@ -130,7 +132,11 @@ function get_description(result) {
   if (metadata) {
     // Description, if available
     if (metadata.description) {
-      return htmlEncode.htmlEncode(metadata.description[0]);
+      return htmlEncode.htmlEncode(
+        downsize(metadata.description[0], {
+          "characters": result_description_length, "append": "..."
+        })
+      );
     }
 
   }

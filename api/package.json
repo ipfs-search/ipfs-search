@@ -6,6 +6,7 @@
   "author": "Mathijs de Bruin <mathijs@mathijsfietst.nl> (http://mathijsfietst.nl/)",
   "license": "AGPL-3.0",
   "dependencies": {
+    "downsize": "0.0.8",
     "elasticsearch": "^11.0.1",
     "js-htmlencode": "^0.2.0",
     "mustache": "^2.2.1"
