@@ -190,6 +190,7 @@ http.createServer(function(request, response) {
         console.info(request.url + " 200: Returning " + body.hits.hits.length + " results");
 
         body.hits.page_size = page_size;
+        body.hits.page_count = Math.ceil(body.hits.total/page_size);
 
         transform_results(body.hits);
 
