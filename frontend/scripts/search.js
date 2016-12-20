@@ -5,9 +5,13 @@ var $ = require('jquery'),
     console = require('console-browserify'),
     after = require('./after'),
     result_template = require('./templates/results'),
-    SearchHistory = require('./searchhistory'),
+    form_history = require('./form_history'),
     blocker = require('./blocker'),
     blocker_wait_time = 300;
+
+// Ugly shizzle right here!
+window.jQuery = $;
+require('./jquery.deserialize');
 
 module.exports = {
   init: function() {
@@ -50,13 +54,16 @@ module.exports = {
       });
     }
 
-    SearchHistory.init(get_results);
+    form_history.init(function (params) {
+      $("#search-form").deserialize(params);
+      get_results(params);
+    });
 
     function submit_form() {
       console.log('Form submit requested.');
 
       var serialized_form = search_form.serialize();
-      SearchHistory.update(serialized_form);
+      form_history.update(serialized_form);
       get_results(serialized_form);
 
       return false;
