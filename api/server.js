@@ -26,7 +26,8 @@ function query(q, page, page_size) {
           "encoder": "html",
           "fields": {
               "*": {
-                  "number_of_fragments" : 1
+                  "number_of_fragments" : 1,
+                  "fragment_size" : 200
               }
           }
       },
