@@ -4,7 +4,8 @@
 var $ = require('jquery'),
     console = require('console-browserify'),
     result_template = require('./templates/results'),
-    SearchHistory = require('./searchhistory');
+    SearchHistory = require('./searchhistory'),
+    blocker = require('./blocker');
 
 module.exports = {
   init: function() {
@@ -15,6 +16,9 @@ module.exports = {
         page_number = $('#page-number');
 
     function get_results(params) {
+      // Show blocker
+      blocker.show();
+
       $.get(
         search_form.attr('action'),
         params
@@ -22,11 +26,12 @@ module.exports = {
 
         result_container.html(result_template(results));
 
+        blocker.hide();
+
         // Wait for re-render
         setTimeout(function () {
           $(window).scrollTop($('.header-wrapper').height());
         }, 100);
-        console.log(results);
       });
     }
 
