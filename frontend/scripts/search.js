@@ -5,7 +5,19 @@ var $ = require('jquery'),
     console = require('console-browserify'),
     result_template = require('./templates/results'),
     SearchHistory = require('./searchhistory'),
-    blocker = require('./blocker');
+    blocker = require('./blocker'),
+    blocker_wait_time = 300;
+
+function after(timeout) {
+  var delay_promise = $.Deferred();
+
+  setTimeout(function () {
+    delay_promise.resolve();
+  }, timeout);
+
+  return delay_promise;
+}
+
 
 module.exports = {
   init: function() {
@@ -16,22 +28,35 @@ module.exports = {
         page_number = $('#page-number');
 
     function get_results(params) {
-      // Show blocker
-      blocker.show();
+      // Show blocker for longer waits
 
-      $.get(
+      // This is silly, but sad. Promises can't be used with timeouts for
+      // some reason. Maybe switch to 'proper' promises?
+      var done = false;
+
+      var result_promise = $.get(
         search_form.attr('action'),
         params
-      ).done(function (results) {
+      );
+
+      result_promise.done(function (results) {
 
         result_container.html(result_template(results));
 
+        done = true;
         blocker.hide();
 
         // Wait for re-render
         setTimeout(function () {
           $(window).scrollTop($('.header-wrapper').height());
         }, 100);
+      });
+
+
+      after(blocker_wait_time).done(function () {
+        if (!done) {
+          blocker.show();
+        }
       });
     }
 
