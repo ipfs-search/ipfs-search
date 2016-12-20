@@ -3,21 +3,11 @@
 
 var $ = require('jquery'),
     console = require('console-browserify'),
+    after = require('./after'),
     result_template = require('./templates/results'),
     SearchHistory = require('./searchhistory'),
     blocker = require('./blocker'),
     blocker_wait_time = 300;
-
-function after(timeout) {
-  var delay_promise = $.Deferred();
-
-  setTimeout(function () {
-    delay_promise.resolve();
-  }, timeout);
-
-  return delay_promise;
-}
-
 
 module.exports = {
   init: function() {
