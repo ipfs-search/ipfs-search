@@ -55,4 +55,3 @@
     service:
       name=sshd
       state=restarted
-- include: ipfs-search.yml
