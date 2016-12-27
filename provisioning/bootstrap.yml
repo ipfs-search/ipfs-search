@@ -20,7 +20,7 @@
     lineinfile:
       "dest=/etc/sudoers
       regexp='^{{ remote_user }} ALL'
-      line='{{ remote_user }} ALL=(ALL) NOPASSWD: ALL'
+      line='{{ remote_user }} ALL=(ALL:ALL) NOPASSWD: ALL'
       state=present"
 
   - name: Disallow root SSH access
