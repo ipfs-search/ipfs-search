@@ -1,15 +1,6 @@
 ---
-- include: ipfs-search.yml
+- include: ipfs-search.yml es_heap_size=6g
 - hosts: youngone
   become: true
   roles:
     - { name: snapshots, tags: ['snapshots'] }
-    # - { name: cgconfig, tags: ['cgconfig']}
-    # - { name: elasticsearch, tags: ['elasticsearch'], es_heap_size: 1g}
-    # - { name: rabbitmq, tags: ['rabbitmq'] }
-    # - { name: ipfs, tags: ['ipfs'] }
-    # - { name: ipfs-tika, tags: ['ipfs-tika'] }
-    # - { name: crawler, tags: ['crawler'] }
-    # - { name: snifloop, tags: ['snifloop']}
-    # - { name: api, tags: ['api']}
-    # - { name: frontend, tags: ['frontend']}
