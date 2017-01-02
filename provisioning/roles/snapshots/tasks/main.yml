@@ -1,4 +1,10 @@
 ---
+- name: Create snapshot volume
+  filesystem:
+    dev: /dev/vdb
+    fstype: ext4
+    resizefs: yes
+    opts: -L snapshots -m 1
 - name: Mount snapshot volume
   mount:
     name: /var/lib/elasticsearch/backup
