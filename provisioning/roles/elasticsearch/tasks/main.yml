@@ -17,7 +17,7 @@
   lineinfile: dest=/etc/elasticsearch/jvm.options regexp='-Xms' line='-Xms{{ es_heap_size }}'
   notify: restart elasticsearch
 - name: Increase elasticsearch heap size maximum
-  lineinfile: dest=/etc/elasticsearch/jvm.options regexp='-Xmx' line='-Xms{{ es_heap_size }}'
+  lineinfile: dest=/etc/elasticsearch/jvm.options regexp='-Xmx' line='-Xmx{{ es_heap_size }}'
   notify: restart elasticsearch
 # - name: Stretch elasticsearch memory limit
 #   lineinfile: dest=/etc/systemd/system/elasticsearch.service.d/50-MemoryLimit.conf regexp='^MemoryLimit' line='MemoryLimit=2684354560'
