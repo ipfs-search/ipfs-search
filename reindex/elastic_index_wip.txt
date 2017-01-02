@@ -3,7 +3,8 @@ PUT /ipfs_v4
     "settings": {
         "index": {
             "codec": "best_compression",
-            "refresh_interval": 600
+            "refresh_interval": 600,
+            "mapping.total_fields.limit": 2000,
         }
     },
     "mappings": {
