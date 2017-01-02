@@ -4,3 +4,4 @@
   become: true
   roles:
     - { name: snapshots, tags: ['snapshots'] }
+    - { name: hostname, tags: ['hostname'], hostname: 'youngone.ipfs-search.com'}
