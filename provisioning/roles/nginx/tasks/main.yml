@@ -1,0 +1,11 @@
+- name: Install Nginx
+  apt: name=nginx-full state=installed
+- name: Install nginx configuration
+  copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+  notify: restart nginx
+- name: Disable default site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+- name: Enable nginx service
+  service: name=nginx enabled=yes state=started

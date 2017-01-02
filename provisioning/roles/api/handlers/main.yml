@@ -1,5 +1,3 @@
 ---
 - name: restart ipfs-search
   systemd: name=ipfs-search daemon_reload=yes state=restarted
-- name: restart nginx
-  systemd: name=nginx daemon_reload=yes state=restarted

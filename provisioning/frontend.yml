@@ -1,0 +1,7 @@
+---
+- hosts: frontend
+  become: true
+  roles:
+    - { name: common, tags: ['common'] }
+    - { name: nginx, tags: ['nginx']}
+    - { name: frontend, tags: ['frontend']}

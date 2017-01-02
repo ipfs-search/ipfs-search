@@ -1,7 +1,0 @@
----
-- include: ipfs-search.yml es_heap_size=6g
-- hosts: youngone
-  become: true
-  roles:
-    - { name: snapshots, tags: ['snapshots'] }
-    - { name: hostname, tags: ['hostname'], hostname: 'youngone.ipfs-search.com'}
