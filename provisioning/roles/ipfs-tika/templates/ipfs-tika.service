@@ -10,6 +10,7 @@ Group=ipfs-tika
 MemoryAccounting=yes
 MemoryLimit=512M
 Nice=10
+Restart=on-failure
 
 [Install]
 WantedBy=default.target
