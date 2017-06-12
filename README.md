@@ -8,7 +8,7 @@ So terribly sorry, but hosting a search engine like this takes a considerable am
 
 As this moment, the founders of ipfs-search, moved on to bigger and better things and had to cut hosting.</p>
 
-If you are able to help out with either of them, >mail us at info@ipfs-search.com or find us at #ipfssearch on Freenode (or #ipfs-search:chat.weho.st on Matrix).
+If you are able to help out with either of them, mail us at info@ipfs-search.com or find us at #ipfssearch on Freenode (or #ipfs-search:chat.weho.st on Matrix).
 
 ## Roadmap
 For discussing and suggesting features, look at the [project planning](https://github.com/ipfs-search/ipfs-search/projects).
