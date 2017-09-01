@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/dokterbob/ipfs-search/crawler"
-	"github.com/dokterbob/ipfs-search/indexer"
-	"github.com/dokterbob/ipfs-search/queue"
+	"github.com/ipfs-search/ipfs-search/crawler"
+	"github.com/ipfs-search/ipfs-search/indexer"
+	"github.com/ipfs-search/ipfs-search/queue"
 	"golang.org/x/net/context"
-	"gopkg.in/ipfs/go-ipfs-api.v1"
+	"github.com/ipfs/go-ipfs-api"
 	"gopkg.in/olivere/elastic.v5"
 	"gopkg.in/urfave/cli.v1"
 	"log"

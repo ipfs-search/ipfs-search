@@ -13,11 +13,20 @@ If you are able to help out with either of them, mail us at info@ipfs-search.com
 ## Roadmap
 For discussing and suggesting features, look at the [project planning](https://github.com/ipfs-search/ipfs-search/projects).
 
-## Vagrant
+## Local setup
+
+Local installation is done using vagrant:
+
 ```bash
-$ vagrant up
+git clone https://github.com/ipfs-search/ipfs-search.git $GOPATH/src/github.com/ipfs-search/ipfs-search
+cd $GOPATH/src/github.com/ipfs-search/ipfs-search
+go get
+vagrant up
 ```
-The search engine should now listen on port 8881 of your local machine, with the API directly exposed on 9615, ES on 9200 and RabbitMQ on 15672.
+
+This starts up the API on port 9615, Elasticsearch on 9200 and RabbitMQ on 15672.
+
+Vagrant setup does not currently start up the frontend.
 
 ## Manual provisioning
 ```bash
