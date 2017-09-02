@@ -3,9 +3,9 @@ package crawler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dokterbob/ipfs-search/indexer"
-	"github.com/dokterbob/ipfs-search/queue"
-	"gopkg.in/ipfs/go-ipfs-api.v1"
+	"github.com/ipfs-search/ipfs-search/indexer"
+	"github.com/ipfs-search/ipfs-search/queue"
+	"github.com/ipfs/go-ipfs-api"
 	"log"
 	"net"
 	"net/http"
