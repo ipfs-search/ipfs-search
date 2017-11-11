@@ -6,7 +6,7 @@ Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterb
 ## Maintainer requested
 So terribly sorry, but hosting a search engine like this takes a considerable amount of resources (money _and_ TLC).
 
-As this moment, the founders of ipfs-search, moved on to bigger and better things and had to cut hosting.</p>
+As this moment, the founders of ipfs-search had to cut hosting because of the growing resources required.</p>
 
 If you are able to help out with either of them, mail us at info@ipfs-search.com or find us at #ipfssearch on Freenode (or #ipfs-search:chat.weho.st on Matrix).
 
