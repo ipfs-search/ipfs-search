@@ -9,6 +9,15 @@
   apt: pkg=elasticsearch state=latest
 - name: Create snapshot directory
   file: path=/var/lib/elasticsearch/backup state=directory owner=elasticsearch group=elasticsearch
+- name: Daily snapshot cronjob
+  cron:
+    name: "Elasticsearch snapshot"
+    cron_file: /etc/crontab
+    minute: 16
+    hour: 3
+    backup: yes
+    user: nobody
+    job: "curl -XPUT http://127.0.0.1:9200/_snapshot/ipfs/snapshot_`date +'%y%m%d-%H%M'` | jq -e '.accepted' > /dev/null"
 - template: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml
   notify: restart elasticsearch
 - template: src=logging.yml dest=/etc/elasticsearch/logging.yml
