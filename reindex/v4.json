@@ -1,10 +1,8 @@
-PUT /ipfs_v4
 {
     "settings": {
         "index": {
-            "codec": "best_compression",
-            "refresh_interval": 600,
-            "mapping.total_fields.limit": 2000,
+            "refresh_interval": "15m",
+            "mapping.total_fields.limit": 2000
         }
     },
     "mappings": {
@@ -28,9 +26,8 @@ PUT /ipfs_v4
         "invalid": {
             "properties": {
                "error": {
-                  "type": "string",
-                  "index": "not_analyzed",
-                  "doc_values": true
+                  "type": "text",
+                  "index": false
                }
             }
         },
@@ -38,8 +35,8 @@ PUT /ipfs_v4
             "dynamic":      "false",
             "properties": {
                 "content":  {
-                    "type": "string",
-                    "index": "analyzed",
+                    "type": "text",
+                    "index": true,
                     "include_in_all": true
                 },
                 "metadata":  {
@@ -47,113 +44,113 @@ PUT /ipfs_v4
                     "dynamic":  true,
                     "properties": {
                         "title" : {
-                            "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "boost": 2,
                             "include_in_all": true
                         },
                         "name": {
-                            "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "boost": 2,
                             "include_in_all": true
                         },
                         "author": {
-                            "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "include_in_all": true
                         },
                         "description": {
-                            "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "boost": 1.5,
                             "include_in_all": true
                         },
                         "producer": {
-                            "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "include_in_all": true
                         },
                         "publisher": {
-                            "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "include_in_all": true
                         },
                         "isbn": {
-                            "type": "string",
-                            "index": "not_analyzed",
+                            "type": "keyword",
+                            "index": true,
                             "include_in_all": true
                         },
                         "language": {
-                            "type": "string",
-                            "index": "not_analyzed",
+                            "type": "keyword",
+                            "index": true,
                             "include_in_all": true,
                             "doc_values": true
                         },
                         "keywords": {
-                           "type": "string",
-                            "index": "analyzed",
-                            "include_in_all": true,
-                            "boost": 2
+                           "type": "text",
+                           "index": true,
+                           "include_in_all": true,
+                           "boost": 2
                         },
                         "xmpDM:album": {
-                           "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "include_in_all": true,
                             "boost": 1.5
                         },
                         "xmpDM:albumArtist": {
-                           "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "include_in_all": true,
                             "boost": 2
                         },
                         "xmpDM:artist": {
-                            "index": "analyzed",
-                            "type": "string",
+                            "type": "text",
+                            "index": true,
                             "include_in_all": true,
                             "boost": 2
                         },
                         "xmpDM:composer": {
-                            "index": "analyzed",
-                            "type": "string",
+                            "type": "text",
+                            "index": true,
                             "include_in_all": true,
                             "boost": 2
                         },
                         "Content-Type": {
-                            "type": "string",
-                            "index": "not_analyzed",
+                            "type": "keyword",
+                            "index": true,
                             "doc_values": true
                         },
                         "X-Parsed-By": {
-                            "type": "string",
-                            "index": "not_analyzed",
+                            "type": "keyword",
+                            "index": true,
                             "doc_values": true
                         },
                         "date": {
                             "type": "date",
                             "format": "strict_date_optional_time||epoch_millis",
-                            "index": "not_analyzed",
+                            "index": true,
                             "doc_values": true
                         },
                         "modified": {
                             "type": "date",
                             "format": "strict_date_optional_time||epoch_millis",
-                            "index": "not_analyzed",
+                            "index": true,
                             "doc_values": true
                         }
                     }
                 },
                 "urls": {
-                    "type": "string",
-                    "index": "not_analyzed",
+                    "type": "keyword",
+                    "index": true,
                     "include_in_all": true,
                     "doc_values": true
                 },
                 "size": {
                     "type": "long",
                     "ignore_malformed": true,
-                    "index": "not_analyzed",
+                    "index": true,
                     "doc_values": true
                 },
                 "references":  {
@@ -161,19 +158,19 @@ PUT /ipfs_v4
                     "dynamic":  true,
                     "properties": {
                         "name": {
-                            "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "boost": 2,
                             "include_in_all": true
                         },
                         "hash": {
-                            "type": "string",
-                            "index": "not_analyzed",
+                            "type": "keyword",
+                            "index": true,
                             "include_in_all": true
                         },
                         "parent_hash": {
-                            "type": "string",
-                            "index": "not_analyzed",
+                            "type": "keyword",
+                            "index": true,
                             "include_in_all": true
                         }
                     }
@@ -188,13 +185,13 @@ PUT /ipfs_v4
                     "dynamic":  true,
                     "properties": {
                         "Hash": {
-                           "type": "string",
+                            "type": "keyword",
+                            "index": true,
                             "include_in_all": true,
-                            "boost": 0.5,
-                            "index": "not_analyzed"
+                            "boost": 0.5
                         },
                         "Name": {
-                           "type": "string",
+                            "type": "text",
                             "include_in_all": true,
                             "boost": 2
                         },
@@ -204,17 +201,17 @@ PUT /ipfs_v4
                            "include_in_all": false
                         },
                         "Type": {
-                           "type": "string",
+                           "type": "keyword",
+                           "index": true,
                            "doc_values": true,
-                           "include_in_all": false,
-                            "index": "not_analyzed"
+                           "include_in_all": false
                         }
                      }
                 },
                 "size": {
                     "type": "long",
                     "ignore_malformed": true,
-                    "index": "not_analyzed",
+                    "index": true,
                     "doc_values": true
                 },
                 "references":  {
@@ -222,14 +219,14 @@ PUT /ipfs_v4
                     "dynamic":  true,
                     "properties": {
                         "name": {
-                            "type": "string",
-                            "index": "analyzed",
+                            "type": "text",
+                            "index": true,
                             "boost": 2,
                             "include_in_all": true
                         },
                         "hash": {
-                            "type": "string",
-                            "index": "not_analyzed",
+                            "type": "keyword",
+                            "index": true,
                             "include_in_all": true
                         }
                     }
