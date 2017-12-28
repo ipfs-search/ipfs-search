@@ -1,4 +1,9 @@
 ---
+- name: Locally install Go dependencies
+  local_action: command go get ./...
+  args:
+    chdir: ../
+  become: false
 - name: Locally compile executable
   local_action: command make linux64
   args:
