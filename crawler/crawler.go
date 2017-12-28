@@ -19,7 +19,7 @@ import (
 const (
 	// Reconnect time in seconds
 	RECONNECT_WAIT    = 2
-	TIKA_TIMEOUT      = 120
+	TIKA_TIMEOUT      = 240
 	METADATA_MAX_SIZE = 50 * 1024 * 1024
 )
 
