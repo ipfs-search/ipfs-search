@@ -1,38 +1,23 @@
 div.blocker {
-    position: fixed;
     // Initially hide
-    // display: none;
+    display: none;
 
-    // > div {
+    > div {
         z-index: 10;
         height: 100vh;
         width: 100vw;
-        background-color: rgba(0,0,0,0.75);
+        background-color: black;
         color: white;
+        opacity: 0.5;
 
-        font-size: 150%;
+        font-size: 48pt;
 
         /* Vertically center content*/
         display: flex;
         align-items: center;
         justify-content: center;
-    // }
-
-    p {
-        width: 30em;
     }
 
-    > div {
-        background-color: rgba(140, 127, 13, 0.8);
-        border-radius: 20px;
-        padding: 20px;
-    }
-
-    a {
-        color: rgb(245, 232, 138);
-    }
-
-    /*
     @keyframes dots-1 { from { opacity: 0; } 25% { opacity: 1; } }
     @keyframes dots-2 { from { opacity: 0; } 50% { opacity: 1; } }
     @keyframes dots-3 { from { opacity: 0; } 75% { opacity: 1; } }
@@ -54,6 +39,5 @@ div.blocker {
         animation-name: dots-3;
         -webkit-animation-name: dots-3;
     }
-    */
 }
 

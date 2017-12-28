@@ -8,7 +8,7 @@ ExecStart=/usr/bin/java -Xmx512m -jar /usr/local/libexec/{{ ipfs_tika_jar }}
 User=ipfs-tika
 Group=ipfs-tika
 MemoryAccounting=yes
-MemoryLimit=512M
+MemoryLimit=768M
 Nice=10
 Restart=on-failure
 
