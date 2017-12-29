@@ -1,5 +1,5 @@
 ---
 ipfs_tika_path: /usr/local/libexec
-ipfs_tika_jar: ipfs-tika-0.3-jar-with-dependencies.jar
-ipfs_tika_sha1: 22153176a1f966db6debbb348991afe6f3b2848c
-ipfs_tika_mirror: https://github.com/dokterbob/ipfs-tika/releases/download/v0.3/
+ipfs_tika_jar: ipfs-tika-0.2-jar-with-dependencies.jar
+ipfs_tika_sha1: 758c041f573f012f5f88e2c09fa0384fd95c76ed
+ipfs_tika_mirror: https://github.com/dokterbob/ipfs-tika/releases/download/v0.2/
