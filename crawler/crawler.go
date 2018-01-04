@@ -18,9 +18,15 @@ import (
 
 const (
 	// Reconnect time in seconds
-	RECONNECT_WAIT    = 2
-	TIKA_TIMEOUT      = 180
+	RECONNECT_WAIT = 2
+	TIKA_TIMEOUT   = 180
+
+	// Don't attempt to get metadata for files over this size
 	METADATA_MAX_SIZE = 50 * 1024 * 1024
+
+	// Size for partial items - this is the default chunker block size
+	// TODO: replace by a sane method of skipping partials
+	PARTIAL_SIZE = 262144
 )
 
 type CrawlerArgs struct {
@@ -222,18 +228,7 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 			return err
 		}
 	case "Directory":
-		// Index name and size for directory and directory items
-		properties := map[string]interface{}{
-			"links":      list.Links,
-			"size":       list.Size,
-			"references": references,
-		}
-
-		err := c.id.IndexItem("directory", hash, properties)
-		if err != nil {
-			return err
-		}
-
+		// Queue indexing of linked items
 		for _, link := range list.Links {
 			args := CrawlerArgs{
 				Hash:       link.Hash,
@@ -262,6 +257,27 @@ func (c Crawler) CrawlHash(hash string, name string, parent_hash string, parent_
 				log.Printf("Type '%s' skipped for '%s'", list.Type, hash)
 			}
 		}
+
+		// Index name and size for directory and directory items
+		properties := map[string]interface{}{
+			"links":      list.Links,
+			"size":       list.Size,
+			"references": references,
+		}
+
+		// Skip partial content
+		if list.Size == PARTIAL_SIZE && parent_hash == "" {
+			// Assertion error.
+			// REMOVE ME!
+			log.Printf("Skipping unreferenced partial content for directory %s", hash)
+			return nil
+		}
+
+		err := c.id.IndexItem("directory", hash, properties)
+		if err != nil {
+			return err
+		}
+
 	default:
 		log.Printf("Type '%s' skipped for '%s'", list.Type, hash)
 	}
@@ -298,10 +314,10 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 
 // Crawl a single object, known to be a file
 func (c Crawler) CrawlFile(hash string, name string, parent_hash string, parent_name string, size uint64) error {
-	if size == 262144 && parent_hash == "" {
+	if size == PARTIAL_SIZE && parent_hash == "" {
 		// Assertion error.
 		// REMOVE ME!
-		log.Printf("Skipping unreferenced partial content for %s", hash)
+		log.Printf("Skipping unreferenced partial content for file %s", hash)
 		return nil
 	}
 
