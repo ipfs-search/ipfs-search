@@ -5,8 +5,8 @@ import (
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs-search/ipfs-search/queue"
-	"golang.org/x/net/context"
 	"github.com/ipfs/go-ipfs-api"
+	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 	"gopkg.in/urfave/cli.v1"
 	"log"
@@ -17,7 +17,7 @@ import (
 const (
 	IPFS_API     = "localhost:5001"
 	HASH_WORKERS = 140
-	FILE_WORKERS = 70
+	FILE_WORKERS = 90
 	IPFS_TIMEOUT = 120 * time.Duration(time.Second)
 	HASH_WAIT    = time.Duration(100 * time.Millisecond)
 	FILE_WAIT    = HASH_WAIT
