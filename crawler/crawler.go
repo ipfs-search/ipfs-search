@@ -19,7 +19,7 @@ import (
 const (
 	// Reconnect time in seconds
 	RECONNECT_WAIT = 2
-	TIKA_TIMEOUT   = 180
+	TIKA_TIMEOUT   = 300
 
 	// Don't attempt to get metadata for files over this size
 	METADATA_MAX_SIZE = 50 * 1024 * 1024

@@ -4,11 +4,11 @@ Requires=ipfs.service
 After=ipfs.service
 
 [Service]
-ExecStart=/usr/bin/java -Xmx512m -jar /usr/local/libexec/{{ ipfs_tika_jar }}
+ExecStart=/usr/bin/java -Xmx768m -jar /usr/local/libexec/{{ ipfs_tika_jar }}
 User=ipfs-tika
 Group=ipfs-tika
 MemoryAccounting=yes
-MemoryLimit=1024M
+MemoryLimit=2048M
 Nice=10
 Restart=on-failure
 
