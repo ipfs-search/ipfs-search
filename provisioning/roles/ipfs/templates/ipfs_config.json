@@ -131,5 +131,11 @@
     "DisableNatPortMap": true,
     "DisableRelay": false,
     "EnableRelayHop": false
+  },
+  "ConnMgr": {
+    "Type": "basic",
+    "LowWater": 600,
+    "HighWater": 7200,
+    "GracePeriod": "20s"
   }
 }
