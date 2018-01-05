@@ -5,7 +5,7 @@
     - { name: common, tags: ['common'] }
     - { name: hostname, tags: ['hostname'], hostname: 'youngone.ipfs-search.com'}
     - { name: cgconfig, tags: ['cgconfig']}
-    - { name: elasticsearch, tags: ['elasticsearch'], es_heap_size: 6g }
+    - { name: elasticsearch, tags: ['elasticsearch'], es_heap_size: 12g }
     - { name: snapshots, tags: ['snapshots'] }
     - { name: rabbitmq, tags: ['rabbitmq'] }
     - { name: ipfs, tags: ['ipfs'] }
