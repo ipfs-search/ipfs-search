@@ -14,6 +14,12 @@ If you are able to help out with either of them, mail us at info@ipfs-search.com
 ## Roadmap
 For discussing and suggesting features, look at the [project planning](https://github.com/ipfs-search/ipfs-search/projects).
 
+## Building
+```bash
+$ go get ./...
+$ make
+```
+
 ## Running
 First of all, make sure Ansible 2.2 is installed:
 
