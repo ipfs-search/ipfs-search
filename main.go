@@ -1,3 +1,7 @@
+/*
+
+Search engine for IPFS using Elasticsearch, RabbitMQ and Tika.
+*/
 package main
 
 import (
