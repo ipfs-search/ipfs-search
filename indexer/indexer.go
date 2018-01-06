@@ -39,9 +39,9 @@ func (i Indexer) IndexItem(doctype string, hash string, properties map[string]in
 	return nil
 }
 
-// Return existing references for an object, or nil, and the type
-// When no object is found nil is returned but no error is set
-// Otherwise, an empty list is returned
+// Return existing references for an object, or nil, and the type.
+// When no object is found nil is returned but no error is set.
+// Otherwise, an empty list is returned.
 func (i Indexer) GetReferences(hash string) ([]Reference, string, error) {
 	fsc := elastic.NewFetchSourceContext(true)
 	fsc.Include("references")
