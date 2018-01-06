@@ -18,13 +18,14 @@ import (
 	"time"
 )
 
+// TODO: Read this from configuration file.
 const (
-	IPFS_API     = "localhost:5001"
-	HASH_WORKERS = 140
-	FILE_WORKERS = 120
-	IPFS_TIMEOUT = 360 * time.Duration(time.Second)
-	HASH_WAIT    = time.Duration(100 * time.Millisecond)
-	FILE_WAIT    = HASH_WAIT
+	ipfsApi     = "localhost:5001"
+	hashWorkers = 140
+	fileWorkers = 120
+	ipfsTimeout = 360 * time.Duration(time.Second)
+	hashWait    = time.Duration(100 * time.Millisecond)
+	fileWait    = hashWait
 )
 
 func main() {
@@ -56,7 +57,7 @@ func main() {
 	app.Run(os.Args)
 }
 
-func get_elastic() (*elastic.Client, error) {
+func getElastic() (*elastic.Client, error) {
 	el, err := elastic.NewClient()
 	if err != nil {
 		return nil, err
@@ -106,28 +107,28 @@ func add(c *cli.Context) error {
 
 func crawl(c *cli.Context) error {
 	// For now, assume gateway running on default host:port
-	sh := shell.NewShell(IPFS_API)
+	sh := shell.NewShell(ipfsApi)
 
 	// Set 1 minute timeout on IPFS requests
-	sh.SetTimeout(IPFS_TIMEOUT)
+	sh.SetTimeout(ipfsTimeout)
 
-	el, err := get_elastic()
+	el, err := getElastic()
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	add_ch, err := queue.NewChannel()
+	addCh, err := queue.NewChannel()
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
-	defer add_ch.Close()
+	defer addCh.Close()
 
-	hq, err := queue.NewTaskQueue(add_ch, "hashes")
+	hq, err := queue.NewTaskQueue(addCh, "hashes")
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	fq, err := queue.NewTaskQueue(add_ch, "files")
+	fq, err := queue.NewTaskQueue(addCh, "files")
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -138,7 +139,7 @@ func crawl(c *cli.Context) error {
 
 	errc := make(chan error, 1)
 
-	for i := 0; i < HASH_WORKERS; i++ {
+	for i := 0; i < hashWorkers; i++ {
 		// Now create queues and channel for workers
 		ch, err := queue.NewChannel()
 		if err != nil {
@@ -163,10 +164,10 @@ func crawl(c *cli.Context) error {
 		}, &crawler.CrawlerArgs{}, errc)
 
 		// Start workers timeout/hash time apart
-		time.Sleep(HASH_WAIT)
+		time.Sleep(hashWait)
 	}
 
-	for i := 0; i < FILE_WORKERS; i++ {
+	for i := 0; i < fileWorkers; i++ {
 		ch, err := queue.NewChannel()
 		if err != nil {
 			return cli.NewExitError(err.Error(), 1)
@@ -191,7 +192,7 @@ func crawl(c *cli.Context) error {
 		}, &crawler.CrawlerArgs{}, errc)
 
 		// Start workers timeout/hash time apart
-		time.Sleep(FILE_WAIT)
+		time.Sleep(fileWait)
 	}
 
 	// sigs := make(chan os.Signal, 1)
@@ -205,7 +206,4 @@ func crawl(c *cli.Context) error {
 			log.Printf("%T: %v", err, err)
 		}
 	}
-
-	// No error
-	return nil
 }
