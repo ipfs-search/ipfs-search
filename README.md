@@ -1,4 +1,5 @@
 # [ipfs-search](http://ipfs-search.com)
+[![Build Status](https://travis-ci.org/ipfs-search/ipfs-search.svg?branch=travis)](https://travis-ci.org/ipfs-search/ipfs-search)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/maintainability)](https://codeclimate.com/github/ipfs-search/ipfs-search/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/test_coverage)](https://codeclimate.com/github/ipfs-search/ipfs-search/test_coverage)
 [![GoDoc](https://godoc.org/github.com/ipfs-search/ipfs-search?status.svg)](https://godoc.org/github.com/ipfs-search/ipfs-search)
@@ -13,6 +14,12 @@ If you are able to help out with either of them, mail us at info@ipfs-search.com
 
 ## Roadmap
 For discussing and suggesting features, look at the [project planning](https://github.com/ipfs-search/ipfs-search/projects).
+
+## Building
+```bash
+$ go get ./...
+$ make
+```
 
 ## Running
 First of all, make sure Ansible 2.2 is installed:
