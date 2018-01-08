@@ -115,7 +115,7 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 						err, ok = r.(error)
 
 						if !ok {
-							err = fmt.Errorf("%T: %v", r)
+							err = fmt.Errorf("Unassertable panic error: %v", r)
 						}
 
 						errc <- err
