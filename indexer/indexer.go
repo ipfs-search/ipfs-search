@@ -6,22 +6,25 @@ import (
 	"gopkg.in/olivere/elastic.v5"
 )
 
+// Indexer performs indexing of items and its references using ElasticCloud
 type Indexer struct {
 	el *elastic.Client
 }
 
+// Reference to indexed item
 type Reference struct {
 	ParentHash string `json:"parent_hash"`
 	Name       string `json:"name"`
 }
 
+// NewIndexer initialises an indexer with a given ES client
 func NewIndexer(el *elastic.Client) *Indexer {
 	return &Indexer{
 		el: el,
 	}
 }
 
-// Add file or directory to index
+// IndexItem adds or updates an IPFS item with arbitrary properties
 func (i Indexer) IndexItem(doctype string, hash string, properties map[string]interface{}) error {
 	_, err := i.el.Update().
 		Index("ipfs").
@@ -39,9 +42,9 @@ func (i Indexer) IndexItem(doctype string, hash string, properties map[string]in
 	return nil
 }
 
-// Return existing references for an object, or nil, and the type.
+// GetReferences returns existing references and the type for an object, or nil.
 // When no object is found nil is returned but no error is set.
-// Otherwise, an empty list is returned.
+// If no object is found, an empty list is returned.
 func (i Indexer) GetReferences(hash string) ([]Reference, string, error) {
 	fsc := elastic.NewFetchSourceContext(true)
 	fsc.Include("references")

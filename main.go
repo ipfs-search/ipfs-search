@@ -20,7 +20,7 @@ import (
 
 // TODO: Read this from configuration file.
 const (
-	ipfsApi     = "localhost:5001"
+	ipfsAPI     = "localhost:5001"
 	hashWorkers = 140
 	fileWorkers = 120
 	ipfsTimeout = 360 * time.Duration(time.Second)
@@ -107,7 +107,7 @@ func add(c *cli.Context) error {
 
 func crawl(c *cli.Context) error {
 	// For now, assume gateway running on default host:port
-	sh := shell.NewShell(ipfsApi)
+	sh := shell.NewShell(ipfsAPI)
 
 	// Set 1 minute timeout on IPFS requests
 	sh.SetTimeout(ipfsTimeout)
@@ -153,7 +153,7 @@ func crawl(c *cli.Context) error {
 		}
 
 		hq.StartConsumer(func(params interface{}) error {
-			args := params.(*crawler.CrawlerArgs)
+			args := params.(*crawler.Args)
 
 			return crawli.CrawlHash(
 				args.Hash,
@@ -161,7 +161,7 @@ func crawl(c *cli.Context) error {
 				args.ParentHash,
 				args.ParentName,
 			)
-		}, &crawler.CrawlerArgs{}, errc)
+		}, &crawler.Args{}, errc)
 
 		// Start workers timeout/hash time apart
 		time.Sleep(hashWait)
@@ -180,7 +180,7 @@ func crawl(c *cli.Context) error {
 		}
 
 		fq.StartConsumer(func(params interface{}) error {
-			args := params.(*crawler.CrawlerArgs)
+			args := params.(*crawler.Args)
 
 			return crawli.CrawlFile(
 				args.Hash,
@@ -189,7 +189,7 @@ func crawl(c *cli.Context) error {
 				args.ParentName,
 				args.Size,
 			)
-		}, &crawler.CrawlerArgs{}, errc)
+		}, &crawler.Args{}, errc)
 
 		// Start workers timeout/hash time apart
 		time.Sleep(fileWait)

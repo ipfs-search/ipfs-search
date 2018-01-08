@@ -9,10 +9,12 @@ import (
 
 var conn *amqp.Connection
 
+// TaskChannel wraps an AMQP channel for tasks
 type TaskChannel struct {
 	ch *amqp.Channel
 }
 
+// NewChannel initialises an AMQP channel
 func NewChannel() (*TaskChannel, error) {
 	var err error
 
@@ -42,6 +44,7 @@ func NewChannel() (*TaskChannel, error) {
 	}, nil
 }
 
+// Close closes a TaskChannel
 func (c *TaskChannel) Close() error {
 	if conn != nil {
 		// Connection exists, defer close
@@ -58,19 +61,21 @@ func (c *TaskChannel) Close() error {
 	return nil
 }
 
+// TaskQueue wraps an channel/queue for tasks
 type TaskQueue struct {
 	c *TaskChannel
 	q *amqp.Queue
 }
 
-func NewTaskQueue(c *TaskChannel, queue_name string) (*TaskQueue, error) {
+// NewTaskQueue creates a named queue on a given chennel
+func NewTaskQueue(c *TaskChannel, queueName string) (*TaskQueue, error) {
 	q, err := c.ch.QueueDeclare(
-		queue_name, // name
-		true,       // durable
-		false,      // delete when unused
-		false,      // exclusive
-		false,      // no-wait
-		nil,        // arguments
+		queueName, // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
 	)
 	if err != nil {
 		return nil, err
@@ -84,6 +89,7 @@ func NewTaskQueue(c *TaskChannel, queue_name string) (*TaskQueue, error) {
 	return &tq, nil
 }
 
+// StartConsumer starts a (non-blocking) worker function for tasks in a TaskQueue
 func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan error) error {
 	msgs, err := t.c.ch.Consume(
 		t.q.Name, // queue
@@ -115,7 +121,7 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 						err, ok = r.(error)
 
 						if !ok {
-							err = fmt.Errorf("%T: %v", r)
+							err = fmt.Errorf("Unassertable panic error: %v", r)
 						}
 
 						errc <- err
@@ -150,6 +156,7 @@ func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interfac
 	return nil
 }
 
+// AddTask adds a task with specified params to the TaskQueue
 func (t TaskQueue) AddTask(params interface{}) error {
 	body, err := json.Marshal(params)
 	if err != nil {
