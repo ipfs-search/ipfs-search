@@ -42,6 +42,8 @@ This starts up the API on port 9615, Elasticsearch on 9200 and RabbitMQ on 15672
 Vagrant setup does not currently start up the frontend.
 
 ### Manual provisioning
+Requires an Ubuntu 16.04 machine.
+
 ```bash
 $ ansible-playbook provisioning/bootstrap.yml --user root --ask-pass
 $ ansible-playbook provisioning/backend.yml
