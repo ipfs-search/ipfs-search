@@ -14,9 +14,9 @@ const (
 	ipfsAPI     = "localhost:5001"
 	hashWorkers = 140
 	fileWorkers = 120
-	ipfsTimeout = 360 * time.Duration(time.Second)
-	hashWait    = time.Duration(100 * time.Millisecond)
-	fileWait    = hashWait
+	ipfsTimeout = 360 * time.Duration(time.Second)      // Timeout for IPFS gateway HTTPS requests
+	hashWait    = time.Duration(100 * time.Millisecond) // Time to wait between creating hash workers
+	fileWait    = hashWait                              // Time to wait between creating file workers
 )
 
 // AddHash queues a single IPFS hash for indexing
