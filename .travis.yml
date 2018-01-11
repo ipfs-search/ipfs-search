@@ -6,6 +6,10 @@ language: go
 go:
   - 1.9.x
 
+services:
+  - rabbitmq
+  - elasticsearch
+
 # Setup caching of dependencies
 # before_cache:
 # - rm -rf $GOPATH/src/github.com/ipfs-search/*
@@ -32,6 +36,9 @@ script: |
   grep -h -v "^mode:" ./*.cover >> c.out
   rm -f *.cover
 
+  # Smoke test; should keep running 10 seconds; 124 is timeout is success
+  make
+  timeout 10 build/ipfs-search c; [ $? -eq 124 ] && (exit 0)
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
