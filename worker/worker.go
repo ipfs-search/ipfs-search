@@ -52,8 +52,8 @@ func New(config *Config) (*Worker, error) {
 	}, nil
 }
 
-// startHash starts hash workers
-func (w *Worker) startHash(errc chan error) error {
+// startHashWorkers starts hash workers
+func (w *Worker) startHashWorkers(errc chan error) error {
 	for i := 0; i < w.config.HashWorkers; i++ {
 		// Now create queues and channel for workers
 		ch, err := queue.NewChannel()
@@ -84,8 +84,8 @@ func (w *Worker) startHash(errc chan error) error {
 	return nil
 }
 
-// startFile starts file workers
-func (w *Worker) startFile(errc chan error) error {
+// startFileWorkers starts file workers
+func (w *Worker) startFileWorkers(errc chan error) error {
 	for i := 0; i < w.config.FileWorkers; i++ {
 		ch, err := queue.NewChannel()
 		if err != nil {
@@ -119,12 +119,12 @@ func (w *Worker) startFile(errc chan error) error {
 
 // Start initiates crawling of the worker
 func (w *Worker) Start() (errc chan error, err error) {
-	err = w.startHash(errc)
+	err = w.startHashWorkers(errc)
 	if err != nil {
 		w.Close()
 		return nil, err
 	}
-	err = w.startFile(errc)
+	err = w.startFileWorkers(errc)
 	if err != nil {
 		w.Close()
 		return nil, err
