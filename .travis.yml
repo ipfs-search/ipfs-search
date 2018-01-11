@@ -29,8 +29,9 @@ before_script:
 
 script: |
   # Thank https://stackoverflow.com/questions/45776043/codeclimate-test-coverage-formatter-for-golang
+  RC=0
   for pkg in $(go list ./... | grep -v vendor); do
-      go test -coverprofile=$(echo $pkg | tr / -).cover $pkg
+      go test -coverprofile=$(echo $pkg | tr / -).cover $pkg || RC=$?
   done
   echo "mode: set" > c.out
   grep -h -v "^mode:" ./*.cover >> c.out
@@ -38,7 +39,9 @@ script: |
 
   # Smoke test; should keep running 10 seconds; 124 is timeout is success
   make
-  timeout 10 build/ipfs-search c; [ $? -eq 124 ] && (exit 0)
+  timeout 10 build/ipfs-search c; [ $? -ne 124 ] && RC=$?
+
+  exit $RC
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
