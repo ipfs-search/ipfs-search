@@ -46,8 +46,9 @@ after_script:
 notifications:
   email: false
   webhooks:
-    urls:
-        - "https://scalar.vector.im/api/neb/services/hooks/dHJhdmlzLWNpLyU0MGRva3RlcmJvYiUzQWNoYXQud2Voby5zdC8lMjFNR1pUZWlZUm9XZllmSmxMckUlM0FjaGF0LndlaG8uc3Q"
+    # This is a bit overly verbose right now (link previews...)
+    # urls:
+    #     - "https://scalar.vector.im/api/neb/services/hooks/dHJhdmlzLWNpLyU0MGRva3RlcmJvYiUzQWNoYXQud2Voby5zdC8lMjFNR1pUZWlZUm9XZllmSmxMckUlM0FjaGF0LndlaG8uc3Q"
     on_success: change  # always|never|change
     on_failure: always
     on_start: never
