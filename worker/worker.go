@@ -17,20 +17,9 @@ type Worker struct {
 	openChannels []*queue.TaskChannel // Channels to be closed later
 }
 
-// New returns an initialized worker
-func New(config *Config) (*Worker, error) {
-	// For now, assume gateway running on default host:port
-	sh := shell.NewShell(config.IpfsAPI)
-
-	// Set 1 minute timeout on IPFS requests
-	sh.SetTimeout(config.IpfsTimeout)
-
-	// These is the channel the crawler uses to add newly crawled hashes
-	addCh, err := queue.NewChannel()
-	if err != nil {
-		return nil, err
-	}
-
+func newCrawler(config *Config, addCh *queue.TaskChannel) (*crawler.Crawler, error) {
+	// Create tasks queue's
+	// As there's potential failure, execute this first to allow quick fail
 	hq, err := queue.NewTaskQueue(addCh, "hashes")
 	if err != nil {
 		addCh.Close()
@@ -43,9 +32,14 @@ func New(config *Config) (*Worker, error) {
 		return nil, err
 	}
 
+	// Create and configure Ipfs shell
+	sh := shell.NewShell(config.IpfsAPI)
+	sh.SetTimeout(config.IpfsTimeout)
+
+	// Create elasticsearch indexer
 	id := indexer.NewIndexer(config.ElasticSearch)
 
-	cr := &crawler.Crawler{
+	c := &crawler.Crawler{
 		Config:    config.CrawlerConfig,
 		Shell:     sh,
 		Indexer:   id,
@@ -53,8 +47,24 @@ func New(config *Config) (*Worker, error) {
 		HashQueue: hq,
 	}
 
+	return c, nil
+}
+
+// New returns an initialized worker
+func New(config *Config) (*Worker, error) {
+	// These is the channel the crawler uses to add newly crawled hashes
+	addCh, err := queue.NewChannel()
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := newCrawler(config, addCh)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Worker{
-		crawler:      cr,
+		crawler:      c,
 		config:       config,
 		openChannels: []*queue.TaskChannel{addCh},
 	}, nil
