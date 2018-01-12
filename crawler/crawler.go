@@ -36,16 +36,7 @@ type Crawler struct {
 }
 
 // New initialises a new Crawler with IPFS shell, indexer, file que and hash queue
-func New(sh *shell.Shell, id *indexer.Indexer, fq *queue.TaskQueue, hq *queue.TaskQueue) *Crawler {
-	// TODO: Settings as parameter to NewCrawler
-	config := &Config{
-		IpfsTikaURL:     "http://localhost:8081",
-		IpfsTikaTimeout: 300 * time.Duration(time.Second),
-		RetryWait:       2 * time.Duration(time.Second),
-		MetadataMaxSize: 50 * 1024 * 1024,
-		PartialSize:     262144,
-	}
-
+func New(sh *shell.Shell, id *indexer.Indexer, fq *queue.TaskQueue, hq *queue.TaskQueue, config *Config) *Crawler {
 	return &Crawler{
 		config: config,
 		sh:     sh,

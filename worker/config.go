@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/ipfs-search/ipfs-search/crawler"
 	"gopkg.in/olivere/elastic.v5"
 	"time"
 )
@@ -14,4 +15,5 @@ type Config struct {
 	IpfsTimeout   time.Duration // Timeout for IPFS gateway HTTPS requests
 	HashWait      time.Duration // Time to wait between creating hash workers
 	FileWait      time.Duration // Time to wait between creating file workers
+	CrawlerConfig *crawler.Config
 }

@@ -46,7 +46,7 @@ func New(config *Config) (*Worker, error) {
 	id := indexer.NewIndexer(config.ElasticSearch)
 
 	return &Worker{
-		crawler:      crawler.New(sh, id, fq, hq),
+		crawler:      crawler.New(sh, id, fq, hq, config.CrawlerConfig),
 		config:       config,
 		openChannels: []*queue.TaskChannel{addCh},
 	}, nil
