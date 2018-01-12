@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"encoding/json"
+	"errors"
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 )
@@ -44,8 +45,12 @@ func extractReferences(result *elastic.GetResult) ([]Reference, error) {
 		return nil, err
 	}
 
-	// TODO: catch situation where "references" is not in the map
-	return parsedResult["references"], nil
+	references, ok := parsedResult["references"]
+	if !ok {
+		return nil, errors.New("references not in output")
+	}
+
+	return references, nil
 }
 
 // GetReferences returns existing references and the type for an object, or nil.
