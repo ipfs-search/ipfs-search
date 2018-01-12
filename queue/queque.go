@@ -90,7 +90,7 @@ func NewTaskQueue(c *TaskChannel, queueName string) (*TaskQueue, error) {
 }
 
 // StartConsumer starts a (non-blocking) worker function for tasks in a TaskQueue
-func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan error) error {
+func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan<- error) error {
 	msgs, err := t.c.ch.Consume(
 		t.q.Name, // queue
 		"",       // consumer
