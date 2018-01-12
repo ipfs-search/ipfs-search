@@ -18,7 +18,7 @@ type Reference struct {
 }
 
 // IndexItem adds or updates an IPFS item with arbitrary properties
-func (i Indexer) IndexItem(doctype string, hash string, properties map[string]interface{}) error {
+func (i *Indexer) IndexItem(doctype string, hash string, properties map[string]interface{}) error {
 	_, err := i.ElasticSearch.Update().
 		Index("ipfs").
 		Type(doctype).
@@ -38,7 +38,7 @@ func (i Indexer) IndexItem(doctype string, hash string, properties map[string]in
 // GetReferences returns existing references and the type for an object, or nil.
 // When no object is found nil is returned but no error is set.
 // If no object is found, an empty list is returned.
-func (i Indexer) GetReferences(hash string) ([]Reference, string, error) {
+func (i *Indexer) GetReferences(hash string) ([]Reference, string, error) {
 	fsc := elastic.NewFetchSourceContext(true)
 	fsc.Include("references")
 
