@@ -16,22 +16,6 @@ import (
 	"time"
 )
 
-const (
-	// Reconnect time in seconds
-	reconnectWait = 2
-	tikaTimeout   = 300
-
-	// Don't attempt to get metadata for files over this size
-	metadataMaxSize = 50 * 1024 * 1024
-
-	// Size for partial items - this is the default chunker block size
-	// TODO: replace by a sane method of skipping partials
-	partialSize = 262144
-
-	// ipfs-tika endpoint URL
-	ipfsTikaURL = "http://localhost:8081"
-)
-
 // Args describe a resource to be crawled
 type Args struct {
 	Hash       string
@@ -43,51 +27,12 @@ type Args struct {
 
 // Crawler consumes file and hash queues and indexes them
 type Crawler struct {
-	sh *shell.Shell
-	id *indexer.Indexer
-	fq *queue.TaskQueue
-	hq *queue.TaskQueue
-}
+	Config *Config
 
-// NewCrawler initialises a new Crawler
-func NewCrawler(sh *shell.Shell, id *indexer.Indexer, fq *queue.TaskQueue, hq *queue.TaskQueue) *Crawler {
-	return &Crawler{
-		sh: sh,
-		id: id,
-		fq: fq,
-		hq: hq,
-	}
-}
-
-func hashURL(hash string) string {
-	return fmt.Sprintf("/ipfs/%s", hash)
-}
-
-// Update references with name, parentHash and parentName. Returns true when updated
-func updateReferences(references []indexer.Reference, name string, parentHash string) ([]indexer.Reference, bool) {
-	if references == nil {
-		// Initialize empty references when none have been found
-		references = []indexer.Reference{}
-	}
-
-	if parentHash == "" {
-		// No parent hash for item, not adding reference
-		return references, false
-	}
-
-	for _, reference := range references {
-		if reference.ParentHash == parentHash {
-			// Reference exists, not updating
-			return references, false
-		}
-	}
-
-	references = append(references, indexer.Reference{
-		Name:       name,
-		ParentHash: parentHash,
-	})
-
-	return references, true
+	Shell     *shell.Shell
+	Indexer   *indexer.Indexer
+	FileQueue *queue.TaskQueue
+	HashQueue *queue.TaskQueue
 }
 
 // Handle IPFS errors graceously, returns try again bool and original error
@@ -100,7 +45,7 @@ func (c Crawler) handleError(err error, hash string) (bool, error) {
 			"error": err.Error(),
 		}
 
-		c.id.IndexItem("invalid", hash, metadata)
+		c.Indexer.IndexItem("invalid", hash, metadata)
 
 		panic(err)
 	}
@@ -146,7 +91,7 @@ func (c Crawler) handleError(err error, hash string) (bool, error) {
 func (c Crawler) indexReferences(hash string, name string, parentHash string) ([]indexer.Reference, bool, error) {
 	var alreadyIndexed bool
 
-	references, itemType, err := c.id.GetReferences(hash)
+	references, itemType, err := c.Indexer.GetReferences(hash)
 	if err != nil {
 		return nil, false, err
 	}
@@ -168,7 +113,7 @@ func (c Crawler) indexReferences(hash string, name string, parentHash string) ([
 				"references": references,
 			}
 
-			err := c.id.IndexItem(itemType, hash, properties)
+			err := c.Indexer.IndexItem(itemType, hash, properties)
 			if err != nil {
 				return nil, false, err
 			}
@@ -202,13 +147,13 @@ func (c Crawler) CrawlHash(hash string, name string, parentHash string, parentNa
 
 	tryAgain := true
 	for tryAgain {
-		list, err = c.sh.FileList(url)
+		list, err = c.Shell.FileList(url)
 
 		tryAgain, err = c.handleError(err, hash)
 
 		if tryAgain {
-			log.Printf("Retrying in %d seconds", reconnectWait)
-			time.Sleep(reconnectWait * time.Duration(time.Second))
+			log.Printf("Retrying in %s", c.Config.RetryWait)
+			time.Sleep(c.Config.RetryWait)
 		}
 	}
 
@@ -226,7 +171,7 @@ func (c Crawler) CrawlHash(hash string, name string, parentHash string, parentNa
 			ParentHash: parentHash,
 		}
 
-		err = c.fq.AddTask(args)
+		err = c.FileQueue.AddTask(args)
 		if err != nil {
 			// failed to send the task
 			return err
@@ -244,7 +189,7 @@ func (c Crawler) CrawlHash(hash string, name string, parentHash string, parentNa
 			switch link.Type {
 			case "File":
 				// Add file to crawl queue
-				err = c.fq.AddTask(args)
+				err = c.FileQueue.AddTask(args)
 				if err != nil {
 					// failed to send the task
 					return err
@@ -252,7 +197,7 @@ func (c Crawler) CrawlHash(hash string, name string, parentHash string, parentNa
 
 			case "Directory":
 				// Add directory to crawl queue
-				c.hq.AddTask(args)
+				c.HashQueue.AddTask(args)
 				if err != nil {
 					// failed to send the task
 					return err
@@ -270,14 +215,14 @@ func (c Crawler) CrawlHash(hash string, name string, parentHash string, parentNa
 		}
 
 		// Skip partial content
-		if list.Size == partialSize && parentHash == "" {
+		if list.Size == c.Config.PartialSize && parentHash == "" {
 			// Assertion error.
 			// REMOVE ME!
 			log.Printf("Skipping unreferenced partial content for directory %s", hash)
 			return nil
 		}
 
-		err := c.id.IndexItem("directory", hash, properties)
+		err := c.Indexer.IndexItem("directory", hash, properties)
 		if err != nil {
 			return err
 		}
@@ -291,12 +236,12 @@ func (c Crawler) CrawlHash(hash string, name string, parentHash string, parentNa
 	return nil
 }
 
-func getMetadata(path string, metadata *map[string]interface{}) error {
+func (c Crawler) getMetadata(path string, metadata *map[string]interface{}) error {
 	client := http.Client{
-		Timeout: tikaTimeout * time.Duration(time.Second),
+		Timeout: c.Config.IpfsTikaTimeout,
 	}
 
-	resp, err := client.Get(ipfsTikaURL + path)
+	resp, err := client.Get(c.Config.IpfsTikaURL + path)
 	if err != nil {
 		return err
 	}
@@ -316,7 +261,7 @@ func getMetadata(path string, metadata *map[string]interface{}) error {
 
 // CrawlFile crawls a single object, known to be a file
 func (c Crawler) CrawlFile(hash string, name string, parentHash string, parentName string, size uint64) error {
-	if size == partialSize && parentHash == "" {
+	if size == c.Config.PartialSize && parentHash == "" {
 		// Assertion error.
 		// REMOVE ME!
 		log.Printf("Skipping unreferenced partial content for file %s", hash)
@@ -338,7 +283,7 @@ func (c Crawler) CrawlFile(hash string, name string, parentHash string, parentNa
 	metadata := make(map[string]interface{})
 
 	if size > 0 {
-		if size > metadataMaxSize {
+		if size > c.Config.MetadataMaxSize {
 			// Fail hard for really large files, for now
 			return fmt.Errorf("%s (%s) too large, not indexing (for now)", hash, name)
 		}
@@ -352,13 +297,13 @@ func (c Crawler) CrawlFile(hash string, name string, parentHash string, parentNa
 
 		tryAgain := true
 		for tryAgain {
-			err = getMetadata(path, &metadata)
+			err = c.getMetadata(path, &metadata)
 
 			tryAgain, err = c.handleError(err, hash)
 
 			if tryAgain {
-				log.Printf("Retrying in %d seconds", reconnectWait)
-				time.Sleep(reconnectWait * time.Duration(time.Second))
+				log.Printf("Retrying in %s", c.Config.RetryWait)
+				time.Sleep(c.Config.RetryWait)
 			}
 		}
 
@@ -392,7 +337,7 @@ func (c Crawler) CrawlFile(hash string, name string, parentHash string, parentNa
 	metadata["size"] = size
 	metadata["references"] = references
 
-	err = c.id.IndexItem("file", hash, metadata)
+	err = c.Indexer.IndexItem("file", hash, metadata)
 	if err != nil {
 		return err
 	}
