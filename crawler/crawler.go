@@ -53,7 +53,7 @@ func (c Crawler) handleError(err error, hash string) (bool, error) {
 	if uerr, ok := err.(*url.Error); ok {
 		// URL errors
 
-		log.Printf("URL error %v", uerr)
+		log.Printf("URL error: %v", uerr)
 
 		if uerr.Timeout() {
 			// Fail on timeouts
