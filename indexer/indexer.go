@@ -8,7 +8,7 @@ import (
 
 // Indexer performs indexing of items and its references using ElasticCloud
 type Indexer struct {
-	el *elastic.Client
+	ElasticSearch *elastic.Client
 }
 
 // Reference to indexed item
@@ -17,16 +17,9 @@ type Reference struct {
 	Name       string `json:"name"`
 }
 
-// NewIndexer initialises an indexer with a given ES client
-func NewIndexer(el *elastic.Client) *Indexer {
-	return &Indexer{
-		el: el,
-	}
-}
-
 // IndexItem adds or updates an IPFS item with arbitrary properties
 func (i Indexer) IndexItem(doctype string, hash string, properties map[string]interface{}) error {
-	_, err := i.el.Update().
+	_, err := i.ElasticSearch.Update().
 		Index("ipfs").
 		Type(doctype).
 		Id(hash).
@@ -49,7 +42,7 @@ func (i Indexer) GetReferences(hash string) ([]Reference, string, error) {
 	fsc := elastic.NewFetchSourceContext(true)
 	fsc.Include("references")
 
-	res, err := i.el.Get().
+	res, err := i.ElasticSearch.Get().
 		Index("ipfs").Type("_all").FetchSourceContext(fsc).Id(hash).Do(context.TODO())
 
 	if err != nil {
