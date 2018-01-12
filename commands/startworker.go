@@ -26,13 +26,13 @@ func getWorkerConfig() (*worker.Config, error) {
 	return config, nil
 }
 
-func startWorker(config *worker.Config) (errc chan error, err error) {
-	worker, err := worker.New(config)
+func startWorker(config *worker.Config) (w *worker.Worker, errc chan error, err error) {
+	w, err = worker.New(config)
 	if err != nil {
 		return
 	}
 
-	errc, err = worker.Start()
+	errc, err = w.Start()
 	return
 }
 
@@ -43,10 +43,11 @@ func StartWorker() (err error) {
 		return
 	}
 
-	errc, err := startWorker(config)
+	worker, errc, err := startWorker(config)
 	if err != nil {
 		return
 	}
+	defer worker.Close()
 
 	// TODO: Catch QUIT signal here and create shutdown channel to properly
 	// exit crawler. This would involve implementing a stop channel all the
