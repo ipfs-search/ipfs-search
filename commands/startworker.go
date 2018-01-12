@@ -36,14 +36,18 @@ func getWorkerConfig() (*worker.Config, error) {
 	return config, nil
 }
 
-func startWorker(config *worker.Config) (w *worker.Worker, errc chan error, err error) {
-	w, err = worker.New(config)
+func startWorker(config *worker.Config, errc chan<- error) (*worker.Worker, error) {
+	w, err := worker.New(config)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	errc, err = w.Start()
-	return
+	err = w.Start(errc)
+	if err != nil {
+		return nil, err
+	}
+
+	return w, nil
 }
 
 // StartWorker configures and initializes a worker
@@ -53,7 +57,9 @@ func StartWorker() (err error) {
 		return
 	}
 
-	worker, errc, err := startWorker(config)
+	errc := make(chan error, 1)
+
+	worker, err := startWorker(config, errc)
 	if err != nil {
 		return
 	}
