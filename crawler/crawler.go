@@ -35,9 +35,8 @@ type Crawler struct {
 	hq *queue.TaskQueue
 }
 
-// NewCrawler initialises a new Crawler
-// TODO: Rename to New()
-func NewCrawler(sh *shell.Shell, id *indexer.Indexer, fq *queue.TaskQueue, hq *queue.TaskQueue) *Crawler {
+// New initialises a new Crawler with IPFS shell, indexer, file que and hash queue
+func New(sh *shell.Shell, id *indexer.Indexer, fq *queue.TaskQueue, hq *queue.TaskQueue) *Crawler {
 	// TODO: Settings as parameter to NewCrawler
 	config := &Config{
 		IpfsTikaURL:     "http://localhost:8081",
