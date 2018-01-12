@@ -36,7 +36,7 @@ type Crawler struct {
 }
 
 // Handle IPFS errors graceously, returns try again bool and original error
-func (c Crawler) handleError(err error, hash string) (bool, error) {
+func (c *Crawler) handleError(err error, hash string) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
 		// We're not recovering from protocol errors, so panic
 
@@ -88,7 +88,7 @@ func (c Crawler) handleError(err error, hash string) (bool, error) {
 	return false, err
 }
 
-func (c Crawler) indexReferences(hash string, name string, parentHash string) ([]indexer.Reference, bool, error) {
+func (c *Crawler) indexReferences(hash string, name string, parentHash string) ([]indexer.Reference, bool, error) {
 	var alreadyIndexed bool
 
 	references, itemType, err := c.Indexer.GetReferences(hash)
@@ -128,7 +128,7 @@ func (c Crawler) indexReferences(hash string, name string, parentHash string) ([
 }
 
 // CrawlHash crawls a particular hash (file or directory)
-func (c Crawler) CrawlHash(hash string, name string, parentHash string, parentName string) error {
+func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentName string) error {
 	references, alreadyIndexed, err := c.indexReferences(hash, name, parentHash)
 
 	if err != nil {
@@ -236,7 +236,7 @@ func (c Crawler) CrawlHash(hash string, name string, parentHash string, parentNa
 	return nil
 }
 
-func (c Crawler) getMetadata(path string, metadata *map[string]interface{}) error {
+func (c *Crawler) getMetadata(path string, metadata *map[string]interface{}) error {
 	client := http.Client{
 		Timeout: c.Config.IpfsTikaTimeout,
 	}
@@ -260,7 +260,7 @@ func (c Crawler) getMetadata(path string, metadata *map[string]interface{}) erro
 }
 
 // CrawlFile crawls a single object, known to be a file
-func (c Crawler) CrawlFile(hash string, name string, parentHash string, parentName string, size uint64) error {
+func (c *Crawler) CrawlFile(hash string, name string, parentHash string, parentName string, size uint64) error {
 	if size == c.Config.PartialSize && parentHash == "" {
 		// Assertion error.
 		// REMOVE ME!
