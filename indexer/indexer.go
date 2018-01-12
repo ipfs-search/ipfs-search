@@ -35,6 +35,19 @@ func (i *Indexer) IndexItem(doctype string, hash string, properties map[string]i
 	return nil
 }
 
+// extractRefrences reads the refernces from the JSON response from ElasticSearch
+func extractReferences(result *elastic.GetResult) ([]Reference, error) {
+	var parsedResult map[string][]Reference
+
+	err := json.Unmarshal(*result.Source, parsedResult)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: catch situation where "references" is not in the map
+	return parsedResult["references"], nil
+}
+
 // GetReferences returns existing references and the type for an object, or nil.
 // When no object is found nil is returned but no error is set.
 // If no object is found, an empty list is returned.
@@ -42,8 +55,12 @@ func (i *Indexer) GetReferences(hash string) ([]Reference, string, error) {
 	fsc := elastic.NewFetchSourceContext(true)
 	fsc.Include("references")
 
-	res, err := i.ElasticSearch.Get().
-		Index("ipfs").Type("_all").FetchSourceContext(fsc).Id(hash).Do(context.TODO())
+	result, err := i.ElasticSearch.
+		Get().
+		Index("ipfs").Type("_all").
+		FetchSourceContext(fsc).
+		Id(hash).
+		Do(context.TODO())
 
 	if err != nil {
 		if elastic.IsNotFound(err) {
@@ -52,11 +69,10 @@ func (i *Indexer) GetReferences(hash string) ([]Reference, string, error) {
 		return nil, "", err
 	}
 
-	var result map[string][]Reference
-	err = json.Unmarshal(*res.Source, &result)
+	references, err := extractReferences(result)
 	if err != nil {
 		return nil, "", err
 	}
 
-	return result["references"], res.Type, nil
+	return references, result.Type, nil
 }
