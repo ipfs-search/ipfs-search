@@ -203,7 +203,7 @@ func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentN
 					return err
 				}
 			default:
-				log.Printf("Type '%s' skipped for '%s'", list.Type, hash)
+				log.Printf("Type '%s' skipped for '%s'", link.Type, hash)
 			}
 		}
 

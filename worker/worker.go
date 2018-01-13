@@ -37,7 +37,9 @@ func newCrawler(config *Config, addCh *queue.TaskChannel) (*crawler.Crawler, err
 	sh.SetTimeout(config.IpfsTimeout)
 
 	// Create elasticsearch indexer
-	id := indexer.NewIndexer(config.ElasticSearch)
+	id := &indexer.Indexer{
+		ElasticSearch: config.ElasticSearch,
+	}
 
 	c := &crawler.Crawler{
 		Config:    config.CrawlerConfig,
