@@ -1,0 +1,238 @@
+{
+    "settings": {
+        "index": {
+            "refresh_interval": "15m",
+            "mapping.total_fields.limit": 4096
+        }
+    },
+    "mappings": {
+        "_default_": {
+            "_all": {
+                "enabled": true
+            },
+            "dynamic_templates": [
+                {
+                    "default_noindex": {
+                        "match": "*",
+                        "mapping": {
+                            "index": "no",
+                            "doc_values": false,
+                            "include_in_all": false
+                        }
+                    }
+                }
+            ]
+        },
+        "invalid": {
+            "properties": {
+               "error": {
+                  "type": "text",
+                  "index": false
+               }
+            }
+        },
+        "file": {
+            "dynamic":      "false",
+            "properties": {
+                "content":  {
+                    "type": "text",
+                    "index": true,
+                    "include_in_all": true
+                },
+                "metadata":  {
+                    "type":     "object",
+                    "dynamic":  true,
+                    "properties": {
+                        "title" : {
+                            "type": "text",
+                            "index": true,
+                            "boost": 2,
+                            "include_in_all": true
+                        },
+                        "name": {
+                            "type": "text",
+                            "index": true,
+                            "boost": 2,
+                            "include_in_all": true
+                        },
+                        "author": {
+                            "type": "text",
+                            "index": true,
+                            "include_in_all": true
+                        },
+                        "description": {
+                            "type": "text",
+                            "index": true,
+                            "boost": 1.5,
+                            "include_in_all": true
+                        },
+                        "producer": {
+                            "type": "text",
+                            "index": true,
+                            "include_in_all": true
+                        },
+                        "publisher": {
+                            "type": "text",
+                            "index": true,
+                            "include_in_all": true
+                        },
+                        "isbn": {
+                            "type": "keyword",
+                            "index": true,
+                            "include_in_all": true
+                        },
+                        "language": {
+                            "type": "keyword",
+                            "index": true,
+                            "include_in_all": true,
+                            "doc_values": true
+                        },
+                        "keywords": {
+                           "type": "text",
+                           "index": true,
+                           "include_in_all": true,
+                           "boost": 2
+                        },
+                        "xmpDM:album": {
+                            "type": "text",
+                            "index": true,
+                            "include_in_all": true,
+                            "boost": 1.5
+                        },
+                        "xmpDM:albumArtist": {
+                            "type": "text",
+                            "index": true,
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "xmpDM:artist": {
+                            "type": "text",
+                            "index": true,
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "xmpDM:composer": {
+                            "type": "text",
+                            "index": true,
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "Content-Type": {
+                            "type": "keyword",
+                            "index": true,
+                            "doc_values": true
+                        },
+                        "X-Parsed-By": {
+                            "type": "keyword",
+                            "index": true,
+                            "doc_values": true
+                        },
+                        "date": {
+                            "type": "date",
+                            "format": "strict_date_optional_time||epoch_millis",
+                            "index": true,
+                            "doc_values": true
+                        },
+                        "modified": {
+                            "type": "date",
+                            "format": "strict_date_optional_time||epoch_millis",
+                            "index": true,
+                            "doc_values": true
+                        }
+                    }
+                },
+                "urls": {
+                    "type": "keyword",
+                    "index": true,
+                    "include_in_all": true,
+                    "doc_values": true
+                },
+                "size": {
+                    "type": "long",
+                    "ignore_malformed": true,
+                    "index": true,
+                    "doc_values": true
+                },
+                "references":  {
+                    "type":     "object",
+                    "dynamic":  true,
+                    "properties": {
+                        "name": {
+                            "type": "text",
+                            "index": true,
+                            "boost": 2,
+                            "include_in_all": true
+                        },
+                        "hash": {
+                            "type": "keyword",
+                            "index": true,
+                            "include_in_all": true
+                        },
+                        "parent_hash": {
+                            "type": "keyword",
+                            "index": true,
+                            "include_in_all": true
+                        }
+                    }
+                }
+            }
+        },
+        "directory": {
+            "dynamic":      "strict",
+            "properties": {
+                "links":  {
+                    "type":     "object",
+                    "dynamic":  true,
+                    "properties": {
+                        "Hash": {
+                            "type": "keyword",
+                            "index": true,
+                            "include_in_all": true,
+                            "boost": 0.5
+                        },
+                        "Name": {
+                            "type": "text",
+                            "include_in_all": true,
+                            "boost": 2
+                        },
+                        "Size": {
+                           "type": "long",
+                           "doc_values": true,
+                           "include_in_all": false,
+                           "ignore_malformed": true
+                        },
+                        "Type": {
+                           "type": "keyword",
+                           "index": true,
+                           "doc_values": true,
+                           "include_in_all": false
+                        }
+                     }
+                },
+                "size": {
+                    "type": "long",
+                    "ignore_malformed": true,
+                    "index": true,
+                    "doc_values": true
+                },
+                "references":  {
+                    "type":     "object",
+                    "dynamic":  true,
+                    "properties": {
+                        "name": {
+                            "type": "text",
+                            "index": true,
+                            "boost": 2,
+                            "include_in_all": true
+                        },
+                        "hash": {
+                            "type": "keyword",
+                            "index": true,
+                            "include_in_all": true
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
