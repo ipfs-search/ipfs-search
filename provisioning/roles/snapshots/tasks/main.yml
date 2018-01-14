@@ -1,4 +1,23 @@
 ---
+- name: Check snapshot repository
+  uri:
+    url: http://127.0.0.1:9200/_snapshot/ipfs
+    status_code: 200, 404
+  register: snapshot_check
+- name: Create snapshot repository
+  uri:
+    url: http://127.0.0.1:9200/_snapshot/ipfs
+    method: PUT
+    body: |
+      {
+        "type": "fs",
+        "settings": {
+          "location": "/var/lib/elasticsearch/backup"
+        }
+      }
+  when: snapshot_check.status == 404
+- name: Install snapshot script
+  copy: src=ipfs-search-snapshot.sh dest=/usr/local/bin/ipfs-search-snapshot.sh mode=755
 - name: Elasticsearch daily snapshot cronjob
   cron:
     name: "Elasticsearch snapshot"
@@ -7,4 +26,4 @@
     hour: 3
     backup: yes
     user: nobody
-    job: "curl -XPUT http://127.0.0.1:9200/_snapshot/ipfs/snapshot_`date +'%y%m%d-%H%M'` | jq -e '.accepted' > /dev/null"
+    job: "/usr/local/bin/ipfs-search-snapshot.sh"
