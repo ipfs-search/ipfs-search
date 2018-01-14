@@ -40,7 +40,6 @@ POST /_aliases
         { "add" : { "index" : "ipfs_v<new>", "alias" : "ipfs" } }
     ]
 }
-
 ```
 
 5. Restart crawler:
