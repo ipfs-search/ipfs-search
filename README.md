@@ -12,7 +12,7 @@ Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterb
 A preliminary start at providing a minimal amount of documentation can be found in the [docs](docs/) folder.
 
 ## Snapshots
-ipfs-search provides the daily snapshot for all of the indexed data using 
+ipfs-search provides the daily snapshot for all of the indexed data using
 [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
 To learn more about downloading and restoring snapshots, read [docs](docs/snapshots.md)
 
@@ -53,6 +53,15 @@ $ make
 ```
 
 ## Running
+
+### Docker
+The most convenient way to run the crawler is through Docker. Simply run:
+
+```bash
+compose up
+```
+
+This will start the crawler and all its dependencies but will not (yet) launch the sniffer or search API. Hashes can be queued for crawling by running `ipfs-search a <hash>` from within the running container.
 
 ### Local setup
 Local installation is done using vagrant:
