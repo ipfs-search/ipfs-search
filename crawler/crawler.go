@@ -35,6 +35,8 @@ type Crawler struct {
 	HashQueue *queue.TaskQueue
 }
 
+type metadata map[string]interface{}
+
 // Handle IPFS errors graceously, returns try again bool and original error
 func (c *Crawler) handleError(err error, hash string) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
@@ -236,7 +238,8 @@ func (c *Crawler) CrawlHash(args *Args) error {
 	return nil
 }
 
-func (c *Crawler) getMetadata(path string, metadata *map[string]interface{}) error {
+// getTika requests IPFS path from IPFS-TIKA and writes returned metadata
+func (c *Crawler) getTika(path string, m *metadata) error {
 	client := http.Client{
 		Timeout: c.Config.IpfsTikaTimeout,
 	}
@@ -252,35 +255,16 @@ func (c *Crawler) getMetadata(path string, metadata *map[string]interface{}) err
 	}
 
 	// Parse resulting JSON
-	if err := json.NewDecoder(resp.Body).Decode(&metadata); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
 		return err
 	}
 
 	return err
 }
 
-// CrawlFile crawls a single object, known to be a file
-func (c *Crawler) CrawlFile(args *Args) error {
-	if args.Size == c.Config.PartialSize && args.ParentHash == "" {
-		// Assertion error.
-		// REMOVE ME!
-		log.Printf("Skipping unreferenced partial content for file %s", args.Hash)
-		return nil
-	}
-
-	references, alreadyIndexed, err := c.indexReferences(args.Hash, args.Name, args.ParentHash)
-
-	if err != nil {
-		return err
-	}
-
-	if alreadyIndexed {
-		return nil
-	}
-
-	log.Printf("Crawling file %s (%s)\n", args.Hash, args.Name)
-
-	metadata := make(map[string]interface{})
+// getMatadata sets metdata for file with args or returns error
+func (c *Crawler) getMetadata(args *Args, m *metadata) error {
+	var err error
 
 	if args.Size > 0 {
 		if args.Size > c.Config.MetadataMaxSize {
@@ -288,16 +272,11 @@ func (c *Crawler) CrawlFile(args *Args) error {
 			return fmt.Errorf("%s (%s) too large, not indexing (for now)", args.Hash, args.Name)
 		}
 
-		var path string
-		if args.Name != "" && args.ParentHash != "" {
-			path = fmt.Sprintf("/ipfs/%s/%s", args.ParentHash, args.Name)
-		} else {
-			path = fmt.Sprintf("/ipfs/%s", args.Hash)
-		}
+		path := filenameURL(args)
 
 		tryAgain := true
 		for tryAgain {
-			err = c.getMetadata(path, &metadata)
+			err = c.getTika(path, m)
 
 			tryAgain, err = c.handleError(err, args.Hash)
 
@@ -306,7 +285,6 @@ func (c *Crawler) CrawlFile(args *Args) error {
 				time.Sleep(c.Config.RetryWait)
 			}
 		}
-
 		if err != nil {
 			return err
 		}
@@ -334,10 +312,41 @@ func (c *Crawler) CrawlFile(args *Args) error {
 		*/
 	}
 
-	metadata["size"] = args.Size
-	metadata["references"] = references
+	return nil
+}
 
-	err = c.Indexer.IndexItem("file", args.Hash, metadata)
+// CrawlFile crawls a single object, known to be a file
+func (c *Crawler) CrawlFile(args *Args) error {
+	if args.Size == c.Config.PartialSize && args.ParentHash == "" {
+		// Assertion error.
+		// REMOVE ME!
+		log.Printf("Skipping unreferenced partial content for file %s", args.Hash)
+		return nil
+	}
+
+	references, alreadyIndexed, err := c.indexReferences(args.Hash, args.Name, args.ParentHash)
+
+	if err != nil {
+		return err
+	}
+
+	if alreadyIndexed {
+		return nil
+	}
+
+	log.Printf("Crawling file %s (%s)\n", args.Hash, args.Name)
+
+	m := make(metadata)
+	c.getMetadata(args, &m)
+	if err != nil {
+		return err
+	}
+
+	// Add previously found references now
+	m["size"] = args.Size
+	m["references"] = references
+
+	err = c.Indexer.IndexItem("file", args.Hash, m)
 	if err != nil {
 		return err
 	}
