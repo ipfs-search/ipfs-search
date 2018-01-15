@@ -72,30 +72,65 @@ func New(config *Config) (*Worker, error) {
 	}, nil
 }
 
+// crawlHash crawls a single hash
+// TODO: Factor this out, entirely; have both functions eat crawler.Args
+func (w *Worker) crawlHash(params interface{}) error {
+	args := params.(*crawler.Args)
+
+	return w.crawler.CrawlHash(
+		args.Hash,
+		args.Name,
+		args.ParentHash,
+		args.ParentName,
+	)
+}
+
+// crawlFile crawls a single file
+// TODO: Factor this out, entirely; have both functions eat crawler.Args
+func (w *Worker) crawlFile(params interface{}) error {
+	args := params.(*crawler.Args)
+
+	return w.crawler.CrawlFile(
+		args.Hash,
+		args.Name,
+		args.ParentHash,
+		args.ParentName,
+		args.Size,
+	)
+}
+
+// workerQueue creates a channel and named queue for a worker to consume
+func (w *Worker) workerQueue(name string) (*queue.TaskQueue, error) {
+	ch, err := queue.NewChannel()
+	if err != nil {
+		return nil, err
+	}
+	w.openChannels = append(w.openChannels, ch)
+
+	q, err := queue.NewTaskQueue(ch, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return q, nil
+}
+
 // startHashWorkers starts hash workers
 func (w *Worker) startHashWorkers(errc chan<- error) error {
 	for i := 0; i < w.config.HashWorkers; i++ {
-		// Now create queues and channel for workers
-		ch, err := queue.NewChannel()
+		q, err := w.workerQueue("hashes")
 		if err != nil {
 			return err
 		}
-		w.openChannels = append(w.openChannels, ch)
 
-		hq, err := queue.NewTaskQueue(ch, "hashes")
-		if err != nil {
-			return err
+		consumer := &queue.Consumer{
+			Func:    w.crawlHash,
+			ErrChan: errc,
+			Queue:   q,
+			Params:  &crawler.Args{},
 		}
-		hq.StartConsumer(func(params interface{}) error {
-			args := params.(*crawler.Args)
 
-			return w.crawler.CrawlHash(
-				args.Hash,
-				args.Name,
-				args.ParentHash,
-				args.ParentName,
-			)
-		}, &crawler.Args{}, errc)
+		consumer.Start()
 
 		// Start workers timeout/hash time apart
 		time.Sleep(w.config.HashWait)
@@ -107,28 +142,19 @@ func (w *Worker) startHashWorkers(errc chan<- error) error {
 // startFileWorkers starts file workers
 func (w *Worker) startFileWorkers(errc chan<- error) error {
 	for i := 0; i < w.config.FileWorkers; i++ {
-		ch, err := queue.NewChannel()
-		if err != nil {
-			return err
-		}
-		w.openChannels = append(w.openChannels, ch)
-
-		fq, err := queue.NewTaskQueue(ch, "files")
+		q, err := w.workerQueue("files")
 		if err != nil {
 			return err
 		}
 
-		fq.StartConsumer(func(params interface{}) error {
-			args := params.(*crawler.Args)
+		consumer := &queue.Consumer{
+			Func:    w.crawlFile,
+			ErrChan: errc,
+			Queue:   q,
+			Params:  &crawler.Args{},
+		}
 
-			return w.crawler.CrawlFile(
-				args.Hash,
-				args.Name,
-				args.ParentHash,
-				args.ParentName,
-				args.Size,
-			)
-		}, &crawler.Args{}, errc)
+		consumer.Start()
 
 		// Start workers timeout/hash time apart
 		time.Sleep(w.config.FileWait)

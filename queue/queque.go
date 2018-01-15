@@ -2,9 +2,7 @@ package queue
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/streadway/amqp"
-	"log"
 )
 
 var conn *amqp.Connection
@@ -87,73 +85,6 @@ func NewTaskQueue(c *TaskChannel, queueName string) (*TaskQueue, error) {
 	}
 
 	return &tq, nil
-}
-
-// StartConsumer starts a (non-blocking) worker function for tasks in a TaskQueue
-func (t TaskQueue) StartConsumer(worker func(interface{}) error, params interface{}, errc chan<- error) error {
-	msgs, err := t.c.ch.Consume(
-		t.q.Name, // queue
-		"",       // consumer
-		false,    // auto-ack
-		false,    // exclusive
-		false,    // no-local
-		false,    // no-wait
-		nil,      // args
-	)
-	if err != nil {
-		return err
-	}
-
-	// Task loop go routine
-	go func() {
-		for d := range msgs {
-
-			// Anonymous function to catch panics without disrupting msgs loop
-			func() {
-				defer func() {
-					if r := recover(); r != nil {
-						log.Printf("Panic in: %s", d.Body)
-
-						// Permanently remove message from original queue
-						d.Reject(false)
-
-						var ok bool
-						err, ok = r.(error)
-
-						if !ok {
-							err = fmt.Errorf("Unassertable panic error: %v", r)
-						}
-
-						errc <- err
-					}
-				}()
-
-				log.Printf("Received a message: %s", d.Body)
-
-				err = json.Unmarshal(d.Body, &params)
-				if err != nil {
-					panic(&err)
-				}
-
-				err = worker(params)
-
-				if err == nil {
-					// Everything went fine, ack the message
-					d.Ack(false)
-				} else {
-					// Send error through channel
-					errc <- err
-
-					// Don't retry
-					d.Reject(false)
-				}
-			}()
-		}
-	}()
-
-	log.Printf("Started worker for queue '%s'", t.q.Name)
-
-	return nil
 }
 
 // AddTask adds a task with specified params to the TaskQueue
