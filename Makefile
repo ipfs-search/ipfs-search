@@ -5,7 +5,7 @@ SOURCES := $(shell find $(SOURCEDIR) -name '*.go')
 .DEFAULT_GOAL: $(BINARY)
 
 $(BINARY): $(SOURCES)
-	go build -o ${BINARY} main.go
+	go build -race -o ${BINARY} main.go
 
 clean:
 	rm -f ${BINARY}
