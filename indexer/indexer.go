@@ -2,9 +2,9 @@ package indexer
 
 import (
 	"encoding/json"
-	"errors"
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
+	"log"
 )
 
 // Indexer performs indexing of items and its references using ElasticCloud
@@ -40,15 +40,13 @@ func (i *Indexer) IndexItem(doctype string, hash string, properties map[string]i
 func extractReferences(result *elastic.GetResult) ([]Reference, error) {
 	var parsedResult map[string][]Reference
 
-	err := json.Unmarshal(*result.Source, parsedResult)
+	err := json.Unmarshal(*result.Source, &parsedResult)
 	if err != nil {
+		log.Printf("can't unmarshal references JSON: %s", *result.Source)
 		return nil, err
 	}
 
-	references, ok := parsedResult["references"]
-	if !ok {
-		return nil, errors.New("references not in output")
-	}
+	references := parsedResult["references"]
 
 	return references, nil
 }
