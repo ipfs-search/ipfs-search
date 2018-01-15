@@ -16,6 +16,7 @@ type Worker struct {
 	crawler      *crawler.Crawler
 	config       *Config
 	openChannels []*queue.TaskChannel // Channels to be closed later
+	errc         chan<- error         // Channel the worker sends errors through
 }
 
 func newCrawler(config *Config, addCh *queue.TaskChannel) (*crawler.Crawler, error) {
@@ -54,7 +55,7 @@ func newCrawler(config *Config, addCh *queue.TaskChannel) (*crawler.Crawler, err
 }
 
 // New returns an initialized worker
-func New(config *Config) (*Worker, error) {
+func New(config *Config, errc chan<- error) (*Worker, error) {
 	// These is the channel the crawler uses to add newly crawled hashes
 	addCh, err := queue.NewChannel()
 	if err != nil {
@@ -70,6 +71,7 @@ func New(config *Config) (*Worker, error) {
 		crawler:      c,
 		config:       config,
 		openChannels: []*queue.TaskChannel{addCh},
+		errc:         errc,
 	}, nil
 }
 
@@ -104,17 +106,17 @@ func (w *Worker) workerQueue(name string) (*queue.TaskQueue, error) {
 	return q, nil
 }
 
-// startHashWorkers starts hash workers
-func (w *Worker) startHashWorkers(errc chan<- error) error {
-	for i := 0; i < w.config.HashWorkers; i++ {
-		q, err := w.workerQueue("hashes")
+// startWorkers starts count workers for q executing crawlFunc and waiting wait between starting them
+func (w *Worker) startWorkers(count int, qName string, crawlFunc func(*crawler.Args) error, wait time.Duration) error {
+	for i := 0; i < count; i++ {
+		q, err := w.workerQueue(qName)
 		if err != nil {
 			return err
 		}
 
 		consumer := &queue.Consumer{
-			Func:    w.crawlWrapper(w.crawler.CrawlHash),
-			ErrChan: errc,
+			Func:    w.crawlWrapper(crawlFunc),
+			ErrChan: w.errc,
 			Queue:   q,
 			Params:  &crawler.Args{},
 		}
@@ -122,44 +124,23 @@ func (w *Worker) startHashWorkers(errc chan<- error) error {
 		consumer.Start()
 
 		// Start workers timeout/hash time apart
-		time.Sleep(w.config.HashWait)
-	}
-
-	return nil
-}
-
-// startFileWorkers starts file workers
-func (w *Worker) startFileWorkers(errc chan<- error) error {
-	for i := 0; i < w.config.FileWorkers; i++ {
-		q, err := w.workerQueue("files")
-		if err != nil {
-			return err
-		}
-
-		consumer := &queue.Consumer{
-			Func:    w.crawlWrapper(w.crawler.CrawlFile),
-			ErrChan: errc,
-			Queue:   q,
-			Params:  &crawler.Args{},
-		}
-
-		consumer.Start()
-
-		// Start workers timeout/hash time apart
-		time.Sleep(w.config.FileWait)
+		time.Sleep(wait)
 	}
 
 	return nil
 }
 
 // Start initiates crawling of the worker
-func (w *Worker) Start(errc chan<- error) error {
-	err := w.startHashWorkers(errc)
+func (w *Worker) Start() error {
+	// Start hash workers
+	err := w.startWorkers(w.config.HashWorkers, "hashes", w.crawler.CrawlHash, w.config.HashWait)
 	if err != nil {
 		w.Close()
 		return err
 	}
-	err = w.startFileWorkers(errc)
+
+	// Start file workers
+	err = w.startWorkers(w.config.FileWorkers, "files", w.crawler.CrawlFile, w.config.FileWait)
 	if err != nil {
 		w.Close()
 		return err

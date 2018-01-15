@@ -37,12 +37,12 @@ func getWorkerConfig() (*worker.Config, error) {
 }
 
 func startWorker(config *worker.Config, errc chan<- error) (*worker.Worker, error) {
-	w, err := worker.New(config)
+	w, err := worker.New(config, errc)
 	if err != nil {
 		return nil, err
 	}
 
-	err = w.Start(errc)
+	err = w.Start()
 	if err != nil {
 		return nil, err
 	}
