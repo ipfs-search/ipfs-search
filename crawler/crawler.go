@@ -128,8 +128,8 @@ func (c *Crawler) indexReferences(hash string, name string, parentHash string) (
 }
 
 // CrawlHash crawls a particular hash (file or directory)
-func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentName string) error {
-	references, alreadyIndexed, err := c.indexReferences(hash, name, parentHash)
+func (c *Crawler) CrawlHash(args *Args) error {
+	references, alreadyIndexed, err := c.indexReferences(args.Hash, args.Name, args.ParentHash)
 
 	if err != nil {
 		return err
@@ -139,9 +139,9 @@ func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentN
 		return nil
 	}
 
-	log.Printf("Crawling hash '%s' (%s)", hash, name)
+	log.Printf("Crawling hash '%s' (%s)", args.Hash, args.Name)
 
-	url := hashURL(hash)
+	url := hashURL(args.Hash)
 
 	var list *shell.UnixLsObject
 
@@ -149,7 +149,7 @@ func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentN
 	for tryAgain {
 		list, err = c.Shell.FileList(url)
 
-		tryAgain, err = c.handleError(err, hash)
+		tryAgain, err = c.handleError(err, args.Hash)
 
 		if tryAgain {
 			log.Printf("Retrying in %s", c.Config.RetryWait)
@@ -164,14 +164,14 @@ func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentN
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
-		args := Args{
-			Hash:       hash,
-			Name:       name,
+		fileArgs := Args{
+			Hash:       args.Hash,
+			Name:       args.Name,
 			Size:       list.Size,
-			ParentHash: parentHash,
+			ParentHash: args.ParentHash,
 		}
 
-		err = c.FileQueue.AddTask(args)
+		err = c.FileQueue.AddTask(fileArgs)
 		if err != nil {
 			// failed to send the task
 			return err
@@ -179,17 +179,17 @@ func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentN
 	case "Directory":
 		// Queue indexing of linked items
 		for _, link := range list.Links {
-			args := Args{
+			dirArgs := Args{
 				Hash:       link.Hash,
 				Name:       link.Name,
 				Size:       link.Size,
-				ParentHash: hash,
+				ParentHash: args.Hash,
 			}
 
 			switch link.Type {
 			case "File":
 				// Add file to crawl queue
-				err = c.FileQueue.AddTask(args)
+				err = c.FileQueue.AddTask(dirArgs)
 				if err != nil {
 					// failed to send the task
 					return err
@@ -197,13 +197,13 @@ func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentN
 
 			case "Directory":
 				// Add directory to crawl queue
-				c.HashQueue.AddTask(args)
+				c.HashQueue.AddTask(dirArgs)
 				if err != nil {
 					// failed to send the task
 					return err
 				}
 			default:
-				log.Printf("Type '%s' skipped for '%s'", link.Type, hash)
+				log.Printf("Type '%s' skipped for '%s'", link.Type, args.Hash)
 			}
 		}
 
@@ -215,23 +215,23 @@ func (c *Crawler) CrawlHash(hash string, name string, parentHash string, parentN
 		}
 
 		// Skip partial content
-		if list.Size == c.Config.PartialSize && parentHash == "" {
+		if list.Size == c.Config.PartialSize && args.ParentHash == "" {
 			// Assertion error.
 			// REMOVE ME!
-			log.Printf("Skipping unreferenced partial content for directory %s", hash)
+			log.Printf("Skipping unreferenced partial content for directory %s", args.Hash)
 			return nil
 		}
 
-		err := c.Indexer.IndexItem("directory", hash, properties)
+		err := c.Indexer.IndexItem("directory", args.Hash, properties)
 		if err != nil {
 			return err
 		}
 
 	default:
-		log.Printf("Type '%s' skipped for '%s'", list.Type, hash)
+		log.Printf("Type '%s' skipped for '%s'", list.Type, args.Hash)
 	}
 
-	log.Printf("Finished hash %s", hash)
+	log.Printf("Finished hash %s", args.Hash)
 
 	return nil
 }
@@ -260,15 +260,15 @@ func (c *Crawler) getMetadata(path string, metadata *map[string]interface{}) err
 }
 
 // CrawlFile crawls a single object, known to be a file
-func (c *Crawler) CrawlFile(hash string, name string, parentHash string, parentName string, size uint64) error {
-	if size == c.Config.PartialSize && parentHash == "" {
+func (c *Crawler) CrawlFile(args *Args) error {
+	if args.Size == c.Config.PartialSize && args.ParentHash == "" {
 		// Assertion error.
 		// REMOVE ME!
-		log.Printf("Skipping unreferenced partial content for file %s", hash)
+		log.Printf("Skipping unreferenced partial content for file %s", args.Hash)
 		return nil
 	}
 
-	references, alreadyIndexed, err := c.indexReferences(hash, name, parentHash)
+	references, alreadyIndexed, err := c.indexReferences(args.Hash, args.Name, args.ParentHash)
 
 	if err != nil {
 		return err
@@ -278,28 +278,28 @@ func (c *Crawler) CrawlFile(hash string, name string, parentHash string, parentN
 		return nil
 	}
 
-	log.Printf("Crawling file %s (%s)\n", hash, name)
+	log.Printf("Crawling file %s (%s)\n", args.Hash, args.Name)
 
 	metadata := make(map[string]interface{})
 
-	if size > 0 {
-		if size > c.Config.MetadataMaxSize {
+	if args.Size > 0 {
+		if args.Size > c.Config.MetadataMaxSize {
 			// Fail hard for really large files, for now
-			return fmt.Errorf("%s (%s) too large, not indexing (for now)", hash, name)
+			return fmt.Errorf("%s (%s) too large, not indexing (for now)", args.Hash, args.Name)
 		}
 
 		var path string
-		if name != "" && parentHash != "" {
-			path = fmt.Sprintf("/ipfs/%s/%s", parentHash, name)
+		if args.Name != "" && args.ParentHash != "" {
+			path = fmt.Sprintf("/ipfs/%s/%s", args.ParentHash, args.Name)
 		} else {
-			path = fmt.Sprintf("/ipfs/%s", hash)
+			path = fmt.Sprintf("/ipfs/%s", args.Hash)
 		}
 
 		tryAgain := true
 		for tryAgain {
 			err = c.getMetadata(path, &metadata)
 
-			tryAgain, err = c.handleError(err, hash)
+			tryAgain, err = c.handleError(err, args.Hash)
 
 			if tryAgain {
 				log.Printf("Retrying in %s", c.Config.RetryWait)
@@ -334,15 +334,15 @@ func (c *Crawler) CrawlFile(hash string, name string, parentHash string, parentN
 		*/
 	}
 
-	metadata["size"] = size
+	metadata["size"] = args.Size
 	metadata["references"] = references
 
-	err = c.Indexer.IndexItem("file", hash, metadata)
+	err = c.Indexer.IndexItem("file", args.Hash, metadata)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Finished file %s", hash)
+	log.Printf("Finished file %s", args.Hash)
 
 	return nil
 }

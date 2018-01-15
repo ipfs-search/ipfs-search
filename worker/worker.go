@@ -77,12 +77,7 @@ func New(config *Config) (*Worker, error) {
 func (w *Worker) crawlHash(params interface{}) error {
 	args := params.(*crawler.Args)
 
-	return w.crawler.CrawlHash(
-		args.Hash,
-		args.Name,
-		args.ParentHash,
-		args.ParentName,
-	)
+	return w.crawler.CrawlHash(args)
 }
 
 // crawlFile crawls a single file
@@ -90,13 +85,7 @@ func (w *Worker) crawlHash(params interface{}) error {
 func (w *Worker) crawlFile(params interface{}) error {
 	args := params.(*crawler.Args)
 
-	return w.crawler.CrawlFile(
-		args.Hash,
-		args.Name,
-		args.ParentHash,
-		args.ParentName,
-		args.Size,
-	)
+	return w.crawler.CrawlFile(args)
 }
 
 // workerQueue creates a channel and named queue for a worker to consume
@@ -124,7 +113,7 @@ func (w *Worker) startHashWorkers(errc chan<- error) error {
 		}
 
 		consumer := &queue.Consumer{
-			Func:    w.crawlHash,
+			Func:    w.crawlFile,
 			ErrChan: errc,
 			Queue:   q,
 			Params:  &crawler.Args{},
@@ -148,7 +137,7 @@ func (w *Worker) startFileWorkers(errc chan<- error) error {
 		}
 
 		consumer := &queue.Consumer{
-			Func:    w.crawlFile,
+			Func:    w.crawlHash,
 			ErrChan: errc,
 			Queue:   q,
 			Params:  &crawler.Args{},
