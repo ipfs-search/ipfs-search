@@ -130,9 +130,9 @@ func (w *Worker) startWorkers(count int, qName string, crawlFunc func(*crawler.A
 	return nil
 }
 
-// Start initiates crawling of the worker
+// Start initiates crawling of the worker (asynchronuously)
 func (w *Worker) Start() error {
-	// Start hash workers
+	// Start hash worker
 	err := w.startWorkers(w.config.HashWorkers, "hashes", w.crawler.CrawlHash, w.config.HashWait)
 	if err != nil {
 		w.Close()
