@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"errors"
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs-search/ipfs-search/queue"
@@ -72,20 +73,19 @@ func New(config *Config) (*Worker, error) {
 	}, nil
 }
 
-// crawlHash crawls a single hash
-// TODO: Factor this out, entirely; have both functions eat crawler.Args
-func (w *Worker) crawlHash(params interface{}) error {
-	args := params.(*crawler.Args)
+// crawlWrapper wraps the actual crawl functions in a type assertion
+// Essentially, it eats a function taking crawler.Args and poops out a
+// function taking interface{}.
+// Perhaps there's a better way to do this?
+func (w *Worker) crawlWrapper(f func(*crawler.Args) error) queue.Func {
+	return func(params interface{}) error {
+		args, ok := params.(*crawler.Args)
+		if !ok {
+			return errors.New("could not assert params as crawler.Args")
+		}
 
-	return w.crawler.CrawlHash(args)
-}
-
-// crawlFile crawls a single file
-// TODO: Factor this out, entirely; have both functions eat crawler.Args
-func (w *Worker) crawlFile(params interface{}) error {
-	args := params.(*crawler.Args)
-
-	return w.crawler.CrawlFile(args)
+		return f(args)
+	}
 }
 
 // workerQueue creates a channel and named queue for a worker to consume
@@ -113,7 +113,7 @@ func (w *Worker) startHashWorkers(errc chan<- error) error {
 		}
 
 		consumer := &queue.Consumer{
-			Func:    w.crawlFile,
+			Func:    w.crawlWrapper(w.crawler.CrawlHash),
 			ErrChan: errc,
 			Queue:   q,
 			Params:  &crawler.Args{},
@@ -137,7 +137,7 @@ func (w *Worker) startFileWorkers(errc chan<- error) error {
 		}
 
 		consumer := &queue.Consumer{
-			Func:    w.crawlHash,
+			Func:    w.crawlWrapper(w.crawler.CrawlFile),
 			ErrChan: errc,
 			Queue:   q,
 			Params:  &crawler.Args{},
