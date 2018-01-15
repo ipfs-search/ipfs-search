@@ -1,0 +1,31 @@
+version: '3'
+services:
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - 15672:15672
+      - 5672:5672
+  elasticsearch:
+    image: elasticsearch:5
+    ports:
+      - 9200:9200
+      - 9300:9300
+  ipfs:
+    image: ipfs/go-ipfs
+    ports:
+      - 4001:4001
+      - 5001:5001
+      - 8080:8080
+  ipfs-tika:
+    build: provisioning/docker/ipfs-tika
+    ports:
+      - 8081:8081
+    depends_on:
+      - ipfs
+  ipfs-search:
+    build: .
+    depends_on:
+      - rabbitmq
+      - elasticsearch
+      - ipfs
+      - ipfs-tika
