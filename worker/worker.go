@@ -38,9 +38,15 @@ func newCrawler(config *Config, addCh *queue.TaskChannel) (*crawler.Crawler, err
 	sh := shell.NewShell(config.IpfsAPI)
 	sh.SetTimeout(config.IpfsTimeout)
 
+	el, err := getElastic(config.ElasticSearchURL)
+	if err != nil {
+		addCh.Close()
+		return nil, err
+	}
+
 	// Create elasticsearch indexer
 	id := &indexer.Indexer{
-		ElasticSearch: config.ElasticSearch,
+		ElasticSearch: el,
 	}
 
 	c := &crawler.Crawler{
@@ -75,21 +81,6 @@ func New(config *Config, errc chan<- error) (*Worker, error) {
 	}, nil
 }
 
-// crawlWrapper wraps the actual crawl functions in a type assertion
-// Essentially, it eats a function taking crawler.Args and poops out a
-// function taking interface{}.
-// Perhaps there's a better way to do this?
-func (w *Worker) crawlWrapper(f func(*crawler.Args) error) queue.Func {
-	return func(params interface{}) error {
-		args, ok := params.(*crawler.Args)
-		if !ok {
-			return errors.New("could not assert params as crawler.Args")
-		}
-
-		return f(args)
-	}
-}
-
 // workerQueue creates a channel and named queue for a worker to consume
 func (w *Worker) workerQueue(name string) (*queue.TaskQueue, error) {
 	ch, err := queue.NewChannel()
@@ -107,7 +98,7 @@ func (w *Worker) workerQueue(name string) (*queue.TaskQueue, error) {
 }
 
 // startWorkers starts count workers for q executing crawlFunc and waiting wait between starting them
-func (w *Worker) startWorkers(count int, qName string, crawlFunc func(*crawler.Args) error, wait time.Duration) error {
+func (w *Worker) startWorkers(count int, qName string, crawlFunc func(params interface{}) error, wait time.Duration) error {
 	for i := 0; i < count; i++ {
 		q, err := w.workerQueue(qName)
 		if err != nil {
@@ -115,7 +106,7 @@ func (w *Worker) startWorkers(count int, qName string, crawlFunc func(*crawler.A
 		}
 
 		consumer := &queue.Consumer{
-			Func:    w.crawlWrapper(crawlFunc),
+			Func:    crawlFunc,
 			ErrChan: w.errc,
 			Queue:   q,
 			Params:  &crawler.Args{},
@@ -130,17 +121,48 @@ func (w *Worker) startWorkers(count int, qName string, crawlFunc func(*crawler.A
 	return nil
 }
 
+func (w *Worker) paramsToIndexable(params interface{}) (*crawler.Indexable, error) {
+	args, ok := params.(*crawler.Args)
+	if !ok {
+		return nil, errors.New("could not assert params as crawler.Args")
+	}
+
+	return &crawler.Indexable{
+		Args:    args,
+		Crawler: w.crawler,
+	}, nil
+
+}
+
+func (w *Worker) crawlHash(params interface{}) error {
+	i, err := w.paramsToIndexable(params)
+	if err != nil {
+		return err
+	}
+
+	return i.CrawlHash()
+}
+
+func (w *Worker) crawlFile(params interface{}) error {
+	i, err := w.paramsToIndexable(params)
+	if err != nil {
+		return err
+	}
+
+	return i.CrawlFile()
+}
+
 // Start initiates crawling of the worker (asynchronuously)
 func (w *Worker) Start() error {
 	// Start hash worker
-	err := w.startWorkers(w.config.HashWorkers, "hashes", w.crawler.CrawlHash, w.config.HashWait)
+	err := w.startWorkers(w.config.HashWorkers, "hashes", w.crawlHash, w.config.HashWait)
 	if err != nil {
 		w.Close()
 		return err
 	}
 
 	// Start file workers
-	err = w.startWorkers(w.config.FileWorkers, "files", w.crawler.CrawlFile, w.config.FileWait)
+	err = w.startWorkers(w.config.FileWorkers, "files", w.crawlFile, w.config.FileWait)
 	if err != nil {
 		w.Close()
 		return err

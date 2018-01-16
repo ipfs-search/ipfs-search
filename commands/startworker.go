@@ -9,11 +9,6 @@ import (
 
 // getWorkgerConfig sets up configuration for worker
 func getWorkerConfig() (*worker.Config, error) {
-	el, err := getElastic()
-	if err != nil {
-		return nil, err
-	}
-
 	crawlerConfig := &crawler.Config{
 		IpfsTikaURL:     "http://localhost:8081",
 		IpfsTikaTimeout: 300 * time.Duration(time.Second),
@@ -23,14 +18,14 @@ func getWorkerConfig() (*worker.Config, error) {
 	}
 
 	config := &worker.Config{
-		IpfsAPI:       "localhost:5001",
-		ElasticSearch: el,
-		HashWorkers:   140,
-		FileWorkers:   120,
-		IpfsTimeout:   360 * time.Duration(time.Second),
-		HashWait:      time.Duration(100 * time.Millisecond),
-		FileWait:      time.Duration(100 * time.Millisecond),
-		CrawlerConfig: crawlerConfig,
+		IpfsAPI:          "localhost:5001",
+		ElasticSearchURL: "http://localhost:9200",
+		HashWorkers:      140,
+		FileWorkers:      120,
+		IpfsTimeout:      360 * time.Duration(time.Second),
+		HashWait:         time.Duration(100 * time.Millisecond),
+		FileWait:         time.Duration(100 * time.Millisecond),
+		CrawlerConfig:    crawlerConfig,
 	}
 
 	return config, nil
