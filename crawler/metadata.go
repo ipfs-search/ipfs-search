@@ -10,13 +10,25 @@ import (
 
 type metadata map[string]interface{}
 
-// getTika requests IPFS path from IPFS-TIKA and writes returned metadata
-func (c *Crawler) getTika(path string, m *metadata) error {
-	client := http.Client{
-		Timeout: c.Config.IpfsTikaTimeout,
+// filenameURL returns an IPFS reference including a filename, if available.
+// e.g. /ipfs/<parent_hash>/my_file.jpg instead of /ipfs/<file_hash>/
+// This helps Tika with file type detection.
+func (i *Indexable) getFilenameURL() (path string) {
+	if i.Name != "" && i.ParentHash != "" {
+		return fmt.Sprintf("/ipfs/%s/%s", i.ParentHash, i.Name)
 	}
 
-	resp, err := client.Get(c.Config.IpfsTikaURL + path)
+	// No name & parent hash available
+	return fmt.Sprintf("/ipfs/%s", i.Hash)
+}
+
+// getTika requests IPFS path from IPFS-TIKA and writes returned metadata
+func (i *Indexable) getTika(path string, m *metadata) error {
+	client := http.Client{
+		Timeout: i.Config.IpfsTikaTimeout,
+	}
+
+	resp, err := client.Get(i.Config.IpfsTikaURL + path)
 	if err != nil {
 		return err
 	}
@@ -35,26 +47,26 @@ func (c *Crawler) getTika(path string, m *metadata) error {
 }
 
 // getMatadata sets metdata for file with args or returns error
-func (c *Crawler) getMetadata(args *Args, m *metadata) error {
+func (i *Indexable) getMetadata(m *metadata) error {
 	var err error
 
-	if args.Size > 0 {
-		if args.Size > c.Config.MetadataMaxSize {
+	if i.Args.Size > 0 {
+		if i.Args.Size > i.Config.MetadataMaxSize {
 			// Fail hard for really large files, for now
-			return fmt.Errorf("%s (%s) too large, not indexing (for now)", args.Hash, args.Name)
+			return fmt.Errorf("%s (%s) too large, not indexing (for now)", i.Args.Hash, i.Args.Name)
 		}
 
-		path := filenameURL(args)
+		path := i.getFilenameURL()
 
 		tryAgain := true
 		for tryAgain {
-			err = c.getTika(path, m)
+			err = i.getTika(path, m)
 
-			tryAgain, err = c.handleError(err, args.Hash)
+			tryAgain, err = i.handleError(err)
 
 			if tryAgain {
-				log.Printf("Retrying in %s", c.Config.RetryWait)
-				time.Sleep(c.Config.RetryWait)
+				log.Printf("Retrying in %s", i.Config.RetryWait)
+				time.Sleep(i.Config.RetryWait)
 			}
 		}
 		if err != nil {
