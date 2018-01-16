@@ -38,9 +38,15 @@ func newCrawler(config *Config, addCh *queue.TaskChannel) (*crawler.Crawler, err
 	sh := shell.NewShell(config.IpfsAPI)
 	sh.SetTimeout(config.IpfsTimeout)
 
+	el, err := getElastic(config.ElasticSearchURL)
+	if err != nil {
+		addCh.Close()
+		return nil, err
+	}
+
 	// Create elasticsearch indexer
 	id := &indexer.Indexer{
-		ElasticSearch: config.ElasticSearch,
+		ElasticSearch: el,
 	}
 
 	c := &crawler.Crawler{

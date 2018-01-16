@@ -1,12 +1,12 @@
-package commands
+package worker
 
 import (
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 )
 
-func getElastic() (*elastic.Client, error) {
-	el, err := elastic.NewClient()
+func getElastic(url string) (*elastic.Client, error) {
+	el, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL(url))
 	if err != nil {
 		return nil, err
 	}
