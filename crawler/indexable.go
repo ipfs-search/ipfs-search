@@ -19,11 +19,19 @@ type Indexable struct {
 	*Args
 }
 
+// String returns '<hash>' (<name>)
+func (i *Indexable) String() string {
+	if i.Name != "" {
+		return fmt.Sprintf("'%s' (%s)", i.Hash, i.Name)
+	}
+	return fmt.Sprintf("'%s' (Unnamed)", i.Hash)
+}
+
 // skipItem determines whether a particular item should not be indexed
 // This holds particularly to partial content.
 func (i *Indexable) skipItem() bool {
 	if i.Size == i.Config.PartialSize && i.ParentHash == "" {
-		log.Printf("Skipping unreferenced partial content for file %s", i.Hash)
+		log.Printf("Skipping unreferenced partial content for item %s", i)
 		return true
 	}
 
@@ -129,7 +137,7 @@ func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 			// Add directory to crawl queue
 			err = i.HashQueue.AddTask(dirArgs)
 		default:
-			log.Printf("Type '%s' skipped for '%s'", link.Type, i.Hash)
+			log.Printf("Type '%s' skipped for %s", link.Type, i)
 		}
 	}
 
@@ -166,7 +174,7 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 
 		err = i.Indexer.IndexItem("directory", i.Hash, m)
 	default:
-		log.Printf("Type '%s' skipped for '%s'", list.Type, i.Hash)
+		log.Printf("Type '%s' skipped for %s", list.Type, i)
 	}
 
 	return
@@ -205,7 +213,7 @@ func (i *Indexable) CrawlHash() error {
 	existing, err := i.preCrawl()
 
 	if !existing.shouldCrawl() || err != nil {
-		log.Printf("Not crawling hash '%s' (%s)", i.Hash, i.Name)
+		log.Printf("Not crawling hash %s", i)
 		return err
 	}
 
@@ -219,7 +227,7 @@ func (i *Indexable) CrawlHash() error {
 		return err
 	}
 
-	log.Printf("Finished hash %s", i.Hash)
+	log.Printf("Finished hash %s", i)
 
 	return nil
 }
@@ -229,18 +237,18 @@ func (i *Indexable) CrawlFile() error {
 	existing, err := i.preCrawl()
 
 	if !existing.shouldCrawl() || err != nil {
-		log.Printf("Not crawling file '%s' (%s)", i.Hash, i.Name)
+		log.Printf("Not crawling file %s", i)
 		return err
 	}
 
-	log.Printf("Crawling file %s (%s)", i.Hash, i.Name)
+	log.Printf("Crawling file %s", i)
 
 	i.processFile(existing.references)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Finished file %s", i.Hash)
+	log.Printf("Finished file %s", i)
 
 	return nil
 }

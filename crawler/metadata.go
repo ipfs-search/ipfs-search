@@ -70,7 +70,7 @@ func (i *Indexable) getMetadata(m *metadata) error {
 	if i.Args.Size > 0 {
 		if i.Args.Size > i.Config.MetadataMaxSize {
 			// Fail hard for really large files, for now
-			return fmt.Errorf("%s (%s) too large, not indexing (for now)", i.Args.Hash, i.Args.Name)
+			return fmt.Errorf("%s too large, not indexing (for now)", i)
 		}
 
 		err = i.getTika(m)
