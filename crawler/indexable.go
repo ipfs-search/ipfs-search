@@ -136,7 +136,7 @@ func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 	return
 }
 
-// processList processes a file listing
+// processList processes and indexes a file listing
 func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.Reference) (err error) {
 	switch list.Type {
 	case "File":
@@ -157,13 +157,14 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 		}
 
 		// Index name and size for directory and directory items
-		properties := metadata{
+		m := metadata{
 			"links":      list.Links,
 			"size":       list.Size,
 			"references": references,
+			"first-seen": nowISO(),
 		}
 
-		err = i.Indexer.IndexItem("directory", i.Hash, properties)
+		err = i.Indexer.IndexItem("directory", i.Hash, m)
 	default:
 		log.Printf("Type '%s' skipped for '%s'", list.Type, i.Hash)
 	}
@@ -171,38 +172,49 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 	return
 }
 
-// updateItem updates references (and later also last seen date)
-func (i *Indexable) updateItem(references []indexer.Reference) error {
-	properties := metadata{
-		"references": references,
-	}
+// processList processes and indexes a single file
+func (i *Indexable) processFile(references []indexer.Reference) error {
+	m := make(metadata)
 
-	return i.Indexer.IndexItem(itemType, i.Hash, properties)
-}
-
-// CrawlHash crawls a particular hash (file or directory)
-func (i *Indexable) CrawlHash() error {
-	if i.skipItem() {
-		return nil
-	}
-
-	references, alreadyIndexed, err := i.getReferences()
+	err := i.getMetadata(&m)
 	if err != nil {
 		return err
 	}
 
-	if alreadyIndexed {
-		return i.updateItem(references)
+	// Add previously found references now
+	m["size"] = i.Size
+	m["references"] = references
+	m["first-seen"] = nowISO()
+
+	return i.Indexer.IndexItem("file", i.Hash, m)
+}
+
+// preCrawl checks for and returns existing item and conditionally updates it
+func (i *Indexable) preCrawl() (existing *existingItem, err error) {
+	existing, err = i.getExistingItem()
+	if err != nil {
+		return
 	}
 
-	log.Printf("crawling hash '%s' (%s)", i.Hash, i.Name)
+	err = existing.update()
+	return
+}
+
+// CrawlHash crawls a particular hash (file or directory)
+func (i *Indexable) CrawlHash() error {
+	existing, err := i.preCrawl()
+
+	if !existing.shouldCrawl() || err != nil {
+		log.Printf("Not crawling hash '%s' (%s)", i.Hash, i.Name)
+		return err
+	}
 
 	list, err := i.getFileList()
 	if err != nil {
 		return err
 	}
 
-	err = i.processList(list, references)
+	err = i.processList(list, existing.references)
 	if err != nil {
 		return err
 	}
@@ -214,33 +226,16 @@ func (i *Indexable) CrawlHash() error {
 
 // CrawlFile crawls a single object, known to be a file
 func (i *Indexable) CrawlFile() error {
-	if i.skipItem() {
-		return nil
-	}
+	existing, err := i.preCrawl()
 
-	references, alreadyIndexed, err := i.getReferences()
-
-	if err != nil {
+	if !existing.shouldCrawl() || err != nil {
+		log.Printf("Not crawling file '%s' (%s)", i.Hash, i.Name)
 		return err
 	}
 
-	if alreadyIndexed {
-		return i.updateItem(references)
-	}
+	log.Printf("Crawling file %s (%s)", i.Hash, i.Name)
 
-	log.Printf("crawling file %s (%s)", i.Hash, i.Name)
-
-	m := make(metadata)
-	i.getMetadata(&m)
-	if err != nil {
-		return err
-	}
-
-	// Add previously found references now
-	m["size"] = i.Size
-	m["references"] = references
-
-	err = i.Indexer.IndexItem("file", i.Hash, m)
+	i.processFile(existing.references)
 	if err != nil {
 		return err
 	}
