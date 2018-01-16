@@ -5,8 +5,8 @@ import (
 	"log"
 )
 
-// updateReferences updates references with name, parentHash and parentName. Returns true when updated
-func (i *Indexable) updateReferences(references []indexer.Reference) ([]indexer.Reference, bool) {
+// updateReferences updates references with Name and ParentHash
+func (i *Indexable) updateReferences(references []indexer.Reference) []indexer.Reference {
 	if references == nil {
 		// Initialize empty references when none have been found
 		references = []indexer.Reference{}
@@ -14,13 +14,13 @@ func (i *Indexable) updateReferences(references []indexer.Reference) ([]indexer.
 
 	if i.ParentHash == "" {
 		// No parent hash for item, not adding reference
-		return references, false
+		return references
 	}
 
 	for _, reference := range references {
 		if reference.ParentHash == i.ParentHash {
 			// Reference exists, not updating
-			return references, false
+			return references
 		}
 	}
 
@@ -30,13 +30,12 @@ func (i *Indexable) updateReferences(references []indexer.Reference) ([]indexer.
 		ParentHash: i.ParentHash,
 	})
 
-	return references, true
+	return references
 }
 
-// indexReferences retreives or creates references for this hashable,
-// returning the resulting references and whether or not the item was
-// previously present in the index.
-func (i *Indexable) indexReferences() ([]indexer.Reference, bool, error) {
+// Return an updated list of references (existing plus new) and whether or the
+// item was previously indexed.
+func (i *Indexable) getReferences() ([]indexer.Reference, bool, error) {
 	var alreadyIndexed bool
 
 	references, itemType, err := i.Indexer.GetReferences(i.Hash)
@@ -51,26 +50,7 @@ func (i *Indexable) indexReferences() ([]indexer.Reference, bool, error) {
 		alreadyIndexed = true
 	}
 
-	references, referencesUpdated := i.updateReferences(references)
-
-	if alreadyIndexed {
-		if referencesUpdated {
-			log.Printf("Found %s, reference added: '%s' from %s", i.Hash, i.Name, i.ParentHash)
-
-			properties := metadata{
-				"references": references,
-			}
-
-			err := i.Indexer.IndexItem(itemType, i.Hash, properties)
-			if err != nil {
-				return nil, false, err
-			}
-		} else {
-			log.Printf("Found %s, references not updated.", i.Hash)
-		}
-	} else if referencesUpdated {
-		log.Printf("Adding %s, reference '%s' from %s", i.Hash, i.Name, i.ParentHash)
-	}
+	references = i.updateReferences(references)
 
 	return references, alreadyIndexed, nil
 }

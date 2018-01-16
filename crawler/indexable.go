@@ -171,19 +171,28 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 	return
 }
 
+// updateItem updates references (and later also last seen date)
+func (i *Indexable) updateItem(references []indexer.Reference) error {
+	properties := metadata{
+		"references": references,
+	}
+
+	return i.Indexer.IndexItem(itemType, i.Hash, properties)
+}
+
 // CrawlHash crawls a particular hash (file or directory)
 func (i *Indexable) CrawlHash() error {
 	if i.skipItem() {
 		return nil
 	}
 
-	references, alreadyIndexed, err := i.indexReferences()
+	references, alreadyIndexed, err := i.getReferences()
 	if err != nil {
 		return err
 	}
 
 	if alreadyIndexed {
-		return nil
+		return i.updateItem(references)
 	}
 
 	log.Printf("crawling hash '%s' (%s)", i.Hash, i.Name)
@@ -209,14 +218,14 @@ func (i *Indexable) CrawlFile() error {
 		return nil
 	}
 
-	references, alreadyIndexed, err := i.indexReferences()
+	references, alreadyIndexed, err := i.getReferences()
 
 	if err != nil {
 		return err
 	}
 
 	if alreadyIndexed {
-		return nil
+		return i.updateItem(references)
 	}
 
 	log.Printf("crawling file %s (%s)", i.Hash, i.Name)
