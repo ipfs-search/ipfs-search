@@ -29,11 +29,8 @@ func (i *Indexable) skipItem() bool {
 	return false
 }
 
-// Handle errors graceously, returns try again bool and original error
-// TODO: this handles both errors for listing as well as metadata errors,
-// which seems a very bad idea and makes this function unnecessarily complex.
-// We should figure out which code handles which and split it up.
-func (i *Indexable) handleError(err error) (bool, error) {
+// handleShellError handles IPFS shell errors; returns try again bool and original error
+func (i *Indexable) handleShellError(err error) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
 		// We're not recovering from protocol errors, so panic
 
@@ -47,9 +44,13 @@ func (i *Indexable) handleError(err error) (bool, error) {
 		panic(err)
 	}
 
-	if uerr, ok := err.(*url.Error); ok {
-		// URL errors
+	// Different error, attempt handling as URL error
+	return i.handleURLError(err)
+}
 
+// handleURLError handles HTTP errors graceously, returns try again bool and original error
+func (i *Indexable) handleURLError(err error) (bool, error) {
+	if uerr, ok := err.(*url.Error); ok {
 		log.Printf("URL error: %v", uerr)
 
 		if uerr.Timeout() {
@@ -93,7 +94,7 @@ func (i *Indexable) getFileList() (list *shell.UnixLsObject, err error) {
 	for tryAgain {
 		list, err = i.Shell.FileList(url)
 
-		tryAgain, err = i.handleError(err)
+		tryAgain, err = i.handleShellError(err)
 
 		if tryAgain {
 			log.Printf("Retrying in %s", i.Config.RetryWait)

@@ -62,7 +62,7 @@ func (i *Indexable) getMetadata(m *metadata) error {
 		for tryAgain {
 			err = i.getTika(path, m)
 
-			tryAgain, err = i.handleError(err)
+			tryAgain, err = i.handleURLError(err)
 
 			if tryAgain {
 				log.Printf("Retrying in %s", i.Config.RetryWait)
