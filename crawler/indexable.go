@@ -212,7 +212,6 @@ func (i *Indexable) CrawlHash(ctx context.Context) error {
 	existing, err := i.preCrawl(ctx)
 
 	if err != nil || !existing.shouldCrawl() {
-		log.Printf("Not crawling hash %s", i)
 		return err
 	}
 
@@ -238,7 +237,6 @@ func (i *Indexable) CrawlFile(ctx context.Context) error {
 	existing, err := i.preCrawl(ctx)
 
 	if err != nil || !existing.shouldCrawl() {
-		log.Printf("Not crawling file %s", i)
 		return err
 	}
 
