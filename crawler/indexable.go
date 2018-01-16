@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/url"
 	// "path"
+	"fmt"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs/go-ipfs-api"
 	"log"
@@ -86,9 +87,14 @@ func (i *Indexable) handleURLError(err error) (bool, error) {
 	return false, err
 }
 
+// hashURL returns the IPFS URL for a particular hash
+func (i *Indexable) hashURL() string {
+	return fmt.Sprintf("/ipfs/%s", i.Hash)
+}
+
 // getFileList return list of files and/or type of item (directory/file)
 func (i *Indexable) getFileList() (list *shell.UnixLsObject, err error) {
-	url := hashURL(i.Hash)
+	url := i.hashURL()
 
 	tryAgain := true
 	for tryAgain {
