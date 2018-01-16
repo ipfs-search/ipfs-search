@@ -1,14 +1,11 @@
 package crawler
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs/go-ipfs-api"
 	"log"
 	"net"
-	"net/http"
 	"net/url"
 	// "path"
 	"strings"
@@ -35,19 +32,17 @@ type Crawler struct {
 	HashQueue *queue.TaskQueue
 }
 
-type metadata map[string]interface{}
-
 // Handle IPFS errors graceously, returns try again bool and original error
 func (c *Crawler) handleError(err error, hash string) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
 		// We're not recovering from protocol errors, so panic
 
 		// Attempt to index panic to prevent re-indexing
-		metadata := map[string]interface{}{
+		m := metadata{
 			"error": err.Error(),
 		}
 
-		c.Indexer.IndexItem("invalid", hash, metadata)
+		c.Indexer.IndexItem("invalid", hash, m)
 
 		panic(err)
 	}
@@ -88,45 +83,6 @@ func (c *Crawler) handleError(err error, hash string) (bool, error) {
 	}
 
 	return false, err
-}
-
-func (c *Crawler) indexReferences(hash string, name string, parentHash string) ([]indexer.Reference, bool, error) {
-	var alreadyIndexed bool
-
-	references, itemType, err := c.Indexer.GetReferences(hash)
-	if err != nil {
-		return nil, false, err
-	}
-
-	// TODO: Handle this more explicitly, use and detect NotFound
-	if references == nil {
-		alreadyIndexed = false
-	} else {
-		alreadyIndexed = true
-	}
-
-	references, referencesUpdated := updateReferences(references, name, parentHash)
-
-	if alreadyIndexed {
-		if referencesUpdated {
-			log.Printf("Found %s, reference added: '%s' from %s", hash, name, parentHash)
-
-			properties := map[string]interface{}{
-				"references": references,
-			}
-
-			err := c.Indexer.IndexItem(itemType, hash, properties)
-			if err != nil {
-				return nil, false, err
-			}
-		} else {
-			log.Printf("Found %s, references not updated.", hash)
-		}
-	} else if referencesUpdated {
-		log.Printf("Adding %s, reference '%s' from %s", hash, name, parentHash)
-	}
-
-	return references, alreadyIndexed, nil
 }
 
 // CrawlHash crawls a particular hash (file or directory)
@@ -234,83 +190,6 @@ func (c *Crawler) CrawlHash(args *Args) error {
 	}
 
 	log.Printf("Finished hash %s", args.Hash)
-
-	return nil
-}
-
-// getTika requests IPFS path from IPFS-TIKA and writes returned metadata
-func (c *Crawler) getTika(path string, m *metadata) error {
-	client := http.Client{
-		Timeout: c.Config.IpfsTikaTimeout,
-	}
-
-	resp, err := client.Get(c.Config.IpfsTikaURL + path)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("undesired status '%s' from ipfs-tika", resp.Status)
-	}
-
-	// Parse resulting JSON
-	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
-		return err
-	}
-
-	return err
-}
-
-// getMatadata sets metdata for file with args or returns error
-func (c *Crawler) getMetadata(args *Args, m *metadata) error {
-	var err error
-
-	if args.Size > 0 {
-		if args.Size > c.Config.MetadataMaxSize {
-			// Fail hard for really large files, for now
-			return fmt.Errorf("%s (%s) too large, not indexing (for now)", args.Hash, args.Name)
-		}
-
-		path := filenameURL(args)
-
-		tryAgain := true
-		for tryAgain {
-			err = c.getTika(path, m)
-
-			tryAgain, err = c.handleError(err, args.Hash)
-
-			if tryAgain {
-				log.Printf("Retrying in %s", c.Config.RetryWait)
-				time.Sleep(c.Config.RetryWait)
-			}
-		}
-		if err != nil {
-			return err
-		}
-
-		// Check for IPFS links in content
-		/*
-			for raw_url := range metadata.urls {
-				url, err := URL.Parse(raw_url)
-
-				if err != nil {
-					return err
-				}
-
-				if strings.HasPrefix(url.Path, "/ipfs/") {
-					// Found IPFS link!
-					args := crawlerArgs{
-						Hash:       link.Hash,
-						Name:       link.Name,
-						Size:       link.Size,
-						ParentHash: hash,
-					}
-
-				}
-			}
-		*/
-	}
 
 	return nil
 }
