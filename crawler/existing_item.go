@@ -3,6 +3,7 @@ package crawler
 import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/indexer"
+	"log"
 )
 
 type existingItem struct {
@@ -51,13 +52,32 @@ func (i *existingItem) updateIndex(ctx context.Context) error {
 
 // update updates existing items (if they in fact do exist)
 func (i *existingItem) update(ctx context.Context) error {
-	i.updateReferences()
+	if i.exists && !i.skipItem() {
+		i.updateReferences()
 
-	if i.exists {
+		log.Printf("Updating %s", i)
 		return i.updateIndex(ctx)
 	}
 
 	return nil
+}
+
+// skipItem determines whether a particular item should not be indexed
+// This holds particularly to partial content.
+func (i *existingItem) skipItem() bool {
+	// TODO; this is currently called in update() and shouldCrawl and
+	// yields duplicate output. Todo; make this return an error or nil.
+	if i.Size == i.Config.PartialSize && i.ParentHash == "" {
+		log.Printf("Skipping unreferenced partial content for item %s", i)
+		return true
+	}
+
+	if i.itemType == "invalid" {
+		log.Printf("Skipping update of invalid %s", i)
+		return true
+	}
+
+	return false
 }
 
 // getExistingItem returns existingItem from index
@@ -87,6 +107,5 @@ func (i *existingItem) shouldCrawl() bool {
 		panic("Existingitem should not be nil")
 	}
 
-	return !i.skipItem() || !i.exists
-
+	return !(i.skipItem() || i.exists)
 }
