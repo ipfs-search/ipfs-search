@@ -28,17 +28,6 @@ func (i *Indexable) String() string {
 	return fmt.Sprintf("'%s' (Unnamed)", i.Hash)
 }
 
-// skipItem determines whether a particular item should not be indexed
-// This holds particularly to partial content.
-func (i *Indexable) skipItem() bool {
-	if i.Size == i.Config.PartialSize && i.ParentHash == "" {
-		log.Printf("Skipping unreferenced partial content for item %s", i)
-		return true
-	}
-
-	return false
-}
-
 // handleShellError handles IPFS shell errors; returns try again bool and original error
 func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && (strings.Contains(err.Error(), "proto") ||
