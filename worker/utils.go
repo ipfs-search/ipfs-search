@@ -3,6 +3,7 @@ package worker
 import (
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
+	"log"
 )
 
 func getElastic(url string) (*elastic.Client, error) {
@@ -18,6 +19,7 @@ func getElastic(url string) (*elastic.Client, error) {
 		// Index does not exist yet, create
 		el.CreateIndex("ipfs")
 	}
+	log.Printf("Connected to ElasticSearch")
 
 	return el, nil
 }
