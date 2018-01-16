@@ -32,7 +32,18 @@ type Crawler struct {
 	HashQueue *queue.TaskQueue
 }
 
-// Handle IPFS errors graceously, returns try again bool and original error
+// skipItem determines whether a particular item should not be indexed
+// This holds particularly to partial content.
+func (c *Crawler) skipItem(args *Args) bool {
+	if args.Size == c.Config.PartialSize && args.ParentHash == "" {
+		log.Printf("Skipping unreferenced partial content for file %s", args.Hash)
+		return true
+	}
+
+	return false
+}
+
+// Handle errors graceously, returns try again bool and original error
 func (c *Crawler) handleError(err error, hash string) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
 		// We're not recovering from protocol errors, so panic
@@ -85,23 +96,9 @@ func (c *Crawler) handleError(err error, hash string) (bool, error) {
 	return false, err
 }
 
-// CrawlHash crawls a particular hash (file or directory)
-func (c *Crawler) CrawlHash(args *Args) error {
-	references, alreadyIndexed, err := c.indexReferences(args.Hash, args.Name, args.ParentHash)
-
-	if err != nil {
-		return err
-	}
-
-	if alreadyIndexed {
-		return nil
-	}
-
-	log.Printf("Crawling hash '%s' (%s)", args.Hash, args.Name)
-
+// getFileList return list of files and/or type of item (directory/file)
+func (c *Crawler) getFileList(args *Args) (list *shell.UnixLsObject, err error) {
 	url := hashURL(args.Hash)
-
-	var list *shell.UnixLsObject
 
 	tryAgain := true
 	for tryAgain {
@@ -115,6 +112,48 @@ func (c *Crawler) CrawlHash(args *Args) error {
 		}
 	}
 
+	return
+}
+
+// queueList queues any items in a given list/directory
+func (c *Crawler) queueList(args *Args, list *shell.UnixLsObject) (err error) {
+	for _, link := range list.Links {
+		dirArgs := &Args{
+			Hash:       link.Hash,
+			Name:       link.Name,
+			Size:       link.Size,
+			ParentHash: args.Hash,
+		}
+
+		switch link.Type {
+		case "File":
+			// Add file to crawl queue
+			err = c.FileQueue.AddTask(dirArgs)
+		case "Directory":
+			// Add directory to crawl queue
+			err = c.HashQueue.AddTask(dirArgs)
+		default:
+			log.Printf("Type '%s' skipped for '%s'", link.Type, args.Hash)
+		}
+	}
+
+	return
+}
+
+// CrawlHash crawls a particular hash (file or directory)
+func (c *Crawler) CrawlHash(args *Args) error {
+	references, alreadyIndexed, err := c.indexReferences(args.Hash, args.Name, args.ParentHash)
+	if err != nil {
+		return err
+	}
+
+	if alreadyIndexed {
+		return nil
+	}
+
+	log.Printf("Crawling hash '%s' (%s)", args.Hash, args.Name)
+
+	list, err := c.getFileList(args)
 	if err != nil {
 		return err
 	}
@@ -129,6 +168,10 @@ func (c *Crawler) CrawlHash(args *Args) error {
 			ParentHash: args.ParentHash,
 		}
 
+		if c.skipItem(args) {
+			return nil
+		}
+
 		err = c.FileQueue.AddTask(fileArgs)
 		if err != nil {
 			// failed to send the task
@@ -136,33 +179,9 @@ func (c *Crawler) CrawlHash(args *Args) error {
 		}
 	case "Directory":
 		// Queue indexing of linked items
-		for _, link := range list.Links {
-			dirArgs := Args{
-				Hash:       link.Hash,
-				Name:       link.Name,
-				Size:       link.Size,
-				ParentHash: args.Hash,
-			}
-
-			switch link.Type {
-			case "File":
-				// Add file to crawl queue
-				err = c.FileQueue.AddTask(dirArgs)
-				if err != nil {
-					// failed to send the task
-					return err
-				}
-
-			case "Directory":
-				// Add directory to crawl queue
-				c.HashQueue.AddTask(dirArgs)
-				if err != nil {
-					// failed to send the task
-					return err
-				}
-			default:
-				log.Printf("Type '%s' skipped for '%s'", link.Type, args.Hash)
-			}
+		err = c.queueList(args, list)
+		if err != nil {
+			return err
 		}
 
 		// Index name and size for directory and directory items
@@ -172,11 +191,7 @@ func (c *Crawler) CrawlHash(args *Args) error {
 			"references": references,
 		}
 
-		// Skip partial content
-		if list.Size == c.Config.PartialSize && args.ParentHash == "" {
-			// Assertion error.
-			// REMOVE ME!
-			log.Printf("Skipping unreferenced partial content for directory %s", args.Hash)
+		if c.skipItem(args) {
 			return nil
 		}
 
@@ -196,10 +211,7 @@ func (c *Crawler) CrawlHash(args *Args) error {
 
 // CrawlFile crawls a single object, known to be a file
 func (c *Crawler) CrawlFile(args *Args) error {
-	if args.Size == c.Config.PartialSize && args.ParentHash == "" {
-		// Assertion error.
-		// REMOVE ME!
-		log.Printf("Skipping unreferenced partial content for file %s", args.Hash)
+	if c.skipItem(args) {
 		return nil
 	}
 
