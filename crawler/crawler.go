@@ -143,24 +143,8 @@ func (c *Crawler) queueList(args *Args, list *shell.UnixLsObject) (err error) {
 	return
 }
 
-// CrawlHash crawls a particular hash (file or directory)
-func (c *Crawler) CrawlHash(args *Args) error {
-	references, alreadyIndexed, err := c.indexReferences(args.Hash, args.Name, args.ParentHash)
-	if err != nil {
-		return err
-	}
-
-	if alreadyIndexed {
-		return nil
-	}
-
-	log.Printf("Crawling hash '%s' (%s)", args.Hash, args.Name)
-
-	list, err := c.getFileList(args)
-	if err != nil {
-		return err
-	}
-
+// processList processes a file listing
+func (c *Crawler) processList(args *Args, list *shell.UnixLsObject, references []indexer.Reference) (err error) {
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
@@ -171,24 +155,12 @@ func (c *Crawler) CrawlHash(args *Args) error {
 			ParentHash: args.ParentHash,
 		}
 
-		if c.skipItem(args) {
-			return nil
-		}
-
 		err = c.FileQueue.AddTask(fileArgs)
-		if err != nil {
-			// failed to send the task
-			return err
-		}
 	case "Directory":
 		// Queue indexing of linked items
 		err = c.queueList(args, list)
 		if err != nil {
 			return err
-		}
-
-		if c.skipItem(args) {
-			return nil
 		}
 
 		// Index name and size for directory and directory items
@@ -198,13 +170,39 @@ func (c *Crawler) CrawlHash(args *Args) error {
 			"references": references,
 		}
 
-		err := c.Indexer.IndexItem("directory", args.Hash, properties)
-		if err != nil {
-			return err
-		}
-
+		err = c.Indexer.IndexItem("directory", args.Hash, properties)
 	default:
 		log.Printf("Type '%s' skipped for '%s'", list.Type, args.Hash)
+	}
+
+	return
+}
+
+// CrawlHash crawls a particular hash (file or directory)
+func (c *Crawler) CrawlHash(args *Args) error {
+	if c.skipItem(args) {
+		return nil
+	}
+
+	references, alreadyIndexed, err := c.indexReferences(args.Hash, args.Name, args.ParentHash)
+	if err != nil {
+		return err
+	}
+
+	if alreadyIndexed {
+		return nil
+	}
+
+	log.Printf("crawling hash '%s' (%s)", args.Hash, args.Name)
+
+	list, err := c.getFileList(args)
+	if err != nil {
+		return err
+	}
+
+	err = c.processList(args, list, references)
+	if err != nil {
+		return err
 	}
 
 	log.Printf("Finished hash %s", args.Hash)
@@ -228,7 +226,7 @@ func (c *Crawler) CrawlFile(args *Args) error {
 		return nil
 	}
 
-	log.Printf("Crawling file %s (%s)\n", args.Hash, args.Name)
+	log.Printf("crawling file %s (%s)", args.Hash, args.Name)
 
 	m := make(metadata)
 	c.getMetadata(args, &m)
