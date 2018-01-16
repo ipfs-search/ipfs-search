@@ -177,7 +177,7 @@ func (i *Indexable) CrawlHash() error {
 		return nil
 	}
 
-	references, alreadyIndexed, err := i.indexReferences(i.Hash, i.Name, i.ParentHash)
+	references, alreadyIndexed, err := i.indexReferences()
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (i *Indexable) CrawlFile() error {
 		return nil
 	}
 
-	references, alreadyIndexed, err := i.indexReferences(i.Hash, i.Name, i.ParentHash)
+	references, alreadyIndexed, err := i.indexReferences()
 
 	if err != nil {
 		return err

@@ -6,36 +6,36 @@ import (
 )
 
 // updateReferences updates references with name, parentHash and parentName. Returns true when updated
-func updateReferences(references []indexer.Reference, name string, parentHash string) ([]indexer.Reference, bool) {
+func (i *Indexable) updateReferences(references []indexer.Reference) ([]indexer.Reference, bool) {
 	if references == nil {
 		// Initialize empty references when none have been found
 		references = []indexer.Reference{}
 	}
 
-	if parentHash == "" {
+	if i.ParentHash == "" {
 		// No parent hash for item, not adding reference
 		return references, false
 	}
 
 	for _, reference := range references {
-		if reference.ParentHash == parentHash {
+		if reference.ParentHash == i.ParentHash {
 			// Reference exists, not updating
 			return references, false
 		}
 	}
 
 	references = append(references, indexer.Reference{
-		Name:       name,
-		ParentHash: parentHash,
+		Name:       i.Name,
+		ParentHash: i.ParentHash,
 	})
 
 	return references, true
 }
 
-func (c *Crawler) indexReferences(hash string, name string, parentHash string) ([]indexer.Reference, bool, error) {
+func (i *Indexable) indexReferences() ([]indexer.Reference, bool, error) {
 	var alreadyIndexed bool
 
-	references, itemType, err := c.Indexer.GetReferences(hash)
+	references, itemType, err := i.Indexer.GetReferences(i.Hash)
 	if err != nil {
 		return nil, false, err
 	}
@@ -47,25 +47,25 @@ func (c *Crawler) indexReferences(hash string, name string, parentHash string) (
 		alreadyIndexed = true
 	}
 
-	references, referencesUpdated := updateReferences(references, name, parentHash)
+	references, referencesUpdated := i.updateReferences(references)
 
 	if alreadyIndexed {
 		if referencesUpdated {
-			log.Printf("Found %s, reference added: '%s' from %s", hash, name, parentHash)
+			log.Printf("Found %s, reference added: '%s' from %s", i.Hash, i.Name, i.ParentHash)
 
-			properties := map[string]interface{}{
+			properties := metadata{
 				"references": references,
 			}
 
-			err := c.Indexer.IndexItem(itemType, hash, properties)
+			err := i.Indexer.IndexItem(itemType, i.Hash, properties)
 			if err != nil {
 				return nil, false, err
 			}
 		} else {
-			log.Printf("Found %s, references not updated.", hash)
+			log.Printf("Found %s, references not updated.", i.Hash)
 		}
 	} else if referencesUpdated {
-		log.Printf("Adding %s, reference '%s' from %s", hash, name, parentHash)
+		log.Printf("Adding %s, reference '%s' from %s", i.Hash, i.Name, i.ParentHash)
 	}
 
 	return references, alreadyIndexed, nil
