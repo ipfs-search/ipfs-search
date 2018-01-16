@@ -18,7 +18,6 @@ func (i *existingItem) updateReferences() {
 	if i.references == nil {
 		// Initialize empty references when none have been found
 		i.references = []indexer.Reference{}
-		return
 	}
 
 	if i.ParentHash == "" {
