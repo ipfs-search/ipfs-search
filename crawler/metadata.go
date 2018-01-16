@@ -22,13 +22,30 @@ func (i *Indexable) getFilenameURL() (path string) {
 	return fmt.Sprintf("/ipfs/%s", i.Hash)
 }
 
-// getTika requests IPFS path from IPFS-TIKA and writes returned metadata
-func (i *Indexable) getTika(path string, m *metadata) error {
+func (i *Indexable) retryingGet(url string) (resp *http.Response, err error) {
 	client := http.Client{
 		Timeout: i.Config.IpfsTikaTimeout,
 	}
 
-	resp, err := client.Get(i.Config.IpfsTikaURL + path)
+	tryAgain := true
+	for tryAgain {
+		resp, err = client.Get(url)
+
+		tryAgain, err = i.handleURLError(err)
+
+		if tryAgain {
+			log.Printf("Retrying in %s", i.Config.RetryWait)
+			time.Sleep(i.Config.RetryWait)
+		}
+	}
+
+	return
+}
+
+// getTika requests IPFS path from IPFS-TIKA and writes returned metadata
+func (i *Indexable) getTika(m *metadata) error {
+	resp, err := i.retryingGet(i.Config.IpfsTikaURL + i.getFilenameURL())
+
 	if err != nil {
 		return err
 	}
@@ -56,19 +73,7 @@ func (i *Indexable) getMetadata(m *metadata) error {
 			return fmt.Errorf("%s (%s) too large, not indexing (for now)", i.Args.Hash, i.Args.Name)
 		}
 
-		path := i.getFilenameURL()
-
-		tryAgain := true
-		for tryAgain {
-			err = i.getTika(path, m)
-
-			tryAgain, err = i.handleURLError(err)
-
-			if tryAgain {
-				log.Printf("Retrying in %s", i.Config.RetryWait)
-				time.Sleep(i.Config.RetryWait)
-			}
-		}
+		err = i.getTika(m)
 		if err != nil {
 			return err
 		}
