@@ -41,8 +41,11 @@ func (i *Indexable) skipItem() bool {
 
 // handleShellError handles IPFS shell errors; returns try again bool and original error
 func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, error) {
-	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
-		// Attempt to index error to prevent re-indexing
+	if _, ok := err.(*shell.Error); ok && (strings.Contains(err.Error(), "proto") ||
+		strings.Contains(err.Error(), "unrecognized type") ||
+		strings.Contains(err.Error(), "not a valid merkledag node")) {
+
+		// Attempt to index panic to prevent re-indexing
 		i.indexInvalid(err)
 
 		// Don't try again, return error
