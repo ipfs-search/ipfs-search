@@ -24,13 +24,11 @@ func newCrawler(config *Config, addCh *queue.TaskChannel) (*crawler.Crawler, err
 	// As there's potential failure, execute this first to allow quick fail
 	hq, err := queue.NewTaskQueue(addCh, "hashes")
 	if err != nil {
-		addCh.Close()
 		return nil, err
 	}
 
 	fq, err := queue.NewTaskQueue(addCh, "files")
 	if err != nil {
-		addCh.Close()
 		return nil, err
 	}
 
@@ -40,7 +38,6 @@ func newCrawler(config *Config, addCh *queue.TaskChannel) (*crawler.Crawler, err
 
 	el, err := getElastic(config.ElasticSearchURL)
 	if err != nil {
-		addCh.Close()
 		return nil, err
 	}
 
@@ -70,6 +67,7 @@ func New(config *Config, errc chan<- error) (*Worker, error) {
 
 	c, err := newCrawler(config, addCh)
 	if err != nil {
+		addCh.Close()
 		return nil, err
 	}
 
