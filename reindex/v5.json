@@ -34,6 +34,18 @@
         "file": {
             "dynamic":      "false",
             "properties": {
+                "first-seen": {
+                    "type": "date",
+                    "format": "strict_date_optional_time||epoch_millis",
+                    "index": true,
+                    "doc_values": true
+                },
+                "last-seen": {
+                    "type": "date",
+                    "format": "strict_date_optional_time||epoch_millis",
+                    "index": true,
+                    "doc_values": true
+                },
                 "content":  {
                     "type": "text",
                     "index": true,
@@ -180,6 +192,18 @@
         "directory": {
             "dynamic":      "strict",
             "properties": {
+                "first-seen": {
+                    "type": "date",
+                    "format": "strict_date_optional_time||epoch_millis",
+                    "index": true,
+                    "doc_values": true
+                },
+                "last-seen": {
+                    "type": "date",
+                    "format": "strict_date_optional_time||epoch_millis",
+                    "index": true,
+                    "doc_values": true
+                },
                 "links":  {
                     "type":     "object",
                     "dynamic":  true,
