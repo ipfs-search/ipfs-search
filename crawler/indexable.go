@@ -43,11 +43,7 @@ func (i *Indexable) skipItem() bool {
 func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
 		// Attempt to index error to prevent re-indexing
-		m := metadata{
-			"error": err.Error(),
-		}
-
-		i.Indexer.IndexItem(ctx, "invalid", i.Hash, m)
+		i.indexInvalid(err)
 
 		// Don't try again, return error
 		return false, err
@@ -119,6 +115,16 @@ func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, 
 	return
 }
 
+// indexInvalid indexes invalid files to prevent indexing again
+func (i *Indexable) indexInvalid(err error) {
+	// Attempt to index panic to prevent re-indexing
+	m := metadata{
+		"error": err.Error(),
+	}
+
+	i.Indexer.IndexItem("invalid", i.Hash, m)
+}
+
 // queueList queues any items in a given list/directory
 func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 	for _, link := range list.Links {
@@ -138,6 +144,7 @@ func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 			err = i.HashQueue.Publish(dirArgs)
 		default:
 			log.Printf("Type '%s' skipped for %s", link.Type, i)
+			i.indexInvalid(fmt.Errorf("Unknown type: %s", link.Type))
 		}
 	}
 
