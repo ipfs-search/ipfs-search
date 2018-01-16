@@ -12,12 +12,6 @@ type Indexer struct {
 	ElasticSearch *elastic.Client
 }
 
-// Reference to indexed item
-type Reference struct {
-	ParentHash string `json:"parent_hash"`
-	Name       string `json:"name"`
-}
-
 // IndexItem adds or updates an IPFS item with arbitrary properties
 func (i *Indexer) IndexItem(ctx context.Context, doctype string, hash string, properties map[string]interface{}) error {
 	_, err := i.ElasticSearch.Update().
@@ -37,8 +31,8 @@ func (i *Indexer) IndexItem(ctx context.Context, doctype string, hash string, pr
 }
 
 // extractRefrences reads the refernces from the JSON response from ElasticSearch
-func extractReferences(result *elastic.GetResult) ([]Reference, error) {
-	var parsedResult map[string][]Reference
+func extractReferences(result *elastic.GetResult) (References, error) {
+	var parsedResult map[string]References
 
 	err := json.Unmarshal(*result.Source, &parsedResult)
 	if err != nil {
@@ -51,10 +45,10 @@ func extractReferences(result *elastic.GetResult) ([]Reference, error) {
 	return references, nil
 }
 
-// GetReferences returns existing references and the type for an object, or nil.
-// When no object is found nil is returned but no error is set.
-// If no object is found, an empty list is returned.
-func (i *Indexer) GetReferences(ctx context.Context, hash string) ([]Reference, string, error) {
+// GetReferences returns existing references and the type for an object.
+// When no object is found an empty list of references is returned, the
+// type is "" and no error is set.
+func (i *Indexer) GetReferences(ctx context.Context, hash string) (References, string, error) {
 	fsc := elastic.NewFetchSourceContext(true)
 	fsc.Include("references")
 
@@ -67,7 +61,8 @@ func (i *Indexer) GetReferences(ctx context.Context, hash string) ([]Reference, 
 
 	if err != nil {
 		if elastic.IsNotFound(err) {
-			return nil, "", nil
+			// Initialize empty references when none have been found
+			return []Reference{}, "", nil
 		}
 		return nil, "", err
 	}
