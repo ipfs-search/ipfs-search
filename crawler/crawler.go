@@ -187,15 +187,15 @@ func (c *Crawler) CrawlHash(args *Args) error {
 			return err
 		}
 
+		if c.skipItem(args) {
+			return nil
+		}
+
 		// Index name and size for directory and directory items
-		properties := map[string]interface{}{
+		properties := metadata{
 			"links":      list.Links,
 			"size":       list.Size,
 			"references": references,
-		}
-
-		if c.skipItem(args) {
-			return nil
 		}
 
 		err := c.Indexer.IndexItem("directory", args.Hash, properties)
