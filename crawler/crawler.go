@@ -44,6 +44,9 @@ func (c *Crawler) skipItem(args *Args) bool {
 }
 
 // Handle errors graceously, returns try again bool and original error
+// TODO: this handles both errors for listing as well as metadata errors,
+// which seems a very bad idea and makes this function unnecessarily complex.
+// We should figure out which code handles which and split it up.
 func (c *Crawler) handleError(err error, hash string) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
 		// We're not recovering from protocol errors, so panic
