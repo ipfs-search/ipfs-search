@@ -24,6 +24,7 @@ func (i *Indexable) updateReferences(references []indexer.Reference) ([]indexer.
 		}
 	}
 
+	// New references found, updating references
 	references = append(references, indexer.Reference{
 		Name:       i.Name,
 		ParentHash: i.ParentHash,
@@ -32,6 +33,9 @@ func (i *Indexable) updateReferences(references []indexer.Reference) ([]indexer.
 	return references, true
 }
 
+// indexReferences retreives or creates references for this hashable,
+// returning the resulting references and whether or not the item was
+// previously present in the index.
 func (i *Indexable) indexReferences() ([]indexer.Reference, bool, error) {
 	var alreadyIndexed bool
 
