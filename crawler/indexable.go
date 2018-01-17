@@ -149,7 +149,7 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
-		fileArgs := Args{
+		fileArgs := &Args{
 			Hash:       i.Hash,
 			Name:       i.Name,
 			Size:       list.Size,
