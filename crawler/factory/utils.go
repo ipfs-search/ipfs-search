@@ -1,4 +1,4 @@
-package crawlworker
+package factory
 
 import (
 	"golang.org/x/net/context"

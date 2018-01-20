@@ -2,11 +2,11 @@ package commands
 
 import (
 	"github.com/ipfs-search/ipfs-search/crawler"
-	"github.com/ipfs-search/ipfs-search/crawlworker"
+	"github.com/ipfs-search/ipfs-search/crawler/factory"
 	"time"
 )
 
-func getConfig() (*crawlworker.Config, error) {
+func getConfig() (*factory.Config, error) {
 	crawlerConfig := &crawler.Config{
 		IpfsTikaURL:     "http://localhost:8081",
 		IpfsTikaTimeout: 300 * time.Duration(time.Second),
@@ -15,7 +15,7 @@ func getConfig() (*crawlworker.Config, error) {
 		PartialSize:     262144,
 	}
 
-	config := &crawlworker.Config{
+	config := &factory.Config{
 		IpfsAPI:          "localhost:5001",
 		ElasticSearchURL: "http://localhost:9200",
 		AMQPURL:          "amqp://guest:guest@localhost:5672/",

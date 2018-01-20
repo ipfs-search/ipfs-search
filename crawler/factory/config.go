@@ -1,4 +1,4 @@
-package crawlworker
+package factory
 
 import (
 	"github.com/ipfs-search/ipfs-search/crawler"

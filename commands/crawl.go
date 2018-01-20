@@ -2,7 +2,7 @@ package commands
 
 import (
 	"context"
-	"github.com/ipfs-search/ipfs-search/crawlworker"
+	"github.com/ipfs-search/ipfs-search/crawler/factory"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"golang.org/x/sync/errgroup"
 	"log"
@@ -17,7 +17,7 @@ func Crawl() error {
 
 	errc := make(chan error, 1)
 
-	factory, err := crawlworker.NewFactory(config, errc)
+	factory, err := factory.NewFactory(config, errc)
 	if err != nil {
 		return err
 	}
