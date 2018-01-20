@@ -42,8 +42,6 @@ func (i *Indexable) skipItem() bool {
 // handleShellError handles IPFS shell errors; returns try again bool and original error
 func (i *Indexable) handleShellError(err error) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
-		// We're not recovering from protocol errors, so panic
-
 		// Attempt to index panic to prevent re-indexing
 		m := metadata{
 			"error": err.Error(),
@@ -51,7 +49,8 @@ func (i *Indexable) handleShellError(err error) (bool, error) {
 
 		i.Indexer.IndexItem("invalid", i.Hash, m)
 
-		panic(err)
+		// Don't try again, return error
+		return false, err
 	}
 
 	// Different error, attempt handling as URL error
