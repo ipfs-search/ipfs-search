@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/streadway/amqp"
 	"log"
+	"runtime/debug"
 )
 
 // WorkerMessage wraps amqp delivery
@@ -51,8 +52,7 @@ func (m *WorkerMessage) Process(ctx context.Context) (err error) {
 }
 
 func (m *WorkerMessage) recoverPanic(r interface{}) (err error) {
-	log.Printf("Panic in: %s", m.Body)
-
+	log.Printf("Panic in: %s\nStack:", m.Body, debug.Stack())
 	// Permanently remove message from original queue
 	m.Reject(false)
 
