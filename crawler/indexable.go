@@ -42,7 +42,7 @@ func (i *Indexable) skipItem() bool {
 // handleShellError handles IPFS shell errors; returns try again bool and original error
 func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
-		// Attempt to index panic to prevent re-indexing
+		// Attempt to index error to prevent re-indexing
 		m := metadata{
 			"error": err.Error(),
 		}
@@ -212,10 +212,12 @@ func (i *Indexable) preCrawl(ctx context.Context) (existing *existingItem, err e
 func (i *Indexable) CrawlHash(ctx context.Context) error {
 	existing, err := i.preCrawl(ctx)
 
-	if !existing.shouldCrawl() || err != nil {
+	if err != nil || !existing.shouldCrawl() {
 		log.Printf("Not crawling hash %s", i)
 		return err
 	}
+
+	log.Printf("Crawling hash %s", i)
 
 	list, err := i.getFileList(ctx)
 	if err != nil {
@@ -236,7 +238,7 @@ func (i *Indexable) CrawlHash(ctx context.Context) error {
 func (i *Indexable) CrawlFile(ctx context.Context) error {
 	existing, err := i.preCrawl(ctx)
 
-	if !existing.shouldCrawl() || err != nil {
+	if err != nil || !existing.shouldCrawl() {
 		log.Printf("Not crawling file %s", i)
 		return err
 	}

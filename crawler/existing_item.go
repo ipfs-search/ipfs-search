@@ -62,6 +62,10 @@ func (i *existingItem) update(ctx context.Context) error {
 
 // getExistingItem returns existingItem from index
 func (i *Indexable) getExistingItem(ctx context.Context) (*existingItem, error) {
+	if i == nil {
+		panic("Indexable should not be nil")
+	}
+
 	references, itemType, err := i.Indexer.GetReferences(ctx, i.Hash)
 	if err != nil {
 		return nil, err
@@ -79,6 +83,10 @@ func (i *Indexable) getExistingItem(ctx context.Context) (*existingItem, error) 
 
 // shouldCrawl returns whether or not this item should be crawled
 func (i *existingItem) shouldCrawl() bool {
+	if i == nil {
+		panic("Existingitem should not be nil")
+	}
+
 	return !i.skipItem() || !i.exists
 
 }
