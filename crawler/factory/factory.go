@@ -102,3 +102,38 @@ func (f *Factory) NewHashWorker() (*queue.Worker, error) {
 		Queue:   hashConQueue,
 	}, nil
 }
+
+func (f *Factory) NewFileWorker() (*queue.Worker, error) {
+	conChannel, err := f.conConnection.NewChannel()
+	fileConQueue, err := conChannel.NewQueue("filees")
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := f.NewCrawler()
+	if err != nil {
+		return nil, err
+	}
+
+	var fileFunc = func(ctx context.Context, msg *queue.WorkerMessage) error {
+		// Unmarshall into
+		args := &crawler.Args{}
+		err := json.Unmarshal(msg.Delivery.Body, args)
+		if err != nil {
+			return err
+		}
+
+		i := crawler.Indexable{
+			Args:    args,
+			Crawler: c,
+		}
+
+		return i.CrawlHash()
+	}
+
+	return &queue.Worker{
+		ErrChan: f.errChan,
+		Func:    fileFunc,
+		Queue:   fileConQueue,
+	}, nil
+}
