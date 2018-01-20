@@ -33,7 +33,7 @@ func (m *WorkerMessage) Process(ctx context.Context) (err error) {
 		}
 	}()
 
-	log.Printf("Received a msg: %s", m.Body)
+	log.Printf("Received in '%s': %s", m.Queue, m.Body)
 
 	err = m.Worker.Func(ctx, m)
 
@@ -98,5 +98,5 @@ func (w *Worker) Work(ctx context.Context) error {
 
 // String returns the name of the worker queue
 func (w *Worker) String() string {
-	return w.Queue.Name
+	return w.Queue.String()
 }
