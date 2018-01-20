@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"github.com/ipfs-search/ipfs-search/indexer"
 )
 
@@ -39,29 +40,29 @@ func (i *existingItem) updateReferences() {
 }
 
 // updateItem updates references (and later also last seen date)
-func (i *existingItem) updateIndex() error {
+func (i *existingItem) updateIndex(ctx context.Context) error {
 	properties := metadata{
 		"references": i.references,
 		"last-seen":  nowISO(),
 	}
 
-	return i.Indexer.IndexItem(i.itemType, i.Hash, properties)
+	return i.Indexer.IndexItem(ctx, i.itemType, i.Hash, properties)
 }
 
 // update updates existing items (if they in fact do exist)
-func (i *existingItem) update() error {
+func (i *existingItem) update(ctx context.Context) error {
 	i.updateReferences()
 
 	if i.exists {
-		return i.updateIndex()
+		return i.updateIndex(ctx)
 	}
 
 	return nil
 }
 
 // getExistingItem returns existingItem from index
-func (i *Indexable) getExistingItem() (*existingItem, error) {
-	references, itemType, err := i.Indexer.GetReferences(i.Hash)
+func (i *Indexable) getExistingItem(ctx context.Context) (*existingItem, error) {
+	references, itemType, err := i.Indexer.GetReferences(ctx, i.Hash)
 	if err != nil {
 		return nil, err
 	}
