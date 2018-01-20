@@ -8,8 +8,24 @@ import (
 	"log"
 )
 
+// block blocks until context is cancelled
+func block(ctx context.Context) error {
+	for {
+		<-ctx.Done()
+		return ctx.Err()
+	}
+}
+
+// log errors from errc
+func errorLoop(errc chan error) {
+	for {
+		err := <-errc
+		log.Printf("%T: %v", err, err)
+	}
+}
+
 // Crawl configures and initializes crawling
-func Crawl() error {
+func Crawl(ctx context.Context) error {
 	config, err := getConfig()
 	if err != nil {
 		return err
@@ -32,7 +48,7 @@ func Crawl() error {
 	}
 
 	// Create error group and context
-	errg, ctx := errgroup.WithContext(context.Background())
+	errg, ctx := errgroup.WithContext(ctx)
 
 	// Start work loop
 	errg.Go(func() error { return hashGroup.Work(ctx) })
@@ -40,22 +56,13 @@ func Crawl() error {
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
 
-	// Start block on errc, logging messages
-mainloop:
-	for {
-		select {
-		// TODO: Cancel on QUIT signal
-		case <-ctx.Done():
-			// Context canceled, stop
-			log.Printf("Context cancelled: %s", ctx.Err())
-			break mainloop
-		case err = <-errc:
-			// Print errors
-			log.Printf("%T: %v", err, err)
-		}
-	}
+	// Log messages, wait for context break
+	go errorLoop(errc)
+	err = block(ctx)
 
-	// Wait until all processes have finished
+	log.Printf("Shutting down: %s", err)
+	log.Print("Waiting for processes to finish")
+
 	err = errg.Wait()
 	log.Printf("Error group finished: %s", err)
 	return err

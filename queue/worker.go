@@ -81,9 +81,9 @@ func (w *Worker) Work(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			// Context canceled, stop processing messages
+			log.Printf("Stopping worker %s: %s", w, ctx.Err())
 			return ctx.Err()
 		case msg := <-msgs:
-			// Keep going on forever
 			message := &WorkerMessage{
 				Worker:   w,
 				Delivery: &msg,
