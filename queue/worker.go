@@ -19,7 +19,7 @@ type WorkerFunc func(ctx context.Context, msg *WorkerMessage) error
 
 // Worker calls Func for every message in Queue, returning errors in ErrChan
 type Worker struct {
-	ErrChan chan error
+	ErrChan chan<- error
 	Func    WorkerFunc
 	Queue   *Queue
 }

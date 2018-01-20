@@ -64,7 +64,7 @@ type Queue struct {
 }
 
 // NewQueue creates a named queue on a given chennel
-func NewQueue(c *Channel, name string) (*Queue, error) {
+func (c *Channel) NewQueue(name string) (*Queue, error) {
 	q, err := c.Channel.QueueDeclare(
 		name,  // name
 		true,  // durable
@@ -84,7 +84,7 @@ func NewQueue(c *Channel, name string) (*Queue, error) {
 }
 
 // Publish adds a task with specified params to the Queue
-func (q Queue) Publish(params interface{}) error {
+func (q *Queue) Publish(params interface{}) error {
 	body, err := json.Marshal(params)
 	if err != nil {
 		return err
@@ -108,7 +108,7 @@ func (q Queue) Publish(params interface{}) error {
 }
 
 // Consume consumes messages from a queue
-func (q Queue) Consume() (<-chan amqp.Delivery, error) {
+func (q *Queue) Consume() (<-chan amqp.Delivery, error) {
 	msgs, err := q.Channel.Consume(
 		q.Name, // queue
 		"",     // consumer
