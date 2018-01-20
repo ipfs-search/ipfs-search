@@ -132,10 +132,10 @@ func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 		switch link.Type {
 		case "File":
 			// Add file to crawl queue
-			err = i.FileQueue.AddTask(dirArgs)
+			err = i.FileQueue.Publish(dirArgs)
 		case "Directory":
 			// Add directory to crawl queue
-			err = i.HashQueue.AddTask(dirArgs)
+			err = i.HashQueue.Publish(dirArgs)
 		default:
 			log.Printf("Type '%s' skipped for %s", link.Type, i)
 		}
@@ -156,7 +156,7 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 			ParentHash: i.ParentHash,
 		}
 
-		err = i.FileQueue.AddTask(fileArgs)
+		err = i.FileQueue.Publish(fileArgs)
 	case "Directory":
 		// Queue indexing of linked items
 		err = i.queueList(list)

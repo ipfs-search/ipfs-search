@@ -21,6 +21,6 @@ type Crawler struct {
 
 	Shell     *shell.Shell
 	Indexer   *indexer.Indexer
-	FileQueue *queue.TaskQueue
-	HashQueue *queue.TaskQueue
+	FileQueue *queue.Queue
+	HashQueue *queue.Queue
 }
