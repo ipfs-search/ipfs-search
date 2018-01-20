@@ -88,7 +88,10 @@ func (w *Worker) Work(ctx context.Context) error {
 				Worker:   w,
 				Delivery: &msg,
 			}
-			w.ErrChan <- message.Process(ctx)
+			err = message.Process(ctx)
+			if err != nil {
+				w.ErrChan <- err
+			}
 		}
 	}
 }
