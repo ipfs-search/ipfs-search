@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/streadway/amqp"
 	"log"
@@ -25,7 +26,12 @@ type Worker struct {
 
 // Process handles a single message, acking if no error and rejecting otherwise
 func (m *WorkerMessage) Process(ctx context.Context) (err error) {
-	defer func() { err = m.recoverPanic() }()
+	defer func() {
+		if r := recover(); r != nil {
+			// Override original error value on panic
+			err = m.recoverPanic(r)
+		}
+	}()
 
 	log.Printf("Received a msg: %s", m.Body)
 
@@ -44,23 +50,23 @@ func (m *WorkerMessage) Process(ctx context.Context) (err error) {
 	return
 }
 
-func (m *WorkerMessage) recoverPanic() error {
-	if r := recover(); r != nil {
-		log.Printf("Panic in: %s", m.Body)
+func (m *WorkerMessage) recoverPanic(r interface{}) (err error) {
+	log.Printf("Panic in: %s", m.Body)
 
-		// Permanently remove message from original queue
-		m.Reject(false)
+	// Permanently remove message from original queue
+	m.Reject(false)
 
-		err, ok := r.(error)
-
-		if !ok {
-			err = fmt.Errorf("Unassertable panic error: %v", r)
-		}
-
-		return err
+	// find out exactly what the error was and set err
+	switch x := r.(type) {
+	case string:
+		err = errors.New(x)
+	case error:
+		err = x
+	default:
+		err = fmt.Errorf("Unassertable panic error: %v", r)
 	}
 
-	return nil
+	return
 }
 
 // Work performs consumption of messages in the worker's Queue
