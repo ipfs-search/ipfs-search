@@ -6,6 +6,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs-search/ipfs-search/queue"
+	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/ipfs/go-ipfs-api"
 )
 
@@ -68,7 +69,7 @@ func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
 	}, nil
 }
 
-func (f *Factory) NewHashWorker() (*queue.Worker, error) {
+func (f *Factory) NewHashWorker() (worker.Worker, error) {
 	conChannel, err := f.conConnection.NewChannel()
 	hashConQueue, err := conChannel.NewQueue("hashes")
 	if err != nil {
@@ -103,7 +104,7 @@ func (f *Factory) NewHashWorker() (*queue.Worker, error) {
 	}, nil
 }
 
-func (f *Factory) NewFileWorker() (*queue.Worker, error) {
+func (f *Factory) NewFileWorker() (worker.Worker, error) {
 	conChannel, err := f.conConnection.NewChannel()
 	fileConQueue, err := conChannel.NewQueue("filees")
 	if err != nil {
