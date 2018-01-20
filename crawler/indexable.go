@@ -40,14 +40,14 @@ func (i *Indexable) skipItem() bool {
 }
 
 // handleShellError handles IPFS shell errors; returns try again bool and original error
-func (i *Indexable) handleShellError(err error) (bool, error) {
+func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, error) {
 	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
 		// Attempt to index panic to prevent re-indexing
 		m := metadata{
 			"error": err.Error(),
 		}
 
-		i.Indexer.IndexItem("invalid", i.Hash, m)
+		i.Indexer.IndexItem(ctx, "invalid", i.Hash, m)
 
 		// Don't try again, return error
 		return false, err
@@ -101,14 +101,14 @@ func (i *Indexable) hashURL() string {
 }
 
 // getFileList return list of files and/or type of item (directory/file)
-func (i *Indexable) getFileList() (list *shell.UnixLsObject, err error) {
+func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, err error) {
 	url := i.hashURL()
 
 	tryAgain := true
 	for tryAgain {
 		list, err = i.Shell.FileList(url)
 
-		tryAgain, err = i.handleShellError(err)
+		tryAgain, err = i.handleShellError(ctx, err)
 
 		if tryAgain {
 			log.Printf("Retrying in %s", i.Config.RetryWait)
@@ -145,7 +145,7 @@ func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 }
 
 // processList processes and indexes a file listing
-func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.Reference) (err error) {
+func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references []indexer.Reference) (err error) {
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
@@ -172,7 +172,7 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 			"first-seen": nowISO(),
 		}
 
-		err = i.Indexer.IndexItem("directory", i.Hash, m)
+		err = i.Indexer.IndexItem(ctx, "directory", i.Hash, m)
 	default:
 		log.Printf("Type '%s' skipped for %s", list.Type, i)
 	}
@@ -181,7 +181,7 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 }
 
 // processList processes and indexes a single file
-func (i *Indexable) processFile(references []indexer.Reference) error {
+func (i *Indexable) processFile(ctx context.Context, references []indexer.Reference) error {
 	m := make(metadata)
 
 	err := i.getMetadata(&m)
@@ -194,35 +194,35 @@ func (i *Indexable) processFile(references []indexer.Reference) error {
 	m["references"] = references
 	m["first-seen"] = nowISO()
 
-	return i.Indexer.IndexItem("file", i.Hash, m)
+	return i.Indexer.IndexItem(ctx, "file", i.Hash, m)
 }
 
 // preCrawl checks for and returns existing item and conditionally updates it
-func (i *Indexable) preCrawl() (existing *existingItem, err error) {
-	existing, err = i.getExistingItem()
+func (i *Indexable) preCrawl(ctx context.Context) (existing *existingItem, err error) {
+	existing, err = i.getExistingItem(ctx)
 	if err != nil {
 		return
 	}
 
-	err = existing.update()
+	err = existing.update(ctx)
 	return
 }
 
 // CrawlHash crawls a particular hash (file or directory)
 func (i *Indexable) CrawlHash(ctx context.Context) error {
-	existing, err := i.preCrawl()
+	existing, err := i.preCrawl(ctx)
 
 	if !existing.shouldCrawl() || err != nil {
 		log.Printf("Not crawling hash %s", i)
 		return err
 	}
 
-	list, err := i.getFileList()
+	list, err := i.getFileList(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = i.processList(list, existing.references)
+	err = i.processList(ctx, list, existing.references)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (i *Indexable) CrawlHash(ctx context.Context) error {
 
 // CrawlFile crawls a single object, known to be a file
 func (i *Indexable) CrawlFile(ctx context.Context) error {
-	existing, err := i.preCrawl()
+	existing, err := i.preCrawl(ctx)
 
 	if !existing.shouldCrawl() || err != nil {
 		log.Printf("Not crawling file %s", i)
@@ -243,7 +243,7 @@ func (i *Indexable) CrawlFile(ctx context.Context) error {
 
 	log.Printf("Crawling file %s", i)
 
-	i.processFile(existing.references)
+	i.processFile(ctx, existing.references)
 	if err != nil {
 		return err
 	}
