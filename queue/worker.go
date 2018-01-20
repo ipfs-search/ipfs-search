@@ -7,8 +7,14 @@ import (
 	"log"
 )
 
+// WorkerMessage wraps amqp delivery
+type WorkerMessage struct {
+	*Worker
+	*amqp.Delivery
+}
+
 // WorkerFunc processes queueue messages
-type WorkerFunc func(ctx context.Context, msg *amqp.Delivery) error
+type WorkerFunc func(ctx context.Context, msg *WorkerMessage) error
 
 // Worker calls Func for every message in Queue, returning errors in ErrChan
 type Worker struct {
@@ -17,13 +23,33 @@ type Worker struct {
 	Queue   *Queue
 }
 
-// messagePanic handles panic in a single message
-func (w *Worker) messagePanic(msg *amqp.Delivery) {
-	if r := recover(); r != nil {
-		log.Printf("Panic in: %s", msg.Body)
+// Process handles a single message, acking if no error and rejecting otherwise
+func (m *WorkerMessage) Process(ctx context.Context) (err error) {
+	defer func() { err = m.recoverPanic() }()
 
-		// Permanently remove msg from original queue
-		msg.Reject(false)
+	log.Printf("Received a msg: %s", m.Body)
+
+	err = m.Worker.Func(ctx, m)
+
+	if err != nil {
+		// Don't retry
+		m.Reject(false)
+
+		return
+	}
+
+	// Everything went fine, ack the message
+	m.Ack(false)
+
+	return
+}
+
+func (m *WorkerMessage) recoverPanic() error {
+	if r := recover(); r != nil {
+		log.Printf("Panic in: %s", m.Body)
+
+		// Permanently remove message from original queue
+		m.Reject(false)
 
 		err, ok := r.(error)
 
@@ -31,30 +57,10 @@ func (w *Worker) messagePanic(msg *amqp.Delivery) {
 			err = fmt.Errorf("Unassertable panic error: %v", r)
 		}
 
-		w.ErrChan <- err
+		return err
 	}
 
-}
-
-// procesMessage processes a single message
-func (w *Worker) processMessage(ctx context.Context, msg *amqp.Delivery) (err error) {
-	defer w.messagePanic(msg)
-
-	log.Printf("Received a msg: %s", msg.Body)
-
-	err = w.Func(ctx, msg)
-
-	if err != nil {
-		// Don't retry
-		msg.Reject(false)
-
-		return
-	}
-
-	// Everything went fine, ack the msg
-	msg.Ack(false)
-
-	return
+	return nil
 }
 
 // Work performs consumption of messages in the worker's Queue
@@ -68,9 +74,15 @@ func (w *Worker) Work(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
+			// Context canceled, stop processing messages
 			return ctx.Err()
 		case msg := <-msgs:
-			w.ErrChan <- w.processMessage(ctx, &msg)
+			// Keep going on forever
+			message := &WorkerMessage{
+				Worker:   w,
+				Delivery: &msg,
+			}
+			w.ErrChan <- message.Process(ctx)
 		}
 	}
 }
