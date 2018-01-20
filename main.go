@@ -61,7 +61,7 @@ func add(c *cli.Context) error {
 func crawl(c *cli.Context) error {
 	fmt.Printf("Starting worker\n")
 
-	err := commands.StartWorker()
+	err := commands.Crawl()
 
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)

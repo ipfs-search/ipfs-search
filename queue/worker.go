@@ -88,7 +88,15 @@ func (w *Worker) Work(ctx context.Context) error {
 				Worker:   w,
 				Delivery: &msg,
 			}
-			w.ErrChan <- message.Process(ctx)
+			err = message.Process(ctx)
+			if err != nil {
+				w.ErrChan <- err
+			}
 		}
 	}
+}
+
+// String returns the name of the worker queue
+func (w *Worker) String() string {
+	return w.Queue.Name
 }
