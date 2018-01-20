@@ -16,7 +16,7 @@ type Factory struct {
 	errChan       chan<- error
 }
 
-func NewFactory(config *Config, errc chan<- error) (*Factory, error) {
+func New(config *Config, errc chan<- error) (*Factory, error) {
 	pubConnection, err := queue.NewConnection(config.AMQPURL)
 	if err != nil {
 		return nil, err

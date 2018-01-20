@@ -17,7 +17,7 @@ func Crawl() error {
 
 	errc := make(chan error, 1)
 
-	factory, err := factory.NewFactory(config, errc)
+	factory, err := factory.New(config, errc)
 	if err != nil {
 		return err
 	}
