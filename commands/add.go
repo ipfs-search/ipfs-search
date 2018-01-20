@@ -6,18 +6,28 @@ import (
 
 // AddHash queues a single IPFS hash for indexing
 func AddHash(hash string) error {
-	ch, err := queue.NewChannel()
+	config, err := getConfig()
+	if err != nil {
+		return err
+	}
+
+	conn, err := queue.NewConnection(config.AMQPURL)
+	if err != nil {
+		return err
+	}
+
+	ch, err := conn.NewChannel()
 	if err != nil {
 		return err
 	}
 	defer ch.Close()
 
-	queue, err := queue.NewTaskQueue(ch, "hashes")
+	queue, err := ch.NewQueue("hashes")
 	if err != nil {
 		return err
 	}
 
-	err = queue.AddTask(map[string]interface{}{
+	err = queue.Publish(map[string]interface{}{
 		"hash": hash,
 	})
 

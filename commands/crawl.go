@@ -1,100 +1,62 @@
 package commands
 
 import (
-	"encoding/json"
-	"github.com/ipfs-search/ipfs-search/crawler"
-	"github.com/ipfs-search/ipfs-search/queue"
+	"context"
+	"github.com/ipfs-search/ipfs-search/crawlworker"
+	"github.com/ipfs-search/ipfs-search/worker"
+	"golang.org/x/sync/errgroup"
+	"log"
 )
-
-type WorkerFactory struct {
-	PubConnection *queue.Connection
-	ConConnection *queue.Connection
-	ErrChan       chan<- error
-}
-
-func (f *WorkerFactory) NewCrawler() (*crawler.Crawler, error) {
-	// Setup channels
-	filePubChannel, err := f.PubConnection.NewChannel()
-	fileQueue, err := filePubChannel.NewQueue("files")
-
-	hashPubChannel, err := f.PubConnection.NewChannel()
-	hashQueue, err := filePubChannel.NewQueue("hashes")
-
-	// This is where we need config
-
-	// Create and configure Ipfs shell
-	sh := shell.NewShell(config.IpfsAPI)
-	sh.SetTimeout(config.IpfsTimeout)
-
-	el, err := getElastic(config.ElasticSearchURL)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create elasticsearch indexer
-	id := &indexer.Indexer{
-		ElasticSearch: el,
-	}
-
-	return &crawler.Crawler{
-		Config:    config.CrawlerConfig,
-		Shell:     sh,
-		Indexer:   id,
-		FileQueue: fileQueue,
-		HashQueue: hashQueue,
-	}, nil
-}
-
-func (f *WorkerFactory) NewHashWorker() (*queue.Worker, error) {
-	conChannel, err := f.ConConnection.NewChannel()
-	hashConQueue, err := filePubChannel.NewQueue("hashes")
-
-	crawler, err := f.NewCrawler()
-
-	var hashFunc = func(msg queue.Message) error {
-		// Unmarshall into
-		args := make(crawler.Args)
-		err := json.Unmarshal(msg.Delivery.Body, args)
-		if err != nil {
-			return err
-		}
-
-		return c.CrawlHash(args)
-	}
-
-	return queue.Worker{
-		ErrChan: errc,
-		Func:    fileFunc,
-		Queue:   hashConQueue,
-	}, nil
-}
 
 // Crawl configures and initializes crawling
 func Crawl() error {
-	// This is common for workers
+	config, err := getConfig()
+	if err != nil {
+		return err
+	}
+
 	errc := make(chan error, 1)
 
-	pubConnection, err := queue.NewConnection("<AMQP URL>")
+	factory, err := crawlworker.NewFactory(config, errc)
 	if err != nil {
 		return err
 	}
 
-	conConnection, err := queue.NewConnection("<AMQP URL>")
-	if err != nil {
-		return err
+	hashGroup := worker.Group{
+		Count:   config.HashWorkers,
+		Factory: factory.NewHashWorker,
+	}
+	fileGroup := worker.Group{
+		Count:   config.FileWorkers,
+		Factory: factory.NewFileWorker,
 	}
 
-	factory, err = WorkerFactory{
-		PubConnection: pubConnection,
-		ConConnection: conConnection,
-		ErrChan:       errc,
-	}
-
-	hashGroup, err = worker.Group{
-		Count: 100,
-		factory.NewHashWorker,
-	}
+	// Create error group and context
+	errg, ctx := errgroup.WithContext(context.Background())
 
 	// Start work loop
-	hashGroup.Work()
+	errg.Go(func() error { return hashGroup.Work(ctx) })
+	errg.Go(func() error { return fileGroup.Work(ctx) })
+
+	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+
+	// Start block on errc, logging messages
+mainloop:
+	for {
+		select {
+		// TODO: Cancel on QUIT signal
+		case <-ctx.Done():
+			// Context canceled, stop
+			log.Printf("Context cancelled: %s", ctx.Err())
+			break mainloop
+		case err = <-errc:
+			// Print errors
+			log.Printf("%T: %v", err, err)
+		}
+	}
+
+	// Wait until all processes have finished
+	err = errg.Wait()
+	log.Printf("Error group finished: %s", err)
+	return err
 }
