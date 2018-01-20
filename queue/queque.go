@@ -10,7 +10,7 @@ type Connection struct {
 	*amqp.Connection
 }
 
-// NewConnection returns new AMPQ connection
+// NewConnection returns new AMQP connection
 func NewConnection(url string) (*Connection, error) {
 	connection, err := amqp.Dial(url)
 
