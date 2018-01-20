@@ -17,25 +17,17 @@ func block(ctx context.Context) error {
 }
 
 // log errors from errc
-func errorLoop(errc chan error) {
+func errorLoop(errc <-chan error) {
 	for {
 		err := <-errc
 		log.Printf("%T: %v", err, err)
 	}
 }
 
-// Crawl configures and initializes crawling
-func Crawl(ctx context.Context) error {
-	config, err := getConfig()
-	if err != nil {
-		return err
-	}
-
-	errc := make(chan error, 1)
-
+func startWorkers(ctx context.Context, config *factory.Config, errc chan<- error) (*errgroup.Group, error) {
 	factory, err := factory.New(config, errc)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	hashGroup := worker.Group{
@@ -54,7 +46,24 @@ func Crawl(ctx context.Context) error {
 	errg.Go(func() error { return hashGroup.Work(ctx) })
 	errg.Go(func() error { return fileGroup.Work(ctx) })
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	return errg, nil
+}
+
+// Crawl configures and initializes crawling
+func Crawl(ctx context.Context) error {
+	config, err := getConfig()
+	if err != nil {
+		return err
+	}
+
+	errc := make(chan error, 1)
+
+	errg, err := startWorkers(ctx, config, errc)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Waiting for messages.")
 
 	// Log messages, wait for context break
 	go errorLoop(errc)
