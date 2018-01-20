@@ -63,7 +63,7 @@ func Crawl(ctx context.Context) error {
 		return err
 	}
 
-	log.Printf("Waiting for messages.")
+	log.Printf("Waiting for messages")
 
 	// Log messages, wait for context break
 	go errorLoop(errc)
