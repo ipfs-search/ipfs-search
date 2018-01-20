@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/url"
 	// "path"
+	"context"
 	"fmt"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs/go-ipfs-api"
@@ -209,7 +210,7 @@ func (i *Indexable) preCrawl() (existing *existingItem, err error) {
 }
 
 // CrawlHash crawls a particular hash (file or directory)
-func (i *Indexable) CrawlHash() error {
+func (i *Indexable) CrawlHash(ctx context.Context) error {
 	existing, err := i.preCrawl()
 
 	if !existing.shouldCrawl() || err != nil {
@@ -233,7 +234,7 @@ func (i *Indexable) CrawlHash() error {
 }
 
 // CrawlFile crawls a single object, known to be a file
-func (i *Indexable) CrawlFile() error {
+func (i *Indexable) CrawlFile(ctx context.Context) error {
 	existing, err := i.preCrawl()
 
 	if !existing.shouldCrawl() || err != nil {

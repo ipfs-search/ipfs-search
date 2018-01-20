@@ -98,7 +98,7 @@ func (f *Factory) NewHashWorker() (worker.Worker, error) {
 			Crawler: c,
 		}
 
-		return i.CrawlHash()
+		return i.CrawlHash(ctx)
 	}
 
 	return &queue.Worker{
@@ -132,7 +132,7 @@ func (f *Factory) NewFileWorker() (worker.Worker, error) {
 			Crawler: c,
 		}
 
-		return i.CrawlFile()
+		return i.CrawlFile(ctx)
 	}
 
 	return &queue.Worker{
