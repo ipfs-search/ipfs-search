@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"golang.org/x/sync/errgroup"
+	"log"
 )
 
 // Group represents a group of Count workers, created by Factory
@@ -34,6 +35,7 @@ func (g *Group) Work(ctx context.Context) error {
 	// is closed and they'll all stop and they can be signalled to stop
 	// by cancelling the parent context.
 	for i := uint(0); i < g.Count; i++ {
+		log.Printf("Starting worker %s (%d)", worker, i)
 		errg.Go(func() error {
 			return worker.Work(ctx)
 		})

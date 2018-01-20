@@ -11,10 +11,12 @@ import (
 )
 
 type Factory struct {
-	config        *Config
+	crawlerConfig *crawler.Config
 	pubConnection *queue.Connection
 	conConnection *queue.Connection
 	errChan       chan<- error
+	indexer       *indexer.Indexer
+	shell         *shell.Shell
 }
 
 func New(config *Config, errc chan<- error) (*Factory, error) {
@@ -28,29 +30,11 @@ func New(config *Config, errc chan<- error) (*Factory, error) {
 		return nil, err
 	}
 
-	return &Factory{
-		config:        config,
-		pubConnection: pubConnection,
-		conConnection: conConnection,
-		errChan:       errc,
-	}, nil
-}
-
-func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
-	// Setup channels
-	filePubChannel, err := f.pubConnection.NewChannel()
-	fileQueue, err := filePubChannel.NewQueue("files")
-
-	hashPubChannel, err := f.pubConnection.NewChannel()
-	hashQueue, err := hashPubChannel.NewQueue("hashes")
-
-	// This is where we need config
-
 	// Create and configure Ipfs shell
-	sh := shell.NewShell(f.config.IpfsAPI)
-	sh.SetTimeout(f.config.IpfsTimeout)
+	sh := shell.NewShell(config.IpfsAPI)
+	sh.SetTimeout(config.IpfsTimeout)
 
-	el, err := getElastic(f.config.ElasticSearchURL)
+	el, err := getElastic(config.ElasticSearchURL)
 	if err != nil {
 		return nil, err
 	}
@@ -60,10 +44,40 @@ func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
 		ElasticSearch: el,
 	}
 
+	return &Factory{
+		crawlerConfig: config.CrawlerConfig,
+		pubConnection: pubConnection,
+		conConnection: conConnection,
+		errChan:       errc,
+		shell:         sh,
+		indexer:       id,
+	}, nil
+}
+
+func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
+	// Setup channels
+	filePubChannel, err := f.pubConnection.NewChannel()
+	if err != nil {
+		return nil, err
+	}
+	fileQueue, err := filePubChannel.NewQueue("files")
+	if err != nil {
+		return nil, err
+	}
+
+	hashPubChannel, err := f.pubConnection.NewChannel()
+	if err != nil {
+		return nil, err
+	}
+	hashQueue, err := hashPubChannel.NewQueue("hashes")
+	if err != nil {
+		return nil, err
+	}
+
 	return &crawler.Crawler{
-		Config:    f.config.CrawlerConfig,
-		Shell:     sh,
-		Indexer:   id,
+		Config:    f.crawlerConfig,
+		Shell:     f.shell,
+		Indexer:   f.indexer,
 		FileQueue: fileQueue,
 		HashQueue: hashQueue,
 	}, nil

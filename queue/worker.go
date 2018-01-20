@@ -92,3 +92,8 @@ func (w *Worker) Work(ctx context.Context) error {
 		}
 	}
 }
+
+// String returns the name of the worker queue
+func (w *Worker) String() string {
+	return w.Queue.Name
+}
