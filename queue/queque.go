@@ -63,6 +63,11 @@ type Queue struct {
 	*amqp.Queue
 }
 
+// String returns the name of the queue
+func (q *Queue) String() string {
+	return q.Name
+}
+
 // NewQueue creates a named queue on a given chennel
 func (c *Channel) NewQueue(name string) (*Queue, error) {
 	q, err := c.Channel.QueueDeclare(
@@ -81,6 +86,16 @@ func (c *Channel) NewQueue(name string) (*Queue, error) {
 		Channel: c,
 		Queue:   &q,
 	}, nil
+}
+
+// NewChannelQueue returns a new queue on a new channel
+func (conn *Connection) NewChannelQueue(name string) (*Queue, error) {
+	channel, err := conn.NewChannel()
+	if err != nil {
+		return nil, err
+	}
+
+	return channel.NewQueue(name)
 }
 
 // Publish adds a task with specified params to the Queue
