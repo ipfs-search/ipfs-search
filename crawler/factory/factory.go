@@ -55,21 +55,12 @@ func New(config *Config, errc chan<- error) (*Factory, error) {
 }
 
 func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
-	// Setup channels
-	filePubChannel, err := f.pubConnection.NewChannel()
-	if err != nil {
-		return nil, err
-	}
-	fileQueue, err := filePubChannel.NewQueue("files")
+	fileQueue, err := f.pubConnection.NewChannelQueue("files")
 	if err != nil {
 		return nil, err
 	}
 
-	hashPubChannel, err := f.pubConnection.NewChannel()
-	if err != nil {
-		return nil, err
-	}
-	hashQueue, err := hashPubChannel.NewQueue("hashes")
+	hashQueue, err := f.pubConnection.NewChannelQueue("hashes")
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +75,7 @@ func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
 }
 
 func (f *Factory) NewHashWorker() (worker.Worker, error) {
-	conChannel, err := f.conConnection.NewChannel()
-	hashConQueue, err := conChannel.NewQueue("hashes")
+	hashConQueue, err := f.conConnection.NewChannelQueue("hashes")
 	if err != nil {
 		return nil, err
 	}
@@ -119,8 +109,7 @@ func (f *Factory) NewHashWorker() (worker.Worker, error) {
 }
 
 func (f *Factory) NewFileWorker() (worker.Worker, error) {
-	conChannel, err := f.conConnection.NewChannel()
-	fileConQueue, err := conChannel.NewQueue("filees")
+	fileConQueue, err := f.conConnection.NewChannelQueue("files")
 	if err != nil {
 		return nil, err
 	}

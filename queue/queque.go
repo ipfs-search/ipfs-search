@@ -83,6 +83,16 @@ func (c *Channel) NewQueue(name string) (*Queue, error) {
 	}, nil
 }
 
+// NewChannelQueue returns a new queue on a new channel
+func (conn *Connection) NewChannelQueue(name string) (*Queue, error) {
+	channel, err := conn.NewChannel()
+	if err != nil {
+		return nil, err
+	}
+
+	return channel.NewQueue(name)
+}
+
 // Publish adds a task with specified params to the Queue
 func (q *Queue) Publish(params interface{}) error {
 	body, err := json.Marshal(params)
