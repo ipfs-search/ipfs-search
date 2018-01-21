@@ -196,14 +196,13 @@ func (i *Indexable) processFile(ctx context.Context, references []indexer.Refere
 }
 
 // preCrawl checks for and returns existing item and conditionally updates it
-func (i *Indexable) preCrawl(ctx context.Context) (existing *existingItem, err error) {
-	existing, err = i.getExistingItem(ctx)
+func (i *Indexable) preCrawl(ctx context.Context) (*existingItem, error) {
+	e, err := i.getExistingItem(ctx)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	err = existing.update(ctx)
-	return
+	return e, e.update(ctx)
 }
 
 // CrawlHash crawls a particular hash (file or directory)
@@ -211,6 +210,7 @@ func (i *Indexable) CrawlHash(ctx context.Context) error {
 	existing, err := i.preCrawl(ctx)
 
 	if err != nil || !existing.shouldCrawl() {
+		log.Printf("Skipping hash %s", i)
 		return err
 	}
 
@@ -236,6 +236,7 @@ func (i *Indexable) CrawlFile(ctx context.Context) error {
 	existing, err := i.preCrawl(ctx)
 
 	if err != nil || !existing.shouldCrawl() {
+		log.Printf("Skipping file %s", i)
 		return err
 	}
 
