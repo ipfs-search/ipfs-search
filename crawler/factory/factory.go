@@ -89,7 +89,7 @@ func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, e
 	}
 
 	// A MessageWorkerFactory generates a worker for every message in a queue
-	messageworkerFactory := func(msg *amqp.Delivery) worker.Worker {
+	messageWorkerFactory := func(msg *amqp.Delivery) worker.Worker {
 		return &Worker{
 			Crawler:   c,
 			Delivery:  msg,
@@ -97,11 +97,7 @@ func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, e
 		}
 	}
 
-	return &queue.Worker{
-		ErrChan: f.errChan,
-		Factory: messageworkerFactory,
-		Queue:   conQueue,
-	}, nil
+	return queue.NewWorker(f.errChan, conQueue, messageWorkerFactory), nil
 }
 
 func (f *Factory) NewHashWorker() (worker.Worker, error) {
