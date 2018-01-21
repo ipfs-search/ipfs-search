@@ -87,18 +87,20 @@ func (f *Factory) newWorker(queueName string, crawlFunc func(i *crawler.Indexabl
 		return nil, err
 	}
 
-	var workFunc = func(ctx context.Context, msg *queue.MessageWorker) error {
-		i, err := c.IndexableFromJSON(msg.Delivery.Body)
-		if err != nil {
-			return err
-		}
+	crawlWorker := &worker.Function{
+		WorkFunc: func(ctx context.Context, msg *queue.MessageWorker) error {
+			i, err := c.IndexableFromJSON(msg.Delivery.Body)
+			if err != nil {
+				return err
+			}
 
-		return crawlFunc(i)(ctx)
+			return crawlFunc(i)(ctx)
+		},
 	}
 
 	return &queue.Worker{
 		ErrChan: f.errChan,
-		Func:    workFunc,
+		Worker:  crawlWorker,
 		Queue:   conQueue,
 	}, nil
 }

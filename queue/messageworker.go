@@ -8,13 +8,21 @@ import (
 	"log"
 )
 
-// MessageWorker wraps amqp delivery
+import (
+	"github.com/ipfs-search/ipfs-search/worker"
+)
+
+// MessageWorkerFactory instantiates a worker for an AMQP message
+type MessageWorkerFactory func(msg *amqp.Delivery) *Worker
+
+// MessageWorker contains a worker performing the actual action and a delivery
+// with a single AMQP message.
 type MessageWorker struct {
-	*Worker
+	Worker worker.Worker
 	*amqp.Delivery
 }
 
-// Work handles a single message, acking if no error and rejecting otherwise
+// Work initiates the contained worker for a single message, acking if no error and rejecting otherwise
 func (m *MessageWorker) Work(ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -23,9 +31,9 @@ func (m *MessageWorker) Work(ctx context.Context) (err error) {
 		}
 	}()
 
-	log.Printf("Received in '%s': %s", m.Queue, m.Body)
+	log.Printf("Received: %s", m.Body)
 
-	err = m.Worker.Func(ctx, m)
+	err = m.Worker.Work(ctx)
 
 	if err != nil {
 		// Don't retry
@@ -42,6 +50,7 @@ func (m *MessageWorker) Work(ctx context.Context) (err error) {
 
 func (m *MessageWorker) recoverPanic(r interface{}) (err error) {
 	log.Printf("Panic in: %s", m.Body)
+
 	// Permanently remove message from original queue
 	m.Reject(false)
 
@@ -56,31 +65,4 @@ func (m *MessageWorker) recoverPanic(r interface{}) (err error) {
 	}
 
 	return
-}
-
-// Work performs consumption of messages in the worker's Queue
-func (w *Worker) Work(ctx context.Context) error {
-	msgs, err := w.Queue.Consume()
-	if err != nil {
-		return err
-	}
-
-	// Keep consuming messages until context is cancelled
-	for {
-		select {
-		case <-ctx.Done():
-			// Context canceled, stop processing messages
-			log.Printf("Stopping worker %s: %s", w, ctx.Err())
-			return ctx.Err()
-		case msg := <-msgs:
-			message := &MessageWorker{
-				Worker:   w,
-				Delivery: &msg,
-			}
-			err = message.Work(ctx)
-			if err != nil {
-				w.ErrChan <- err
-			}
-		}
-	}
 }
