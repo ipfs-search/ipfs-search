@@ -22,7 +22,6 @@ func AddHash(hash string) error {
 	if err != nil {
 		return err
 	}
-	defer ch.Close()
 
 	queue, err := ch.NewQueue("hashes")
 	if err != nil {
