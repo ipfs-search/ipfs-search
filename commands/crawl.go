@@ -24,18 +24,20 @@ func errorLoop(errc <-chan error) {
 	}
 }
 
-func startWorkers(ctx context.Context, config *factory.Config, errc chan<- error) (*errgroup.Group, error) {
-	factory, err := factory.New(config, errc)
+func startWorkers(ctx context.Context, config *Config, errc chan<- error) (*errgroup.Group, error) {
+	factory, err := factory.New(config.Factory, errc)
 	if err != nil {
 		return nil, err
 	}
 
 	hashGroup := worker.Group{
 		Count:   config.HashWorkers,
+		Wait:    config.HashWait,
 		Factory: factory.NewHashWorker,
 	}
 	fileGroup := worker.Group{
 		Count:   config.FileWorkers,
+		Wait:    config.FileWait,
 		Factory: factory.NewFileWorker,
 	}
 
