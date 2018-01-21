@@ -77,7 +77,7 @@ func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
 // newWorker generalizes creating new workers; it takes a queue name and a
 // crawlFunc, which takes an Indexable and returns the function performing
 // the actual crawling
-func (f *Factory) newWorker(queueName string, crawlFunc func(i *crawler.Indexable) func(context.Context) error) (worker.Worker, error) {
+func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, error) {
 	conQueue, err := f.conConnection.NewChannelQueue(queueName)
 	if err != nil {
 		return nil, err
@@ -90,18 +90,10 @@ func (f *Factory) newWorker(queueName string, crawlFunc func(i *crawler.Indexabl
 
 	// A MessageWorkerFactory generates a worker for every message in a queue
 	messageworkerFactory := func(msg *amqp.Delivery) worker.Worker {
-		// A Function worker generates a worker performing a single function
-		return &worker.Function{
-			WorkFunc: func(ctx context.Context) error {
-				// Create an Indexable from the message's body
-				i, err := c.IndexableFromJSON(msg.Body)
-				if err != nil {
-					return err
-				}
-
-				// Call crawler function with context
-				return crawlFunc(i)(ctx)
-			},
+		return &Worker{
+			Crawler:   c,
+			Delivery:  msg,
+			CrawlFunc: crawl,
 		}
 	}
 
