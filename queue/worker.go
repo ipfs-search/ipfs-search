@@ -8,14 +8,14 @@ import (
 	"log"
 )
 
-// WorkerMessage wraps amqp delivery
-type WorkerMessage struct {
+// MessageWorker wraps amqp delivery
+type MessageWorker struct {
 	*Worker
 	*amqp.Delivery
 }
 
 // WorkerFunc processes queueue messages
-type WorkerFunc func(ctx context.Context, msg *WorkerMessage) error
+type WorkerFunc func(ctx context.Context, msg *MessageWorker) error
 
 // Worker calls Func for every message in Queue, returning errors in ErrChan
 type Worker struct {
@@ -24,8 +24,8 @@ type Worker struct {
 	Queue   *Queue
 }
 
-// Process handles a single message, acking if no error and rejecting otherwise
-func (m *WorkerMessage) Process(ctx context.Context) (err error) {
+// Work handles a single message, acking if no error and rejecting otherwise
+func (m *MessageWorker) Work(ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// Override original error value on panic
@@ -50,7 +50,7 @@ func (m *WorkerMessage) Process(ctx context.Context) (err error) {
 	return
 }
 
-func (m *WorkerMessage) recoverPanic(r interface{}) (err error) {
+func (m *MessageWorker) recoverPanic(r interface{}) (err error) {
 	log.Printf("Panic in: %s", m.Body)
 	// Permanently remove message from original queue
 	m.Reject(false)
@@ -83,11 +83,11 @@ func (w *Worker) Work(ctx context.Context) error {
 			log.Printf("Stopping worker %s: %s", w, ctx.Err())
 			return ctx.Err()
 		case msg := <-msgs:
-			message := &WorkerMessage{
+			message := &MessageWorker{
 				Worker:   w,
 				Delivery: &msg,
 			}
-			err = message.Process(ctx)
+			err = message.Work(ctx)
 			if err != nil {
 				w.ErrChan <- err
 			}

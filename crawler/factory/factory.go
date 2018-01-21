@@ -85,7 +85,7 @@ func (f *Factory) NewHashWorker() (worker.Worker, error) {
 		return nil, err
 	}
 
-	var hashFunc = func(ctx context.Context, msg *queue.WorkerMessage) error {
+	var hashFunc = func(ctx context.Context, msg *queue.MessageWorker) error {
 		// Unmarshall into
 		args := &crawler.Args{}
 		err := json.Unmarshal(msg.Delivery.Body, args)
@@ -119,7 +119,7 @@ func (f *Factory) NewFileWorker() (worker.Worker, error) {
 		return nil, err
 	}
 
-	var fileFunc = func(ctx context.Context, msg *queue.WorkerMessage) error {
+	var fileFunc = func(ctx context.Context, msg *queue.MessageWorker) error {
 		// Unmarshall into
 		args := &crawler.Args{}
 		err := json.Unmarshal(msg.Delivery.Body, args)
