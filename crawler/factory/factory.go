@@ -2,12 +2,12 @@ package factory
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/ipfs/go-ipfs-api"
+	"github.com/streadway/amqp"
 )
 
 type Factory struct {
@@ -74,8 +74,11 @@ func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
 	}, nil
 }
 
-func (f *Factory) NewHashWorker() (worker.Worker, error) {
-	hashConQueue, err := f.conConnection.NewChannelQueue("hashes")
+// newWorker generalizes creating new workers; it takes a queue name and a
+// crawlFunc, which takes an Indexable and returns the function performing
+// the actual crawling
+func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, error) {
+	conQueue, err := f.conConnection.NewChannelQueue(queueName)
 	if err != nil {
 		return nil, err
 	}
@@ -85,59 +88,26 @@ func (f *Factory) NewHashWorker() (worker.Worker, error) {
 		return nil, err
 	}
 
-	var hashFunc = func(ctx context.Context, msg *queue.WorkerMessage) error {
-		// Unmarshall into
-		args := &crawler.Args{}
-		err := json.Unmarshal(msg.Delivery.Body, args)
-		if err != nil {
-			return err
+	// A MessageWorkerFactory generates a worker for every message in a queue
+	messageWorkerFactory := func(msg *amqp.Delivery) worker.Worker {
+		return &Worker{
+			Crawler:   c,
+			Delivery:  msg,
+			CrawlFunc: crawl,
 		}
-
-		i := crawler.Indexable{
-			Args:    args,
-			Crawler: c,
-		}
-
-		return i.CrawlHash(ctx)
 	}
 
-	return &queue.Worker{
-		ErrChan: f.errChan,
-		Func:    hashFunc,
-		Queue:   hashConQueue,
-	}, nil
+	return queue.NewWorker(f.errChan, conQueue, messageWorkerFactory), nil
+}
+
+func (f *Factory) NewHashWorker() (worker.Worker, error) {
+	return f.newWorker("hashes", func(i *crawler.Indexable) func(context.Context) error {
+		return i.CrawlHash
+	})
 }
 
 func (f *Factory) NewFileWorker() (worker.Worker, error) {
-	fileConQueue, err := f.conConnection.NewChannelQueue("files")
-	if err != nil {
-		return nil, err
-	}
-
-	c, err := f.NewCrawler()
-	if err != nil {
-		return nil, err
-	}
-
-	var fileFunc = func(ctx context.Context, msg *queue.WorkerMessage) error {
-		// Unmarshall into
-		args := &crawler.Args{}
-		err := json.Unmarshal(msg.Delivery.Body, args)
-		if err != nil {
-			return err
-		}
-
-		i := crawler.Indexable{
-			Args:    args,
-			Crawler: c,
-		}
-
-		return i.CrawlFile(ctx)
-	}
-
-	return &queue.Worker{
-		ErrChan: f.errChan,
-		Func:    fileFunc,
-		Queue:   fileConQueue,
-	}, nil
+	return f.newWorker("files", func(i *crawler.Indexable) func(context.Context) error {
+		return i.CrawlFile
+	})
 }

@@ -2,75 +2,35 @@ package queue
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"github.com/streadway/amqp"
 	"log"
 )
 
-// WorkerMessage wraps amqp delivery
-type WorkerMessage struct {
-	*Worker
-	*amqp.Delivery
-}
-
-// WorkerFunc processes queueue messages
-type WorkerFunc func(ctx context.Context, msg *WorkerMessage) error
-
-// Worker calls Func for every message in Queue, returning errors in ErrChan
+// Worker instantiates and calls MessageWorker for every Message in Queue
 type Worker struct {
-	ErrChan chan<- error
-	Func    WorkerFunc
-	Queue   *Queue
+	errChan chan<- error
+	queue   *Queue
+	factory MessageWorkerFactory
 }
 
-// Process handles a single message, acking if no error and rejecting otherwise
-func (m *WorkerMessage) Process(ctx context.Context) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			// Override original error value on panic
-			err = m.recoverPanic(r)
-		}
-	}()
-
-	log.Printf("Received in '%s': %s", m.Queue, m.Body)
-
-	err = m.Worker.Func(ctx, m)
-
-	if err != nil {
-		// Don't retry
-		m.Reject(false)
-
-		return
+// NewWorker returns a worker for a given queue with error channel. The
+// MessageWorkerFactory is itself wrapped in a messageWorker for proper
+// error handling etc.
+func NewWorker(errc chan<- error, queue *Queue, factory MessageWorkerFactory) *Worker {
+	return &Worker{
+		errChan: errc,
+		queue:   queue,
+		factory: newMessageWorker(factory),
 	}
-
-	// Everything went fine, ack the message
-	m.Ack(false)
-
-	return
 }
 
-func (m *WorkerMessage) recoverPanic(r interface{}) (err error) {
-	log.Printf("Panic in: %s", m.Body)
-	// Permanently remove message from original queue
-	m.Reject(false)
-
-	// find out exactly what the error was and set err
-	switch x := r.(type) {
-	case string:
-		err = errors.New(x)
-	case error:
-		err = x
-	default:
-		err = fmt.Errorf("Unassertable panic error: %v", r)
-	}
-
-	return
+// String returns the name of the worker queue
+func (w *Worker) String() string {
+	return w.queue.String()
 }
 
 // Work performs consumption of messages in the worker's Queue
 func (w *Worker) Work(ctx context.Context) error {
-	msgs, err := w.Queue.Consume()
+	msgs, err := w.queue.Consume()
 	if err != nil {
 		return err
 	}
@@ -83,19 +43,11 @@ func (w *Worker) Work(ctx context.Context) error {
 			log.Printf("Stopping worker %s: %s", w, ctx.Err())
 			return ctx.Err()
 		case msg := <-msgs:
-			message := &WorkerMessage{
-				Worker:   w,
-				Delivery: &msg,
-			}
-			err = message.Process(ctx)
+			worker := w.factory(&msg)
+			err = worker.Work(ctx)
 			if err != nil {
-				w.ErrChan <- err
+				w.errChan <- err
 			}
 		}
 	}
-}
-
-// String returns the name of the worker queue
-func (w *Worker) String() string {
-	return w.Queue.String()
 }
