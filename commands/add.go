@@ -16,6 +16,7 @@ func AddHash(hash string) error {
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	ch, err := conn.NewChannel()
 	if err != nil {
