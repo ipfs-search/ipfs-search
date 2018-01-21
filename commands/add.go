@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/queue"
 )
 
@@ -27,8 +28,8 @@ func AddHash(hash string) error {
 		return err
 	}
 
-	err = queue.Publish(map[string]interface{}{
-		"hash": hash,
+	err = queue.Publish(&crawler.Args{
+		Hash: hash,
 	})
 
 	return err
