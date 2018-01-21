@@ -51,13 +51,11 @@ func (i *existingItem) updateIndex(ctx context.Context) error {
 
 // update updates existing items (if they in fact do exist)
 func (i *existingItem) update(ctx context.Context) error {
-	if !i.skipItem() {
+	if i.exists && !i.skipItem() {
 		i.updateReferences()
 
-		if i.exists {
-			log.Printf("Updating %s", i)
-			return i.updateIndex(ctx)
-		}
+		log.Printf("Updating %s", i)
+		return i.updateIndex(ctx)
 	}
 
 	return nil
