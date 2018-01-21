@@ -7,6 +7,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/ipfs/go-ipfs-api"
+	"github.com/streadway/amqp"
 )
 
 type Factory struct {
@@ -87,20 +88,26 @@ func (f *Factory) newWorker(queueName string, crawlFunc func(i *crawler.Indexabl
 		return nil, err
 	}
 
-	crawlWorker := &worker.Function{
-		WorkFunc: func(ctx context.Context, msg *queue.MessageWorker) error {
-			i, err := c.IndexableFromJSON(msg.Delivery.Body)
-			if err != nil {
-				return err
-			}
+	// A MessageWorkerFactory generates a worker for every message in a queue
+	messageworkerFactory := func(msg *amqp.Delivery) worker.Worker {
+		// A Function worker generates a worker performing a single function
+		return &worker.Function{
+			WorkFunc: func(ctx context.Context) error {
+				// Create an Indexable from the message's body
+				i, err := c.IndexableFromJSON(msg.Body)
+				if err != nil {
+					return err
+				}
 
-			return crawlFunc(i)(ctx)
-		},
+				// Call crawler function with context
+				return crawlFunc(i)(ctx)
+			},
+		}
 	}
 
 	return &queue.Worker{
 		ErrChan: f.errChan,
-		Worker:  crawlWorker,
+		Factory: messageworkerFactory,
 		Queue:   conQueue,
 	}, nil
 }

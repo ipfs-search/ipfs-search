@@ -12,6 +12,17 @@ type Worker struct {
 	Factory MessageWorkerFactory
 }
 
+// NewWorker returns a worker for a given queue with error channel. The
+// MessageWorkerFactory is itself wrapped in a messageWorker for proper
+// error handling etc.
+func NewWorker(errc chan<- error, queue *Queue, factory MessageWorkerFactory) *Worker {
+	return &Worker{
+		ErrChan: errc,
+		Queue:   queue,
+		Factory: newMessageWorker(factory),
+	}
+}
+
 // String returns the name of the worker queue
 func (w *Worker) String() string {
 	return w.Queue.String()

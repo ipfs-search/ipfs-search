@@ -4,26 +4,35 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/streadway/amqp"
 	"log"
 )
 
-import (
-	"github.com/ipfs-search/ipfs-search/worker"
-)
+// MessageWorkerFactory instantiates a worker for a single AMQP message
+type MessageWorkerFactory func(msg *amqp.Delivery) worker.Worker
 
-// MessageWorkerFactory instantiates a worker for an AMQP message
-type MessageWorkerFactory func(msg *amqp.Delivery) *Worker
+// newMessageWorker implements MessageWorkerFactory and wraps a factory with
+// a messageWorker, such that messages will be properly acked/rejected and
+// errors/panics handled
+func newMessageWorker(factory MessageWorkerFactory) MessageWorkerFactory {
+	return func(msg *amqp.Delivery) worker.Worker {
+		return &messageWorker{
+			Factory:  factory,
+			Delivery: msg,
+		}
+	}
+}
 
-// MessageWorker contains a worker performing the actual action and a delivery
-// with a single AMQP message.
-type MessageWorker struct {
-	Worker worker.Worker
+// messageWorker instantiates and wraps a single worker for every message for
+// error handling and ack/rejection
+type messageWorker struct {
+	Factory MessageWorkerFactory
 	*amqp.Delivery
 }
 
 // Work initiates the contained worker for a single message, acking if no error and rejecting otherwise
-func (m *MessageWorker) Work(ctx context.Context) (err error) {
+func (m *messageWorker) Work(ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// Override original error value on panic
@@ -33,7 +42,9 @@ func (m *MessageWorker) Work(ctx context.Context) (err error) {
 
 	log.Printf("Received: %s", m.Body)
 
-	err = m.Worker.Work(ctx)
+	// Create new worker for the actual work and perform it
+	worker := m.Factory(m.Delivery)
+	err = worker.Work(ctx)
 
 	if err != nil {
 		// Don't retry
@@ -48,7 +59,7 @@ func (m *MessageWorker) Work(ctx context.Context) (err error) {
 	return
 }
 
-func (m *MessageWorker) recoverPanic(r interface{}) (err error) {
+func (m *messageWorker) recoverPanic(r interface{}) (err error) {
 	log.Printf("Panic in: %s", m.Body)
 
 	// Permanently remove message from original queue
