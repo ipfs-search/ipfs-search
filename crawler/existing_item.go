@@ -32,11 +32,13 @@ func (i *existingItem) updateReferences() {
 		}
 	}
 
-	// New references found, updating references
-	i.references = append(i.references, indexer.Reference{
+	r := indexer.Reference{
 		Name:       i.Name,
 		ParentHash: i.ParentHash,
-	})
+	}
+
+	log.Printf("Adding reference '%s' to '%s'", r, i)
+	i.references = append(i.references, r)
 }
 
 // updateItem updates references (and later also last seen date)

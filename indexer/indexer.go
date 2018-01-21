@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"gopkg.in/olivere/elastic.v5"
 	"log"
 )
@@ -16,6 +17,10 @@ type Indexer struct {
 type Reference struct {
 	ParentHash string `json:"parent_hash"`
 	Name       string `json:"name"`
+}
+
+func (r *Reference) String() string {
+	return fmt.Sprintf("%s to %s", r.Name, r.ParentHash)
 }
 
 // IndexItem adds or updates an IPFS item with arbitrary properties
