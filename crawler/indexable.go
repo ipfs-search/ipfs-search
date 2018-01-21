@@ -48,8 +48,6 @@ func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, erro
 // handleURLError handles HTTP errors graceously, returns try again bool and original error
 func (i *Indexable) handleURLError(err error) (bool, error) {
 	if uerr, ok := err.(*url.Error); ok {
-		log.Printf("URL error: %v", uerr)
-
 		if uerr.Timeout() {
 			// Fail on timeouts
 			return false, err
@@ -57,6 +55,7 @@ func (i *Indexable) handleURLError(err error) (bool, error) {
 
 		if uerr.Temporary() {
 			// Retry on other temp errors
+			log.Printf("Temporary URL error: %v", uerr)
 			return true, nil
 		}
 
