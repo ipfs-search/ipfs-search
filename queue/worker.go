@@ -7,9 +7,9 @@ import (
 
 // Worker instantiates and calls MessageWorker for every Message in Queue
 type Worker struct {
-	ErrChan chan<- error
-	Queue   *Queue
-	Factory MessageWorkerFactory
+	errChan chan<- error
+	queue   *Queue
+	factory MessageWorkerFactory
 }
 
 // NewWorker returns a worker for a given queue with error channel. The
@@ -17,20 +17,20 @@ type Worker struct {
 // error handling etc.
 func NewWorker(errc chan<- error, queue *Queue, factory MessageWorkerFactory) *Worker {
 	return &Worker{
-		ErrChan: errc,
-		Queue:   queue,
-		Factory: newMessageWorker(factory),
+		errChan: errc,
+		queue:   queue,
+		factory: newMessageWorker(factory),
 	}
 }
 
 // String returns the name of the worker queue
 func (w *Worker) String() string {
-	return w.Queue.String()
+	return w.queue.String()
 }
 
 // Work performs consumption of messages in the worker's Queue
 func (w *Worker) Work(ctx context.Context) error {
-	msgs, err := w.Queue.Consume()
+	msgs, err := w.queue.Consume()
 	if err != nil {
 		return err
 	}
@@ -43,10 +43,10 @@ func (w *Worker) Work(ctx context.Context) error {
 			log.Printf("Stopping worker %s: %s", w, ctx.Err())
 			return ctx.Err()
 		case msg := <-msgs:
-			worker := w.Factory(&msg)
+			worker := w.factory(&msg)
 			err = worker.Work(ctx)
 			if err != nil {
-				w.ErrChan <- err
+				w.errChan <- err
 			}
 		}
 	}
