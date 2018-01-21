@@ -2,7 +2,6 @@ package factory
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs-search/ipfs-search/queue"
@@ -74,8 +73,11 @@ func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
 	}, nil
 }
 
-func (f *Factory) NewHashWorker() (worker.Worker, error) {
-	hashConQueue, err := f.conConnection.NewChannelQueue("hashes")
+// newWorker generalizes creating new workers; it takes a queue name and a
+// crawlFunc, which takes an Indexable and returns the function performing
+// the actual crawling
+func (f *Factory) newWorker(queueName string, crawlFunc func(i *crawler.Indexable) func(context.Context) error) (worker.Worker, error) {
+	conQueue, err := f.conConnection.NewChannelQueue(queueName)
 	if err != nil {
 		return nil, err
 	}
@@ -85,59 +87,30 @@ func (f *Factory) NewHashWorker() (worker.Worker, error) {
 		return nil, err
 	}
 
-	var hashFunc = func(ctx context.Context, msg *queue.MessageWorker) error {
-		// Unmarshall into
-		args := &crawler.Args{}
-		err := json.Unmarshal(msg.Delivery.Body, args)
+	var workFunc = func(ctx context.Context, msg *queue.MessageWorker) error {
+		i, err := c.IndexableFromJSON(msg.Delivery.Body)
 		if err != nil {
 			return err
 		}
 
-		i := crawler.Indexable{
-			Args:    args,
-			Crawler: c,
-		}
-
-		return i.CrawlHash(ctx)
+		return crawlFunc(i)(ctx)
 	}
 
 	return &queue.Worker{
 		ErrChan: f.errChan,
-		Func:    hashFunc,
-		Queue:   hashConQueue,
+		Func:    workFunc,
+		Queue:   conQueue,
 	}, nil
 }
 
+func (f *Factory) NewHashWorker() (worker.Worker, error) {
+	return f.newWorker("hashes", func(i *crawler.Indexable) func(context.Context) error {
+		return i.CrawlHash
+	})
+}
+
 func (f *Factory) NewFileWorker() (worker.Worker, error) {
-	fileConQueue, err := f.conConnection.NewChannelQueue("files")
-	if err != nil {
-		return nil, err
-	}
-
-	c, err := f.NewCrawler()
-	if err != nil {
-		return nil, err
-	}
-
-	var fileFunc = func(ctx context.Context, msg *queue.MessageWorker) error {
-		// Unmarshall into
-		args := &crawler.Args{}
-		err := json.Unmarshal(msg.Delivery.Body, args)
-		if err != nil {
-			return err
-		}
-
-		i := crawler.Indexable{
-			Args:    args,
-			Crawler: c,
-		}
-
-		return i.CrawlFile(ctx)
-	}
-
-	return &queue.Worker{
-		ErrChan: f.errChan,
-		Func:    fileFunc,
-		Queue:   fileConQueue,
-	}, nil
+	return f.newWorker("files", func(i *crawler.Indexable) func(context.Context) error {
+		return i.CrawlFile
+	})
 }
