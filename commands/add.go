@@ -12,7 +12,7 @@ func AddHash(hash string) error {
 		return err
 	}
 
-	conn, err := queue.NewConnection(config.AMQPURL)
+	conn, err := queue.NewConnection(config.Factory.AMQPURL)
 	if err != nil {
 		return err
 	}
