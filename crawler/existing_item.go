@@ -9,36 +9,29 @@ import (
 type existingItem struct {
 	*Indexable
 	exists     bool
-	references []indexer.Reference
+	references indexer.References
 	itemType   string
+}
+
+// ReferenceFromIndexable generates a new reference for a given indexable
+func referenceFromExisting(i *existingItem) *indexer.Reference {
+	return &indexer.Reference{
+		Name:       i.Name,
+		ParentHash: i.ParentHash,
+	}
 }
 
 // updateReferences updates references with Name and ParentHash
 func (i *existingItem) updateReferences() {
-	if i.references == nil {
-		// Initialize empty references when none have been found
-		i.references = []indexer.Reference{}
-	}
+	newRef := referenceFromExisting(i)
 
-	if i.ParentHash == "" {
-		// No parent hash for item, not adding reference
+	if newRef.ParentHash == "" || i.references.Contains(newRef) {
+		// Not updating references
 		return
 	}
 
-	for _, reference := range i.references {
-		if reference.ParentHash == i.ParentHash {
-			// Reference exists, not updating
-			return
-		}
-	}
-
-	r := indexer.Reference{
-		Name:       i.Name,
-		ParentHash: i.ParentHash,
-	}
-
-	log.Printf("Adding reference '%s' to '%s'", r, i)
-	i.references = append(i.references, r)
+	log.Printf("Adding reference '%s' to %s", newRef, i)
+	i.references = append(i.references, *newRef)
 }
 
 // updateItem updates references (and later also last seen date)
@@ -53,11 +46,15 @@ func (i *existingItem) updateIndex(ctx context.Context) error {
 
 // update updates existing items (if they in fact do exist)
 func (i *existingItem) update(ctx context.Context) error {
-	if i.exists && !i.skipItem() {
+	if !i.skipItem() {
+		// Update references always; this also adds existing to them
+		// I know, this is bad design...
 		i.updateReferences()
 
-		log.Printf("Updating %s", i)
-		return i.updateIndex(ctx)
+		if i.exists {
+			log.Printf("Updating %s", i)
+			return i.updateIndex(ctx)
+		}
 	}
 
 	return nil
@@ -94,7 +91,7 @@ func (i *Indexable) getExistingItem(ctx context.Context) (*existingItem, error) 
 
 	item := &existingItem{
 		Indexable:  i,
-		exists:     references != nil, // references == nil -> doesn't exist
+		exists:     itemType != "", // itemType == nil -> doesn't exist
 		references: references,
 		itemType:   itemType,
 	}
