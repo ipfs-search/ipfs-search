@@ -35,7 +35,7 @@ func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, erro
 		strings.Contains(err.Error(), "not a valid merkledag node")) {
 
 		// Attempt to index panic to prevent re-indexing
-		i.indexInvalid(err)
+		i.indexInvalid(ctx, err)
 
 		// Don't try again, return error
 		return false, err
@@ -108,17 +108,17 @@ func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, 
 }
 
 // indexInvalid indexes invalid files to prevent indexing again
-func (i *Indexable) indexInvalid(err error) {
+func (i *Indexable) indexInvalid(ctx context.Context, err error) {
 	// Attempt to index panic to prevent re-indexing
 	m := metadata{
 		"error": err.Error(),
 	}
 
-	i.Indexer.IndexItem("invalid", i.Hash, m)
+	i.Indexer.IndexItem(ctx, "invalid", i.Hash, m)
 }
 
 // queueList queues any items in a given list/directory
-func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
+func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (err error) {
 	for _, link := range list.Links {
 		dirArgs := &Args{
 			Hash:       link.Hash,
@@ -136,7 +136,7 @@ func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 			err = i.HashQueue.Publish(dirArgs)
 		default:
 			log.Printf("Type '%s' skipped for %s", link.Type, i)
-			i.indexInvalid(fmt.Errorf("Unknown type: %s", link.Type))
+			i.indexInvalid(ctx, fmt.Errorf("Unknown type: %s", link.Type))
 		}
 	}
 
@@ -158,7 +158,7 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 		err = i.FileQueue.Publish(fileArgs)
 	case "Directory":
 		// Queue indexing of linked items
-		err = i.queueList(list)
+		err = i.queueList(ctx, list)
 		if err != nil {
 			return err
 		}
