@@ -5,11 +5,14 @@ Search engine for IPFS using Elasticsearch, RabbitMQ and Tika.
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/ipfs-search/ipfs-search/commands"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -58,10 +61,37 @@ func add(c *cli.Context) error {
 	return nil
 }
 
+// onSigTerm calls f() when SIGTERM (control-C) is received
+func onSigTerm(f func()) {
+	sigChan := make(chan os.Signal, 2)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	var fail = func() {
+		<-sigChan
+		os.Exit(1)
+	}
+
+	var quit = func() {
+		<-sigChan
+
+		go fail()
+
+		fmt.Println("Received SIGTERM, quitting... One more SIGTERM and we'll abort!")
+		f()
+	}
+
+	go quit()
+}
+
 func crawl(c *cli.Context) error {
 	fmt.Printf("Starting worker\n")
 
-	err := commands.StartWorker()
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Allow SIGTERM / Control-C quit through context
+	onSigTerm(cancel)
+
+	err := commands.Crawl(ctx)
 
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)

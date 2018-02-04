@@ -35,7 +35,7 @@ function query(q, page, page_size) {
       },
       "_source": [
         "metadata.title", "metadata.name", "metadata.description",
-        "references", "size"
+        "references", "size", "last-seen", "first-seen"
       ]
   };
 
@@ -154,7 +154,9 @@ function transform_results(results) {
       "title": get_title(item),
       "description": get_description(item),
       "type": item._type,
-      "size": item._source.size
+      "size": item._source.size,
+      "first-seen": item._source['first-seen'],
+      "last-seen": item._source['last-seen']
     });
   });
 
