@@ -1,24 +1,30 @@
 package commands
 
 import (
+	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/queue"
 )
 
 // AddHash queues a single IPFS hash for indexing
 func AddHash(hash string) error {
-	ch, err := queue.NewChannel()
-	if err != nil {
-		return err
-	}
-	defer ch.Close()
-
-	queue, err := queue.NewTaskQueue(ch, "hashes")
+	config, err := getConfig()
 	if err != nil {
 		return err
 	}
 
-	err = queue.AddTask(map[string]interface{}{
-		"hash": hash,
+	conn, err := queue.NewConnection(config.Factory.AMQPURL)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	queue, err := conn.NewChannelQueue("hashes")
+	if err != nil {
+		return err
+	}
+
+	err = queue.Publish(&crawler.Args{
+		Hash: hash,
 	})
 
 	return err

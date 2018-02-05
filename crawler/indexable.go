@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/url"
 	// "path"
+	"context"
 	"fmt"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs/go-ipfs-api"
@@ -27,30 +28,17 @@ func (i *Indexable) String() string {
 	return fmt.Sprintf("'%s' (Unnamed)", i.Hash)
 }
 
-// skipItem determines whether a particular item should not be indexed
-// This holds particularly to partial content.
-func (i *Indexable) skipItem() bool {
-	if i.Size == i.Config.PartialSize && i.ParentHash == "" {
-		log.Printf("Skipping unreferenced partial content for item %s", i)
-		return true
-	}
-
-	return false
-}
-
 // handleShellError handles IPFS shell errors; returns try again bool and original error
-func (i *Indexable) handleShellError(err error) (bool, error) {
-	if _, ok := err.(*shell.Error); ok && strings.Contains(err.Error(), "proto") {
-		// We're not recovering from protocol errors, so panic
+func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, error) {
+	if _, ok := err.(*shell.Error); ok && (strings.Contains(err.Error(), "proto") ||
+		strings.Contains(err.Error(), "unrecognized type") ||
+		strings.Contains(err.Error(), "not a valid merkledag node")) {
 
 		// Attempt to index panic to prevent re-indexing
-		m := metadata{
-			"error": err.Error(),
-		}
+		i.indexInvalid(ctx, err)
 
-		i.Indexer.IndexItem("invalid", i.Hash, m)
-
-		panic(err)
+		// Don't try again, return error
+		return false, err
 	}
 
 	// Different error, attempt handling as URL error
@@ -60,8 +48,6 @@ func (i *Indexable) handleShellError(err error) (bool, error) {
 // handleURLError handles HTTP errors graceously, returns try again bool and original error
 func (i *Indexable) handleURLError(err error) (bool, error) {
 	if uerr, ok := err.(*url.Error); ok {
-		log.Printf("URL error: %v", uerr)
-
 		if uerr.Timeout() {
 			// Fail on timeouts
 			return false, err
@@ -69,6 +55,7 @@ func (i *Indexable) handleURLError(err error) (bool, error) {
 
 		if uerr.Temporary() {
 			// Retry on other temp errors
+			log.Printf("Temporary URL error: %v", uerr)
 			return true, nil
 		}
 
@@ -101,14 +88,14 @@ func (i *Indexable) hashURL() string {
 }
 
 // getFileList return list of files and/or type of item (directory/file)
-func (i *Indexable) getFileList() (list *shell.UnixLsObject, err error) {
+func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, err error) {
 	url := i.hashURL()
 
 	tryAgain := true
 	for tryAgain {
 		list, err = i.Shell.FileList(url)
 
-		tryAgain, err = i.handleShellError(err)
+		tryAgain, err = i.handleShellError(ctx, err)
 
 		if tryAgain {
 			log.Printf("Retrying in %s", i.Config.RetryWait)
@@ -119,8 +106,18 @@ func (i *Indexable) getFileList() (list *shell.UnixLsObject, err error) {
 	return
 }
 
+// indexInvalid indexes invalid files to prevent indexing again
+func (i *Indexable) indexInvalid(ctx context.Context, err error) {
+	// Attempt to index panic to prevent re-indexing
+	m := metadata{
+		"error": err.Error(),
+	}
+
+	i.Indexer.IndexItem(ctx, "invalid", i.Hash, m)
+}
+
 // queueList queues any items in a given list/directory
-func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
+func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (err error) {
 	for _, link := range list.Links {
 		dirArgs := &Args{
 			Hash:       link.Hash,
@@ -132,12 +129,13 @@ func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 		switch link.Type {
 		case "File":
 			// Add file to crawl queue
-			err = i.FileQueue.AddTask(dirArgs)
+			err = i.FileQueue.Publish(dirArgs)
 		case "Directory":
 			// Add directory to crawl queue
-			err = i.HashQueue.AddTask(dirArgs)
+			err = i.HashQueue.Publish(dirArgs)
 		default:
 			log.Printf("Type '%s' skipped for %s", link.Type, i)
+			i.indexInvalid(ctx, fmt.Errorf("Unknown type: %s", link.Type))
 		}
 	}
 
@@ -145,21 +143,21 @@ func (i *Indexable) queueList(list *shell.UnixLsObject) (err error) {
 }
 
 // processList processes and indexes a file listing
-func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.Reference) (err error) {
+func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references []indexer.Reference) (err error) {
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
-		fileArgs := Args{
+		fileArgs := &Args{
 			Hash:       i.Hash,
 			Name:       i.Name,
 			Size:       list.Size,
 			ParentHash: i.ParentHash,
 		}
 
-		err = i.FileQueue.AddTask(fileArgs)
+		err = i.FileQueue.Publish(fileArgs)
 	case "Directory":
 		// Queue indexing of linked items
-		err = i.queueList(list)
+		err = i.queueList(ctx, list)
 		if err != nil {
 			return err
 		}
@@ -172,7 +170,7 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 			"first-seen": nowISO(),
 		}
 
-		err = i.Indexer.IndexItem("directory", i.Hash, m)
+		err = i.Indexer.IndexItem(ctx, "directory", i.Hash, m)
 	default:
 		log.Printf("Type '%s' skipped for %s", list.Type, i)
 	}
@@ -181,7 +179,7 @@ func (i *Indexable) processList(list *shell.UnixLsObject, references []indexer.R
 }
 
 // processList processes and indexes a single file
-func (i *Indexable) processFile(references []indexer.Reference) error {
+func (i *Indexable) processFile(ctx context.Context, references []indexer.Reference) error {
 	m := make(metadata)
 
 	err := i.getMetadata(&m)
@@ -194,35 +192,36 @@ func (i *Indexable) processFile(references []indexer.Reference) error {
 	m["references"] = references
 	m["first-seen"] = nowISO()
 
-	return i.Indexer.IndexItem("file", i.Hash, m)
+	return i.Indexer.IndexItem(ctx, "file", i.Hash, m)
 }
 
 // preCrawl checks for and returns existing item and conditionally updates it
-func (i *Indexable) preCrawl() (existing *existingItem, err error) {
-	existing, err = i.getExistingItem()
+func (i *Indexable) preCrawl(ctx context.Context) (*existingItem, error) {
+	e, err := i.getExistingItem(ctx)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	err = existing.update()
-	return
+	return e, e.update(ctx)
 }
 
 // CrawlHash crawls a particular hash (file or directory)
-func (i *Indexable) CrawlHash() error {
-	existing, err := i.preCrawl()
+func (i *Indexable) CrawlHash(ctx context.Context) error {
+	existing, err := i.preCrawl(ctx)
 
-	if !existing.shouldCrawl() || err != nil {
-		log.Printf("Not crawling hash %s", i)
+	if err != nil || !existing.shouldCrawl() {
+		log.Printf("Skipping hash %s", i)
 		return err
 	}
 
-	list, err := i.getFileList()
+	log.Printf("Crawling hash %s", i)
+
+	list, err := i.getFileList(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = i.processList(list, existing.references)
+	err = i.processList(ctx, list, existing.references)
 	if err != nil {
 		return err
 	}
@@ -233,17 +232,17 @@ func (i *Indexable) CrawlHash() error {
 }
 
 // CrawlFile crawls a single object, known to be a file
-func (i *Indexable) CrawlFile() error {
-	existing, err := i.preCrawl()
+func (i *Indexable) CrawlFile(ctx context.Context) error {
+	existing, err := i.preCrawl(ctx)
 
-	if !existing.shouldCrawl() || err != nil {
-		log.Printf("Not crawling file %s", i)
+	if err != nil || !existing.shouldCrawl() {
+		log.Printf("Skipping file %s", i)
 		return err
 	}
 
 	log.Printf("Crawling file %s", i)
 
-	i.processFile(existing.references)
+	i.processFile(ctx, existing.references)
 	if err != nil {
 		return err
 	}
