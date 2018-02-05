@@ -30,7 +30,7 @@ func (i *existingItem) updateReferences() {
 		return
 	}
 
-	log.Printf("Adding reference '%s' to %s", newRef, i)
+	log.Printf("Adding reference '%v' to %v", newRef, i)
 	i.references = append(i.references, *newRef)
 }
 
@@ -52,7 +52,7 @@ func (i *existingItem) update(ctx context.Context) error {
 		i.updateReferences()
 
 		if i.exists {
-			log.Printf("Updating %s", i)
+			log.Printf("Updating %v", i)
 			return i.updateIndex(ctx)
 		}
 	}
@@ -66,12 +66,12 @@ func (i *existingItem) skipItem() bool {
 	// TODO; this is currently called in update() and shouldCrawl and
 	// yields duplicate output. Todo; make this return an error or nil.
 	if i.Size == i.Config.PartialSize && i.ParentHash == "" {
-		log.Printf("Skipping unreferenced partial content for item %s", i)
+		log.Printf("Skipping unreferenced partial content for item %v", i)
 		return true
 	}
 
 	if i.itemType == "invalid" {
-		log.Printf("Skipping update of invalid %s", i)
+		log.Printf("Skipping update of invalid %v", i)
 		return true
 	}
 
