@@ -18,12 +18,7 @@ func AddHash(hash string) error {
 	}
 	defer conn.Close()
 
-	ch, err := conn.NewChannel()
-	if err != nil {
-		return err
-	}
-
-	queue, err := ch.NewQueue("hashes")
+	queue, err := conn.NewChannelQueue("hashes")
 	if err != nil {
 		return err
 	}
