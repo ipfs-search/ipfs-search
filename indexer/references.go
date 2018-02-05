@@ -14,7 +14,7 @@ func (r *Reference) String() string {
 // References represents a list of references
 type References []Reference
 
-// Exists returns true of a given reference exists, false when it doesn't
+// Contains returns true of a given reference exists, false when it doesn't
 func (references References) Contains(newRef *Reference) bool {
 	for _, r := range references {
 		if r.ParentHash == newRef.ParentHash {

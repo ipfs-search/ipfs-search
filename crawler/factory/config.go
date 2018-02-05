@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Config defines configuration for a crawler factory
 type Config struct {
 	IpfsAPI          string
 	ElasticSearchURL string

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Config defines configuration for commands
 type Config struct {
 	Crawler *crawler.Config
 	Factory *factory.Config

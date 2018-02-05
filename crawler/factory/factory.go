@@ -10,6 +10,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
+// Factory creates hash and file crawl workers
 type Factory struct {
 	crawlerConfig *crawler.Config
 	pubConnection *queue.Connection
@@ -19,6 +20,7 @@ type Factory struct {
 	shell         *shell.Shell
 }
 
+// New creates a new crawl worker factory
 func New(config *Config, errc chan<- error) (*Factory, error) {
 	pubConnection, err := queue.NewConnection(config.AMQPURL)
 	if err != nil {
@@ -54,7 +56,7 @@ func New(config *Config, errc chan<- error) (*Factory, error) {
 	}, nil
 }
 
-func (f *Factory) NewCrawler() (*crawler.Crawler, error) {
+func (f *Factory) newCrawler() (*crawler.Crawler, error) {
 	fileQueue, err := f.pubConnection.NewChannelQueue("files")
 	if err != nil {
 		return nil, err
@@ -83,7 +85,7 @@ func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, e
 		return nil, err
 	}
 
-	c, err := f.NewCrawler()
+	c, err := f.newCrawler()
 	if err != nil {
 		return nil, err
 	}
@@ -100,12 +102,14 @@ func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, e
 	return queue.NewWorker(f.errChan, conQueue, messageWorkerFactory), nil
 }
 
+// NewHashWorker returns a new hash crawl worker
 func (f *Factory) NewHashWorker() (worker.Worker, error) {
 	return f.newWorker("hashes", func(i *crawler.Indexable) func(context.Context) error {
 		return i.CrawlHash
 	})
 }
 
+// NewFileWorker returns a new file crawl worker
 func (f *Factory) NewFileWorker() (worker.Worker, error) {
 	return f.newWorker("files", func(i *crawler.Indexable) func(context.Context) error {
 		return i.CrawlFile

@@ -26,6 +26,7 @@ type Crawler struct {
 	HashQueue *queue.Queue
 }
 
+// IndexableFromJSON returns and Indexable associated with this crawler based on a JSON blob
 func (c *Crawler) IndexableFromJSON(input []byte) (*Indexable, error) {
 	// Unmarshall message into crawler Args
 	args := &Args{}
