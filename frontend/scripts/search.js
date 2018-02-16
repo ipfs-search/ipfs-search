@@ -21,6 +21,16 @@ module.exports = {
         result_container = $('#result-container'),
         page_number = $('#page-number');
 
+    search_form.data('ipfs-gateway', 'https://gateway.ipfs.io');
+
+    var gateway_promise = $.get({'url': 'http://localhost:8080/ipfs/QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv/ping', 'cache': false});
+
+    gateway_promise.done(function (result) {
+      if (result === 'ipfs') {
+        search_form.data('ipfs-gateway', 'http://localhost:8080');
+      }
+    });
+
     function get_results(params) {
       // Show blocker for longer waits
 
@@ -34,6 +44,8 @@ module.exports = {
       );
 
       result_promise.done(function (results) {
+
+        results.gateway = search_form.data('ipfs-gateway');
 
         result_container.html(result_template(results));
 
