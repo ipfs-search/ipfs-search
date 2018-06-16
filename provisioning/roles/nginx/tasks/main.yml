@@ -1,5 +1,5 @@
 - name: Install Nginx
-  apt: name=nginx-full state=installed
+  apt: name=nginx-full state=present
 - name: Install nginx configuration
   copy: src=nginx.conf dest=/etc/nginx/nginx.conf
   notify: restart nginx

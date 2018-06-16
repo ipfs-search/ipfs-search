@@ -16,7 +16,7 @@
 - name: Sync frontend
   synchronize: src=../../../frontend/app/ dest=/usr/local/libexec/ipfs-search-frontend/ times=yes partial=yes archive=no recursive=yes
 - name: Install nginx configuration
-  copy: src=nginx-frontend.conf dest=/etc/nginx/sites-available/frontend.conf
+  template: src=nginx-frontend.conf dest=/etc/nginx/sites-available/frontend.conf
   notify: restart nginx
 - name: Enable nginx configuration
   file:

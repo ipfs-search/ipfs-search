@@ -1,7 +1,14 @@
 ---
 - hosts: frontend
   become: true
+  vars:
+    - hostname: poppycorn.ipfs-search.com
+    - certbot_email: info@ipfs-search.com
+    - certbot_domains: ipfs-search.com,api.ipfs-search.com
+    - certbot_test: true
   roles:
-    - { name: common, tags: ['common'] }
+    - { name: common, tags: ['common']}
+    - { name: hostname, tags: ['hostname']}
     - { name: nginx, tags: ['nginx']}
     - { name: frontend, tags: ['frontend']}
+    - { name: certbot , tags: ['certbot']}

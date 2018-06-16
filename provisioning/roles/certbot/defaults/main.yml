@@ -1,0 +1,4 @@
+---
+certbot_test: false
+dh_params: /etc/ssl/certs/dhparam.pem
+options_ssl_nginx: /etc/nginx/options-ssl-nginx.conf

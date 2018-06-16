@@ -1,0 +1,21 @@
+---
+- name: software-properties-common installed
+  apt:
+    name: software-properties-common
+    state: latest
+- name: certbot ppa added
+  apt_repository:
+    repo: 'ppa:certbot/certbot'
+- name: certbot installed
+  apt:
+    name: python-certbot-nginx
+    state: latest
+- name: setup certificates
+  command: certbot certonly --nginx {% if certbot_test %}--test-cert {% endif %}-m '{{ certbot_email }}' --agree-tos -n -d '{{ certbot_domains }}'
+- name: Generate Diffie-Hellman params
+  command: openssl dhparam -out {{ dh_params }} 4096
+  args:
+    creates: '{{ dh_params }}'
+- name: Install nginx SSL params
+  template: src=options-ssl-nginx.conf dest='{{ options_ssl_nginx }}'
+  notify: restart nginx
