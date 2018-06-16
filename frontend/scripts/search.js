@@ -43,14 +43,14 @@ module.exports = {
         params
       );
 
-      result_promise.done(function (results) {
-
-        results.gateway = search_form.data('ipfs-gateway');
-
-        result_container.html(result_template(results));
-
+      result_promise.always(function () {
         done = true;
         blocker.hide();
+      });
+
+      result_promise.done(function (results) {
+        results.gateway = search_form.data('ipfs-gateway');
+        result_container.html(result_template(results));
 
         // Wait for re-render
         setTimeout(function () {
@@ -58,6 +58,9 @@ module.exports = {
         }, 100);
       });
 
+      result_promise.fail(function () {
+        alert('Error processing your request, please try again.');
+      });
 
       after(blocker_wait_time).done(function () {
         if (!done) {
