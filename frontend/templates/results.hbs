@@ -18,6 +18,9 @@
           {{#if size}}
             <div>{{ size }} bytes</div>
           {{/if}}
+          {{#if last-seen}}
+            <div>Last seen: {{ last-seen }}</div>
+          {{/if}}
         </div>
       {{/each}}
       <div class="paginator">
