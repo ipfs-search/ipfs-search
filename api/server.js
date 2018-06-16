@@ -94,7 +94,7 @@ function get_title(result) {
 
   // Try references
   src.references.forEach(function (item) {
-    if (item.name) {
+    if (item.name && len(item.name) > 1) {
       titles.push(item.name[0]);
     }
   });
