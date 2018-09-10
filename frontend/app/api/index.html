@@ -68,7 +68,11 @@
     <p>And by type (currently, `file` and `directory`):<br>
         <code>GET <a href="/v1/search?q=_type=directory">/v1/search?q=_type=directory</a></code>
     </p>
+    <p>Only consider objects seen within the last month:<br>
+        <code>GET <a href="/v1/search?q=last-seen:&gt;now-1M">/v1/search?q=last-seen:&gt;now-1M</a></code>
+    </p>
 
+`
     <h2>Code</h2>
     <p><a href="https://github.com/ipfs-search/ipfs-search">https://github.com/ipfs-search/ipfs-search</a></p>
 
