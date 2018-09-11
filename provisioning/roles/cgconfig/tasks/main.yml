@@ -1,6 +1,6 @@
 ---
 - name: Install cgroup tools
-  apt: name=cgroup-tools state=installed
+  apt: name=cgroup-tools state=present
 - name: Install cgconfig file
   copy: src=cgconfig.conf dest=/etc/cgconfig.conf mode=644
   notify: restart cgconfig
