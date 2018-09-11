@@ -1,6 +1,6 @@
 ---
 - name: Install jq snifloop dependency
-  apt: name=jq state=installed
+  apt: name=jq state=present
 - name: Install scripts
   copy: dest=/usr/local/ src=bin owner=root group=root mode=755
 - name: Create snifloop user.
