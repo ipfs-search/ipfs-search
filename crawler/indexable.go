@@ -6,7 +6,7 @@ import (
 	// "path"
 	"context"
 	"fmt"
-	"github.com/ipfs-search/ipfs-search/index"
+	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs/go-ipfs-api"
 	"log"
 	"strings"
