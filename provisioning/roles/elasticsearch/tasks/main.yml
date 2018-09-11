@@ -9,9 +9,11 @@
   apt: pkg=elasticsearch state=latest
 - name: Create snapshot directory
   file: path=/var/lib/elasticsearch/backup state=directory owner=elasticsearch group=elasticsearch
-- template: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml
+- name: Configuration
+  template: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml
   notify: restart elasticsearch
-- template: src=logging.yml dest=/etc/elasticsearch/logging.yml
+- name: Configure logging
+  template: src=logging.yml dest=/etc/elasticsearch/logging.yml
   notify: restart elasticsearch
 - name: Increase elasticsearch heap size minimum
   lineinfile: dest=/etc/elasticsearch/jvm.options regexp='-Xms' line='-Xms{{ es_heap_size }}'
