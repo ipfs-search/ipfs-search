@@ -2,7 +2,7 @@
 Description=IPFS daemon
 
 [Service]
-ExecStart={{ ipfs_binary }} daemon --manage-fdlimit
+ExecStart={{ ipfs_binary }} daemon --manage-fdlimit --migrate
 PermissionsStartOnly=true
 ExecStartPost=/bin/bash -c "echo 0 > /sys/fs/cgroup/memory/system.slice/ipfs.service/memory.swappiness"
 Restart=on-failure
