@@ -3,3 +3,4 @@ ipfs_tika_path: /usr/local/libexec
 ipfs_tika_jar: ipfs-tika-0.3.1-jar-with-dependencies.jar
 ipfs_tika_sha1: abf484c2dae65ba36912f1932234b169f4903ccc
 ipfs_tika_mirror: https://github.com/dokterbob/ipfs-tika/releases/download/v0.3.1/
+ipfs_tika_heap_max: 3072m
