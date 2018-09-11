@@ -7,10 +7,10 @@
   apt: name=unattended-upgrades state=present
 - name: enable unattended upgrades
   debconf: name=unattended-upgrades question=enable_auto_updates value=true vtype=boolean
-- name: set timezone to Europe/Amsterdam
-  timezone: name=Europe/Amsterdam
+- name: set timezone to Europe/Lisbon
+  timezone: name=Europe/Lisbon
 - name: Install misc utils
-  apt: name={{item}} state=installed
+  apt: name={{item}} state=present
   with_items:
        - screen
        - tree
