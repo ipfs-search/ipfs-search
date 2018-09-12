@@ -2,7 +2,7 @@
 - hosts: backend
   become: true
   vars:
-    - hostname: youngone.ipfs-search.com
+    - hostname: oetmoen.ipfs-search.com
     - es_heap_size: 12g
   roles:
     - { name: common, tags: ['common'] }
