@@ -1,26 +1,45 @@
-types:
-  - audio:
-    - audio/*
-    - application/ogg
-  - video:
-    - video/*
-    - application/mp4
-  - document:
-    - text/html
-    - text/plain
-    - application/pdf
-    - application/postscript
-    - application/rtf
-    - application/epub+zip
-    - application/x-mobipocket-ebook
-    - "*excel"
-    - "*word"
-    - "*powerpoint"
-    - "*document*"
-  - image:
-    - image/*
-analyzed_fields:
-  - title
-  - description
-  - artist
-  - author
+tika:
+  url: http://localhost:8081
+  timeout: 5m0s
+  max_size: 50MB
+ipfs:
+  api_url: localhost:5001
+  timeout: 6m0s
+elasticsearch:
+  url: http://localhost:9200
+amqp:
+  url: amqp://guest:guest@localhost:5672/
+crawler:
+  retry_wait: 2s
+  hash_wait: 100ms
+  file_wait: 100ms
+  partial_size: 256KB
+  hash_workers: 140
+  file_workers: 120
+index:
+  types:
+    - audio:
+      - audio/*
+      - application/ogg
+    - video:
+      - video/*
+      - application/mp4
+    - document:
+      - text/html
+      - text/plain
+      - application/pdf
+      - application/postscript
+      - application/rtf
+      - application/epub+zip
+      - application/x-mobipocket-ebook
+      - "*excel"
+      - "*word"
+      - "*powerpoint"
+      - "*document*"
+    - image:
+      - image/*
+  analyzed_fields:
+    - title
+    - description
+    - artist
+    - author

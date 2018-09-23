@@ -53,15 +53,10 @@ func startWorkers(ctx context.Context, cfg *config.Config, errc chan<- error) (*
 }
 
 // Crawl configures and initializes crawling
-func Crawl(ctx context.Context) error {
-	c, err := config.Get()
-	if err != nil {
-		return err
-	}
-
+func Crawl(ctx context.Context, cfg *config.Config) error {
 	errc := make(chan error, 1)
 
-	errg, err := startWorkers(ctx, c, errc)
+	errg, err := startWorkers(ctx, cfg, errc)
 	if err != nil {
 		return err
 	}

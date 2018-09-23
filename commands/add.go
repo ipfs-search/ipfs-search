@@ -7,13 +7,8 @@ import (
 )
 
 // AddHash queues a single IPFS hash for indexing
-func AddHash(hash string) error {
-	cfg, err := config.Get()
-	if err != nil {
-		return err
-	}
-
-	conn, err := queue.NewConnection(cfg.AMPQ.AMQPURL)
+func AddHash(cfg *config.Config, hash string) error {
+	conn, err := queue.NewConnection(cfg.AMQP.AMQPURL)
 	if err != nil {
 		return err
 	}
