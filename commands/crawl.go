@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"github.com/ipfs-search/ipfs-search/config"
 	"github.com/ipfs-search/ipfs-search/crawler/factory"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"golang.org/x/sync/errgroup"
@@ -24,20 +25,20 @@ func errorLoop(errc <-chan error) {
 	}
 }
 
-func startWorkers(ctx context.Context, config *Config, errc chan<- error) (*errgroup.Group, error) {
-	factory, err := factory.New(config.Factory, errc)
+func startWorkers(ctx context.Context, cfg *config.Config, errc chan<- error) (*errgroup.Group, error) {
+	factory, err := factory.New(cfg.FactoryConfig(), errc)
 	if err != nil {
 		return nil, err
 	}
 
 	hashGroup := worker.Group{
-		Count:   config.HashWorkers,
-		Wait:    config.HashWait,
+		Count:   cfg.Crawler.HashWorkers,
+		Wait:    cfg.Crawler.HashWait,
 		Factory: factory.NewHashWorker,
 	}
 	fileGroup := worker.Group{
-		Count:   config.FileWorkers,
-		Wait:    config.FileWait,
+		Count:   cfg.Crawler.FileWorkers,
+		Wait:    cfg.Crawler.FileWait,
 		Factory: factory.NewFileWorker,
 	}
 
@@ -53,14 +54,14 @@ func startWorkers(ctx context.Context, config *Config, errc chan<- error) (*errg
 
 // Crawl configures and initializes crawling
 func Crawl(ctx context.Context) error {
-	config, err := getConfig()
+	c, err := config.Get()
 	if err != nil {
 		return err
 	}
 
 	errc := make(chan error, 1)
 
-	errg, err := startWorkers(ctx, config, errc)
+	errg, err := startWorkers(ctx, c, errc)
 	if err != nil {
 		return err
 	}
