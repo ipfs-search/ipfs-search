@@ -43,7 +43,8 @@ function query(q, page, page_size) {
     index: 'ipfs',
     body: body,
     size: page_size,
-    from: page*page_size
+    from: page*page_size,
+    timeout: '15s'
   });
 }
 
