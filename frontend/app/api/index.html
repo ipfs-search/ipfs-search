@@ -79,6 +79,10 @@
     <p>Only consider objects seen within the last month:<br>
         <code>GET <a href="/v1/search?q=last-seen:&gt;now-1M">/v1/search?q=last-seen:&gt;now-1M</a></code>
     </p>
+    <p>
+        List only images:<br>
+        <code>GET <a href="/v1/search?q=metadata.Content-Type:image*">/v1/search?q=metadata.Content-Type:image*</a></code>
+    </p>
 
     <h2 id="metadata">Metadata</h2>
     <p>Brand new, Tika-extracted metadata for files on IPFS!</p>
