@@ -119,13 +119,17 @@ func Get(configFile string) (*Config, error) {
 	// Start with empty configuration
 	cfg := Default()
 
-	err := cfg.ReadFromFile(configFile)
-	if err != nil {
-		return nil, fmt.Errorf("Error reading configuration file: %v", err)
+	if configFile != "" {
+		fmt.Printf("Reading configuration file: %s\n", configFile)
+
+		err := cfg.ReadFromFile(configFile)
+		if err != nil {
+			return nil, fmt.Errorf("Error reading configuration file: %v", err)
+		}
 	}
 
 	// Read configuration values from env
-	err = cfg.ReadFromEnv()
+	err := cfg.ReadFromEnv()
 	if err != nil {
 		return nil, fmt.Errorf("Error reading configuration from env: %v", err)
 	}
@@ -135,9 +139,6 @@ func Get(configFile string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Print config for debug
-	log.Printf("Config:\n%v\n", cfg)
 
 	return cfg, nil
 }

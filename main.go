@@ -46,15 +46,17 @@ func main() {
 		cli.StringFlag{
 			Name:  "config, c",
 			Usage: "Load configuration from `FILE`",
-			Value: "config.yml",
 		},
 	}
 
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getConfig(c *cli.Context) (*config.Config, error) {
-	configFile := c.String("config")
+	configFile := c.GlobalString("config")
 
 	cfg, err := config.Get(configFile)
 	if err != nil {
@@ -72,7 +74,7 @@ func add(c *cli.Context) error {
 
 	cfg, err := getConfig(c)
 	if err != nil {
-		return err
+		return cli.NewExitError(err.Error(), 1)
 	}
 
 	fmt.Printf("Adding hash '%s' to queue\n", hash)
@@ -108,7 +110,7 @@ func onSigTerm(f func()) {
 }
 
 func crawl(c *cli.Context) error {
-	fmt.Printf("Starting worker\n")
+	fmt.Println("Starting worker")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -117,7 +119,7 @@ func crawl(c *cli.Context) error {
 
 	cfg, err := getConfig(c)
 	if err != nil {
-		return err
+		return cli.NewExitError(err.Error(), 1)
 	}
 
 	err = commands.Crawl(ctx, cfg)
