@@ -25,11 +25,19 @@
         h5 {
           margin: 13pt 6pt 0pt;
         }
+        .uglyred {
+            color: red;
+        }
+        .uglyblue {
+            color: blue;
+        }
     </style>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 </head>
 <body>
     <h1>ipfs-search alpha</h1>
+    <h2><span class="uglyred">NEW</span>: <a class="uglyblue" href="#metadata">METADATA</a>!</h2>
+    <h2>Search</h2>
     <p>Not much here yet, but try:
         <code>GET <a href="/v1/search?q=something">/v1/search?q=something</a></code>
     </p>
@@ -71,7 +79,98 @@
     <p>Only consider objects seen within the last month:<br>
         <code>GET <a href="/v1/search?q=last-seen:&gt;now-1M">/v1/search?q=last-seen:&gt;now-1M</a></code>
     </p>
+    <p>Find all items linking here:<br>
+        <code>GET <a href="/v1/search?q=references.parent_hash:QmVFHYaqPHJ7vg2DcszELhyQ7pJXLjHgx33FBwgbiWRQKi">/v1/search?q=references.parent_hash:QmVFHYaqPHJ7vg2DcszELhyQ7pJXLjHgx33FBwgbiWRQKi</a></code>
+    </p>
+    <p>
+        List only images:<br>
+        <code>GET <a href="/v1/search?q=metadata.Content-Type:image*">/v1/search?q=metadata.Content-Type:image*</a></code>
+    </p>
 
+    <h2 id="metadata">Metadata</h2>
+    <p>Brand new, Tika-extracted metadata for files on IPFS!</p>
+
+    <p>Try:
+        <code>GET <a href="/v1/metadata/QmSTAxpZCmotrXVRjiaftHJRW6wXpH8tXAyax94Jhxq8bZ/">/v1/metadata/QmSTAxpZCmotrXVRjiaftHJRW6wXpH8tXAyax94Jhxq8bZ/</a></code>
+    </p>
+
+    <h2>Example</h2>
+    <pre>{
+    "metadata":{
+        "xmpDM:genre":[
+            "Soundtrack"
+        ],
+        "xmpDM:composer":[
+            "Nobuo Uematsu"
+        ],
+        "X-Parsed-By":[
+            "org.apache.tika.parser.DefaultParser",
+            "org.apache.tika.parser.mp3.Mp3Parser"
+        ],
+        "creator":[
+            ""
+        ],
+        "xmpDM:album":[
+            "\"Final Fantasy IX\" Original Soundtrack, Disk 4"
+        ],
+        "xmpDM:trackNumber":[
+            "24"
+        ],
+        "xmpDM:releaseDate":[
+            "2000"
+        ],
+        "meta:author":[
+            ""
+        ],
+        "xmpDM:artist":[
+            ""
+        ],
+        "dc:creator":[
+            ""
+        ],
+        "xmpDM:audioCompressor":[
+            "MP3"
+        ],
+        "resourceName":[
+            "24-Coca Cola TV CM 1.mp3"
+        ],
+        "title":[
+            "Coca Cola TV CM 1"
+        ],
+        "xmpDM:audioChannelType":[
+            "Stereo"
+        ],
+        "version":[
+            "MPEG 3 Layer III Version 1"
+        ],
+        "xmpDM:logComment":[
+            "eng - \nhttp://www.ffdream.com"
+        ],
+        "xmpDM:audioSampleRate":[
+            "44100"
+        ],
+        "channels":[
+            "2"
+        ],
+        "dc:title":[
+            "Coca Cola TV CM 1"
+        ],
+        "Author":[
+            ""
+        ],
+        "xmpDM:duration":[
+            "20218.76953125"
+        ],
+        "Content-Type":[
+            "audio/mpeg"
+        ],
+        "samplerate":[
+            "44100"
+        ]
+    },
+    "version":1,
+    "type":"file"
+}</pre>
 `
     <h2>Code</h2>
     <p><a href="https://github.com/ipfs-search/ipfs-search">https://github.com/ipfs-search/ipfs-search</a></p>
