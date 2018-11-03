@@ -52,6 +52,13 @@ In the near future we hope to provide an endpoint for adding new items to the cr
 ### Frontend
 The frontend is nothing more than a static front to the search API.
 
+## Requirements
+
+* Go 1.11
+* Elasticsearch
+* RabbitMQ
+* Nodejs
+
 ## Configuration
 Configuration can be done using a YAML configuration file, see [`example_config.yml`](example_config.yml).
 
