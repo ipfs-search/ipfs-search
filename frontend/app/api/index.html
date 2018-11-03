@@ -74,7 +74,7 @@
         <code>GET <a href="/v1/search?q=something">/v1/search?q=references.name:*.html</a></code>
     </p>
     <p>And by type (currently, `file` and `directory`):<br>
-        <code>GET <a href="/v1/search?q=_type=directory">/v1/search?q=_type=directory</a></code>
+        <code>GET <a href="/v1/search?q=_type:directory">/v1/search?q=_type:directory</a></code>
     </p>
     <p>Only consider objects seen within the last month:<br>
         <code>GET <a href="/v1/search?q=last-seen:&gt;now-1M">/v1/search?q=last-seen:&gt;now-1M</a></code>
