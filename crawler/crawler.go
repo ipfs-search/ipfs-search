@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs/go-ipfs-api"
@@ -33,6 +34,12 @@ func (c *Crawler) IndexableFromJSON(input []byte) (*Indexable, error) {
 	err := json.Unmarshal(input, args)
 	if err != nil {
 		return nil, err
+	}
+
+	// Later down, we assume this hash is set and we're seeing errors where
+	// this aparently seems not the case.
+	if args.Hash == "" {
+		return nil, fmt.Errorf("Empty hash in JSON: %s", input)
 	}
 
 	return &Indexable{
