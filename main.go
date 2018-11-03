@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ipfs-search/ipfs-search/commands"
+	"github.com/ipfs-search/ipfs-search/config"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
@@ -41,19 +42,44 @@ func main() {
 		},
 	}
 
-	app.Run(os.Args)
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "config, c",
+			Usage: "Load configuration from `FILE`",
+		},
+	}
+
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func getConfig(c *cli.Context) (*config.Config, error) {
+	configFile := c.GlobalString("config")
+
+	cfg, err := config.Get(configFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
 }
 
 func add(c *cli.Context) error {
 	if c.NArg() != 1 {
 		return cli.NewExitError("Please supply one hash as argument.", 1)
 	}
-
 	hash := c.Args().Get(0)
+
+	cfg, err := getConfig(c)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
 
 	fmt.Printf("Adding hash '%s' to queue\n", hash)
 
-	err := commands.AddHash(hash)
+	err = commands.AddHash(cfg, hash)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -84,14 +110,19 @@ func onSigTerm(f func()) {
 }
 
 func crawl(c *cli.Context) error {
-	fmt.Printf("Starting worker\n")
+	fmt.Println("Starting worker")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Allow SIGTERM / Control-C quit through context
 	onSigTerm(cancel)
 
-	err := commands.Crawl(ctx)
+	cfg, err := getConfig(c)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	err = commands.Crawl(ctx, cfg)
 
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)

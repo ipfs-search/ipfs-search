@@ -52,3 +52,13 @@ In the near future we hope to provide an endpoint for adding new items to the cr
 ### Frontend
 The frontend is nothing more than a static front to the search API.
 
+## Configuration
+Configuration can be done using a YAML configuration file, see [`example_config.yml`](example_config.yml).
+
+The following configuration options can be overridden by environment variables:
+* `IPFS_TIKA_URL`
+* `IPFS_API_URL`
+* `ELASTICSEARCH_URL`
+* `AMQP_URL`
+
+or by using environment variables.
