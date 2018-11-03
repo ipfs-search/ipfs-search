@@ -33,12 +33,12 @@ type messageWorker struct {
 
 // Work initiates the contained worker for a single message, acking if no error and rejecting otherwise
 func (m *messageWorker) Work(ctx context.Context) (err error) {
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		// Override original error value on panic
-	// 		err = m.recoverPanic(r)
-	// 	}
-	// }()
+	defer func() {
+		if r := recover(); r != nil {
+			// Override original error value on panic
+			err = m.recoverPanic(r)
+		}
+	}()
 
 	log.Printf("Received: %s", m.Body)
 
