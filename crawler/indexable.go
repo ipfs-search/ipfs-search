@@ -34,7 +34,7 @@ func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, erro
 		strings.Contains(err.Error(), "unrecognized type") ||
 		strings.Contains(err.Error(), "not a valid merkledag node")) {
 
-		// Attempt to index panic to prevent re-indexing
+		// Attempt to index invalid to prevent re-indexing
 		i.indexInvalid(ctx, err)
 
 		// Don't try again, return error
