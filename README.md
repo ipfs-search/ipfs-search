@@ -11,6 +11,11 @@ Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterb
 ## Docs
 A preliminary start at providing a minimal amount of documentation can be found in the [docs](docs/) folder.
 
+## Related repo's
+* [frontend](https://github.com/ipfs-search/ipfs-search-frontend)
+* [metadata API](https://github.com/ipfs-search/ipfs-metadata-api)
+* [search API](https://github.com/ipfs-search/ipfs-search-api)
+
 ## Contributors wanted
 Building a search engine like this takes a considerable amount of resources (money _and_ TLC).
 If you are able to help out with either of them, mail us at info@ipfs-search.com or find us at #ipfssearch on Freenode (or #ipfs-search:chat.weho.st on Matrix).
