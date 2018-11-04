@@ -1,33 +1,25 @@
 ---
-- name: Install nodesource repository key
-  apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key state=present
-- name: Add nodesource repository
-  apt_repository: repo='deb https://deb.nodesource.com/node_9.x xenial main' state=present update_cache=yes
-- name: Install Node
-  apt:
-    name: nodejs
-    state: latest
 - name: Create destination folder for search api
-  file: path={{ api_install_path }} state=directory
-- name: Clone ipfs-search-api repository
-  git:
-    dest: "{{ api_install_path }}/search"
-    repo: https://github.com/ipfs-search/ipfs-search-api.git
-  become: false
-- name: Install search API
-  npm:
-    path: "{{ api_install_path }}/search"
-  notify: restart ipfs-search
-  become: false
-- name: Clone ipfs-metadata-api repository
-  git:
-    dest: "{{ api_install_path }}/metadata"
-    repo: https://github.com/ipfs-search/ipfs-metadata-api.git
-  become: false
-- name: Install metadata API
-  npm:
-    path: "{{ api_install_path }}/metadata"
-  notify: restart ipfs-metadata
+  file: path={{ api_install_path }} state=directory owner="{{ lookup('env','USER') }}"
+- block:
+  - name: Clone ipfs-search-api repository
+    git:
+      dest: "{{ api_install_path }}/search"
+      repo: https://github.com/ipfs-search/ipfs-search-api.git
+    notify: restart ipfs-search
+  - name: Install search API
+    command: npm install --no-package-lock
+    args:
+      chdir: "{{ api_install_path }}/search"
+  - name: Clone ipfs-metadata-api repository
+    git:
+      dest: "{{ api_install_path }}/metadata"
+      repo: https://github.com/ipfs-search/ipfs-metadata-api.git
+    notify: restart ipfs-metadata
+  - name: Install metadata API
+    command: npm install --no-package-lock
+    args:
+      chdir: "{{ api_install_path }}/metadata"
   become: false
 - name: Create ipfs-search group
   group: name=ipfs-search system=true state=present
