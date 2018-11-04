@@ -7,7 +7,7 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "downsize": "0.0.8",
-    "elasticsearch": "^11.0.1",
+    "elasticsearch": "^15.2.0",
     "js-htmlencode": "^0.2.0",
     "mustache": "^2.2.1"
   }
