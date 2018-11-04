@@ -1,0 +1,18 @@
+tika:
+  url: http://localhost:8081  # ipfs-tika endpoint URL, also TIKA_URL in env
+  timeout: 5m  # ipfs-tika request timeout
+  max_size: 50MB  # Don't attempt to get metadata for files over this size
+ipfs:
+  api_url: localhost:5001  # IPFS API endpoint, also IPFS_API_URL in env
+  timeout: 6m  # Timeout for IPFS gateway HTTPS requests
+elasticsearch:
+  url: http://localhost:9200  # Also ELASTICSEARCH_URL in env
+amqp:
+  url: amqp://guest:guest@localhost:5672/  # Also AMQP_URL in env
+crawler:
+  retry_wait: 2s  # wait time between retries of failed requests
+  hash_wait: 100ms  # Time between launching workers
+  file_wait: 100ms
+  partial_size: 256KB  # Size for partial items - this is the default chunker block size
+  hash_workers: 140
+  file_workers: 120

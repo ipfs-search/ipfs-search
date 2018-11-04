@@ -4,7 +4,7 @@ Requires=elasticsearch.service rabbitmq-server.service ipfs.service ipfs-tika.se
 After=elasticsearch.service rabbitmq-server.service ipfs.service ipfs-tika.service
 
 [Service]
-ExecStart=/usr/local/bin/ipfs-search c
+ExecStart=/usr/local/bin/ipfs-search -c /etc/ipfs-crawler/config.yml crawl
 Restart=on-failure
 User=ipfs-crawler
 Group=ipfs-crawler
