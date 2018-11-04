@@ -29,6 +29,7 @@ func (i *Indexable) retryingGet(url string) (resp *http.Response, err error) {
 
 	tryAgain := true
 	for tryAgain {
+		log.Printf("Fetching metadata from '%s'", url)
 		resp, err = client.Get(url)
 
 		tryAgain, err = i.handleURLError(err)
