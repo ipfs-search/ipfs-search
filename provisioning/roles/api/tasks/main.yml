@@ -4,36 +4,36 @@
 - name: Add nodesource repository
   apt_repository: repo='deb https://deb.nodesource.com/node_9.x xenial main' state=present update_cache=yes
 - name: Install Node
-  apt: name={{item}} state=latest
-  with_items:
-       - nodejs
-- name: Locally install search dependencies
-  local_action: command npm install
-  args:
-    chdir: ../api/search
-  become: false
-- name: Locally install metadata dependencies
-  local_action: command npm install
-  args:
-    chdir: ../api/metadata
-  become: false
+  apt:
+    name: nodejs
+    state: latest
 - name: Create destination folder for search api
-  file: path=/usr/local/libexec/ipfs-search-api state=directory
+  file: path={{ api_install_path }} state=directory
 - name: Sync ipfs-search api
-  synchronize: src=../../../api/ dest=/usr/local/libexec/ipfs-search-api times=yes partial=yes archive=no recursive=yes
+  synchronize: src=../../../api/ dest={{ api_install_path }} times=yes partial=yes archive=no recursive=yes
+  notify:
+    - restart ipfs-search
+    - restart ipfs-metadata
+- name: Install search API
+  npm:
+    path: "{{ api_install_path }}/search"
   notify: restart ipfs-search
+- name: Install metadata API
+  npm:
+    path: "{{ api_install_path }}/metadata"
+  notify: restart ipfs-metadata
 - name: Create ipfs-search group.
   group: name=ipfs-search system=true state=present
 - name: Create ipfs-search user.
   user: name=ipfs-search comment="ipfs-search api" group=ipfs-search system=true state=present home=/nonexistent shell=/usr/sbin/nologin
 - name: Install ipfs-search service
-  copy: src=ipfs-search.service dest=/etc/systemd/system/ipfs-search.service
+  template: src=ipfs-search.service dest=/etc/systemd/system/ipfs-search.service
   notify: restart ipfs-search
 - name: Install ipfs-metadata service
-  copy: src=ipfs-metadata.service dest=/etc/systemd/system/ipfs-metadata.service
+  template: src=ipfs-metadata.service dest=/etc/systemd/system/ipfs-metadata.service
   notify: restart ipfs-metadata
 - name: Install nginx configuration
-  copy: src=nginx-api.conf dest=/etc/nginx/sites-available/api.conf
+  template: src=nginx-api.conf dest=/etc/nginx/sites-available/api.conf
   notify: restart nginx
 - name: Enable nginx configuration
   file:
