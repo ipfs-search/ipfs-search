@@ -18,6 +18,24 @@ If you are able to help out with either of them, mail us at info@ipfs-search.com
 ## Roadmap
 For discussing and suggesting features, look at the [project planning](https://github.com/ipfs-search/ipfs-search/projects).
 
+## Requirements
+
+* Go 1.11
+* Elasticsearch 5.x
+* RabbitMQ / AMQP server
+* NodeJS 9.x
+
+## Configuration
+Configuration can be done using a YAML configuration file, see [`example_config.yml`](example_config.yml).
+
+The following configuration options can be overridden by environment variables:
+* `IPFS_TIKA_URL`
+* `IPFS_API_URL`
+* `ELASTICSEARCH_URL`
+* `AMQP_URL`
+
+or by using environment variables.
+
 ## Building
 ```bash
 $ go get ./...
@@ -25,18 +43,13 @@ $ make
 ```
 
 ## Running
-First of all, make sure Ansible 2.2 is installed:
-
-```bash
-$ pip2 install 'ansible<2.3'
-```
 
 ### Local setup
 Local installation is done using vagrant:
 
 ```bash
-git clone https://github.com/ipfs-search/ipfs-search.git $GOPATH/src/github.com/ipfs-search/ipfs-search
-cd $GOPATH/src/github.com/ipfs-search/ipfs-search
+git clone https://github.com/ipfs-search/ipfs-search.git ipfs-search
+cd ipfs-search
 vagrant up
 ```
 

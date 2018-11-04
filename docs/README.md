@@ -1,6 +1,6 @@
 # ipfs-search documentation
 
-## Components
+## Architecture
 
 ipfs-search consists of the following components:
 * Sniffer
@@ -51,21 +51,3 @@ In the near future we hope to provide an endpoint for adding new items to the cr
 
 ### Frontend
 The frontend is nothing more than a static front to the search API.
-
-## Requirements
-
-* Go 1.11
-* Elasticsearch 5.x
-* RabbitMQ / AMQP server
-* NodeJS 9.x
-
-## Configuration
-Configuration can be done using a YAML configuration file, see [`example_config.yml`](example_config.yml).
-
-The following configuration options can be overridden by environment variables:
-* `IPFS_TIKA_URL`
-* `IPFS_API_URL`
-* `ELASTICSEARCH_URL`
-* `AMQP_URL`
-
-or by using environment variables.
