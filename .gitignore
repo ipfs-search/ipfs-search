@@ -33,3 +33,4 @@ provisioning/*.retry
 backup
 node_modules
 design
+deployment/*.retry
