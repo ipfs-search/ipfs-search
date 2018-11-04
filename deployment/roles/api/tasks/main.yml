@@ -9,22 +9,29 @@
     state: latest
 - name: Create destination folder for search api
   file: path={{ api_install_path }} state=directory
-- name: Sync ipfs-search api
-  synchronize: src=../../../api/ dest={{ api_install_path }} times=yes partial=yes archive=no recursive=yes
-  notify:
-    - restart ipfs-search
-    - restart ipfs-metadata
+- name: Clone ipfs-search-api repository
+  git:
+    dest: "{{ api_install_path }}/search"
+    repo: https://github.com/ipfs-search/ipfs-search-api.git
+  become: false
 - name: Install search API
   npm:
     path: "{{ api_install_path }}/search"
   notify: restart ipfs-search
+  become: false
+- name: Clone ipfs-metadata-api repository
+  git:
+    dest: "{{ api_install_path }}/metadata"
+    repo: https://github.com/ipfs-search/ipfs-metadata-api.git
+  become: false
 - name: Install metadata API
   npm:
     path: "{{ api_install_path }}/metadata"
   notify: restart ipfs-metadata
-- name: Create ipfs-search group.
+  become: false
+- name: Create ipfs-search group
   group: name=ipfs-search system=true state=present
-- name: Create ipfs-search user.
+- name: Create ipfs-search user
   user: name=ipfs-search comment="ipfs-search api" group=ipfs-search system=true state=present home=/nonexistent shell=/usr/sbin/nologin
 - name: Install ipfs-search service
   template: src=ipfs-search.service dest=/etc/systemd/system/ipfs-search.service

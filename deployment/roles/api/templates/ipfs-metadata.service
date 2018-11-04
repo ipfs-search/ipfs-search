@@ -9,6 +9,7 @@ ExecStart=/usr/bin/npm start
 Restart=on-failure
 User=ipfs-search
 Group=ipfs-search
+Environment=NODE_ENV=production
 
 [Install]
 WantedBy=default.target
