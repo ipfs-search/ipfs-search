@@ -55,9 +55,9 @@ The frontend is nothing more than a static front to the search API.
 ## Requirements
 
 * Go 1.11
-* Elasticsearch
-* RabbitMQ
-* Nodejs
+* Elasticsearch 5.x
+* RabbitMQ / AMQP server
+* NodeJS 9.x
 
 ## Configuration
 Configuration can be done using a YAML configuration file, see [`example_config.yml`](example_config.yml).
