@@ -1,0 +1,13 @@
+---
+# Common configuration for all hosts
+- hosts: all
+  become: true
+  vars:
+    - hostname: "{{ inventory_hostname }}"
+  roles:
+    - { name: common, tags: ['common'] }
+    - { name: hostname, tags: ['hostname']}
+- name: Backend
+  include: backend.yml
+- name: Frontend
+  include: frontend.yml

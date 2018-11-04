@@ -1,10 +1,10 @@
 [Unit]
-Description=ipfs metadata api
+Description=ipfs search api
 Requires=elasticsearch.service
 After=elasticsearch.service
 
 [Service]
-WorkingDirectory=/usr/local/libexec/ipfs-search-api/metadata
+WorkingDirectory={{ api_install_path }}/search
 ExecStart=/usr/bin/npm start
 Restart=on-failure
 User=ipfs-search
