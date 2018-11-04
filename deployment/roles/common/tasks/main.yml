@@ -12,8 +12,10 @@
 - name: Install misc utils
   apt: name={{item}} state=present
   with_items:
-       - screen
-       - tree
+    - apt-transport-https
+    - screen
+    - tree
+    - git
 - name: Configure journald
   copy: dest=/etc/systemd/journald.conf src=journald.conf owner=root group=root mode=644
   notify: restart journald
