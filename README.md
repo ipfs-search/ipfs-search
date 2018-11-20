@@ -20,6 +20,8 @@ A preliminary start at providing a minimal amount of documentation can be found 
 Building a search engine like this takes a considerable amount of resources (money _and_ TLC).
 If you are able to help out with either of them, mail us at info@ipfs-search.com or find us at #ipfssearch on Freenode (or #ipfs-search:chat.weho.st on Matrix).
 
+Please read the Contributing.md file before contributing.
+
 ## Roadmap
 For discussing and suggesting features, look at the [project planning](https://github.com/ipfs-search/ipfs-search/projects).
 
