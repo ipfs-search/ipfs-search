@@ -64,3 +64,30 @@ Vagrant setup does not currently start up the frontend.
 
 ### Ansible deployment
 Automated deployment can be done on any (virtual) Ubuntu 16.04 machine. The full production stack is automated and can be found [here](deployment/).
+
+## Restoring the snapshot
+Download the `ipfs-search` snapshot with `ipfs get`\
+Add the path of the downloaded snapshot to the configuration file:
+1. Open `elasticsearch.yml`
+2. Add: `path.repo: ["path/to/snapshot"]`
+3. Run the elasticsearch
+
+Now use the following command to register the repository with any name (for example: ipfs_search)
+```
+curl -X PUT "localhost:9200/_snapshot/ipfs_search" -H 'Content-Type: application/json' -d'
+{
+    "type": "fs",
+    "settings": {
+        "location": "path/to/snapshot",
+        "compress": true
+    }
+}'
+```
+To list all available snapshots:searchsearch\
+`curl -X GET "localhost:9200/_snapshot/ipfs_search/_all?pretty"`
+
+To show a specific snapshot (for example the snapshot snapshot_181025-0316)\
+`curl -X GET "localhost:9200/_snapshot/ipfs_search/snapshot_181025-0316?pretty"`
+
+Restore the specified snapshot with this command\
+`curl -X POST "localhost:9200/_snapshot/elastic_search/snapshot_181025-0316/_restore?wait_for_completion=true"`
