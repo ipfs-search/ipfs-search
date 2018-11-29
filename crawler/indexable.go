@@ -144,6 +144,8 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 
 // processList processes and indexes a file listing
 func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references []indexer.Reference) (err error) {
+	now := nowISO()
+
 	switch list.Type {
 	case "File":
 		// Add to file crawl queue
@@ -167,7 +169,8 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 			"links":      list.Links,
 			"size":       list.Size,
 			"references": references,
-			"first-seen": nowISO(),
+			"first-seen": now,
+			"last-seen":  now,
 		}
 
 		err = i.Indexer.IndexItem(ctx, "directory", i.Hash, m)
@@ -180,6 +183,8 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 
 // processList processes and indexes a single file
 func (i *Indexable) processFile(ctx context.Context, references []indexer.Reference) error {
+	now := nowISO()
+
 	m := make(metadata)
 
 	err := i.getMetadata(&m)
@@ -190,7 +195,8 @@ func (i *Indexable) processFile(ctx context.Context, references []indexer.Refere
 	// Add previously found references now
 	m["size"] = i.Size
 	m["references"] = references
-	m["first-seen"] = nowISO()
+	m["first-seen"] = now
+	m["last-seen"] = now
 
 	return i.Indexer.IndexItem(ctx, "file", i.Hash, m)
 }
