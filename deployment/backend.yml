@@ -2,7 +2,7 @@
 - hosts: backend
   become: true
   vars:
-    - es_heap_size: 12g
+    - es_heap_size: 14g
   roles:
     - { name: cgconfig, tags: ['cgconfig']}
     - { name: elasticsearch, tags: ['elasticsearch']}
