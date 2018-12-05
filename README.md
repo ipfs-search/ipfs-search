@@ -11,6 +11,11 @@ Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterb
 ## Docs
 A preliminary start at providing a minimal amount of documentation can be found in the [docs](docs/) folder.
 
+## Snapshots
+ipfs-search provides the daily snapshot for all of the indexed data using 
+[elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
+To learn more about downloading and restoring snapshots, read [docs](docs/snapshots.md)
+
 ## Related repo's
 * [frontend](https://github.com/ipfs-search/ipfs-search-frontend)
 * [metadata API](https://github.com/ipfs-search/ipfs-metadata-api)
