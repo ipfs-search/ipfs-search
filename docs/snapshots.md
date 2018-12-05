@@ -7,7 +7,7 @@ The snapshots will be available on [IPFS](https://ipfs.io/) and the hash will be
 To pin the snapshots:
 `ipfs pin add $hash`
 
-For now its size is about 325GB, So to automatically resume the pinning when interrupted you can use the following command:
+To automatically resume the pinning when interrupted you can use the following command:
 ```
 while [ 1 ]; do ipfs pin add $hash; sleep 60; done
 ```
