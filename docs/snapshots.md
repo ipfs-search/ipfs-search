@@ -1,9 +1,9 @@
 # ipfs-search snapshots
-ipfs-search provides the daily snapshots for all of the indexed data using 
-[elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
-The snapshots will be available on [IPFS](https://ipfs.io/) and the hash will be provided after the issue [ipfs/go-ipfs#5815](https://github.com/ipfs/go-ipfs/issues/5815) is solved
-<!-- The snapshots are available on [IPFS](https://ipfs.io/) with the following hash: `Qmc3RxfyZTPf7omWN1XxDkaZhp93ukfLSY14CTC8n1v5Hv` -->
+ipfs-search makes daily [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html) of the indexed data.
 
+As soon as [ipfs/go-ipfs#5815](https://github.com/ipfs/go-ipfs/issues/5815) is solved, they will be automatically published on [IPFS](https://ipfs.io/). Inthe meantime, you may contact the team on IRC/Matrix (#ipfssearch on Freenode or #ipfs-search:chat.weho.st on Matrix) for less recent 'manual' shares of the snaphshot.
+
+## Pinning
 To pin the snapshots:
 `ipfs pin add $hash`
 
@@ -12,7 +12,7 @@ To automatically resume the pinning when interrupted you can use the following c
 while [ 1 ]; do ipfs pin add $hash; sleep 60; done
 ```
 
-## Restoring the snapshot
+## Restoring 
 Download the `ipfs-search` snapshot with  `ipfs add pin` then mount it using 
 [FUSE](https://github.com/ipfs/go-ipfs/blob/master/docs/fuse.md) or use `ipfs get`\
 
