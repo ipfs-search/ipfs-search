@@ -1,14 +1,15 @@
-## ipfs-search snapshots
-ipfs-search provides the daily snapshot for all of the indexed data using 
+# ipfs-search snapshots
+ipfs-search provides the daily snapshots for all of the indexed data using 
 [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
-The snapshots are available on [IPFS](https://ipfs.io/) with the following hash: `Qmc3RxfyZTPf7omWN1XxDkaZhp93ukfLSY14CTC8n1v5Hv`
+The snapshots will be available on [IPFS](https://ipfs.io/) and the hash will be provided after the issue [ipfs/go-ipfs#5815](https://github.com/ipfs/go-ipfs/issues/5815) is solved
+<!-- The snapshots are available on [IPFS](https://ipfs.io/) with the following hash: `Qmc3RxfyZTPf7omWN1XxDkaZhp93ukfLSY14CTC8n1v5Hv` -->
 
 To pin the snapshots:
-`ipfs pin add Qmc3RxfyZTPf7omWN1XxDkaZhp93ukfLSY14CTC8n1v5Hv`
+`ipfs pin add $hash`
 
 For now its size is about 325GB, So to automatically resume the pinning when interrupted you can use the following command:
 ```
-while [ 1 ]; do ipfs pin add Qmc3RxfyZTPf7omWN1XxDkaZhp93ukfLSY14CTC8n1v5Hv; sleep 60; done
+while [ 1 ]; do ipfs pin add $hash; sleep 60; done
 ```
 
 ## Restoring the snapshot
@@ -36,3 +37,8 @@ To list all of the available snapshots:searchsearch\
 `curl -X GET "localhost:9200/_snapshot/ipfs_search/snapshot_181025-0316?pretty"`
  Restore the specified snapshot with this command\
 `curl -X POST "localhost:9200/_snapshot/elastic_search/snapshot_181025-0316/_restore?wait_for_completion=true"`
+
+For further information use [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
+
+## License
+[CC-BY-SA 4.0](https://github.com/idleberg/Creative-Commons-Markdown/blob/master/4.0/by-sa.markdown)
