@@ -1,14 +1,13 @@
 package crawler
 
 import (
-	"net"
-	"net/url"
-	// "path"
 	"context"
 	"fmt"
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs/go-ipfs-api"
 	"log"
+	"net"
+	"net/url"
 	"strings"
 	"syscall"
 	"time"
