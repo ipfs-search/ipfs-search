@@ -2,7 +2,7 @@
     "settings": {
         "index": {
             "refresh_interval": "15m",
-            "mapping.total_fields.limit": 4096
+            "mapping.total_fields.limit": 8192
         }
     },
     "mappings": {
