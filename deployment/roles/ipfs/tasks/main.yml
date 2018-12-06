@@ -22,6 +22,9 @@
     IPFS_PATH: "{{ ipfs_path }}"
   become: true
   become_user: ipfs
+# TODO: SECURITY: This requires that we trust ipify to provide the correct public IP. We could run our own ipify server.
+- name: Get my public IP from ipify.org
+  ipify_facts:
 - template: src=ipfs_config.json dest=/var/lib/ipfs/config
   notify: restart ipfs
 - name: Configure IPFS service
