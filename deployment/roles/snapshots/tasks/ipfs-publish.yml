@@ -1,0 +1,41 @@
+---
+- name: Create state directory
+  file:
+    path: "{{ snapshot_publish_state_path }}"
+    state: directory
+    owner: "{{ ipfs_user }}"
+- name: Install publish script
+  template:
+    src: ipfs-search-snapshot-publish.sh
+    dest: /usr/local/bin/ipfs-search-snapshot-publish.sh
+    mode: 0755
+- name: Add ipfs user to elasticsearch group (read access to snapshots)
+  user:
+    name: ipfs
+    groups: elasticsearch
+    append: true
+- name: Link snapshot directory into IPFS root
+  file:
+    state: link
+    src: "{{ snapshot_disk_path }}"
+    path: "{{ snapshot_publish_path }}"
+- block:
+  - name: List IPFS keys
+    command: ipfs key list
+    register: ipfs_keys
+  - name: Create publication key
+    command: "ipfs key gen --type ed25519 {{ snapshot_publish_keyname }}"
+    when: "snapshot_publish_keyname not in ipfs_keys.stdout"
+  environment:
+    IPFS_PATH: "{{ ipfs_path }}"
+  become: true
+  become_user: "{{ ipfs_user }}"
+- name: Daily IPFS publish cronjob
+  cron:
+    name: "IPFS publish snapshot"
+    cron_file: /etc/crontab
+    minute: 16
+    hour: 5
+    backup: yes
+    user: ipfs
+    job: "/usr/local/bin/ipfs-search-snapshot-publish.sh"

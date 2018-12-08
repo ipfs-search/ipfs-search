@@ -7,3 +7,7 @@
   import_tasks: disk.yml
   tags:
     - snapshots-disk
+- name: Configuring IPFS publish of disk snapshots
+  import_tasks: ipfs-publish.yml
+  tags:
+    - snapshots-ipfs-publish

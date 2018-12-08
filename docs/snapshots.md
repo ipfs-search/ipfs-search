@@ -1,44 +1,37 @@
 # ipfs-search snapshots
-ipfs-search makes daily [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html) of the indexed data.
+ipfs-search makes daily [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html) of the indexed data.
 
-As soon as [ipfs/go-ipfs#5815](https://github.com/ipfs/go-ipfs/issues/5815) is solved, they will be automatically published on [IPFS](https://ipfs.io/). Inthe meantime, you may contact the team on IRC/Matrix (#ipfssearch on Freenode or #ipfs-search:chat.weho.st on Matrix) for less recent 'manual' shares of the snaphshot.
+We are currently experimenting with automated publishing of these daily snapshots over IPFS. This should allow anyone to inspect our index and/or to fork or mirror our service. The daily snapshots, for now, are published to:
+https://gateway.ipfs.io/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi
+
+As of the time of writing (April 5, 2020) the full index is about 425 GB.
 
 ## Pinning
 To pin the snapshots:
-`ipfs pin add $hash`
+`ipfs pin add /ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi`
 
 To automatically resume the pinning when interrupted you can use the following command:
 ```
-while [ 1 ]; do ipfs pin add $hash; sleep 60; done
+while [ 1 ]; do ipfs pin add --progress /ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi; sleep 60; done
 ```
 
-## Restoring 
-Download the `ipfs-search` snapshot with  `ipfs add pin` then mount it using 
-[FUSE](https://github.com/ipfs/go-ipfs/blob/master/docs/fuse.md) or use `ipfs get`\
+## Restoring
+It should be possible to load the snapshots directly through a (local) IPFS gateway into Elasticsearch, although this has not yet been tested and it is most certainly advisable to pin the dataset as per the instructions above.
 
-Add the path of the downloaded snapshot to the configuration file:
-1. Open `elasticsearch.yml`
-2. Add: `path.repo: ["path/to/snapshot"]`
-3. Run the elasticsearch
- Now use the following command to register the repository with any name (for example: ipfs_search)
-```
-curl -X PUT "localhost:9200/_snapshot/ipfs_search" -H 'Content-Type: application/json' -d'
-{
-    "type": "fs",
-    "settings": {
-        "location": "path/to/snapshot",
-        "compress": true
-    }
-}'
-```
-To list all of the available snapshots:searchsearch\
-`curl -X GET "localhost:9200/_snapshot/ipfs_search/_all?pretty"`
- To show a specific snapshot (for example the snapshot snapshot_181025-0316)\
-`curl -X GET "localhost:9200/_snapshot/ipfs_search/snapshot_181025-0316?pretty"`
- Restore the specified snapshot with this command\
-`curl -X POST "localhost:9200/_snapshot/elastic_search/snapshot_181025-0316/_restore?wait_for_completion=true"`
+In order to load the snapshots, first make sure you're running a compatible (or equal) version of Elasticsearch and that there is enough disk space available (twice the current size of the index, so ~ 1TB as of the time of writing).
 
-For further information use [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
+The steps are as follows:
 
-## License
+1. [Run an IPFS Node](https://docs.ipfs.io/introduction/usage/)
+2. Pin the index snapshot (as per instructions above)
+3. [Run Elasticsearch 5.x](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/install-elasticsearch.html)
+4. Register the local IPFS gateway as a [readonly Elasticsearch snapshot repository](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_read_only_url_repository) through the URL `http://localhost:8080/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi/backup`
+5. List available snapshots with `curl -X GET "localhost:9200/_snapshot/<repo_name>/_all?pretty"
+`, testing your prior configuration
+6. [Restore the snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_restore) of your choice: `curl -X POST "localhost:9200/_snapshot/<repo_name>/<snapshot_id>/_restore?pretty"
+`
+7. Wait... now...
+8. Query away! You now run an exact copy of the ipfs-search.com index!
+
+## Snapshot data license
 [CC-BY-SA 4.0](https://github.com/idleberg/Creative-Commons-Markdown/blob/master/4.0/by-sa.markdown)

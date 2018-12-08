@@ -20,7 +20,10 @@
       }
   when: snapshot_check.status == 404
 - name: Install snapshot script
-  template: src=ipfs-search-snapshot.sh dest=/usr/local/bin/ipfs-search-snapshot-disk.sh mode=755
+  template:
+    src: ipfs-search-snapshot.sh
+    dest: /usr/local/bin/ipfs-search-snapshot-disk.sh
+    mode: 0755
   vars:
     - snapshot_name: "{{ snapshot_disk_name }}"
 - name: Elasticsearch daily snapshot cronjob
