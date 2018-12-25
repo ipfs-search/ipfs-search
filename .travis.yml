@@ -19,7 +19,7 @@ services:
 #     - $GOPATH/src
 #     - $GOPATH/pkg
 
-install: go get -t -v ./...
+install: env GO111MODULE=on go get -t -v ./...
 
 before_script:
   # Install CodeClimate test reporter
@@ -29,6 +29,7 @@ before_script:
 
 script: |
   # Thank https://stackoverflow.com/questions/45776043/codeclimate-test-coverage-formatter-for-golang
+  export GO111MODULE=on
   RC=0
   for pkg in $(go list ./... | grep -v vendor); do
       go test -coverprofile=$(echo $pkg | tr / -).cover $pkg || RC=$?
