@@ -13,7 +13,7 @@ type existingItem struct {
 	itemType   string
 }
 
-// ReferenceFromIndexable generates a new reference for a given indexable
+// referenceFromIndexable generates a new reference for a given indexable
 func referenceFromExisting(i *existingItem) *indexer.Reference {
 	return &indexer.Reference{
 		Name:       i.Name,
@@ -34,7 +34,7 @@ func (i *existingItem) updateReferences() {
 	i.references = append(i.references, *newRef)
 }
 
-// updateItem updates references (and later also last seen date)
+// updateItem updates references and last seen date
 func (i *existingItem) updateIndex(ctx context.Context) error {
 	properties := metadata{
 		"references": i.references,
