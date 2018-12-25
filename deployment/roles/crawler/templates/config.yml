@@ -1,5 +1,5 @@
 tika:
-  url: http://localhost:8081  # ipfs-tika endpoint URL, also TIKA_URL in env
+  url: http://localhost:8231  # ipfs-tika endpoint URL, also TIKA_URL in env
   timeout: 5m  # ipfs-tika request timeout
   max_size: 50MB  # Don't attempt to get metadata for files over this size
 ipfs:

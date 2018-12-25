@@ -6,7 +6,8 @@
   notify: restart ipfs-tika
 - group: name=ipfs-tika system=true state=present
 - user: name=ipfs-tika comment="IPFS tika daemon" group=ipfs-tika system=true state=present home="/nonexistent" shell=/usr/sbin/nologin
-- template: src=ipfs-tika.service dest=/etc/systemd/system/ipfs-tika.service
+- name: systemd service
+  template: src=ipfs-tika.service dest=/etc/systemd/system/ipfs-tika.service
   notify: restart ipfs-tika
 - service: name=ipfs-tika enabled=yes state=started
   notify: restart ipfs-tika

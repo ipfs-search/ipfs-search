@@ -11,6 +11,7 @@ MemoryAccounting=yes
 MemoryLimit=4096M
 Nice=10
 Restart=on-failure
+Environment=IPFS_TIKA_LISTEN_PORT=8231
 
 [Install]
 WantedBy=default.target
