@@ -8,6 +8,10 @@
     repo: 'ppa:certbot/certbot'
 - name: certbot installed
   apt:
+    name: certbot
+    state: latest
+- name: python-certbot-nginx installed
+  apt:
     name: python-certbot-nginx
     state: latest
 - name: setup certificates
