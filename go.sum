@@ -46,7 +46,7 @@ github.com/multiformats/go-multiaddr v1.3.0 h1:qv23SBIX9ayNNoGuPFp26xW9cFl3gR4iR
 github.com/multiformats/go-multiaddr v1.3.0/go.mod h1:1JAWc2R8uiQTLrCHI/lmOkXYu5B8025fQbZjq8//YgY=
 github.com/multiformats/go-multiaddr-net v1.6.3 h1:Who/zy46KcaQjgGqT8hXEtBHnWAWHk33eqqQte+nhW8=
 github.com/multiformats/go-multiaddr-net v1.6.3/go.mod h1:AO4WqKzxLt+paJ0N0kufj6teQ2R6fZbnItDvGTwilmk=
-github.com/multiformats/go-multihash v1.0.8 h1:v/1HVWH2gq7IZGnFXrTsjoG2I5XIsU5gXiGH5SH915k=
+github.com/multiformats/go-multihash v1.0.8 h1:pyowaBSivNxBr137ZjYkr0q4o41MKSJVPKuO7F7AAfY=
 github.com/multiformats/go-multihash v1.0.8/go.mod h1:sT17phG+xVgnrZc8ht/ZoCIV0sKRwvmZkXk46UfSxM4=
 github.com/pkg/errors v0.8.0 h1:WdK/asTD0HN+q6hsWO3/vpuAkAr+tw6aNJNDFFf0+qw=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
