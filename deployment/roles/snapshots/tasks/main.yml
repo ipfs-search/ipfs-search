@@ -1,18 +1,18 @@
 ---
 - name: Check snapshot repository
   uri:
-    url: http://127.0.0.1:9200/_snapshot/ipfs
+    url: http://127.0.0.1:9200/_snapshot/ipfs_s3
     status_code: 200, 404
   register: snapshot_check
 - name: Create snapshot repository
   uri:
-    url: http://127.0.0.1:9200/_snapshot/ipfs
+    url: http://127.0.0.1:9200/_snapshot/ipfs_s3
     method: PUT
     body: |
       {
-        "type": "fs",
+        "type": "s3",
         "settings": {
-          "location": "/var/lib/elasticsearch/backup"
+          "bucket": "ipfs-search-snapshots"
         }
       }
   when: snapshot_check.status == 404
