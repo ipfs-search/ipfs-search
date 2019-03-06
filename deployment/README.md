@@ -13,6 +13,9 @@ other-or-same-host.name.com
 
 You may refer to the hosts file by setting `ANSIBLE_INVENTORY=<hosts_file>` in your environment.
 
+## Amazon S3 credentials
+Currently, the `snapshots` role expects Amazon credentials to be set up manually. You can might either disable/skip the `snapshots` role or set up a bucket and authentication. See: https://www.elastic.co/guide/en/elasticsearch/plugins/6.5/repository-s3-client.html
+
 ## Bootstrappeing
 The `bootstrap` playbook will make sure `sudo` and `Ansible` are available on the machine, assuming initial SSH root access. It creates a remote SSH user with pubkey authentication and sudo rights on the server(s) and completely disables password login.
 
