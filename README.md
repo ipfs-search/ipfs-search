@@ -4,7 +4,7 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/test_coverage)](https://codeclimate.com/github/ipfs-search/ipfs-search/test_coverage)
 [![GoDoc](https://godoc.org/github.com/ipfs-search/ipfs-search?status.svg)](https://godoc.org/github.com/ipfs-search/ipfs-search)
 [![Backers on Open Collective](https://opencollective.com/ipfs-search/backers/badge.svg)](#backers)
- [![Sponsors on Open Collective](https://opencollective.com/ipfs-search/sponsors/badge.svg)](#sponsors) 
+ [![Sponsors on Open Collective](https://opencollective.com/ipfs-search/sponsors/badge.svg)](#sponsors)
 
 Search engine for the [Interplanetary Filesystem](https://ipfs.io). Sniffs the DHT gossip and indexes file and directory hashes.
 
@@ -32,7 +32,7 @@ For discussing and suggesting features, look at the [project planning](https://g
 
 ## Requirements
 
-* Go 1.11
+* Go 1.12
 * Elasticsearch 5.x
 * RabbitMQ / AMQP server
 * NodeJS 9.x
@@ -87,7 +87,7 @@ Automated deployment can be done on any (virtual) Ubuntu 16.04 machine. The full
 
 ## Contributors
 
-This project exists thanks to all the people who contribute. 
+This project exists thanks to all the people who contribute.
 <a href="https://github.com/ipfs-search/ipfs-search/graphs/contributors"><img src="https://opencollective.com/ipfs-search/contributors.svg?width=890&button=false" /></a>
 
 
