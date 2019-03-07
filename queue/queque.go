@@ -71,7 +71,8 @@ func (q *Queue) String() string {
 // NewQueue creates a named queue on a given chennel
 func (c *Channel) NewQueue(name string) (*Queue, error) {
 	args := amqp.Table{
-		"x-max-priority": 9,
+		"x-max-priority": 9,                   // Enable all 9 priorities
+		"x-message-ttl":  1000 * 60 * 60 * 24, // Expire messages after 24 hours
 	}
 
 	q, err := c.Channel.QueueDeclare(
