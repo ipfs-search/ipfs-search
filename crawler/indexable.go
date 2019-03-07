@@ -6,6 +6,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/indexer"
 	"github.com/ipfs/go-ipfs-api"
 	"log"
+	"math/rand"
 	"net"
 	"net/url"
 	"strings"
@@ -125,13 +126,21 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 			ParentHash: i.Hash,
 		}
 
+		// Generate random lower priority for items in this directory
+		// Rationale; directories might have different availability but
+		// within a directory, items are likely to have similar availability.
+		// We want consumers to get a varied mixture of availability, for
+		// consistent overall indexing load.
+
+		priority := uint8(rand.Intn(8))
+
 		switch link.Type {
 		case "File":
 			// Add file to crawl queue, with lower priority
-			err = i.FileQueue.Publish(dirArgs, 8)
+			err = i.FileQueue.Publish(dirArgs, priority)
 		case "Directory":
 			// Add directory to crawl queue, with lower priority
-			err = i.HashQueue.Publish(dirArgs, 8)
+			err = i.HashQueue.Publish(dirArgs, priority)
 		default:
 			log.Printf("Type '%s' skipped for %s", link.Type, i)
 			i.indexInvalid(ctx, fmt.Errorf("Unknown type: %s", link.Type))
