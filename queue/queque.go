@@ -2,6 +2,7 @@ package queue
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/streadway/amqp"
 )
 
@@ -70,9 +71,13 @@ func (q *Queue) String() string {
 
 // NewQueue creates a named queue on a given chennel
 func (c *Channel) NewQueue(name string) (*Queue, error) {
+	deadQueue := fmt.Sprintf("%s-dead", name)
+
 	args := amqp.Table{
-		"x-max-priority": 9,                   // Enable all 9 priorities
-		"x-message-ttl":  1000 * 60 * 60 * 24, // Expire messages after 24 hours
+		"x-max-priority":            9,                   // Enable all 9 priorities
+		"x-message-ttl":             1000 * 60 * 60 * 24, // Expire messages after 24 hours
+		"x-dead-letter-exchange":    "",                  // Anything failing or expiring goes here
+		"x-dead-letter-routing-key": deadQueue,
 	}
 
 	q, err := c.Channel.QueueDeclare(
@@ -82,6 +87,18 @@ func (c *Channel) NewQueue(name string) (*Queue, error) {
 		false, // exclusive
 		false, // no-wait
 		args,  // arguments
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = c.Channel.QueueDeclare(
+		deadQueue, // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
 	)
 	if err != nil {
 		return nil, err
