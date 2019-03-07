@@ -40,7 +40,7 @@ func (m *messageWorker) Work(ctx context.Context) (err error) {
 		}
 	}()
 
-	log.Printf("Received: %s", m.Body)
+	log.Printf("Received: %s (priority: %d)", m.Body, m.Priority)
 
 	// Create new worker for the actual work and perform it
 	worker := m.Factory(m.Delivery)
