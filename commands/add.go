@@ -19,9 +19,10 @@ func AddHash(cfg *config.Config, hash string) error {
 		return err
 	}
 
+	// Add with highest priority
 	err = queue.Publish(&crawler.Args{
 		Hash: hash,
-	})
+	}, 9)
 
 	return err
 }

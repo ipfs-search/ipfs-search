@@ -70,13 +70,17 @@ func (q *Queue) String() string {
 
 // NewQueue creates a named queue on a given chennel
 func (c *Channel) NewQueue(name string) (*Queue, error) {
+	args := amqp.Table{
+		"x-max-priority": 9,
+	}
+
 	q, err := c.Channel.QueueDeclare(
 		name,  // name
 		true,  // durable
 		false, // delete when unused
 		false, // exclusive
 		false, // no-wait
-		nil,   // arguments
+		args,  // arguments
 	)
 	if err != nil {
 		return nil, err
@@ -99,7 +103,8 @@ func (conn *Connection) NewChannelQueue(name string) (*Queue, error) {
 }
 
 // Publish adds a task with specified params to the Queue
-func (q *Queue) Publish(params interface{}) error {
+// priority: higher number, higher priority
+func (q *Queue) Publish(params interface{}, priority uint8) error {
 	body, err := json.Marshal(params)
 	if err != nil {
 		return err
@@ -114,6 +119,7 @@ func (q *Queue) Publish(params interface{}) error {
 			DeliveryMode: amqp.Persistent,
 			ContentType:  "application/json",
 			Body:         body,
+			Priority:     priority,
 		})
 	if err != nil {
 		return err
