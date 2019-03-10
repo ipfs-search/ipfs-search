@@ -1,22 +1,12 @@
 ---
 - name: Assure we have a containing folder with permission to clone in
   file: path="{{ frontend_install_path }}/.." state=directory owner="{{ lookup('env','USER') }}"
-# Disabled while fixing frontend build
-# - block:
-#   - name: Clone frontend
-#     git:
-#       repo: https://github.com/ipfs-search/ipfs-search-frontend.git
-#       dest: "{{ frontend_install_path }}"
-#       version: master
-#   - name: Install frontend dependencies
-#     command: npm install --no-package-lock
-#     args:
-#       chdir: "{{ frontend_install_path }}"
-#   - name: Build frontend
-#     shell: "$(npm bin)/gulp build"
-#     args:
-#       chdir: "{{ frontend_install_path }}"
-#   become: false
+- block:
+  - name: Clone frontend
+    git:
+      repo: https://github.com/ipfs-search/ipfs-search-frontend.git
+      dest: "{{ frontend_install_path }}"
+      version: v2_rendered
 - name: Install nginx configuration
   template: src=nginx-frontend.conf dest=/etc/nginx/sites-available/frontend.conf
   notify: restart nginx
