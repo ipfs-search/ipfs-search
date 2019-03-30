@@ -132,7 +132,7 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 		// We want consumers to get a varied mixture of availability, for
 		// consistent overall indexing load.
 
-		priority := uint8(rand.Intn(8))
+		priority := uint8(1 + rand.Intn(7))
 
 		switch link.Type {
 		case "File":
