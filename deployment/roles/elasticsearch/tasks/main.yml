@@ -20,7 +20,7 @@
   register: es_plugins
 - name: Remove S3 repository plugin
   command: /usr/share/elasticsearch/bin/elasticsearch-plugin remove -s repository-s3
-  when: es_installed.changed and 'repository-s3' in es_plugins
+  when: es_installed.changed and 'repository-s3' in es_plugins.stdout
 - name: Install S3 repository plugin
   command: /usr/share/elasticsearch/bin/elasticsearch-plugin install -s repository-s3
   when: es_installed.changed
