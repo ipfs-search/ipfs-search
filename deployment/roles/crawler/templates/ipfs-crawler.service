@@ -16,7 +16,7 @@ ProtectSystem=true
 PrivateDevices=true
 PrivateTmp=true
 MemoryAccounting=yes
-MemoryLimit=1024M
+MemoryLimit=2048M
 # As yet unsupported security options
 #ControlGroupAttribute=memory.swappiness 1
 #PrivateUser=true
