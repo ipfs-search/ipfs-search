@@ -10,7 +10,7 @@
 - name: Install JRE
   apt: pkg=default-jre state=present
 - name: Install elasticsearch
-  apt: pkg=elasticsearch state=latest
+  apt: pkg=elasticsearch state=present
   notify: restart elasticsearch
   register: es_installed
 - name: Create snapshot directory
