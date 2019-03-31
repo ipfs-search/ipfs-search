@@ -16,7 +16,7 @@ ProtectSystem=true
 PrivateDevices=true
 PrivateTmp=true
 MemoryAccounting=yes
-MemoryLimit=2048M
+MemoryLimit={{ crawler_memlimit }}
 # As yet unsupported security options
 #ControlGroupAttribute=memory.swappiness 1
 #PrivateUser=true

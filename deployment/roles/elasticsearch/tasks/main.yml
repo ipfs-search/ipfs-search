@@ -28,10 +28,10 @@
 - name: Configuration
   template: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml
   notify: restart elasticsearch
-- name: Increase elasticsearch heap size minimum
+- name: Configure elasticsearch heap size minimum
   lineinfile: dest=/etc/elasticsearch/jvm.options regexp='-Xms' line='-Xms{{ es_heap_size }}'
   notify: restart elasticsearch
-- name: Increase elasticsearch heap size maximum
+- name: Configure elasticsearch heap size maximum
   lineinfile: dest=/etc/elasticsearch/jvm.options regexp='-Xmx' line='-Xmx{{ es_heap_size }}'
   notify: restart elasticsearch
 # - name: Stretch elasticsearch memory limit

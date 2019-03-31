@@ -2,7 +2,9 @@
 - hosts: backend
   become: true
   vars:
-    - es_heap_size: 22g
+    - es_heap_size: 20g
+    - ipfs_memlimit: 12G
+    - crawler_memlimit: 4G
   roles:
     - { name: cgconfig, tags: ['cgconfig']}
     - { name: elasticsearch, tags: ['elasticsearch']}
