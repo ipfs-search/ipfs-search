@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/streadway/amqp"
-	"log"
 	"time"
 )
+
+const confirmTimeout = 10 * time.Second
 
 // Connection wraps an AMQP connection
 type Connection struct {
@@ -156,17 +157,12 @@ func (q *Queue) Publish(params interface{}, priority uint8) error {
 		return err
 	}
 
-	log.Printf("Waiting for confirmation of one publishing")
-
 	select {
 	case confirmed := <-q.Channel.Confirms:
-		if confirmed.Ack {
-			log.Printf("Confirmed delivery with delivery tag: %d", confirmed.DeliveryTag)
-		} else {
-			log.Printf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
+		if !confirmed.Ack {
 			return fmt.Errorf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
 		}
-	case <-time.After(10 * time.Second):
+	case <-time.After(confirmTimeout):
 		return fmt.Errorf("Timeout waiting for confirmation of publish!")
 	}
 
