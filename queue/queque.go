@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/streadway/amqp"
 	"log"
+	"time"
 )
 
 // Connection wraps an AMQP connection
@@ -156,11 +157,17 @@ func (q *Queue) Publish(params interface{}, priority uint8) error {
 	}
 
 	log.Printf("Waiting for confirmation of one publishing")
-	if confirmed := <-q.Channel.Confirms; confirmed.Ack {
-		log.Printf("Confirmed delivery with delivery tag: %d", confirmed.DeliveryTag)
-	} else {
-		log.Printf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
-		return fmt.Errorf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
+
+	select {
+	case confirmed := <-q.Channel.Confirms:
+		if confirmed.Ack {
+			log.Printf("Confirmed delivery with delivery tag: %d", confirmed.DeliveryTag)
+		} else {
+			log.Printf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
+			return fmt.Errorf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
+		}
+	case <-time.After(10 * time.Second):
+		return fmt.Errorf("Timeout waiting for confirmation of publish!")
 	}
 
 	return nil
