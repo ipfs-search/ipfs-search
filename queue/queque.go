@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/streadway/amqp"
+	"log"
 )
 
 // Connection wraps an AMQP connection
@@ -24,11 +25,13 @@ func NewConnection(url string) (*Connection, error) {
 
 // NewChannel initialises an AMQP channel
 func (conn *Connection) NewChannel() (*Channel, error) {
+	// Create channel
 	ch, err := conn.Channel()
 	if err != nil {
 		return nil, err
 	}
 
+	// Set Qos
 	err = ch.Qos(
 		1,     // prefetch count
 		0,     // prefetch size
@@ -38,14 +41,23 @@ func (conn *Connection) NewChannel() (*Channel, error) {
 		return nil, err
 	}
 
+	// Enable confirm
+	if err := ch.Confirm(false); err != nil {
+		return nil, fmt.Errorf("Channel could not be put into confirm mode: %s", err)
+	}
+
+	confirms := ch.NotifyPublish(make(chan amqp.Confirmation, 1))
+
 	return &Channel{
-		Channel: ch,
+		Channel:  ch,
+		Confirms: confirms,
 	}, nil
 }
 
 // Channel wraps an AMQP channel
 type Channel struct {
 	*amqp.Channel
+	Confirms chan amqp.Confirmation
 }
 
 // Close closes a Channel
@@ -141,6 +153,14 @@ func (q *Queue) Publish(params interface{}, priority uint8) error {
 		})
 	if err != nil {
 		return err
+	}
+
+	log.Printf("Waiting for confirmation of one publishing")
+	if confirmed := <-q.Channel.Confirms; confirmed.Ack {
+		log.Printf("Confirmed delivery with delivery tag: %d", confirmed.DeliveryTag)
+	} else {
+		log.Printf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
+		return fmt.Errorf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
 	}
 
 	return nil
