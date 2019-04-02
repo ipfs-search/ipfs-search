@@ -13,6 +13,9 @@ Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterb
 ## Docs
 A preliminary start at providing a minimal amount of documentation can be found in the [docs](docs/) folder.
 
+## Contact
+Please find us on our Freenode/[Riot/Matrix](https://riot.im/app/#/room/#ipfssearch:matrix.org) channel #ipfssearch.
+
 ## Snapshots
 ipfs-search provides the daily snapshot for all of the indexed data using
 [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
