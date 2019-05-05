@@ -5,7 +5,7 @@ After=ipfs.service rabbitmq-server.service
 
 [Service]
 ExecStart=/bin/bash /usr/local/bin/dht-snifloop.sh
-Restart=on-failure
+Restart=always
 User=snifloop
 Group=ipfs
 Environment="IPFS_PATH={{ ipfs_path }}"

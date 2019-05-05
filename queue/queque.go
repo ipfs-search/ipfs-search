@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/streadway/amqp"
+	"time"
 )
+
+const confirmTimeout = 10 * time.Second
 
 // Connection wraps an AMQP connection
 type Connection struct {
@@ -24,11 +27,13 @@ func NewConnection(url string) (*Connection, error) {
 
 // NewChannel initialises an AMQP channel
 func (conn *Connection) NewChannel() (*Channel, error) {
+	// Create channel
 	ch, err := conn.Channel()
 	if err != nil {
 		return nil, err
 	}
 
+	// Set Qos
 	err = ch.Qos(
 		1,     // prefetch count
 		0,     // prefetch size
@@ -38,14 +43,23 @@ func (conn *Connection) NewChannel() (*Channel, error) {
 		return nil, err
 	}
 
+	// Enable confirm
+	if err := ch.Confirm(false); err != nil {
+		return nil, fmt.Errorf("Channel could not be put into confirm mode: %s", err)
+	}
+
+	confirms := ch.NotifyPublish(make(chan amqp.Confirmation, 1))
+
 	return &Channel{
-		Channel: ch,
+		Channel:  ch,
+		Confirms: confirms,
 	}, nil
 }
 
 // Channel wraps an AMQP channel
 type Channel struct {
 	*amqp.Channel
+	Confirms chan amqp.Confirmation
 }
 
 // Close closes a Channel
@@ -141,6 +155,15 @@ func (q *Queue) Publish(params interface{}, priority uint8) error {
 		})
 	if err != nil {
 		return err
+	}
+
+	select {
+	case confirmed := <-q.Channel.Confirms:
+		if !confirmed.Ack {
+			return fmt.Errorf("Failed delivery of delivery tag: %d", confirmed.DeliveryTag)
+		}
+	case <-time.After(confirmTimeout):
+		return fmt.Errorf("Timeout waiting for confirmation of publish!")
 	}
 
 	return nil

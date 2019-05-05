@@ -6,7 +6,19 @@
     git:
       repo: https://github.com/ipfs-search/ipfs-search-frontend.git
       dest: "{{ frontend_install_path }}"
-      version: v2_rendered
+      version: v2
+    register: git
+  - block:
+    - name: Install frontend dependencies
+      command: npm install
+      args:
+        chdir: "{{ frontend_install_path }}"
+    - name: Build frontend
+      shell: "$(npm bin)/ember build --environment production"
+      args:
+        chdir: "{{ frontend_install_path }}"
+    when: git.changed
+  become: false
 - name: Install nginx configuration
   template: src=nginx-frontend.conf dest=/etc/nginx/sites-available/frontend.conf
   notify: restart nginx
