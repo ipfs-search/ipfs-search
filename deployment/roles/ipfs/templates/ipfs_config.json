@@ -149,8 +149,8 @@
     "DisableBandwidthMetrics": true,
     "DisableNatPortMap": true,
     "DisableRelay": false,
-    "EnableRelayHop": true,
-    "EnableAutoNATService": true
+    "EnableRelayHop": false,
+    "EnableAutoNATService": false
   },
   "ConnMgr": {
     "Type": "basic",
