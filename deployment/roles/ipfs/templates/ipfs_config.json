@@ -155,7 +155,7 @@
   "ConnMgr": {
     "Type": "basic",
     "LowWater": 600,
-    "HighWater": 28800,
+    "HighWater": 14400,
     "GracePeriod": "20s"
   }
 }
