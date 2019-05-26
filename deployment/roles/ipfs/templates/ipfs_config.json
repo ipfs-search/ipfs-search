@@ -153,9 +153,9 @@
     "EnableAutoNATService": false,
     "ConnMgr": {
       "Type": "basic",
-      "LowWater": 600,
-      "HighWater": 14400,
-      "GracePeriod": "20s"
+      "LowWater": 2000,
+      "HighWater": 8000,
+      "GracePeriod": "5m"
     }
   }
 }
