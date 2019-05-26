@@ -150,12 +150,12 @@
     "DisableNatPortMap": true,
     "DisableRelay": false,
     "EnableRelayHop": false,
-    "EnableAutoNATService": false
-  },
-  "ConnMgr": {
-    "Type": "basic",
-    "LowWater": 600,
-    "HighWater": 14400,
-    "GracePeriod": "20s"
+    "EnableAutoNATService": false,
+    "ConnMgr": {
+      "Type": "basic",
+      "LowWater": 600,
+      "HighWater": 14400,
+      "GracePeriod": "20s"
+    }
   }
 }
