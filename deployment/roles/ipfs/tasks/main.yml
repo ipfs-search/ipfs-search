@@ -1,6 +1,6 @@
 ---
 - name: download go-ipfs binary
-  get_url: url={{ binary_url }} checksum=sha256:{{ binary_hash }} dest=/tmp/go-ipfs.tar.gz
+  get_url: url={{ binary_url }} checksum=sha512:{{ binary_sha512 }} dest=/tmp/go-ipfs.tar.gz
   register: binary
 - block:
     - name: extract go-ipfs archive
