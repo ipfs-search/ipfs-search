@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Tail IPFS log
+# Get hashes for handleAddProvider messages
+# Filter IPFS README and demo hashes
+# Add null character every 100 lines
+# Sort and filter unique entries after every null character and call ipfs-search add for every hash
+
 while true
 do
 	echo "Script stopped, starting again"
