@@ -149,13 +149,14 @@
     "DisableBandwidthMetrics": true,
     "DisableNatPortMap": true,
     "DisableRelay": false,
-    "EnableRelayHop": false,
+    "EnableRelayHop": true,
+    "EnableAutoRelay": true,
     "EnableAutoNATService": false,
     "ConnMgr": {
       "Type": "basic",
-      "LowWater": 2000,
-      "HighWater": 6000,
-      "GracePeriod": "5m"
+      "LowWater": 3000,
+      "HighWater": 8000,
+      "GracePeriod": "15m"
     }
   }
 }
