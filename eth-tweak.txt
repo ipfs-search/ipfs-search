@@ -1,4 +1,0 @@
-ethtool -K eth0 tx-tcp6-segmentation off
-ethtool -K eth0 tx-tcp-segmentation off
-ethtool -K eth0 gso off
-ethtool -K eth0 gro off
