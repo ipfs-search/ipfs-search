@@ -30,5 +30,9 @@ func Default() *Config {
 			RetryWait:   2 * time.Duration(time.Second),
 			PartialSize: 262144,
 		},
+		Sniffer{
+			LastSeenExpiration: 30 * time.Duration(time.Minute),
+			LastSeenPruneLen:   1024,
+		},
 	}
 }

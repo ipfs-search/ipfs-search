@@ -16,6 +16,9 @@ crawler:
   partial_size: 256KB  # Size for partial items - this is the default chunker block size
   hash_workers: 140
   file_workers: 120
+sniffer:
+  lastseen_expiration: 30m
+  lastseen_prunelen: 1024
 # Future features; automatic index upgrading and indexes per mime type
 index:
   types:

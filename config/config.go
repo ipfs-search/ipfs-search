@@ -6,6 +6,7 @@ import (
 	"github.com/c2h5oh/datasize"
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/crawler/factory"
+	"github.com/ipfs-search/ipfs-search/sniffer"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -41,12 +42,18 @@ type Crawler struct {
 	FileWorkers uint              `yaml:"file_workers"`
 }
 
+type Sniffer struct {
+	LastSeenExpiration time.Duration `yaml:"lastseen_expiration`
+	LastSeenPruneLen   int           `yaml:"lastseen_prunelen`
+}
+
 type Config struct {
 	Tika          `yaml:"tika"`
 	IPFS          `yaml:"ipfs"`
 	ElasticSearch `yaml:"elasticsearch"`
 	AMQP          `yaml:"amqp"`
 	Crawler       `yaml:"crawler"`
+	Sniffer       `yaml:"sniffer"`
 }
 
 func (c *Config) CrawlerConfig() *crawler.Config {
@@ -56,6 +63,15 @@ func (c *Config) CrawlerConfig() *crawler.Config {
 		MetadataMaxSize: uint64(c.Tika.MetadataMaxSize),
 		RetryWait:       c.Crawler.RetryWait,
 		PartialSize:     uint64(c.Crawler.PartialSize),
+	}
+}
+
+func (c *Config) SnifferConfig() *sniffer.Config {
+	return &sniffer.Config{
+		IpfsAPI:            c.IPFS.IpfsAPI,
+		AMQPURL:            c.AMQP.AMQPURL,
+		LastSeenExpiration: c.Sniffer.LastSeenExpiration,
+		LastSeenPruneLen:   c.Sniffer.LastSeenPruneLen,
 	}
 }
 

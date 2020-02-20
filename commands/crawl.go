@@ -9,22 +9,6 @@ import (
 	"log"
 )
 
-// block blocks until context is cancelled
-func block(ctx context.Context) error {
-	for {
-		<-ctx.Done()
-		return ctx.Err()
-	}
-}
-
-// log errors from errc
-func errorLoop(errc <-chan error) {
-	for {
-		err := <-errc
-		log.Printf("%T: %v", err, err)
-	}
-}
-
 func startWorkers(ctx context.Context, cfg *config.Config, errc chan<- error) (*errgroup.Group, error) {
 	factory, err := factory.New(cfg.FactoryConfig(), errc)
 	if err != nil {

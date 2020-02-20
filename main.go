@@ -40,6 +40,12 @@ func main() {
 			Usage:   "start crawler",
 			Action:  crawl,
 		},
+		{
+			Name:    "sniff",
+			Aliases: []string{"c"},
+			Usage:   "start sniffer",
+			Action:  sniff,
+		},
 	}
 
 	app.Flags = []cli.Flag{
@@ -123,6 +129,28 @@ func crawl(c *cli.Context) error {
 	}
 
 	err = commands.Crawl(ctx, cfg)
+
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	return nil
+}
+
+func sniff(c *cli.Context) error {
+	fmt.Println("Starting sniffer")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Allow SIGTERM / Control-C quit through context
+	onSigTerm(cancel)
+
+	cfg, err := getConfig(c)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	err = commands.Sniff(ctx, cfg)
 
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
