@@ -1,9 +1,0 @@
----
-- name: Disable TCP6 segmentation offloading
-  command: ethtool -K {{ eth_interface }} tx-tcp6-segmentation off
-- name: Disable TCP segmentation offloading
-  command: ethtool -K {{ eth_interface }} tx-tcp-segmentation off
-- name: Disable GSO
-  command: ethtool -K {{ eth_interface }} gso off
-- name: Disable GRO
-  command: ethtool -K {{ eth_interface }} gro off

@@ -1,0 +1,8 @@
+---
+- name: Disable ethernet HW offloading (stability fix)
+  interfaces_file:
+    iface: '{{ eth_iface }}'
+    backup: yes
+    option: post-up
+    value: /sbin/ethtool -K $IFACE tx-tcp6-segmentation off tx-tcp-segmentation off gso off gro off
+  notify: restart networking
