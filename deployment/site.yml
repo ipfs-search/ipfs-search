@@ -8,6 +8,6 @@
     - { name: common, tags: ['common'] }
     - { name: hostname, tags: ['hostname']}
 - name: Backend
-  include: backend.yml
+  import_playbook: backend.yml
 - name: Frontend
-  include: frontend.yml
+  import_playbook: frontend.yml

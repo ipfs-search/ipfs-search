@@ -1,5 +1,5 @@
 ---
-- include: python2.yml
+- import_playbook: python2.yml
 - hosts: all
 
   become: true
