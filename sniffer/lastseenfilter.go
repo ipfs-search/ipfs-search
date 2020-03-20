@@ -12,7 +12,8 @@ type lastSeenFilter struct {
 }
 
 func NewLastSeenFilter(expiration time.Duration, pruneLen int) *lastSeenFilter {
-	r := make(map[Resource]time.Time)
+	// Allocate memory for pruneLen+1
+	r := make(map[Resource]time.Time, pruneLen+1)
 
 	return &lastSeenFilter{
 		Expiration: expiration,
