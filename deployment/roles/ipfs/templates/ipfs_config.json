@@ -24,7 +24,12 @@
       "/ip4/198.18.0.0/ipcidr/15",
       "/ip4/198.51.100.0/ipcidr/24",
       "/ip4/203.0.113.0/ipcidr/24",
-      "/ip4/240.0.0.0/ipcidr/4"
+      "/ip4/240.0.0.0/ipcidr/4",
+      "/ip6/100::/ipcidr/64",
+      "/ip6/2001:2::/ipcidr/48",
+      "/ip6/2001:db8::/ipcidr/32",
+      "/ip6/fc00::/ipcidr/7",
+      "/ip6/fe80::/ipcidr/10"
     ],
     "Swarm": [
       "/ip4/0.0.0.0/tcp/4001",
@@ -87,8 +92,12 @@
   },
   "Experimental": {
     "FilestoreEnabled": true,
+    "UrlstoreEnabled": false,
+    "ShardingEnabled": false,
     "Libp2pStreamMounting": false,
-    "ShardingEnabled": false
+    "P2pHttpProxy": false,
+    "QUIC": false,
+    "PreferTLS": false
   },
   "Gateway": {
     "HTTPHeaders": {
@@ -121,6 +130,11 @@
     "IPFS": "/ipfs",
     "IPNS": "/ipns"
   },
+  "Pubsub": {
+    "Router": "",
+    "DisableSigning": false,
+    "StrictSignatureVerification": false
+  },
   "Reprovider": {
     "Interval": "12h",
     "Strategy": "all"
@@ -144,7 +158,12 @@
       "/ip4/198.18.0.0/ipcidr/15",
       "/ip4/198.51.100.0/ipcidr/24",
       "/ip4/203.0.113.0/ipcidr/24",
-      "/ip4/240.0.0.0/ipcidr/4"
+      "/ip4/240.0.0.0/ipcidr/4",
+      "/ip6/100::/ipcidr/64",
+      "/ip6/2001:2::/ipcidr/48",
+      "/ip6/2001:db8::/ipcidr/32",
+      "/ip6/fc00::/ipcidr/7",
+      "/ip6/fe80::/ipcidr/10"
     ],
     "DisableBandwidthMetrics": true,
     "DisableNatPortMap": true,
