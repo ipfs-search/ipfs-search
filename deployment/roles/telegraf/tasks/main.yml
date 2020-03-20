@@ -1,0 +1,26 @@
+---
+- name: Install apt-transport-https
+  apt: name=apt-transport-https state=present
+- name: Install ca-certificates
+  apt: name=ca-certificates state=latest
+- name: Install InfluxDB repository key
+  apt_key: url=https://repos.influxdata.com/influxdb.key state=present
+- name: Add Telegraf repository
+  apt_repository:
+    repo: "deb https://repos.influxdata.com/{{ ansible_distribution|lower }} {{ ansible_lsb.codename }} stable"
+    filename: "telegraf"
+    state: present
+- name: Install misc utils
+  apt: name=lm-sensors state=present
+- name: Install Telegraf package
+  apt:
+    name: telegraf
+    state: present
+    update_cache: yes
+  notify: restart telegraf
+- name: Telegraf configuration
+  template: src=telegraf.conf dest=/etc/telegraf/telegraf.conf
+  notify: restart telegraf
+- name: Enable telegraf service
+  service: name=telegraf enabled=yes state=started
+

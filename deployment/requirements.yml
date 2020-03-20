@@ -1,0 +1,3 @@
+---
+- name: wireguard
+  src: adamruzicka.wireguard
