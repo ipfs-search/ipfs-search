@@ -1,0 +1,17 @@
+[Unit]
+Description=ipfs-search sniffer
+Requires=ipfs.service rabbitmq-server.service
+After=ipfs.service rabbitmq-server.service
+
+[Service]
+ExecStart=/usr/local/bin/ipfs-search -c /etc/ipfs-crawler/config.yml sniff
+Restart=always
+User=ipfs-sniffer
+Group=ipfs-sniffer
+ProtectHome=true
+ProtectSystem=true
+PrivateDevices=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

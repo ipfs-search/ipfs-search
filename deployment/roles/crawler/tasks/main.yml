@@ -13,15 +13,25 @@
   apt: name=rsync state=present
 - name: Install crawler executable
   synchronize: src=../../../build/ipfs-search.linux64 dest=/usr/local/bin/ipfs-search times=yes partial=yes archive=no
-  notify: restart ipfs-crawler
+  notify:
+    - restart ipfs-crawler
+    - restart ipfs-sniffer
 - group: name=ipfs-crawler system=true state=present
 - user: name=ipfs-crawler comment="ipfs-crawler daemon" group=ipfs-crawler system=true state=present home=/nonexistent shell=/usr/sbin/nologin
+- group: name=ipfs-sniffer system=true state=present
+- user: name=ipfs-sniffer comment="ipfs-sniffer daemon" group=ipfs-sniffer system=true state=present home=/nonexistent shell=/usr/sbin/nologin
 - name: Install crawler systemd service
   template: src=ipfs-crawler.service dest=/etc/systemd/system/ipfs-crawler.service
   notify: restart ipfs-crawler
+- name: Install sniffer systemd service
+  template: src=ipfs-sniffer.service dest=/etc/systemd/system/ipfs-sniffer.service
+  notify: restart ipfs-sniffer
 - name: Ensures ipfs-search dir exists
   file: path=/etc/ipfs-crawler state=directory
 - name: Install configuration file
   template: src=config.yml dest=/etc/ipfs-crawler/config.yml
-  notify: restart ipfs-crawler
+  notify:
+    - restart ipfs-crawler
+    - restart ipfs-sniffer
 - service: name=ipfs-crawler enabled=yes state=started
+- service: name=ipfs-sniffer enabled=yes state=started

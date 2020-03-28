@@ -14,6 +14,5 @@
     - { name: ipfs, tags: ['ipfs'] }
     - { name: ipfs-tika, tags: ['ipfs-tika'] }
     - { name: crawler, tags: ['crawler'] }
-    - { name: snifloop, tags: ['snifloop']}
     - { name: nginx, tags: ['nginx']}
     - { name: api, tags: ['api']}
