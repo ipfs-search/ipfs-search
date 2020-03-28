@@ -10,7 +10,7 @@ Group=ipfs-tika
 MemoryAccounting=yes
 MemoryLimit=4096M
 Nice=10
-Restart=on-failure
+Restart=always
 Environment=IPFS_TIKA_LISTEN_PORT=8231
 
 [Install]
