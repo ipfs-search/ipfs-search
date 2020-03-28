@@ -31,8 +31,8 @@ func Default() *Config {
 			PartialSize: 262144,
 		},
 		Sniffer{
-			LastSeenExpiration: 30 * time.Duration(time.Minute),
-			LastSeenPruneLen:   1024,
+			LastSeenExpiration: 60 * time.Duration(time.Minute),
+			LastSeenPruneLen:   16384,
 		},
 	}
 }

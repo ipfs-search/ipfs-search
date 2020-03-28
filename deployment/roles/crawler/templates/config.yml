@@ -16,3 +16,6 @@ crawler:
   partial_size: 256KB  # Size for partial items - this is the default chunker block size
   hash_workers: 120
   file_workers: 60
+sniffer:
+  lastseen_expiration: 60m
+  lastseen_prunelen: 16384
