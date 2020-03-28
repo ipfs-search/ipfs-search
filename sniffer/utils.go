@@ -15,6 +15,9 @@ func getProviders(ctx context.Context, l shell.Logger, providers chan<- Provider
 			// Context closed, return context error
 			return ctx.Err()
 		default:
+			// Note: this one is blocking, and might stall. We should have a timeout on this
+			// or something!
+			log.Printf("Waiting for next messaage")
 			msg, err := l.Next()
 			if err != nil {
 				return err
@@ -40,6 +43,8 @@ func addProviders(ctx context.Context, providers <-chan Provider, queue *queue.Q
 			return ctx.Err()
 		case p := <-providers:
 			// Add with highest priority, as this is supposed to be available
+			log.Printf("Queueing %v", p.Resource)
+
 			err := queue.Publish(&crawler.Args{
 				Hash: p.Id,
 			}, 9)
@@ -51,21 +56,30 @@ func addProviders(ctx context.Context, providers <-chan Provider, queue *queue.Q
 	}
 }
 
-func filterProviders(ctx context.Context, input <-chan Provider, output chan<- Provider, filters []Filter) error {
+func shouldFilter(p Provider, filters []Filter) bool {
+	// The first filter returning false gets a resource skipped
+	for _, f := range filters {
+		if !f.Filter(p) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func filterProviders(ctx context.Context, in <-chan Provider, out chan<- Provider, filters []Filter) error {
 	for {
 		select {
 		case <-ctx.Done():
 			// Context closed, return context error
 			return ctx.Err()
-		case i := <-input:
-			for _, f := range filters {
-				if !f.Filter(i) {
-					log.Printf("Disgarding provider: %v", i)
-					continue
-				}
+		case p := <-in:
+			if !shouldFilter(p, filters) {
+				log.Printf("Filtering %v", p.Resource)
+				continue
 			}
 
-			output <- i
+			out <- p
 		}
 	}
 }

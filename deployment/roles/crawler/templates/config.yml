@@ -1,7 +1,7 @@
 tika:
   url: http://localhost:8231  # ipfs-tika endpoint URL, also TIKA_URL in env
   timeout: 5m  # ipfs-tika request timeout
-  max_size: 50MB  # Don't attempt to get metadata for files over this size
+  max_size: 4GB  # Don't attempt to get metadata for files over this size
 ipfs:
   api_url: localhost:5001  # IPFS API endpoint, also IPFS_API_URL in env
   timeout: 6m  # Timeout for IPFS gateway HTTPS requests
@@ -18,4 +18,4 @@ crawler:
   file_workers: 60
 sniffer:
   lastseen_expiration: 60m
-  lastseen_prunelen: 16384
+  lastseen_prunelen: 16383

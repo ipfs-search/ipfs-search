@@ -52,7 +52,8 @@ func (s *Sniffer) Work(ctx context.Context) error {
 	filteredProviders := make(chan Provider)
 
 	lastSeenFilter := NewLastSeenFilter(s.Config.LastSeenExpiration, s.Config.LastSeenPruneLen)
-	filters := []Filter{lastSeenFilter}
+	cidFilter := NewCidFilter()
+	filters := []Filter{lastSeenFilter, cidFilter}
 
 	// Create error group and context
 	errg, ctx := errgroup.WithContext(ctx)

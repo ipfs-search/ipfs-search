@@ -32,7 +32,7 @@ func Default() *Config {
 		},
 		Sniffer{
 			LastSeenExpiration: 60 * time.Duration(time.Minute),
-			LastSeenPruneLen:   16384,
+			LastSeenPruneLen:   16383,
 		},
 	}
 }

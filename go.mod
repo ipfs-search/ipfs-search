@@ -4,7 +4,7 @@ require (
 	github.com/Netflix/go-env v0.0.0-20180529183433-1e80ef5003ef
 	github.com/c2h5oh/datasize v0.0.0-20171227191756-4eba002a5eae
 	github.com/fortytw2/leaktest v1.3.0 // indirect
-	github.com/ipfs/go-cid v0.0.5 // indirect
+	github.com/ipfs/go-cid v0.0.5
 	github.com/ipfs/go-ipfs-api v0.0.3
 	github.com/libp2p/go-libp2p-core v0.3.0 // indirect
 	github.com/libp2p/go-libp2p-protocol v0.0.1 // indirect

@@ -46,21 +46,23 @@ func (f *lastSeenFilter) Filter(p Provider) bool {
 
 	if !present {
 		// Not present, add it!
-		log.Printf("Adding: %v", p)
+		log.Printf("Adding LastSeen: %v, len: %d", p, len(f.resources))
 		f.resources[*(p.Resource)] = p.Date
 
+		// Index it!
 		return true
 	}
 
 	if p.Date.Sub(lastSeen) > f.Expiration {
-		// Last seen longer than expiration ago, index it!
-		log.Printf("Updating: %v", p)
-
+		// Last seen longer than expiration ago, update last seen.
+		log.Printf("Updating LastSeen: %v, len: %d", p, len(f.resources))
 		f.resources[*(p.Resource)] = p.Date
+
+		// Index it!
 		return true
 	}
 
 	// Too recent, don't index
-	log.Printf("Disgarding new: %v - last seen: %s", p, lastSeen)
+	log.Printf("Filtering recent %v, LastSeen %s", p, lastSeen)
 	return false
 }
