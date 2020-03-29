@@ -129,7 +129,6 @@ func crawl(c *cli.Context) error {
 	}
 
 	err = commands.Crawl(ctx, cfg)
-
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -151,7 +150,6 @@ func sniff(c *cli.Context) error {
 	}
 
 	err = commands.Sniff(ctx, cfg)
-
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
