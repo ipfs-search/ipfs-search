@@ -6,8 +6,8 @@ ExecStart={{ ipfs_binary }} daemon --manage-fdlimit --migrate
 PermissionsStartOnly=true
 ExecStartPost=/bin/bash -c "echo 0 > /sys/fs/cgroup/memory/system.slice/ipfs.service/memory.swappiness"
 Restart=on-failure
-User=ipfs
-Group=ipfs
+User={{ ipfs_user }}
+Group={{ ipfs_group }}
 Environment="IPFS_PATH={{ ipfs_path }}"
 DevicePolicy=closed
 DeviceAllow=/dev/fuse

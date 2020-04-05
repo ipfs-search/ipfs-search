@@ -21,7 +21,7 @@
   environment:
     IPFS_PATH: "{{ ipfs_path }}"
   become: true
-  become_user: ipfs
+  become_user: "{{ ipfs_user }}"
 # TODO: SECURITY: This requires that we trust ipify to provide the correct public IP. We could run our own ipify server.
 - name: Get my public IP from ipify.org
   ipify_facts:
@@ -33,4 +33,11 @@
 - name: Enable IPFS service
   systemd: name=ipfs daemon_reload=yes state=started enabled=yes
 - name: Enable IPFS garbage collection
-  cron: name="ipfs collect garbage" cron_file=/etc/crontab minute="*/9" hour="*" backup="yes" user=ipfs job="env IPFS_PATH=/var/lib/ipfs ipfs repo gc > /dev/null"
+  cron:
+    name: "ipfs collect garbage"
+    cron_file: /etc/crontab
+    minute: "*/9"
+    hour: "*"
+    backup: "yes"
+    user: "{{ ipfs_user }}"
+    job: "env IPFS_PATH={{ ipfs_path }} ipfs repo gc > /dev/null"
