@@ -11,8 +11,8 @@ ipfs-search consists of the following components:
 * API
 * Frontend
 
-### Sniffer: snifloop.sh
-The sniffer listens to gossip between our IPFS node and others and adds hashes for which a provider is offered to the `hashes` queue.
+### Sniffer
+The sniffer listens to gossip between our IPFS node and others and adds hashes for which a provider is offered to the `hashes` queue, filtering for (currently) unparseable data and items recently updated.
 
 ### Queue: RabbitMQ
 RabbitMQ holds a `files` and a `hashes` queue with items to be crawled, in a soon-to-be well-defined JSON-format.
