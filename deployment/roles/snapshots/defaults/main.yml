@@ -1,0 +1,5 @@
+---
+snapshot_disk_name: ipfs_disk
+snapshot_disk_path: /var/lib/elasticsearch/backup
+snapshot_s3_name: ipfs_s3
+snapshot_s3_bucket: ipfs-search-snapshots
