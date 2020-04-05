@@ -93,7 +93,7 @@
   "Experimental": {
     "FilestoreEnabled": true,
     "UrlstoreEnabled": false,
-    "ShardingEnabled": false,
+    "ShardingEnabled": true,
     "Libp2pStreamMounting": false,
     "P2pHttpProxy": false,
     "QUIC": false,
@@ -136,7 +136,7 @@
     "StrictSignatureVerification": false
   },
   "Reprovider": {
-    "Interval": "12h",
+    "Interval": "0",
     "Strategy": "all"
   },
   "SupernodeRouting": {
