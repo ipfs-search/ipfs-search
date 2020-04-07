@@ -1,6 +1,7 @@
 #!/bin/bash
 
 IPFS="env IPFS_PATH={{ ipfs_path }} ipfs"
+IPFS_CLUSTER="env IPFS_CLUSTER_PATH={{ ipfs_cluster_path }} ipfs-cluster-ctl"
 SNAPSHOT_DIR="{{ snapshot_publish_path }}"
 STATE_PATH="{{ snapshot_publish_state_path }}"
 ADD_PARAMS="-w -r --nocopy --fscache --chunker size-1048576 --hash blake2b-256 --quieter --dereference-args"
@@ -18,7 +19,7 @@ else
 	echo "Old hash not found, not updating!"
 fi
 
-# Add dir to IPFS
+echo "Adding snapshot directory"
 NEW_HASH=`$IPFS add $ADD_PARAMS $SNAPSHOT_DIR`
 STATUS=$?
 
@@ -30,7 +31,7 @@ if [[ $STATUS == "0" ]]; then
 
 	if [ -n "$OLD_HASH" ]; then
 	    echo "Replacing pin for $OLD_HASH with $NEW_HASH"
-	    $IPFS pin update $OLD_HASH $NEW_HASH
+	    $IPFS_CLUSTER pin update $OLD_HASH $NEW_HASH
 	fi
 
     $IPFS name publish --key=$PUBLISH_KEY $NEW_HASH
