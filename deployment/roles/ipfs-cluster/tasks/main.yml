@@ -86,3 +86,8 @@
   become: true
   become_user: "{{ ipfs_cluster_user }}"
   when: service_followers.changed
+  register: service_followers_cid
+- name: Printing new cluster service file cid
+  debug:
+    msg: "Cluster service file: {{ service_followers_cid.stdout }}"
+  when: service_followers.changed
