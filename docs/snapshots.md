@@ -1,12 +1,21 @@
 # ipfs-search snapshots
 ipfs-search makes daily [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html) of the indexed data.
 
-We are currently experimenting with automated publishing of these daily snapshots over IPFS. This should allow anyone to inspect our index and/or to fork or mirror our service. The daily snapshots, for now, are published to:
-https://gateway.ipfs.io/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi
-
+We are currently experimenting with automated publishing of these daily snapshots over IPFS. This should allow anyone to inspect our index and/or to fork or mirror our service.
 As of the time of writing (April 5, 2020) the full index is about 425 GB.
 
-## Pinning
+## Cluster
+We are running an [ipfs-cluster](https://cluster.ipfs.io/), automating the process of pinning the latest updates. The easiest way to do this, is throuhg [ipfs-cluster-follow](https://cluster.ipfs.io/documentation/collaborative/joining/):
+
+1. [Run a local IPFS Node](https://docs.ipfs.io/introduction/usage/).
+2. [Download](https://dist.ipfs.io/#ipfs-cluster-follow) for your platform and extract the archive.
+3. Run: `ipfs-cluster-follow ipfs-search run --init cluster.ipfs-search.com`
+
+Now `ipfs-cluster-follow` should download the cluster configuration, connect to other nodes and start pinning the latest snapshot, automatically updating every night.
+
+## Manual pinning
+The daily snapshots, for now, are published to: https://gateway.ipfs.io/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi
+
 To pin the snapshots:
 `ipfs pin add /ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi`
 
