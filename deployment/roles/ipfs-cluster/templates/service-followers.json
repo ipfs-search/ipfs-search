@@ -1,0 +1,107 @@
+{
+  "cluster": {
+    "secret": "4b29c94c30313057097110d1711fd69a155f829c03a2bb915043f06582ea4c7b",
+    "leave_on_shutdown": false,
+    "listen_multiaddress": [
+      "/ip4/0.0.0.0/tcp/9087",
+      "/ip4/0.0.0.0/udp/9087/quic",
+      "/ip6/::/tcp/9087",
+      "/ip6/::/udp/9087/quic"
+    ],
+    "enable_relay_hop": true,
+    "connection_manager": {
+      "high_water": 400,
+      "low_water": 100,
+      "grace_period": "2m0s"
+    },
+    "state_sync_interval": "5m0s",
+    "pin_recover_interval": "12m0s",
+    "replication_factor_min": -1,
+    "replication_factor_max": -1,
+    "monitor_ping_interval": "15s",
+    "peer_watch_interval": "5s",
+    "mdns_interval": "10s",
+    "disable_repinning": false,
+    "peer_addresses": [
+      "/ip4/{{ ipify_public_ip }}/tcp/9096/p2p/{{ ipfs_cluster_peer_id }}",
+      "/ip4/{{ ipify_public_ip }}/udp/9096/quic/p2p/{{ ipfs_cluster_peer_id }}",
+      "/ip6/{{ ansible_default_ipv6.address }}/tcp/9096/p2p/{{ ipfs_cluster_peer_id }}",
+      "/ip6/{{ ansible_default_ipv6.address }}/udp/9096/quic/p2p/{{ ipfs_cluster_peer_id }}"
+    ],
+    "follower_mode": true
+  },
+  "consensus": {
+    "crdt": {
+      "cluster_name": "ipfs-search-snapshots",
+      "trusted_peers": [
+        "{{ ipfs_cluster_peer_id }}"
+      ]
+    }
+  },
+  "ipfs_connector": {
+    "ipfshttp": {
+      "node_multiaddress": "/ip4/127.0.0.1/tcp/5001",
+      "connect_swarms_delay": "30s",
+      "ipfs_request_timeout": "5m0s",
+      "pin_timeout": "24h0m0s",
+      "unpin_timeout": "3h0m0s",
+      "repogc_timeout": "24h0m0s"
+    }
+  },
+  "pin_tracker": {
+    "stateless": {
+      "concurrent_pins": 10
+    }
+  },
+  "monitor": {
+    "pubsubmon": {
+      "check_interval": "15s",
+      "failure_threshold": 3
+    }
+  },
+  "informer": {
+    "disk": {
+      "metric_ttl": "30s",
+      "metric_type": "freespace"
+    }
+  },
+  "observations": {
+    "metrics": {
+      "enable_stats": false,
+      "prometheus_endpoint": "/ip4/127.0.0.1/tcp/8888",
+      "reporting_interval": "2s"
+    },
+    "tracing": {
+      "enable_tracing": false,
+      "jaeger_agent_endpoint": "/ip4/0.0.0.0/udp/6831",
+      "sampling_prob": 0.3,
+      "service_name": "cluster-daemon"
+    }
+  },
+  "datastore": {
+    "badger": {
+      "badger_options": {
+        "dir": "",
+        "value_dir": "",
+        "sync_writes": true,
+        "table_loading_mode": 2,
+        "value_log_loading_mode": 2,
+        "num_versions_to_keep": 1,
+        "max_table_size": 67108864,
+        "level_size_multiplier": 10,
+        "max_levels": 7,
+        "value_threshold": 32,
+        "num_memtables": 5,
+        "num_level_zero_tables": 5,
+        "num_level_zero_tables_stall": 10,
+        "level_one_size": 268435456,
+        "value_log_file_size": 1073741823,
+        "value_log_max_entries": 1000000,
+        "num_compactors": 2,
+        "compact_l_0_on_close": false,
+        "read_only": false,
+        "truncate": false
+      }
+    }
+  }
+}

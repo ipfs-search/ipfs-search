@@ -1,0 +1,4 @@
+{
+    "id": "{{ ipfs_cluster_peer_id }}",
+    "private_key": "{{ ipfs_cluster_peer_secret }}"
+}

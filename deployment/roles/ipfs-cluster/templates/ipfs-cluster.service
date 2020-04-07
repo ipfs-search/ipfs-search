@@ -1,0 +1,20 @@
+[Unit]
+Description=ipfs-cluster-service
+Requires=ipfs.service
+After=ipfs.service
+
+[Service]
+ExecStart={{ ipfs_cluster_service_binary }} daemon
+PermissionsStartOnly=true
+Restart=always
+User={{ ipfs_cluster_user }}
+Group={{ ipfs_cluster_group }}
+Environment="IPFS_CLUSTER_PATH={{ ipfs_cluster_path }}"
+DevicePolicy=closed
+MemoryAccounting=yes
+MemoryLimit={{ ipfs_cluster_memlimit }}
+LimitNOFILE=65536
+Nice=10
+
+[Install]
+WantedBy=default.target
