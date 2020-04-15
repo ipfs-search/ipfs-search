@@ -34,7 +34,7 @@ The steps are as follows:
 1. [Run an IPFS Node](https://docs.ipfs.io/introduction/usage/)
 2. Pin the index snapshot (as per instructions above)
 3. [Run Elasticsearch 5.x](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/install-elasticsearch.html)
-4. Register the local IPFS gateway as a [readonly Elasticsearch snapshot repository](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_read_only_url_repository) through the URL `http://localhost:8080/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi/backup`
+4. Register the local IPFS gateway as a [readonly Elasticsearch snapshot repository](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_read_only_url_repository) through the URL `http://localhost:8080/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi/backup/` (assuming your local IPFS gateway is running on `localhost:8080`)
 5. List available snapshots with `curl -X GET "localhost:9200/_snapshot/<repo_name>/_all?pretty"
 `, testing your prior configuration
 6. [Restore the snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_restore) of your choice: `curl -X POST "localhost:9200/_snapshot/<repo_name>/<snapshot_id>/_restore?pretty"
