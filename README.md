@@ -105,7 +105,7 @@ Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com
 
 ## Sponsors
 
-<a href="https://nlnet.nl/project/IPFS-search/"><img src="https://nlnet.nl/logo/banner.png"><img src="https://nlnet.nl/image/logos/NGI0_tag.png"></a>
+<a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/logo/banner.png"></a> <a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/image/logos/NGI0_tag.png"></a><br>
 ipfs-search is supported by NLNet through the EU's Next Generation Internet (NGI0) programme.
 
 Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/ipfs-search#sponsor)]
