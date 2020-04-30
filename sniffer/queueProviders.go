@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func addProviders(ctx context.Context, providers <-chan t.Provider, queue *queue.Queue) error {
+func queueProviders(ctx context.Context, providers <-chan t.Provider, queue *queue.Queue) error {
 	for {
 		select {
 		case <-ctx.Done():
