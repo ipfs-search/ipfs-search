@@ -17,7 +17,7 @@ func shouldInclude(p t.Provider, filters []Filter) (bool, error) {
 		include, err := f.Filter(p)
 
 		if err != nil {
-			return false, err
+			return false, t.NewProviderErrorf(err, p, "Error %s with filter %v", err, f)
 		}
 
 		if !include {

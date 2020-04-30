@@ -4,8 +4,8 @@ import "fmt"
 
 // Resource represents a resource on the dweb.
 type Resource struct {
-	Protocol string
-	Id       string
+	Protocol string // Protocol as a string, e.g. "ipfs"
+	Id       string // Identifier for this resource, unique together with Protocol
 }
 
 // URI returns a unique identifier for the resource.

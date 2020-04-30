@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Provider for a Resource at a particular Date.
+// Provider represents a Resource available from an identified provider at a particular moment.
 type Provider struct {
 	*Resource
 	Date     time.Time
