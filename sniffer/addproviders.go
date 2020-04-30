@@ -11,7 +11,6 @@ func addProviders(ctx context.Context, providers <-chan Provider, queue *queue.Q
 	for {
 		select {
 		case <-ctx.Done():
-			// Context closed, return context error
 			return ctx.Err()
 		case p := <-providers:
 			// Add with highest priority, as this is supposed to be available
