@@ -28,6 +28,7 @@ func New(cfg *Config) (*Sniffer, error) {
 	}, nil
 }
 
+// Work starts a blocking sniffer, returning an error when anything goes wrong
 func (s *Sniffer) Work(ctx context.Context) error {
 	logger, err := s.Shell.GetLogs(ctx)
 	if err != nil {
@@ -57,7 +58,7 @@ func (s *Sniffer) Work(ctx context.Context) error {
 
 	// Create error group and context
 	errg, ctx := errgroup.WithContext(ctx)
-	errg.Go(func() error { return getProviders(ctx, logger, sniffedProviders) })
+	errg.Go(func() error { return getProviders(ctx, logger, sniffedProviders, s.Config.LoggerTimeout) })
 	errg.Go(func() error { return filterProviders(ctx, sniffedProviders, filteredProviders, filters) })
 	errg.Go(func() error { return addProviders(ctx, filteredProviders, queue) })
 
