@@ -69,7 +69,7 @@ func (s *Sniffer) Work(ctx context.Context) error {
 		return filterProviders(ctx, sniffedProviders, filteredProviders, filters)
 	})
 	errg.Go(func() error {
-		return addProviders(ctx, filteredProviders, queue)
+		return queueProviders(ctx, filteredProviders, queue)
 	})
 
 	return errg.Wait()
