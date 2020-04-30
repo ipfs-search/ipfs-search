@@ -1,19 +1,20 @@
-package sniffer
+package filters
 
 import (
+	t "github.com/ipfs-search/ipfs-search/types"
 	"log"
 	"time"
 )
 
 type lastSeenFilter struct {
-	resources  map[Resource]time.Time
+	resources  map[t.Resource]time.Time
 	Expiration time.Duration
 	PruneLen   int
 }
 
-func NewLastSeenFilter(expiration time.Duration, pruneLen int) *lastSeenFilter {
+func LastSeenFilter(expiration time.Duration, pruneLen int) *lastSeenFilter {
 	// Allocate memory for pruneLen+1
-	r := make(map[Resource]time.Time, pruneLen+1)
+	r := make(map[t.Resource]time.Time, pruneLen+1)
 
 	return &lastSeenFilter{
 		Expiration: expiration,
@@ -39,7 +40,7 @@ func (f *lastSeenFilter) prune() {
 	}
 }
 
-func (f *lastSeenFilter) Filter(p Provider) bool {
+func (f *lastSeenFilter) Filter(p t.Provider) (bool, error) {
 	f.prune()
 
 	lastSeen, present := f.resources[*(p.Resource)]
@@ -50,7 +51,7 @@ func (f *lastSeenFilter) Filter(p Provider) bool {
 		f.resources[*(p.Resource)] = p.Date
 
 		// Index it!
-		return true
+		return true, nil
 	}
 
 	if p.Date.Sub(lastSeen) > f.Expiration {
@@ -59,10 +60,10 @@ func (f *lastSeenFilter) Filter(p Provider) bool {
 		f.resources[*(p.Resource)] = p.Date
 
 		// Index it!
-		return true
+		return true, nil
 	}
 
 	// Too recent, don't index
 	log.Printf("Filtering recent %v, LastSeen %s", p, lastSeen)
-	return false
+	return false, nil
 }

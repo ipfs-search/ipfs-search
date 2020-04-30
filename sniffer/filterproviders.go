@@ -2,33 +2,50 @@ package sniffer
 
 import (
 	"context"
-	"log"
+	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-func shouldFilter(p Provider, filters []Filter) bool {
-	// The first filter returning false gets a resource skipped
+// Filter takes a provider, returning true if it is to be included or false when
+// it is to be discarded.
+type Filter interface {
+	Filter(t.Provider) (bool, error)
+}
+
+// Return false for the first filter returning false, true otherwise
+func shouldInclude(p t.Provider, filters []Filter) (bool, error) {
 	for _, f := range filters {
-		if !f.Filter(p) {
-			return false
+		include, err := f.Filter(p)
+
+		if err != nil {
+			return false, err
+		}
+
+		if !include {
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
 }
 
-func filterProviders(ctx context.Context, in <-chan Provider, out chan<- Provider, filters []Filter) error {
+// filterProviders filters a stream of providers, retaining only those for
+// which all filters return true.
+func filterProviders(ctx context.Context, in <-chan t.Provider, out chan<- t.Provider, filters []Filter) error {
 	for {
 		select {
 		case <-ctx.Done():
 			// Context closed, return context error
 			return ctx.Err()
 		case p := <-in:
-			if !shouldFilter(p, filters) {
-				log.Printf("Filtering %v", p.Resource)
-				continue
+			include, err := shouldInclude(p, filters)
+
+			if err != nil {
+				return err
 			}
 
-			out <- p
+			if include {
+				out <- p
+			}
 		}
 	}
 }

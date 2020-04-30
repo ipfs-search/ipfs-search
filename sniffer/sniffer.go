@@ -3,6 +3,8 @@ package sniffer
 import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/queue"
+	"github.com/ipfs-search/ipfs-search/sniffer/filters"
+	t "github.com/ipfs-search/ipfs-search/types"
 	"github.com/ipfs/go-ipfs-api"
 	"golang.org/x/sync/errgroup"
 )
@@ -49,18 +51,26 @@ func (s *Sniffer) Work(ctx context.Context) error {
 		return err
 	}
 
-	sniffedProviders := make(chan Provider)
-	filteredProviders := make(chan Provider)
+	sniffedProviders := make(chan t.Provider)
+	filteredProviders := make(chan t.Provider)
 
-	lastSeenFilter := NewLastSeenFilter(s.Config.LastSeenExpiration, s.Config.LastSeenPruneLen)
-	cidFilter := NewCidFilter()
+	lastSeenFilter := filters.LastSeenFilter(s.Config.LastSeenExpiration, s.Config.LastSeenPruneLen)
+	cidFilter := filters.CidFilter()
 	filters := []Filter{lastSeenFilter, cidFilter}
+
+	providerExtractor := ProviderExtractor{}
 
 	// Create error group and context
 	errg, ctx := errgroup.WithContext(ctx)
-	errg.Go(func() error { return getProviders(ctx, logger, sniffedProviders, s.Config.LoggerTimeout) })
-	errg.Go(func() error { return filterProviders(ctx, sniffedProviders, filteredProviders, filters) })
-	errg.Go(func() error { return addProviders(ctx, filteredProviders, queue) })
+	errg.Go(func() error {
+		return getProviders(ctx, logger, providerExtractor, sniffedProviders, s.Config.LoggerTimeout)
+	})
+	errg.Go(func() error {
+		return filterProviders(ctx, sniffedProviders, filteredProviders, filters)
+	})
+	errg.Go(func() error {
+		return addProviders(ctx, filteredProviders, queue)
+	})
 
 	return errg.Wait()
 }
