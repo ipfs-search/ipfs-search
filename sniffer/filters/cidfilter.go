@@ -1,31 +1,36 @@
 package filters
 
 import (
-	"fmt"
 	t "github.com/ipfs-search/ipfs-search/types"
 	"github.com/ipfs/go-cid"
 )
 
-type cidFilter struct{}
+// CidFilter filters out invalid CID's or those which are not Raw or DagProtobuf.
+type CidFilter struct{}
 
-func CidFilter() *cidFilter {
-	return &cidFilter{}
+// NewCidFilter returns a new CidFilter.
+func NewCidFilter() *CidFilter {
+	return &CidFilter{}
 }
 
 // Filter filters out invalid CID's or those which are not Raw or DagProtobuf.
-func (f *cidFilter) Filter(p t.Provider) (bool, error) {
+func (f *CidFilter) Filter(p t.Provider) (bool, error) {
+	if p.Resource.Protocol != "ipfs" {
+		return false, t.NewProviderErrorf(nil, p, "Unsupported protocol %s for %v", p.Resource.Protocol, p)
+	}
+
 	c, err := cid.Decode(p.Id)
 
 	if err != nil {
-		return false, fmt.Errorf("Error decoding %v to CID: %v", p, err)
+		return false, t.NewProviderErrorf(err, p, "%s decoding CID %v", err, p)
 	}
 
-	switch t := c.Type(); t {
+	switch cidType := c.Type(); cidType {
 	case cid.Raw, cid.DagProtobuf:
 		// (Potential) files and directories
 		return true, nil
 	default:
 		// Can't handle other types (for now)
-		return false, fmt.Errorf("Unsupported codec %v, codec %v", p, cid.CodecToStr[t])
+		return false, t.NewProviderErrorf(nil, p, "Unsupported codec %s for %v", cid.CodecToStr[cidType], p)
 	}
 }

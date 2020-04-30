@@ -55,8 +55,8 @@ func (s *Sniffer) Work(ctx context.Context) error {
 	filteredProviders := make(chan t.Provider)
 
 	lastSeenFilter := filters.LastSeenFilter(s.Config.LastSeenExpiration, s.Config.LastSeenPruneLen)
-	cidFilter := filters.CidFilter()
-	filters := []Filter{lastSeenFilter, cidFilter}
+	cidFilter := filters.NewCidFilter()
+	multiFilter := filters.MultiFilter(lastSeenFilter, cidFilter)
 
 	providerExtractor := ProviderExtractor{}
 
@@ -66,7 +66,7 @@ func (s *Sniffer) Work(ctx context.Context) error {
 		return getProviders(ctx, logger, providerExtractor, sniffedProviders, s.Config.LoggerTimeout)
 	})
 	errg.Go(func() error {
-		return filterProviders(ctx, sniffedProviders, filteredProviders, filters)
+		return filterProviders(ctx, sniffedProviders, filteredProviders, multiFilter)
 	})
 	errg.Go(func() error {
 		return queueProviders(ctx, filteredProviders, queue)
