@@ -6,6 +6,23 @@ import (
 	"time"
 )
 
+// TestNoHandleAddProvider tests for messages which are not relevant
+func TestNoHandleAddProvider(t *testing.T) {
+	// Actual log message for testing
+	mockMsg := map[string]interface{}{
+		"Operation": "other",
+	}
+
+	assert := assert.New(t)
+
+	e := ProviderExtractor{}
+
+	p, err := e.Extract(mockMsg)
+
+	assert.Empty(err)
+	assert.Empty(p)
+}
+
 func TestExtract(t *testing.T) {
 	// Actual log message for testing
 	mockMsg := map[string]interface{}{
