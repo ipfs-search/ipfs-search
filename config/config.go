@@ -4,9 +4,6 @@ import (
 	"fmt"
 	env "github.com/Netflix/go-env"
 	"github.com/c2h5oh/datasize"
-	"github.com/ipfs-search/ipfs-search/crawler"
-	"github.com/ipfs-search/ipfs-search/crawler/factory"
-	"github.com/ipfs-search/ipfs-search/sniffer"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -33,20 +30,6 @@ type AMQP struct {
 	AMQPURL string `yaml:"url" env:"AMQP_URL"`
 }
 
-type Crawler struct {
-	RetryWait   time.Duration     `yaml:"retry_wait"`
-	HashWait    time.Duration     `yaml:"hash_wait"`
-	FileWait    time.Duration     `yaml:"file_wait"`
-	PartialSize datasize.ByteSize `yaml:"partial_size"`
-	HashWorkers uint              `yaml:"hash_workers"`
-	FileWorkers uint              `yaml:"file_workers"`
-}
-
-type Sniffer struct {
-	LastSeenExpiration time.Duration `yaml:"lastseen_expiration`
-	LastSeenPruneLen   int           `yaml:"lastseen_prunelen`
-}
-
 type Config struct {
 	Tika          `yaml:"tika"`
 	IPFS          `yaml:"ipfs"`
@@ -54,35 +37,6 @@ type Config struct {
 	AMQP          `yaml:"amqp"`
 	Crawler       `yaml:"crawler"`
 	Sniffer       `yaml:"sniffer"`
-}
-
-func (c *Config) CrawlerConfig() *crawler.Config {
-	return &crawler.Config{
-		IpfsTikaURL:     c.Tika.IpfsTikaURL,
-		IpfsTikaTimeout: c.Tika.IpfsTikaTimeout,
-		MetadataMaxSize: uint64(c.Tika.MetadataMaxSize),
-		RetryWait:       c.Crawler.RetryWait,
-		PartialSize:     uint64(c.Crawler.PartialSize),
-	}
-}
-
-func (c *Config) SnifferConfig() *sniffer.Config {
-	return &sniffer.Config{
-		IpfsAPI:            c.IPFS.IpfsAPI,
-		AMQPURL:            c.AMQP.AMQPURL,
-		LastSeenExpiration: c.Sniffer.LastSeenExpiration,
-		LastSeenPruneLen:   c.Sniffer.LastSeenPruneLen,
-	}
-}
-
-func (c *Config) FactoryConfig() *factory.Config {
-	return &factory.Config{
-		IpfsAPI:          c.IPFS.IpfsAPI,
-		IpfsTimeout:      c.IPFS.IpfsTimeout,
-		ElasticSearchURL: c.ElasticSearch.ElasticSearchURL,
-		AMQPURL:          c.AMQP.AMQPURL,
-		CrawlerConfig:    c.CrawlerConfig(),
-	}
 }
 
 // String renders config as YAML

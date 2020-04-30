@@ -8,7 +8,11 @@ import (
 	"time"
 )
 
-func getProviders(ctx context.Context, l shell.Logger, providers chan<- Provider, timeout time.Duration) error {
+type logger interface {
+	Next() (map[string]interface{}, error)
+}
+
+func getProviders(ctx context.Context, l logger, providers chan<- Provider, timeout time.Duration) error {
 	for {
 		select {
 		case <-ctx.Done():

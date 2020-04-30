@@ -22,17 +22,7 @@ func Default() *Config {
 		AMQP{
 			AMQPURL: "amqp://guest:guest@localhost:5672/",
 		},
-		Crawler{
-			HashWait:    time.Duration(100 * time.Millisecond),
-			FileWait:    time.Duration(100 * time.Millisecond),
-			HashWorkers: 140,
-			FileWorkers: 120,
-			RetryWait:   2 * time.Duration(time.Second),
-			PartialSize: 262144,
-		},
-		Sniffer{
-			LastSeenExpiration: 60 * time.Duration(time.Minute),
-			LastSeenPruneLen:   16383,
-		},
+		CrawlerDefaults(),
+		SnifferDefaults(),
 	}
 }

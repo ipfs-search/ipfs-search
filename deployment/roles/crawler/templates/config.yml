@@ -19,3 +19,4 @@ crawler:
 sniffer:
   lastseen_expiration: 60m
   lastseen_prunelen: 16383
+  logger_timeout: 10s
