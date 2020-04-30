@@ -2,15 +2,16 @@ package sniffer
 
 import (
 	"fmt"
+	t "github.com/ipfs-search/ipfs-search/types"
 	"time"
 )
 
-// Message represents a single log message, based on the go-ipfs-api interface.
-type Message map[string]interface{}
-
-// ResourceProvider attempts to extract a ResourceProvider from a Message, returning nil when
+// ProviderExtractor attempts to extract a ResourceProvider from a Message, returning nil when
 // none was found and an error in unexpected situations.
-func (m Message) ResourceProvider() (*Provider, error) {
+type ProviderExtractor struct{}
+
+// Extract performs the extraction.
+func (e ProviderExtractor) Extract(m map[string]interface{}) (*t.Provider, error) {
 	// Somehow, real life messages are divided into events and operations.
 	// This is not properly documented anywhere.
 	operationType, _ := m["Operation"]
@@ -45,8 +46,8 @@ func (m Message) ResourceProvider() (*Provider, error) {
 			return nil, fmt.Errorf("Could not read 'peer' in tags of message: %#v", m)
 		}
 
-		return &Provider{
-			Resource: &Resource{
+		return &t.Provider{
+			Resource: &t.Resource{
 				Protocol: "ipfs",
 				Id:       key,
 			},
