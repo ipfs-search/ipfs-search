@@ -6,7 +6,6 @@ import (
 	"github.com/ipfs-search/ipfs-search/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
-
 	"time"
 )
 
