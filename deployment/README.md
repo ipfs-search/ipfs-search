@@ -1,20 +1,13 @@
 # Ansible deployment
 Requires one, or two, Ubuntu 16.04 (virtual) machine(s) with root access and a local install of [Ansible 2.6](https://docs.ansible.com/ansible/2.6/installation_guide/intro_installation.html).
 
-## Hosts configuration
-In order to use Ansible deployment, `backend` and `frontend` hosts need to be configured in your [inventory](https://docs.ansible.com/ansible/2.6/user_guide/intro_inventory.html). For example:
-```toml
-[frontend]
-short_name my-canoncial-host.name.com
+## Inventory
+The default Ansible configuration we're using, `ansible.cfg` in the current directory, configures the [inventory](https://docs.ansible.com/ansible/2.6/user_guide/intro_inventory.html) in `inventory.yml` in the current directory.
 
-[backend]
-short_name_2 other-or-same-host.name.com
-```
+In order to use Ansible deployment, `backend` and `frontend` host groups need to be configured here. An example is provided in [`inventory_example.yml`](inventory_example.yml).
 
-You may refer to the hosts file by setting `ANSIBLE_INVENTORY=<hosts_file>` in your environment.
-
-## Amazon S3 credentials
-The `snapshots` role expects the Amazon credentials to be configured in `vault/secrets.yml`. You can might either disable/skip the `snapshots` role or set up a bucket and authentication and configure the credentials based on `secrets_example.yml`, which you can encrypt with `ansible-vault encrypt`.
+## Vault
+In addition to the inventory, a succesful deployment requires several secrets to be configured in `vault/secrets.yml`. An example file is provided in [`vault/secrets_example.yml`](vault/secrets_example.yml), which you can encrypt with `ansible-vault encrypt` and later edited with `ansible-vault edit vault/secrets.yml`.
 
 See:
 - https://www.elastic.co/guide/en/elasticsearch/plugins/6.5/repository-s3-client.html

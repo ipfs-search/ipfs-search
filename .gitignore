@@ -29,8 +29,6 @@ _testmain.go
 
 build
 
-provisioning/*.retry
 backup
 node_modules
 design
-deployment/*.retry

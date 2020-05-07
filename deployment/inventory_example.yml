@@ -1,0 +1,25 @@
+backend:
+  hosts:
+    backend_host:
+      ansible_host: <fqdn_host_name>
+
+      # The values below are only relevant for monitoring through InfluxDB over a Wireguard tunnel
+      wireguard_wg0_peers:
+        <backend_host>:
+          public_key: <pubkey>
+          allowed_ips: <ip>
+          endpoint: <fqdn_host_name>:51820
+
+      wireguard_wg0_interface:
+        address: <ip>
+        private_key: !vault |
+                <encrypted_value>
+
+      influxdb_url: http://<wg_influxdb_url>:8086
+
+frontend:
+  hosts:
+    frontend_host:
+      ansible_host: <fqdn_host_name>
+      # Change the value below to false for production!
+      certbot_test: false
