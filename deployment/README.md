@@ -27,11 +27,7 @@ $ ansible-playbook site.yml
 ## Frontend deploy
 
 ### Staging vs. production certificates
-By default, staging certificates are requested from LetsEncrypt. Once the above process proceeds, the variable `certbot_test` should be set to `false`. The best way to do this, is to define it in the inventory file, for example:
-```toml
-[frontend]
-short_name my-canoncial-host.name.com certbot_test=false
-```
+By default, staging certificates are requested from LetsEncrypt. Once the above process proceeds, the variable `certbot_test` should be set to `false` in `inventory.yml`.
 
 ### Deploying frontend updates
 By default, the `v2` branch of the [frontend repository] is deployed, using the following command (the `-t frontend` makes sure that only the actual frontend code is deployed, rather than the entire frontend server setup):
