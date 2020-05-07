@@ -36,15 +36,10 @@ before_script:
 
 script:
   # Run a bunch of code checkers/linters in parallel
-  - golangci-lint run
+  # TODO: Enable after code cleanup
+  # - golangci-lint run
   # Run actual tests
   - go test -v -race -coverprofile c.out ./...
-  # Smoke test; should keep running 10 seconds; 124 is timeout is success
-  - |
-    make
-    timeout 10 build/ipfs-search c; [ $? -ne 124 ] && RC=$?
-
-    exit $RC
 
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
