@@ -31,15 +31,20 @@ before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
+  # We can download and extract the golangci-lint binary in one (long) command.
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $GOPATH/bin v1.25.1
 
 script:
+  # Run a bunch of code checkers/linters in parallel
+  - golangci-lint run
+  # Run actual tests
   - go test -v -race -coverprofile c.out ./...
   # Smoke test; should keep running 10 seconds; 124 is timeout is success
   - |
-  make
-  timeout 10 build/ipfs-search c; [ $? -ne 124 ] && RC=$?
+    make
+    timeout 10 build/ipfs-search c; [ $? -ne 124 ] && RC=$?
 
-  exit $RC
+    exit $RC
 
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
