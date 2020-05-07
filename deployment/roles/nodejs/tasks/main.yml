@@ -2,7 +2,7 @@
 - name: Install nodesource repository key
   apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key state=present
 - name: Add nodesource repository
-  apt_repository: repo='deb https://deb.nodesource.com/node_9.x xenial main' state=present update_cache=yes
+  apt_repository: "repo='deb https://deb.nodesource.com/{{ node_branch }} xenial main' state=present update_cache=yes"
 - name: Install Node
   apt:
     name: nodejs

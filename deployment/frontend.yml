@@ -5,6 +5,8 @@
     - certbot_email: info@ipfs-search.com
     - certbot_domains: ipfs-search.com,api.ipfs-search.com
     # Note: manually disable certbot testing from the command line!
+    # Example:
+    # ansible-playbook -e certbot_test=false frontend.yml
     - certbot_test: true
   roles:
     - { name: nginx, tags: ['nginx']}
