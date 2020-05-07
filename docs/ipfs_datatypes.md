@@ -53,8 +53,8 @@ Reference: https://ipld.io/
 In IPFS, all CIDs refer to objects with the following properties:
 
 * `cid`: the identifier (CIDv0 or CIDv1, as described above).
-* `size`: the cumulative size of the object, including the sizeo of the objects linked to.
-* `links`: a list of links to other objects in CID format.
+* `size`: the cumulative size of the object, including the size of the objects linked to.
+* `links`: a list of links to other objects in CID format, except for `raw` objects.
 * `data`: encoded data according to the IPLD multicodec content type in the CID.
 
 Objects may be explored with the IPLD explorer: https://explore.ipld.io/
@@ -63,7 +63,9 @@ Objects may be explored with the IPLD explorer: https://explore.ipld.io/
 
 Within IPLD, the following data formats are currently usage within IPFS:
 
-1. `dag-pb`: UnixFS protobuf format for files, raw data, HAMT and directories.
+1. `dag-pb`: Protobuf wrapper around UnixFS protobuf format for files, raw data, HAMT, and directories.
+    The `Data` field of the [dag-pb protobuf](https://github.com/ipld/specs/blob/master/block-layer/codecs/dag-pb.md) holds protobuf-encoded UnixFS data.
+    See below for a dissection of a few exemplary blocks to make this more clear. 
 2. `dag-cbor`: JSON-like generic datastructures for objects with links to other objects.
 3. `raw`: Unencoded binary data.
 
@@ -71,7 +73,11 @@ The full list of IPLD formats (including various address format specifiers and o
 https://github.com/multiformats/multicodec/blob/master/table.csv
 
 #### DAG protobuf (`dag-pb`)
-This is the legacy IPFS UnixFS format, encoding files and directories according to the following Protobuf format:
+This is a protobuf wrapper which seems to be only used for UnixFSv1-encoded data with links.
+A draft specification can be found at:
+https://github.com/ipld/specs/blob/master/block-layer/codecs/dag-pb.md
+
+Inside the `Data` field is the legacy IPFS UnixFS format, encoding files and directories according to the following Protobuf format:
 
 https://github.com/ipfs/go-unixfs/blob/master/pb/unixfs.proto
 
@@ -299,6 +305,42 @@ $ ipfs --encoding=json object stat /ipfs/QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptV
 }
 ```
 
+We can examine the `dag-pb(UnixFSv1(data))` wrapping through decoding the raw block data:
+```
+$ ipfs block get QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB | xxd
+  00000000: 0acb 0808 0212 c308 4865 6c6c 6f20 616e  ........Hello an
+  ...
+  00000440: 7269 7479 2d6e 6f74 6573 0a18 c308       rity-notes....
+```
+
+We know from the CID that this is `protobuf`, so we can use [the dag-pb spec](https://github.com/ipld/specs/blob/master/block-layer/codecs/dag-pb.md) to decode it:
+* `0acb08` is the interesting part: `0a` is `1010`, which tells us this is field number `1`, type `010`, which is an embedded message or bunch of bytes (the latter in our case).
+    `cb08` is the length as `varint`, so that's `1100 1011 0000 1000` -> `100 1011 000 1000` -> reverse to `000 1000 100 1011` -> `1099` in decimal.
+    The referenced spec tells us that field `1` is the `Data` field.
+
+Due to historical reasons, the `Link` field is encoded before the `Data` field, but we have no links as this is a self-contained file.
+We can parse the bytes following this as UnixFS protobuf.
+We can also use `ipfs object data` to output just that, the `Data` field of an Object.    
+
+```
+$ ipfs object data QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB | xxd
+  00000000: 0802 12c3 0848 656c 6c6f 2061 6e64 2057  .....Hello and W
+  ...
+  00000440: 792d 6e6f 7465 730a 18c3 08              y-notes....
+```
+
+Using the UnixFSv1 protobuf schema from above, this decodes as follows:
+- `0802` -> `08` is `1000`, which tells us this is field number `1`, type `000`, which is a `varint` in this case.
+    `02` is the value in `varint` encoding, which is just `2` in decimal.
+    This is the `Type` field in the [unixfs protobuf spec](https://github.com/ipfs/go-unixfs/blob/master/pb/unixfs.proto).
+    The type is `file`.
+- `12c308` -> `12` is `1 0010`, which tells us this is field number `2`, type `010`, which is a `bytes` in this case.
+    `c308` is the length, as `varint`: `1100 0011 0000 1000` -> `100 0011 000 1000` -> reverse to `000 1000 100 0011` -> `1091` in decimal.
+- some data (which is actually `1091` bytes long, nice!)
+- `18c3 08` -> `18` is `1 1000`, which tells us this is field number `3`, type `000`, which is a `varint` in this case.
+    `c308` is, again `1091` in decimal, which is good, because this is a file and that's what you'd expect.
+    This is the `filesize` field.
+
 #### Directories
 Directories added to IPFS may be encoded in several different ways:
 
@@ -396,6 +438,47 @@ $ curl -s "http://localhost:5001/api/v0/ls?arg=/ipfs/QmQy8FTQCdJGtNHg92pc4B6F4cj
 }
 ```
 
+We can again decode the protobuf encoding to understand what's going on behind the scenes:
+```
+$ ipfs block get QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv | xxd
+  00000000: 122e 0a22 1220 a52c 3602 030c b912 edfe  ...". .,6.......
+  00000010: 4de9 7002 fdad f9d4 5666 c3be 122a 2efb  M.p.....Vf...*..
+  00000020: 5db9 3c1d 5fa6 1205 6162 6f75 7418 980d  ].<._...about...
+  00000030: 1230 0a22 1220 929a 303c 39da 8a0b 67c0  .0.". ..0<9...g.
+  ...
+  00000150: 6375 7269 7479 2d6e 6f74 6573 1895 090a  curity-notes....
+  00000160: 0208 01                                  ...
+```
+
+The block data decodes like this:
+- `122e` - `12` is `0001 0010`, so field `2`, type embedded message.
+    `2e` is the size: `0010 1110`, which is `46` in decimal.
+    Fields:
+    - `0a22` - `0a` is `0000 1010`, field `1`, type `bytes`, this is the `Hash` field.
+        `22`, varint, `34` bytes. 
+    - `1220 a52c 3602 030c b912 edfe 4de9 7002 fdad f9d4 5666 c3be 122a 2efb 5db9 3c1d 5fa6` binary hash.
+        This is 34 bytes because it's a multihash, including one byte for the hash type (`sha2-256`) and the length (32 bytes)
+    - `1205` - `12` is `0001 0010`, field `2`, type `string`, this is the `Name` field.
+        `05`, varint, `5` bytes.
+    - `6162 6f75 74` binary name, `about`.
+    - `18 980d` - `18` is `0001 1000`, field `3`, type `varint`.
+        `980d` is `1001 1000 0000 1101` -> `001 1000 000 1101` -> `000 1101 001 1000` -> `1688` in decimal.
+        That's also what `ipfs object links` reports. Good.
+- More links.
+    They each start with `12`, indicating field `2`, embedded message.
+- `0a02` at the end is the `Data` field, which is two bytes long.
+    The actual data can be read out with `object data` again.
+
+```
+$ ipfs object data QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv | xxd
+  00000000: 0801                                     ..
+```
+
+It reads "I am a directory".
+
+The interesting thing to note here is that the UnixFS protobuf marks this block as a directory, but does not actually contain links to the files contained in the directory.
+Those links are stored in the surrounding `dag-pb` Object.
+
 ##### 2. UnixFS protobuf with raw leaves
 
 Examples:
@@ -467,6 +550,9 @@ $ curl -s "http://localhost:5001/api/v0/ls?arg=/ipfs/QmZzwcXprWah5w7qFPQ42UdGmok
 }
 ```
 Note that our request not to resolve the types and sizes for protobuf objects with raw leaves seem to be ignored.
+
+From a protobuf perspective, raw-leaves directories behave identically to "normal" protobuf directories.
+The only difference is that the CIDs referenced in the `Links` field of the `dag-pb` shell are `raw`.
 
 ##### 3. UnixFS protobuf HAMT directory
 Protobuf HAMT directories are a special kind of directories which are accessed as a [HAMT](https://en.wikipedia.org/wiki/Hash_array_mapped_trie). This allows for fast indexing of very large directories, as protobuf directories require scanning all the blocks (chunks) to find a particular link.
