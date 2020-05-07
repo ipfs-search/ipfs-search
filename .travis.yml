@@ -3,8 +3,13 @@ env:
     - CC_TEST_REPORTER_ID=8682688bc269d0f558949836dc3a7da18cd504940d6a4034c4539203dbe3fa22
 
 language: go
+
 go:
-  - - "1.11.x"
+  - - "1.13.x"
+
+# Only clone the most recent commit.
+git:
+  depth: 1
 
 services:
   - rabbitmq
@@ -19,7 +24,7 @@ services:
 #     - $GOPATH/src
 #     - $GOPATH/pkg
 
-install: env GO111MODULE=on go get -t -v ./...
+install: go get -t -v ./...
 
 before_script:
   # Install CodeClimate test reporter
@@ -27,22 +32,15 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
-script: |
-  # Thank https://stackoverflow.com/questions/45776043/codeclimate-test-coverage-formatter-for-golang
-  export GO111MODULE=on
-  RC=0
-  for pkg in $(go list ./... | grep -v vendor); do
-      go test -coverprofile=$(echo $pkg | tr / -).cover $pkg || RC=$?
-  done
-  echo "mode: set" > c.out
-  grep -h -v "^mode:" ./*.cover >> c.out
-  rm -f *.cover
-
+script:
+  - go test -v -race -coverprofile c.out ./...
   # Smoke test; should keep running 10 seconds; 124 is timeout is success
+  - |
   make
   timeout 10 build/ipfs-search c; [ $? -ne 124 ] && RC=$?
 
   exit $RC
+
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
