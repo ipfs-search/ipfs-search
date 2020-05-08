@@ -15,6 +15,7 @@ type providerExtractor interface {
 	Extract(map[string]interface{}) (*t.Provider, error)
 }
 
+// ErrorLoggerTimeout represents a timeout from the IPFS shell's logger.
 var ErrorLoggerTimeout = errors.New("Timeout waiting for log messages")
 
 // The default IPFS logger is a blocking function without a context, hence

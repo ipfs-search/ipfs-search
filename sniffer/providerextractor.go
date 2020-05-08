@@ -14,7 +14,7 @@ type ProviderExtractor struct{}
 func (e ProviderExtractor) Extract(m map[string]interface{}) (*t.Provider, error) {
 	// Somehow, real life messages are divided into events and operations.
 	// This is not properly documented anywhere.
-	operationType, _ := m["Operation"]
+	operationType := m["Operation"]
 	if operationType == "handleAddProvider" {
 		rawDate, ok := m["Start"]
 		if !ok {
