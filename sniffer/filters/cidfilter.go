@@ -12,6 +12,7 @@ func CidFilter() *cidFilter {
 	return &cidFilter{}
 }
 
+// Filter filters out invalid CID's or those which are not Raw or DagProtobuf.
 func (f *cidFilter) Filter(p t.Provider) (bool, error) {
 	c, err := cid.Decode(p.Id)
 
