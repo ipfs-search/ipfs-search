@@ -14,7 +14,7 @@ func TestPassSingle(t *testing.T) {
 		R: true,
 	}
 
-	m := MultiFilter(&f)
+	m := NewMultiFilter(&f)
 	r, err := m.Filter(types.Provider{})
 
 	assert.True(r)
@@ -28,7 +28,7 @@ func TestRejectSingle(t *testing.T) {
 		R: false,
 	}
 
-	m := MultiFilter(&f)
+	m := NewMultiFilter(&f)
 	r, err := m.Filter(types.Provider{})
 
 	assert.False(r)
@@ -42,7 +42,7 @@ func TestPassTwo(t *testing.T) {
 		R: true,
 	}
 
-	m := MultiFilter(&f, &f)
+	m := NewMultiFilter(&f, &f)
 	r, err := m.Filter(types.Provider{})
 
 	assert.True(r)
@@ -62,7 +62,7 @@ func TestFailFirst(t *testing.T) {
 		R: false,
 	}
 
-	m := MultiFilter(&rejectFilter, &passFilter)
+	m := NewMultiFilter(&rejectFilter, &passFilter)
 	r, err := m.Filter(types.Provider{})
 
 	assert.False(r)
@@ -83,7 +83,7 @@ func TestFailSecond(t *testing.T) {
 		R: false,
 	}
 
-	m := MultiFilter(&passFilter, &rejectFilter)
+	m := NewMultiFilter(&passFilter, &rejectFilter)
 	r, err := m.Filter(types.Provider{})
 
 	assert.False(r)
@@ -102,7 +102,7 @@ func TestError(t *testing.T) {
 		Err: mockErr,
 	}
 
-	m := MultiFilter(&f)
+	m := NewMultiFilter(&f)
 	_, err := m.Filter(types.Provider{})
 
 	assert.Error(err)

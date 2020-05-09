@@ -4,19 +4,21 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-type multiFilter struct {
+// MultiFilter efficiently combines multiple filters into a single filter.
+type MultiFilter struct {
 	filters []Filter
 }
 
-// MultiFilter efficiently combines multiple filters into a single one
-func MultiFilter(filters ...Filter) *multiFilter {
-	return &multiFilter{
+// NewMultiFilter returns a pointer to a new MultiFilter.
+func NewMultiFilter(filters ...Filter) *MultiFilter {
+	return &MultiFilter{
 		filters,
 	}
 }
 
-// Filter returns false for the first filter returning false, true otherwise
-func (m *multiFilter) Filter(p t.Provider) (bool, error) {
+// Filter takes a Provider and returns true when it is to be included, false
+// when not and an error when unexpected condition occur.
+func (m *MultiFilter) Filter(p t.Provider) (bool, error) {
 	for _, f := range m.filters {
 		include, err := f.Filter(p)
 

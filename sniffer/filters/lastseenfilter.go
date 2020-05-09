@@ -6,24 +6,26 @@ import (
 	"time"
 )
 
-type lastSeenFilter struct {
+// LastSeenFilter filters out recently seen Providers.
+type LastSeenFilter struct {
 	resources  map[t.Resource]time.Time
 	Expiration time.Duration
 	PruneLen   int
 }
 
-func LastSeenFilter(expiration time.Duration, pruneLen int) *lastSeenFilter {
+// NewLastSeenFilter initialises a new LastSeenFilter and returns a pointer to it.
+func NewLastSeenFilter(expiration time.Duration, pruneLen int) *LastSeenFilter {
 	// Allocate memory for pruneLen+1
 	r := make(map[t.Resource]time.Time, pruneLen+1)
 
-	return &lastSeenFilter{
+	return &LastSeenFilter{
 		Expiration: expiration,
 		PruneLen:   pruneLen,
 		resources:  r,
 	}
 }
 
-func (f *lastSeenFilter) prune() {
+func (f *LastSeenFilter) prune() {
 	if len(f.resources) > f.PruneLen {
 		// Delete all expired items
 		now := time.Now()
@@ -40,7 +42,9 @@ func (f *lastSeenFilter) prune() {
 	}
 }
 
-func (f *lastSeenFilter) Filter(p t.Provider) (bool, error) {
+// Filter takes a Provider and returns true when it is to be included, false
+// when not and an error when unexpected condition occur.
+func (f *LastSeenFilter) Filter(p t.Provider) (bool, error) {
 	f.prune()
 
 	lastSeen, present := f.resources[*(p.Resource)]

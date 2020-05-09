@@ -4,8 +4,8 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-// Filter takes a provider, returning true if it is to be included or false when
-// it is to be discarded.
+// Filter takes a Provider and returns true when it is to be included, false
+// when not and an error when unexpected condition occur.
 type Filter interface {
 	Filter(t.Provider) (bool, error)
 }

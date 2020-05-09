@@ -8,12 +8,13 @@ import (
 // CidFilter filters out invalid CID's or those which are not Raw or DagProtobuf.
 type CidFilter struct{}
 
-// NewCidFilter returns a new CidFilter.
+// NewCidFilter returns a pointer to a new CidFilter.
 func NewCidFilter() *CidFilter {
 	return &CidFilter{}
 }
 
-// Filter filters out invalid CID's or those which are not Raw or DagProtobuf.
+// Filter takes a Provider and returns true when it is to be included, false
+// when not and an error when unexpected condition occur.
 func (f *CidFilter) Filter(p t.Provider) (bool, error) {
 	if p.Resource.Protocol != "ipfs" {
 		return false, t.NewProviderErrorf(nil, p, "Unsupported protocol %s for %v", p.Resource.Protocol, p)
