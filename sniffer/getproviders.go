@@ -12,6 +12,7 @@ var ErrorLoggerTimeout = errors.New("Timeout waiting for log messages")
 
 // The default IPFS logger is a blocking function without a context, hence
 // we wrap it in a goroutine to allow for timeouts.
+// TODO: Implement the timeout in a filter (e.g. no message for x amount of time, return error).
 // TODO: Upgrade to well-designed `go-ipfs-http-api` if and when Logger is
 // implemented there and/or to use the generic `Request()` from there.
 func loggerToChannel(ctx context.Context, l Logger, msgs chan<- map[string]interface{}, errc chan<- error) {

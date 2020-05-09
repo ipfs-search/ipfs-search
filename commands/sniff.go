@@ -15,6 +15,9 @@ func Sniff(ctx context.Context, cfg *config.Config) error {
 	// Initialize IPFS shell
 	sh := shell.NewShell(cfg.IpfsAPI)
 
+	// Never timeout, the logger does a long poll!
+	sh.SetTimeout(0)
+
 	// Create and configure add queue
 	conn, err := queue.NewConnection(cfg.AMQPURL)
 	if err != nil {
@@ -28,19 +31,29 @@ func Sniff(ctx context.Context, cfg *config.Config) error {
 		return err
 	}
 
-	s, err := sniffer.New(cfg.SnifferConfig(), sh, q)
+	s, err := sniffer.New(cfg.SnifferConfig(), q)
 	if err != nil {
 		// Error starting sniffer
 		return err
 	}
 
 	for {
-		err := s.Sniff(ctx)
+		// Get a new logger everytime; the logger tends to hang, some times
+		logger, err := sh.GetLogs(ctx)
+		if err != nil {
+			// Error opening logger
+			return err
+		}
+
+		err = s.Sniff(ctx, logger)
 		log.Printf("Sniffer completed, error: %v", err)
+
+		// We're done with the current logger
+		logger.Close()
 
 		select {
 		case <-ctx.Done():
-			// Context cancelled, return error
+			// Context cancelled from above, return error
 			return err
 		case <-time.After(1 * time.Second):
 			// Wait a second, preventing tight restart loops

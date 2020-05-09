@@ -12,14 +12,13 @@ import (
 // them into the crawler's queue.
 type Sniffer struct {
 	cfg       *Config
-	shell     Shell
 	queue     Queue
 	filter    filters.Filter
 	extractor Extractor
 }
 
 // New returns a new sniffer.
-func New(cfg *Config, shell Shell, queue Queue) (*Sniffer, error) {
+func New(cfg *Config, queue Queue) (*Sniffer, error) {
 	// Initialize filters
 	lastSeenFilter := filters.NewLastSeenFilter(cfg.LastSeenExpiration, cfg.LastSeenPruneLen)
 	cidFilter := filters.NewCidFilter()
@@ -33,24 +32,13 @@ func New(cfg *Config, shell Shell, queue Queue) (*Sniffer, error) {
 
 	return &Sniffer{
 		cfg:       cfg,
-		shell:     shell,
 		filter:    f,
 		extractor: x,
 	}, nil
 }
 
-// Sniff starts sniffing, returning an error when anything goes wrong
-func (s *Sniffer) Sniff(ctx context.Context) error {
-	// Never timeout, this is a long poll!
-	s.shell.SetTimeout(0)
-
-	// Get logger
-	logger, err := s.shell.GetLogs(ctx)
-	if err != nil {
-		return err
-	}
-	defer logger.Close()
-
+// Sniff starts sniffing, only returning in error conditions.
+func (s *Sniffer) Sniff(ctx context.Context, logger Logger) error {
 	sniffedProviders := make(chan t.Provider)
 	filteredProviders := make(chan t.Provider)
 

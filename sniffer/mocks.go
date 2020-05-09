@@ -31,3 +31,17 @@ type mockExtractor struct {
 func (m mockExtractor) Extract(map[string]interface{}) (*t.Provider, error) {
 	return m.provider, m.err
 }
+
+type mockQueue struct {
+	msg       interface{}
+	priority  uint8
+	err       error
+	publishes int
+}
+
+func (m mockQueue) Publish(msg interface{}, priority uint8) error {
+	m.msg = msg
+	m.priority = priority
+	m.publishes++
+	return m.err
+}
