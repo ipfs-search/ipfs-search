@@ -3,7 +3,9 @@ package commands
 import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/config"
+	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/sniffer"
+	"github.com/ipfs/go-ipfs-api"
 	"log"
 	"time"
 )
@@ -20,12 +22,13 @@ func Sniff(ctx context.Context, cfg *config.Config) error {
 	}
 	defer conn.Close()
 
-	queue, err := conn.NewChannelQueue("hashes")
+	// Yielded hashes (of which type is unknown), should be added to hashes.
+	q, err := conn.NewChannelQueue("hashes")
 	if err != nil {
 		return err
 	}
 
-	s, err := sniffer.New(cfg.SnifferConfig(), shell, queue)
+	s, err := sniffer.New(cfg.SnifferConfig(), sh, q)
 	if err != nil {
 		// Error starting sniffer
 		return err

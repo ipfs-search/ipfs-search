@@ -12,34 +12,13 @@ import (
 const longTime = time.Duration(time.Minute)
 const shortTime = time.Duration(0)
 
-type mockLogger struct {
-	wait time.Duration
-	msg  map[string]interface{}
-	err  error
-}
-
-func (m mockLogger) Next() (map[string]interface{}, error) {
-	time.Sleep(m.wait)
-
-	return m.msg, m.err
-}
-
-type mockProviderExtractor struct {
-	provider *types.Provider
-	err      error
-}
-
-func (m mockProviderExtractor) Extract(map[string]interface{}) (*types.Provider, error) {
-	return m.provider, m.err
-}
-
 // TestContextCancel tests whether we're returning an error on context cancellation
 func TestContextCancel(t *testing.T) {
 	l := &mockLogger{
 		wait: time.Duration(longTime),
 	}
 
-	e := &mockProviderExtractor{}
+	e := &mockExtractor{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan types.Provider)
@@ -60,7 +39,7 @@ func TestTimeout(t *testing.T) {
 		wait: time.Duration(longTime),
 	}
 
-	e := &mockProviderExtractor{}
+	e := &mockExtractor{}
 
 	ctx := context.Background()
 	c := make(chan types.Provider)
@@ -84,7 +63,7 @@ func TestYieldProvider(t *testing.T) {
 
 	l := &mockLogger{}
 
-	e := &mockProviderExtractor{
+	e := &mockExtractor{
 		provider: &mockProvider,
 	}
 
@@ -107,7 +86,7 @@ func TestLoggerError(t *testing.T) {
 		err: errMock,
 	}
 
-	e := &mockProviderExtractor{}
+	e := &mockExtractor{}
 
 	ctx := context.Background()
 	c := make(chan types.Provider)
@@ -125,7 +104,7 @@ func TestProviderErr(t *testing.T) {
 
 	l := &mockLogger{}
 
-	e := &mockProviderExtractor{
+	e := &mockExtractor{
 		err: errMock,
 	}
 
