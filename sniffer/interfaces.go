@@ -3,7 +3,6 @@ package sniffer
 import (
 	"context"
 	t "github.com/ipfs-search/ipfs-search/types"
-	shell "github.com/ipfs/go-ipfs-api"
 	"time"
 )
 
@@ -29,5 +28,5 @@ type Shell interface {
 	SetTimeout(time.Duration)
 	// Note: it's rather weird but Golang doesn't accept the Logger interface from
 	// above here.
-	GetLogs(context.Context) (shell.Logger, error)
+	GetLogs(context.Context) (Logger, error)
 }
