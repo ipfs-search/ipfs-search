@@ -13,9 +13,9 @@ func queueProviders(ctx context.Context, providers <-chan t.Provider, queue Queu
 		case <-ctx.Done():
 			return ctx.Err()
 		case p := <-providers:
-			// Add with highest priority, as this is supposed to be available
 			log.Printf("Queueing %v", p.Resource)
 
+			// Add with highest priority (9), as this is supposed to be available
 			err := queue.Publish(&crawler.Args{
 				Hash: p.Id,
 			}, 9)

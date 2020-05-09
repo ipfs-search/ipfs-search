@@ -32,6 +32,7 @@ func New(cfg *Config, queue Queue) (*Sniffer, error) {
 
 	return &Sniffer{
 		cfg:       cfg,
+		queue:     queue,
 		filter:    f,
 		extractor: x,
 	}, nil

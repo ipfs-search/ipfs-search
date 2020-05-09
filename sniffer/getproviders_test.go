@@ -61,7 +61,9 @@ func TestYieldProvider(t *testing.T) {
 		},
 	}
 
-	l := &mockLogger{}
+	// Send a nil message to assure a call to extractor
+	l := newMockLogger()
+	l.msgs <- nil
 
 	e := &mockExtractor{
 		provider: &mockProvider,
@@ -82,8 +84,11 @@ func TestYieldProvider(t *testing.T) {
 func TestLoggerError(t *testing.T) {
 	errMock := errors.New("mock")
 
-	l := &mockLogger{
-		err: errMock,
+	// Create mock logger with associated messages
+	errc := make(chan error, 1)
+	errc <- errMock
+	l := mockLogger{
+		errc: errc,
 	}
 
 	e := &mockExtractor{}
@@ -102,7 +107,8 @@ func TestLoggerError(t *testing.T) {
 func TestProviderErr(t *testing.T) {
 	errMock := errors.New("mock")
 
-	l := &mockLogger{}
+	l := newMockLogger()
+	l.msgs <- nil
 
 	e := &mockExtractor{
 		err: errMock,
