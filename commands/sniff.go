@@ -10,14 +10,29 @@ import (
 
 // Sniff configures and initializes crawling
 func Sniff(ctx context.Context, cfg *config.Config) error {
-	s, err := sniffer.New(cfg.SnifferConfig())
+	// Initialize IPFS shell
+	sh := shell.NewShell(cfg.IpfsAPI)
+
+	// Create and configure add queue
+	conn, err := queue.NewConnection(cfg.AMQPURL)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	queue, err := conn.NewChannelQueue("hashes")
+	if err != nil {
+		return err
+	}
+
+	s, err := sniffer.New(cfg.SnifferConfig(), shell, queue)
 	if err != nil {
 		// Error starting sniffer
 		return err
 	}
 
 	for {
-		err := s.Work(ctx)
+		err := s.Sniff(ctx)
 		log.Printf("Sniffer completed, error: %v", err)
 
 		select {

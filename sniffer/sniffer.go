@@ -12,64 +12,56 @@ import (
 // Sniffer is a worker sniffing for provider messages, filtering them and feeding
 // them into the crawler's queue.
 type Sniffer struct {
-	Shell  *shell.Shell
-	Config *Config
+	shell     *shell.Shell
+	queue     *queue.Queue
+	cfg       *Config
+	filter    filters.Filter
+	extractor *ProviderExtractor
 }
 
 // New returns a new sniffer.
-func New(cfg *Config) (*Sniffer, error) {
-	// Create and configure Ipfs shell
-	sh := shell.NewShell(cfg.IpfsAPI)
+func New(cfg *Config, shell *shell.Shell, queue *queue.Queue) (*Sniffer, error) {
+	// Initialize filters
+	lastSeenFilter := filters.LastSeenFilter(cfg.LastSeenExpiration, cfg.LastSeenPruneLen)
+	cidFilter := filters.NewCidFilter()
+	filter := filters.MultiFilter(lastSeenFilter, cidFilter)
 
-	// Never timeout, this is a long poll!
-	sh.SetTimeout(0)
+	// Initialize extractor
+	extractor := ProviderExtractor{}
 
 	return &Sniffer{
-		Shell:  sh,
-		Config: cfg,
+		shell:     shell,
+		cfg:       cfg,
+		filter:    filter,
+		extractor: &extractor,
 	}, nil
 }
 
-// Work starts a blocking sniffer, returning an error when anything goes wrong
-func (s *Sniffer) Work(ctx context.Context) error {
-	logger, err := s.Shell.GetLogs(ctx)
+// Sniff starts sniffing, returning an error when anything goes wrong
+func (s *Sniffer) Sniff(ctx context.Context) error {
+	// Never timeout, this is a long poll!
+	s.shell.SetTimeout(0)
+
+	// Get logger
+	logger, err := s.shell.GetLogs(ctx)
 	if err != nil {
 		return err
 	}
-
 	defer logger.Close()
-
-	// Create and configure add queue
-	conn, err := queue.NewConnection(s.Config.AMQPURL)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	queue, err := conn.NewChannelQueue("hashes")
-	if err != nil {
-		return err
-	}
 
 	sniffedProviders := make(chan t.Provider)
 	filteredProviders := make(chan t.Provider)
 
-	lastSeenFilter := filters.LastSeenFilter(s.Config.LastSeenExpiration, s.Config.LastSeenPruneLen)
-	cidFilter := filters.NewCidFilter()
-	multiFilter := filters.MultiFilter(lastSeenFilter, cidFilter)
-
-	providerExtractor := ProviderExtractor{}
-
 	// Create error group and context
 	errg, ctx := errgroup.WithContext(ctx)
 	errg.Go(func() error {
-		return getProviders(ctx, logger, providerExtractor, sniffedProviders, s.Config.LoggerTimeout)
+		return getProviders(ctx, logger, s.extractor, sniffedProviders, s.cfg.LoggerTimeout)
 	})
 	errg.Go(func() error {
-		return filterProviders(ctx, sniffedProviders, filteredProviders, multiFilter)
+		return filterProviders(ctx, sniffedProviders, filteredProviders, s.filter)
 	})
 	errg.Go(func() error {
-		return queueProviders(ctx, filteredProviders, queue)
+		return queueProviders(ctx, filteredProviders, s.queue)
 	})
 
 	return errg.Wait()
