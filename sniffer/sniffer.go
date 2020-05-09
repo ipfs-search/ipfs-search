@@ -2,25 +2,23 @@ package sniffer
 
 import (
 	"context"
-	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/sniffer/filters"
 	t "github.com/ipfs-search/ipfs-search/types"
-	"github.com/ipfs/go-ipfs-api"
 	"golang.org/x/sync/errgroup"
 )
 
 // Sniffer is a worker sniffing for provider messages, filtering them and feeding
 // them into the crawler's queue.
 type Sniffer struct {
-	shell     *shell.Shell
-	queue     *queue.Queue
 	cfg       *Config
+	shell     Shell
+	queue     Queue
 	filter    filters.Filter
-	extractor *ProviderExtractor
+	extractor Extractor
 }
 
 // New returns a new sniffer.
-func New(cfg *Config, shell *shell.Shell, queue *queue.Queue) (*Sniffer, error) {
+func New(cfg *Config, shell Shell, queue Queue) (*Sniffer, error) {
 	// Initialize filters
 	lastSeenFilter := filters.LastSeenFilter(cfg.LastSeenExpiration, cfg.LastSeenPruneLen)
 	cidFilter := filters.NewCidFilter()
@@ -30,8 +28,8 @@ func New(cfg *Config, shell *shell.Shell, queue *queue.Queue) (*Sniffer, error) 
 	extractor := ProviderExtractor{}
 
 	return &Sniffer{
-		shell:     shell,
 		cfg:       cfg,
+		shell:     shell,
 		filter:    filter,
 		extractor: &extractor,
 	}, nil

@@ -3,12 +3,11 @@ package sniffer
 import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/crawler"
-	"github.com/ipfs-search/ipfs-search/queue"
 	t "github.com/ipfs-search/ipfs-search/types"
 	"log"
 )
 
-func queueProviders(ctx context.Context, providers <-chan t.Provider, queue *queue.Queue) error {
+func queueProviders(ctx context.Context, providers <-chan t.Provider, queue Queue) error {
 	for {
 		select {
 		case <-ctx.Done():
