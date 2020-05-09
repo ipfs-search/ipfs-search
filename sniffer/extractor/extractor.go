@@ -10,9 +10,9 @@ import (
 // none was found and an error in unexpected situations.
 type Extractor struct{}
 
-// New returns a new Extractor
-func New() (Extractor, error) {
-	return Extractor{}, nil
+// New returns a pointer to a new Extractor
+func New() (*Extractor, error) {
+	return &Extractor{}, nil
 }
 
 // Extract performs the extraction.

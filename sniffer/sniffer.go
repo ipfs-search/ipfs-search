@@ -21,9 +21,9 @@ type Sniffer struct {
 // New returns a new sniffer.
 func New(cfg *Config, shell Shell, queue Queue) (*Sniffer, error) {
 	// Initialize filters
-	lastSeenFilter := filters.LastSeenFilter(cfg.LastSeenExpiration, cfg.LastSeenPruneLen)
+	lastSeenFilter := filters.NewLastSeenFilter(cfg.LastSeenExpiration, cfg.LastSeenPruneLen)
 	cidFilter := filters.NewCidFilter()
-	f := filters.MultiFilter(lastSeenFilter, cidFilter)
+	f := filters.NewMultiFilter(lastSeenFilter, cidFilter)
 
 	// Initialize extractor
 	x, err := extractor.New()
