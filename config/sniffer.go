@@ -10,14 +10,12 @@ type Sniffer struct {
 	LastSeenExpiration time.Duration `yaml:"lastseen_expiration"`
 	LastSeenPruneLen   int           `yaml:"lastseen_prunelen"`
 	LoggerTimeout      time.Duration `yaml:"logger_timeout"`
+	BufferSize         uint          `yaml:"buffer_size"`
 }
 
 func (c *Config) SnifferConfig() *sniffer.Config {
-	return &sniffer.Config{
-		LastSeenExpiration: c.Sniffer.LastSeenExpiration,
-		LastSeenPruneLen:   c.Sniffer.LastSeenPruneLen,
-		LoggerTimeout:      c.Sniffer.LoggerTimeout,
-	}
+	cfg := sniffer.Config(c.Sniffer)
+	return &cfg
 }
 
 func SnifferDefaults() Sniffer {
