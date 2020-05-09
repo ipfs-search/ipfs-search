@@ -1,4 +1,4 @@
-package sniffer
+package extractor
 
 import (
 	"fmt"
@@ -6,12 +6,17 @@ import (
 	"time"
 )
 
-// ProviderExtractor attempts to extract a ResourceProvider from a Message, returning nil when
+// Extractor attempts to extract a ResourceProvider from a Message, returning nil when
 // none was found and an error in unexpected situations.
-type ProviderExtractor struct{}
+type Extractor struct{}
+
+// New returns a new Extractor
+func New() (Extractor, error) {
+	return Extractor{}, nil
+}
 
 // Extract performs the extraction.
-func (e ProviderExtractor) Extract(m map[string]interface{}) (*t.Provider, error) {
+func (e Extractor) Extract(m map[string]interface{}) (*t.Provider, error) {
 	// Somehow, real life messages are divided into events and operations.
 	// This is not properly documented anywhere.
 	operationType := m["Operation"]

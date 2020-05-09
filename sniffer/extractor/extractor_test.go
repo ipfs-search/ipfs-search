@@ -1,4 +1,4 @@
-package sniffer
+package extractor
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -15,7 +15,8 @@ func TestNoHandleAddProvider(t *testing.T) {
 
 	assert := assert.New(t)
 
-	e := ProviderExtractor{}
+	e, err := New()
+	assert.Empty(err)
 
 	p, err := e.Extract(mockMsg)
 
@@ -42,7 +43,8 @@ func TestExtract(t *testing.T) {
 
 	assert := assert.New(t)
 
-	e := ProviderExtractor{}
+	e, err := New()
+	assert.Empty(err)
 
 	p, err := e.Extract(mockMsg)
 	assert.Empty(err)
@@ -55,7 +57,9 @@ func TestExtract(t *testing.T) {
 
 func TestExtractError(t *testing.T) {
 	assert := assert.New(t)
-	e := ProviderExtractor{}
+
+	e, err := New()
+	assert.Empty(err)
 
 	testError := func(msg map[string]interface{}, errContains string) {
 		p, err := e.Extract(msg)
