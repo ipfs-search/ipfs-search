@@ -39,8 +39,8 @@ func New(cfg *Config, queue Queue) (*Sniffer, error) {
 
 // Sniff starts sniffing, only returning in error conditions.
 func (s *Sniffer) Sniff(ctx context.Context, logger Logger) error {
-	sniffedProviders := make(chan t.Provider)
-	filteredProviders := make(chan t.Provider)
+	sniffedProviders := make(chan t.Provider, s.cfg.BufferSize)
+	filteredProviders := make(chan t.Provider, s.cfg.BufferSize)
 
 	// Create error group and context
 	errg, ctx := errgroup.WithContext(ctx)
