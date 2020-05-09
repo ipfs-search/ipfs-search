@@ -2,6 +2,7 @@ package sniffer
 
 import (
 	"context"
+	"github.com/ipfs-search/ipfs-search/sniffer/extractor"
 	"github.com/ipfs-search/ipfs-search/sniffer/filters"
 	t "github.com/ipfs-search/ipfs-search/types"
 	"golang.org/x/sync/errgroup"
@@ -22,16 +23,19 @@ func New(cfg *Config, shell Shell, queue Queue) (*Sniffer, error) {
 	// Initialize filters
 	lastSeenFilter := filters.LastSeenFilter(cfg.LastSeenExpiration, cfg.LastSeenPruneLen)
 	cidFilter := filters.NewCidFilter()
-	filter := filters.MultiFilter(lastSeenFilter, cidFilter)
+	f := filters.MultiFilter(lastSeenFilter, cidFilter)
 
 	// Initialize extractor
-	extractor := ProviderExtractor{}
+	x, err := extractor.New()
+	if err != nil {
+		return nil, err
+	}
 
 	return &Sniffer{
 		cfg:       cfg,
 		shell:     shell,
-		filter:    filter,
-		extractor: &extractor,
+		filter:    f,
+		extractor: x,
 	}, nil
 }
 
