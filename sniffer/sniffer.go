@@ -46,7 +46,7 @@ func (s *Sniffer) Sniff(ctx context.Context, logger Logger) error {
 	// Create error group and context
 	errg, ctx := errgroup.WithContext(ctx)
 	errg.Go(func() error {
-		return getProviders(ctx, logger, s.extractor, sniffedProviders, s.cfg.LoggerTimeout)
+		return yieldProviders(ctx, logger, s.extractor, sniffedProviders, s.cfg.LoggerTimeout)
 	})
 	errg.Go(func() error {
 		return filterProviders(ctx, sniffedProviders, filteredProviders, s.filter)

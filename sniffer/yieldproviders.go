@@ -32,7 +32,7 @@ func loggerToChannel(ctx context.Context, l Logger, msgs chan<- map[string]inter
 	}
 }
 
-func getProviders(ctx context.Context, l Logger, e Extractor, providers chan<- t.Provider, timeout time.Duration) error {
+func yieldProviders(ctx context.Context, l Logger, e Extractor, providers chan<- t.Provider, timeout time.Duration) error {
 	msgs := make(chan map[string]interface{})
 	errc := make(chan error, 1)
 
