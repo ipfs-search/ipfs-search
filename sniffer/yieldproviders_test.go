@@ -28,7 +28,7 @@ func TestContextCancel(t *testing.T) {
 	// Cancel context immediately
 	cancel()
 
-	err := getProviders(ctx, l, e, c, longTime)
+	err := yieldProviders(ctx, l, e, c, longTime)
 
 	assert.Equal(err, context.Canceled)
 }
@@ -46,13 +46,13 @@ func TestTimeout(t *testing.T) {
 
 	assert := assert.New(t)
 
-	err := getProviders(ctx, l, e, c, shortTime)
+	err := yieldProviders(ctx, l, e, c, shortTime)
 
 	assert.Equal(ErrorLoggerTimeout, err)
 
 }
 
-// TestYieldProvider tests whether a provider is yielded on a provider message
+// TestYieldProvider tests whether a provider is yielded for a provider message
 func TestYieldProvider(t *testing.T) {
 	mockProvider := types.Provider{
 		Resource: &types.Resource{
@@ -74,7 +74,7 @@ func TestYieldProvider(t *testing.T) {
 
 	assert := assert.New(t)
 
-	go getProviders(ctx, l, e, c, longTime)
+	go yieldProviders(ctx, l, e, c, longTime)
 
 	provider := <-c
 	assert.Equal(mockProvider, provider)
@@ -98,7 +98,7 @@ func TestLoggerError(t *testing.T) {
 
 	assert := assert.New(t)
 
-	err := getProviders(ctx, l, e, c, longTime)
+	err := yieldProviders(ctx, l, e, c, longTime)
 
 	assert.Equal(err, errMock)
 }
@@ -119,7 +119,7 @@ func TestProviderErr(t *testing.T) {
 
 	assert := assert.New(t)
 
-	err := getProviders(ctx, l, e, c, longTime)
+	err := yieldProviders(ctx, l, e, c, longTime)
 
 	assert.Equal(err, errMock)
 }
