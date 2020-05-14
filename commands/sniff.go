@@ -26,12 +26,12 @@ func Sniff(ctx context.Context, cfg *config.Config) error {
 	defer conn.Close()
 
 	// Yielded hashes (of which type is unknown), should be added to hashes.
-	q, err := conn.NewChannelQueue("hashes")
+	queue, err := conn.NewChannelQueue("hashes")
 	if err != nil {
 		return err
 	}
 
-	s, err := sniffer.New(cfg.SnifferConfig(), q)
+	s, err := sniffer.New(cfg.SnifferConfig())
 	if err != nil {
 		// Error starting sniffer
 		return err
@@ -45,7 +45,7 @@ func Sniff(ctx context.Context, cfg *config.Config) error {
 			return err
 		}
 
-		err = s.Sniff(ctx, logger)
+		err = s.Sniff(ctx, logger, queue)
 		log.Printf("Sniffer completed, error: %v", err)
 
 		// We're done with the current logger

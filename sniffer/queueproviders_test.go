@@ -22,7 +22,8 @@ func TestQueueContextCancel(t *testing.T) {
 	// Cancel context immediately
 	cancel()
 
-	err := queueProviders(ctx, c, q)
+	pq := &providerQueuer{}
+	err := pq.queue(ctx, c, q)
 
 	assert.Equal(err, context.Canceled)
 }
@@ -45,7 +46,8 @@ func TestQueuePublish(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go queueProviders(ctx, c, q)
+	pq := &providerQueuer{}
+	go pq.queue(ctx, c, q)
 
 	// See whether stuff actually got queued
 	pub := <-pubs
@@ -77,8 +79,10 @@ func TestQueueError(t *testing.T) {
 	c := make(chan types.Provider, 1)
 	c <- p
 
+	pq := &providerQueuer{}
+
 	ctx := context.Background()
-	err := queueProviders(ctx, c, q)
+	err := pq.queue(ctx, c, q)
 
 	assert.True(errors.Is(err, mockErr))
 }

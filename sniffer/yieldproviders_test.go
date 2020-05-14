@@ -28,7 +28,12 @@ func TestContextCancel(t *testing.T) {
 	// Cancel context immediately
 	cancel()
 
-	err := yieldProviders(ctx, l, e, c, longTime)
+	py := &providerYielder{
+		e:       e,
+		timeout: longTime,
+	}
+
+	err := py.yield(ctx, l, c)
 
 	assert.Equal(err, context.Canceled)
 }
@@ -46,7 +51,12 @@ func TestTimeout(t *testing.T) {
 
 	assert := assert.New(t)
 
-	err := yieldProviders(ctx, l, e, c, shortTime)
+	py := &providerYielder{
+		e:       e,
+		timeout: shortTime,
+	}
+
+	err := py.yield(ctx, l, c)
 
 	assert.Equal(ErrorLoggerTimeout, err)
 
@@ -74,7 +84,12 @@ func TestYieldProvider(t *testing.T) {
 
 	assert := assert.New(t)
 
-	go yieldProviders(ctx, l, e, c, longTime)
+	py := &providerYielder{
+		e:       e,
+		timeout: longTime,
+	}
+
+	go py.yield(ctx, l, c)
 
 	provider := <-c
 	assert.Equal(mockProvider, provider)
@@ -98,7 +113,12 @@ func TestLoggerError(t *testing.T) {
 
 	assert := assert.New(t)
 
-	err := yieldProviders(ctx, l, e, c, longTime)
+	py := &providerYielder{
+		e:       e,
+		timeout: longTime,
+	}
+
+	err := py.yield(ctx, l, c)
 
 	assert.Equal(err, errMock)
 }
@@ -119,7 +139,12 @@ func TestProviderErr(t *testing.T) {
 
 	assert := assert.New(t)
 
-	err := yieldProviders(ctx, l, e, c, longTime)
+	py := &providerYielder{
+		e:       e,
+		timeout: longTime,
+	}
+
+	err := py.yield(ctx, l, c)
 
 	assert.Equal(err, errMock)
 }

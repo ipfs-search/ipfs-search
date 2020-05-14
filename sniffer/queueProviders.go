@@ -7,7 +7,9 @@ import (
 	"log"
 )
 
-func queueProviders(ctx context.Context, providers <-chan t.Provider, queue Queue) error {
+type providerQueuer struct{}
+
+func (q *providerQueuer) queue(ctx context.Context, providers <-chan t.Provider, queue Queue) error {
 	for {
 		select {
 		case <-ctx.Done():

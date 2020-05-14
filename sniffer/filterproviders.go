@@ -6,16 +6,19 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-// filterProviders filters a stream of providers, dropping those
-// for which filter returns false
-func filterProviders(ctx context.Context, in <-chan t.Provider, out chan<- t.Provider, f filters.Filter) error {
+type providerFilter struct {
+	f filters.Filter
+}
+
+// filter filters a stream of providers, dropping those for which filter returns false
+func (f *providerFilter) filter(ctx context.Context, in <-chan t.Provider, out chan<- t.Provider) error {
 	for {
 		select {
 		case <-ctx.Done():
 			// Context closed, return context error
 			return ctx.Err()
 		case p := <-in:
-			include, err := f.Filter(p)
+			include, err := f.f.Filter(p)
 
 			if err != nil {
 				return err
@@ -26,4 +29,5 @@ func filterProviders(ctx context.Context, in <-chan t.Provider, out chan<- t.Pro
 			}
 		}
 	}
+
 }
