@@ -24,7 +24,8 @@ func TestFilterProvidersInclude(t *testing.T) {
 	out := make(chan types.Provider)
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go filterProviders(ctx, in, out, mockFilter)
+	pf := &providerFilter{f: mockFilter}
+	go pf.filter(ctx, in, out)
 
 	// Write provider
 	in <- p
@@ -54,7 +55,8 @@ func TestFilterProvidersExclude(t *testing.T) {
 	out := make(chan types.Provider)
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go filterProviders(ctx, in, out, mockFilter)
+	pf := &providerFilter{f: mockFilter}
+	go pf.filter(ctx, in, out)
 
 	// Write provider
 	in <- p
@@ -84,7 +86,8 @@ func TestFilterProvidersError(t *testing.T) {
 	// Write provider
 	in <- p
 
-	err := filterProviders(ctx, in, out, mockFilter)
+	pf := &providerFilter{f: mockFilter}
+	err := pf.filter(ctx, in, out)
 
 	assert.Error(err)
 	assert.Equal(mockError, err)
@@ -109,7 +112,8 @@ func TestFilterProvidersContextCancel(t *testing.T) {
 	// Cancel already
 	cancel()
 
-	err := filterProviders(ctx, in, out, mockFilter)
+	pf := &providerFilter{f: mockFilter}
+	err := pf.filter(ctx, in, out)
 
 	assert.Error(err)
 

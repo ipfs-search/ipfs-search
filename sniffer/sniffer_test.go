@@ -12,11 +12,9 @@ import (
 func TestNew(t *testing.T) {
 	assert := assert.New(t)
 
-	q := mockQueue{}
-
 	cfg := DefaultConfig()
 
-	s, e := New(cfg, q)
+	s, e := New(cfg)
 
 	assert.NotEmpty(s)
 	assert.Empty(e)
@@ -26,22 +24,33 @@ func TestNew(t *testing.T) {
 func TestSniffCancel(t *testing.T) {
 	assert := assert.New(t)
 
-	l := mockLogger{}
 	x := mockExtractor{}
+	py := &providerYielder{
+		e:       x,
+		timeout: longTime,
+	}
+
 	f := &filters.MockFilter{}
+	pf := &providerFilter{f: f}
+
+	pq := &providerQueuer{}
 
 	cfg := DefaultConfig()
 
 	s := &Sniffer{
-		cfg:       cfg,
-		filter:    f,
-		extractor: x,
+		cfg:     cfg,
+		yielder: py,
+		filter:  pf,
+		queuer:  pq,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	err := s.Sniff(ctx, l)
+	l := mockLogger{}
+	q := &mockQueue{}
+	err := s.Sniff(ctx, l, q)
+
 	assert.Contains(err.Error(), "context canceled")
 }
 
@@ -59,7 +68,7 @@ func TestLogToPublish(t *testing.T) {
 
 	// Create sniffer
 	cfg := DefaultConfig()
-	s, e := New(cfg, q)
+	s, e := New(cfg)
 	assert.NotEmpty(s)
 	assert.Empty(e)
 
@@ -90,7 +99,7 @@ func TestLogToPublish(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Run sniffer in goroutine
-	go s.Sniff(ctx, l)
+	go s.Sniff(ctx, l, q)
 
 	// Retreive publication
 	pub := <-pubs

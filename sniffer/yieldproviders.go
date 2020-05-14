@@ -31,7 +31,12 @@ func loggerToChannel(ctx context.Context, l Logger, msgs chan<- map[string]inter
 	}
 }
 
-func yieldProviders(ctx context.Context, l Logger, e Extractor, providers chan<- t.Provider, timeout time.Duration) error {
+type providerYielder struct {
+	e       Extractor
+	timeout time.Duration
+}
+
+func (y *providerYielder) yield(ctx context.Context, l Logger, providers chan<- t.Provider) error {
 	msgs := make(chan map[string]interface{})
 	errc := make(chan error, 1)
 
@@ -41,12 +46,12 @@ func yieldProviders(ctx context.Context, l Logger, e Extractor, providers chan<-
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-time.After(timeout):
+		case <-time.After(y.timeout):
 			return ErrorLoggerTimeout
 		case err := <-errc:
 			return err
 		case msg := <-msgs:
-			provider, err := e.Extract(msg)
+			provider, err := y.e.Extract(msg)
 			if err != nil {
 				return err
 			}
