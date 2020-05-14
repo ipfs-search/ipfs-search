@@ -19,7 +19,7 @@ func (q *providerQueuer) queue(ctx context.Context, providers <-chan t.Provider,
 
 			// Add with highest priority (9), as this is supposed to be available
 			err := queue.Publish(&crawler.Args{
-				Hash: p.Id,
+				Hash: p.ID,
 			}, 9)
 
 			if err != nil {

@@ -66,7 +66,7 @@ func (m mockQueue) Publish(pub interface{}, priority uint8) error {
 func mockProvider() t.Provider {
 	resource := &t.Resource{
 		Protocol: "ipfs",
-		Id:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 	}
 
 	return t.Provider{

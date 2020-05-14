@@ -51,7 +51,7 @@ func TestExtract(t *testing.T) {
 
 	assert.Equal(p.Date, time.Date(2020, time.January, 21, 17, 28, 02, 501941007, time.UTC))
 	assert.Equal(p.Resource.Protocol, "ipfs")
-	assert.Equal(p.Resource.Id, "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp")
+	assert.Equal(p.Resource.ID, "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp")
 	assert.Equal(p.Provider, "QmeTtFXm42Jb2todcKR538j6qHYxXt6suUzpF3rtT9FPSd")
 }
 

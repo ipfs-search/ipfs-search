@@ -53,7 +53,7 @@ func TestQueuePublish(t *testing.T) {
 	pub := <-pubs
 	priority := <-priorities
 
-	assert.Equal(pub.(*crawler.Args).Hash, p.Resource.Id)
+	assert.Equal(pub.(*crawler.Args).Hash, p.Resource.ID)
 	assert.Equal(priority, uint8(9))
 
 	// Cleanup

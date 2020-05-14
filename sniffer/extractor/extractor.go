@@ -54,7 +54,7 @@ func (e Extractor) Extract(m map[string]interface{}) (*t.Provider, error) {
 		return &t.Provider{
 			Resource: &t.Resource{
 				Protocol: "ipfs",
-				Id:       key,
+				ID:       key,
 			},
 			Date:     date,
 			Provider: peer,

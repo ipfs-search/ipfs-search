@@ -13,7 +13,7 @@ func makeProvider(resource *types.Resource) *types.Provider {
 	if resource == nil {
 		resource = &types.Resource{
 			Protocol: "ipfs",
-			Id:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		}
 	}
 
@@ -40,7 +40,7 @@ func TestCid1Rawleave(t *testing.T) {
 
 	r := &types.Resource{
 		Protocol: "ipfs",
-		Id:       "bafkreiblvqc3q73ygovlzaxz4iilm5fopppcdc3uzkrtepjsgkvyev3kgy",
+		ID:       "bafkreiblvqc3q73ygovlzaxz4iilm5fopppcdc3uzkrtepjsgkvyev3kgy",
 	}
 
 	p := makeProvider(r)
@@ -56,7 +56,7 @@ func TestCid1Protobuf(t *testing.T) {
 
 	r := &types.Resource{
 		Protocol: "ipfs",
-		Id:       "bafybeihpsvpelgck42nikpiiuvgbf3ob3ydjkzkq5267mnp5jq5uhzatcy",
+		ID:       "bafybeihpsvpelgck42nikpiiuvgbf3ob3ydjkzkq5267mnp5jq5uhzatcy",
 	}
 
 	p := makeProvider(r)
@@ -73,7 +73,7 @@ func TestUnsupported(t *testing.T) {
 	// Ethereum block
 	r := &types.Resource{
 		Protocol: "ipfs",
-		Id:       "z43AaGEvwdfzjrCZ3Sq7DKxdDHrwoaPQDtqF4jfdkNEVTiqGVFW",
+		ID:       "z43AaGEvwdfzjrCZ3Sq7DKxdDHrwoaPQDtqF4jfdkNEVTiqGVFW",
 	}
 
 	p := makeProvider(r)
@@ -89,7 +89,7 @@ func TestInvalid(t *testing.T) {
 
 	invalidResource := &types.Resource{
 		Protocol: "ipfs",
-		Id:       "invalid",
+		ID:       "invalid",
 	}
 
 	p := makeProvider(invalidResource)
@@ -105,7 +105,7 @@ func TestNonIpfs(t *testing.T) {
 
 	invalidResource := &types.Resource{
 		Protocol: "bananafs",
-		Id:       "dontcare",
+		ID:       "dontcare",
 	}
 
 	p := makeProvider(invalidResource)
