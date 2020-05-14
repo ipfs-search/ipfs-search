@@ -38,7 +38,7 @@ For discussing and suggesting features, look at the [project planning](https://g
 ## Requirements
 
 * Go 1.13
-* Elasticsearch 5.x
+* Elasticsearch 6.x
 * RabbitMQ / AMQP server
 * NodeJS 9.x
 

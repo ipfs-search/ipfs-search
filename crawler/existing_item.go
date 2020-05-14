@@ -2,20 +2,21 @@ package crawler
 
 import (
 	"context"
-	"github.com/ipfs-search/ipfs-search/indexer"
+	"github.com/ipfs-search/ipfs-search/index"
+	"github.com/ipfs-search/ipfs-search/types/references"
 	"log"
 )
 
 type existingItem struct {
 	*Indexable
 	exists     bool
-	references indexer.References
-	itemType   string
+	references references.References
+	index      index.Index
 }
 
 // referenceFromIndexable generates a new reference for a given indexable
-func referenceFromExisting(i *existingItem) *indexer.Reference {
-	return &indexer.Reference{
+func referenceFromExisting(i *existingItem) *references.Reference {
+	return &references.Reference{
 		Name:       i.Name,
 		ParentHash: i.ParentHash,
 	}
@@ -41,7 +42,7 @@ func (i *existingItem) updateIndex(ctx context.Context) error {
 		"last-seen":  nowISO(),
 	}
 
-	return i.Indexer.IndexItem(ctx, i.itemType, i.Hash, properties)
+	return i.index.Update(ctx, i.Hash, properties)
 }
 
 // update updates existing items (if they in fact do exist)
@@ -70,7 +71,7 @@ func (i *existingItem) skipItem() bool {
 		return true
 	}
 
-	if i.itemType == "invalid" {
+	if i.index == i.InvalidIndex {
 		log.Printf("Skipping update of invalid %v", i)
 		return true
 	}
@@ -84,16 +85,24 @@ func (i *Indexable) getExistingItem(ctx context.Context) (*existingItem, error) 
 		panic("Indexable should not be nil")
 	}
 
-	references, itemType, err := i.Indexer.GetReferences(ctx, i.Hash)
+	indexes := []index.Index{i.InvalidIndex, i.FileIndex, i.DirectoryIndex}
+
+	// Container for query reference fetch results
+	src := &struct {
+		references references.References
+	}{}
+
+	index, err := index.MultiGet(ctx, indexes, i.Hash, src, "references")
+
 	if err != nil {
 		return nil, err
 	}
 
 	item := &existingItem{
 		Indexable:  i,
-		exists:     itemType != "", // itemType == nil -> doesn't exist
-		references: references,
-		itemType:   itemType,
+		exists:     index != nil,
+		references: src.references,
+		index:      index,
 	}
 
 	return item, nil

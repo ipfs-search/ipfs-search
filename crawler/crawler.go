@@ -3,7 +3,7 @@ package crawler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ipfs-search/ipfs-search/indexer"
+	"github.com/ipfs-search/ipfs-search/index"
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs/go-ipfs-api"
 )
@@ -21,8 +21,12 @@ type Args struct {
 type Crawler struct {
 	Config *Config
 
-	Shell     *shell.Shell
-	Indexer   *indexer.Indexer
+	Shell *shell.Shell
+
+	FileIndex      index.Index
+	DirectoryIndex index.Index
+	InvalidIndex   index.Index
+
 	FileQueue *queue.Queue
 	HashQueue *queue.Queue
 }

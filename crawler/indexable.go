@@ -3,7 +3,7 @@ package crawler
 import (
 	"context"
 	"fmt"
-	"github.com/ipfs-search/ipfs-search/indexer"
+	"github.com/ipfs-search/ipfs-search/types/references"
 	"github.com/ipfs/go-ipfs-api"
 	"log"
 	"math/rand"
@@ -113,7 +113,7 @@ func (i *Indexable) indexInvalid(ctx context.Context, err error) {
 		"error": err.Error(),
 	}
 
-	i.Indexer.IndexItem(ctx, "invalid", i.Hash, m)
+	i.InvalidIndex.Index(ctx, i.Hash, m)
 }
 
 // queueList queues any items in a given list/directory
@@ -151,7 +151,7 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 }
 
 // processList processes and indexes a file listing
-func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references []indexer.Reference) (err error) {
+func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references references.References) (err error) {
 	now := nowISO()
 
 	switch list.Type {
@@ -181,7 +181,7 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 			"last-seen":  now,
 		}
 
-		err = i.Indexer.IndexItem(ctx, "directory", i.Hash, m)
+		err = i.DirectoryIndex.Index(ctx, i.Hash, m)
 	default:
 		log.Printf("Type '%s' skipped for %s", list.Type, i)
 	}
@@ -190,7 +190,7 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 }
 
 // processList processes and indexes a single file
-func (i *Indexable) processFile(ctx context.Context, references []indexer.Reference) error {
+func (i *Indexable) processFile(ctx context.Context, references references.References) error {
 	now := nowISO()
 
 	m := make(metadata)
@@ -206,7 +206,7 @@ func (i *Indexable) processFile(ctx context.Context, references []indexer.Refere
 	m["first-seen"] = now
 	m["last-seen"] = now
 
-	return i.Indexer.IndexItem(ctx, "file", i.Hash, m)
+	return i.FileIndex.Index(ctx, i.Hash, m)
 }
 
 // preCrawl checks for and returns existing item and conditionally updates it

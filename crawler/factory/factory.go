@@ -3,7 +3,7 @@ package factory
 import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/crawler"
-	"github.com/ipfs-search/ipfs-search/indexer"
+	"github.com/ipfs-search/ipfs-search/index"
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/ipfs/go-ipfs-api"
@@ -16,8 +16,12 @@ type Factory struct {
 	pubConnection *queue.Connection
 	conConnection *queue.Connection
 	errChan       chan<- error
-	indexer       *indexer.Indexer
-	shell         *shell.Shell
+
+	fileIndex      index.Index
+	directoryIndex index.Index
+	invalidIndex   index.Index
+
+	shell *shell.Shell
 }
 
 // New creates a new crawl worker factory
@@ -41,18 +45,24 @@ func New(config *Config, errc chan<- error) (*Factory, error) {
 		return nil, err
 	}
 
-	// Create elasticsearch indexer
-	id := &indexer.Indexer{
-		ElasticSearch: el,
-	}
-
 	return &Factory{
 		crawlerConfig: config.CrawlerConfig,
 		pubConnection: pubConnection,
 		conConnection: conConnection,
 		errChan:       errc,
 		shell:         sh,
-		indexer:       id,
+		fileIndex: &index.ESIndex{
+			Client: el,
+			Name:   "ipfs_files_v0",
+		},
+		directoryIndex: &index.ESIndex{
+			Client: el,
+			Name:   "ipfs_directories_v0",
+		},
+		invalidIndex: &index.ESIndex{
+			Client: el,
+			Name:   "ipfs_invalids_v0",
+		},
 	}, nil
 }
 
@@ -68,9 +78,13 @@ func (f *Factory) newCrawler() (*crawler.Crawler, error) {
 	}
 
 	return &crawler.Crawler{
-		Config:    f.crawlerConfig,
-		Shell:     f.shell,
-		Indexer:   f.indexer,
+		Config: f.crawlerConfig,
+		Shell:  f.shell,
+
+		FileIndex:      f.fileIndex,
+		DirectoryIndex: f.directoryIndex,
+		InvalidIndex:   f.invalidIndex,
+
 		FileQueue: fileQueue,
 		HashQueue: hashQueue,
 	}, nil
