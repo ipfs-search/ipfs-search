@@ -68,11 +68,12 @@ The most convenient way to run the crawler is through Docker. Simply run:
 docker-compose up
 ```
 
-This will start the crawler and all its dependencies but will not (yet) launch the sniffer or search API. Hashes can be queued for crawling manually by running `ipfs-search a <hash>` from within the running container. For example:
+This will start the crawler, the sniffer and all its dependencies. Hashes can also be queued for crawling manually by running `ipfs-search a <hash>` from within the running container. For example:
 
 ```bash
-docker-compose exec ipfs-search ipfs-search add QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv
+docker-compose exec ipfs-crawler ipfs-search add QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv
 ```
+
 
 ### Local setup
 Local installation is done using vagrant:
