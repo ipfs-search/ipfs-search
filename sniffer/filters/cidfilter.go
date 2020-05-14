@@ -20,7 +20,7 @@ func (f *CidFilter) Filter(p t.Provider) (bool, error) {
 		return false, t.NewProviderErrorf(nil, p, "Unsupported protocol %s for %v", p.Resource.Protocol, p)
 	}
 
-	c, err := cid.Decode(p.Id)
+	c, err := cid.Decode(p.ID)
 
 	if err != nil {
 		return false, t.NewProviderErrorf(err, p, "%s decoding CID %v", err, p)

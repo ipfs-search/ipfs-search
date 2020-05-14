@@ -14,7 +14,7 @@ func TestNewProviderErrorf(t *testing.T) {
 	mockProvider := Provider{
 		Resource: &Resource{
 			Protocol: "mockProtocol",
-			Id:       "mockKey",
+			ID:       "mockKey",
 		},
 	}
 

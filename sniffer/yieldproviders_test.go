@@ -67,7 +67,7 @@ func TestYieldProvider(t *testing.T) {
 	mockProvider := types.Provider{
 		Resource: &types.Resource{
 			Protocol: "mockProtocol",
-			Id:       "mockKey",
+			ID:       "mockKey",
 		},
 	}
 
