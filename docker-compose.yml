@@ -11,7 +11,7 @@ services:
       - 9200:9200
       - 9300:9300
   ipfs:
-    image: ipfs/go-ipfs
+    image: ipfs/go-ipfs:v0.4.23
     ports:
       - 4001:4001
       - 5001:5001
@@ -24,8 +24,21 @@ services:
       - ipfs
     environment:
       - IPFS_GATEWAY=http://ipfs:8080/
-  ipfs-search:
+  ipfs-crawler:
     build: .
+    depends_on:
+      - rabbitmq
+      - elasticsearch
+      - ipfs
+      - ipfs-tika
+    environment:
+      - IPFS_TIKA_URL=http://ipfs-tika:8081
+      - IPFS_API_URL=ipfs:5001
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
+  ipfs-sniffer:
+    build: .
+    command: sniff
     depends_on:
       - rabbitmq
       - elasticsearch
