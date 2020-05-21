@@ -1,0 +1,44 @@
+{
+    "content": " \n\n    \n\n  \n\n  \n\n  \n    \n      \n        Index of /ipfs/QmNq57j5Z49GGthPAJmJKf5xxUVBe2CTzwRVprqWhd38qd/importShows\n      \n\n      \t\n             \n\n          \t\n            ..\n          \t\n\t\n             \n\n          \t\n            1513572885135_import.png\n          \t28 kB",
+    "metadata": {
+      "Content-Encoding": [
+        "UTF-8"
+      ],
+      "Content-Type": [
+        "text/html; charset=UTF-8"
+      ],
+      "X-Parsed-By": [
+        "org.apache.tika.parser.DefaultParser",
+        "org.apache.tika.parser.html.HtmlParser"
+      ],
+      "dc:title": [
+        "/ipfs/QmNq57j5Z49GGthPAJmJKf5xxUVBe2CTzwRVprqWhd38qd/importShows"
+      ],
+      "resourceName": [
+        "importShows"
+      ],
+      "title": [
+        "/ipfs/QmNq57j5Z49GGthPAJmJKf5xxUVBe2CTzwRVprqWhd38qd/importShows"
+      ]
+    },
+    "references": [
+      {
+        "name": "importShows",
+        "parent_hash": "QmNq57j5Z49GGthPAJmJKf5xxUVBe2CTzwRVprqWhd38qd"
+      },
+      {
+        "name": "Jennifer Armintrout - Queene of Light (v5.0) (html)",
+        "parent_hash": "QmUxxvaTinaNuaMW7s4xwpv23rxCkeHseAxDg3ytgWKJ4x"
+      },
+      {
+        "name": "entry102",
+        "parent_hash": "Qmc6D9dUzowfVzMxioBP5rTpFu87PHQqtXMg6E9SgxYUU5"
+      }
+    ],
+    "size": 262144,
+    "urls": [
+      "http://localhost:8080/ipfs/QmNq57j5Z49GGthPAJmJKf5xxUVBe2CTzwRVprqWhd38qd/importShows/..",
+      "http://localhost:8080/ipfs/QmNq57j5Z49GGthPAJmJKf5xxUVBe2CTzwRVprqWhd38qd/importShows/1513572885135_import.png"
+    ],
+    "last-seen": "2020-05-14T12:35:50Z"
+  }
