@@ -265,3 +265,11 @@ func (i *Indexable) CrawlFile(ctx context.Context) error {
 
 	return nil
 }
+
+// ReferenceFromIndexable generates a new reference for a given indexable
+func ReferenceFromIndexable(i *Indexable) *references.Reference {
+	return &references.Reference{
+		Name:       i.Name,
+		ParentHash: i.ParentHash,
+	}
+}
