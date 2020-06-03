@@ -14,11 +14,14 @@ type metadata map[string]interface{}
 // e.g. /ipfs/<parent_hash>/my_file.jpg instead of /ipfs/<file_hash>/
 // This helps Tika with file type detection.
 func (i *Indexable) getFilenameURL() (path string) {
-	if i.Name != "" && i.ParentHash != "" {
+	if i.ParentHash != "" {
+		if i.Name == "" {
+			panic("ParentHash set but no Name for Indexable.")
+		}
+
 		return fmt.Sprintf("/ipfs/%s/%s", i.ParentHash, i.Name)
 	}
 
-	// No name & parent hash available
 	return fmt.Sprintf("/ipfs/%s", i.Hash)
 }
 
