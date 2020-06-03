@@ -41,7 +41,7 @@ func (i *existingItem) updateIndex(ctx context.Context) error {
 func (i *existingItem) update(ctx context.Context) error {
 	if !i.skipItem() {
 		// Update references always; this also adds existing to them
-		// I know, this is bad design...
+		// FIXME: I know, this is bad design...
 		i.updateReferences()
 
 		if i.exists {
