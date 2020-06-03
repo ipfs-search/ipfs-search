@@ -14,17 +14,9 @@ type existingItem struct {
 	index      index.Index
 }
 
-// referenceFromIndexable generates a new reference for a given indexable
-func referenceFromExisting(i *existingItem) *references.Reference {
-	return &references.Reference{
-		Name:       i.Name,
-		ParentHash: i.ParentHash,
-	}
-}
-
 // updateReferences updates references with Name and ParentHash
 func (i *existingItem) updateReferences() {
-	newRef := referenceFromExisting(i)
+	newRef := ReferenceFromIndexable(i.Indexable)
 
 	if newRef.ParentHash == "" || i.references.Contains(newRef) {
 		// Not updating references
