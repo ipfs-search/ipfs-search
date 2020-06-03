@@ -18,7 +18,7 @@ func TestMultiGetNotFound(t *testing.T) {
 
 	var dst interface{}
 
-	index, err := MultiGet(ctx, []Index{m}, "", &dst, "")
+	index, err := MultiGet(ctx, []Getter{m}, "", &dst, "")
 
 	assert.Nil(index)
 	assert.Nil(err)
@@ -41,7 +41,7 @@ func TestMultiGetFound(t *testing.T) {
 		},
 	}
 
-	index, err := MultiGet(ctx, []Index{m}, "", dst, "references")
+	index, err := MultiGet(ctx, []Getter{m}, "", dst, "references")
 
 	assert.Equal(index, m)
 	assert.Equal(res, dst.references)

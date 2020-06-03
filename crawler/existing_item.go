@@ -77,22 +77,29 @@ func (i *Indexable) getExistingItem(ctx context.Context) (*existingItem, error) 
 		panic("Indexable should not be nil")
 	}
 
-	indexes := []index.Index{i.InvalidIndex, i.FileIndex, i.DirectoryIndex}
+	indexes := []index.Getter{i.InvalidIndex, i.FileIndex, i.DirectoryIndex}
 
 	// Container for query reference fetch results
 	src := &struct {
 		references references.References
 	}{}
 
-	index, err := index.MultiGet(ctx, indexes, i.Hash, src, "references")
+	getterIndex, err := index.MultiGet(ctx, indexes, i.Hash, src, "references")
 
 	if err != nil {
 		return nil, err
 	}
 
+	// Type assert back to index MulitGetter works on getters
+	index, ok := getterIndex.(index.Index)
+
+	if getterIndex != nil && !ok {
+		panic("Cannot assert Getter back to Index!")
+	}
+
 	item := &existingItem{
 		Indexable:  i,
-		exists:     index != nil,
+		exists:     getterIndex != nil,
 		references: src.references,
 		index:      index,
 	}

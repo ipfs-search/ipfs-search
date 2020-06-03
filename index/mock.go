@@ -27,13 +27,3 @@ func (m *mockIndex) Get(ctx context.Context, id string, dst interface{}, fields 
 
 	return m.Found, m.Error
 }
-
-func (m *mockIndex) Index(ctx context.Context, id string, properties map[string]interface{}) error {
-	// TODO: Implement me!
-	return nil
-}
-
-func (m *mockIndex) Update(ctx context.Context, id string, properties map[string]interface{}) error {
-	// TODO: Implement me!
-	return nil
-}
