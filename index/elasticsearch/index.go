@@ -1,4 +1,4 @@
-package index
+package elasticsearch
 
 import (
 	"context"
@@ -6,14 +6,19 @@ import (
 	"github.com/olivere/elastic/v6"
 )
 
-// ESIndex wraps an Elasticsearch index to store documents
-type ESIndex struct {
+// Index wraps an Elasticsearch index to store documents
+type Index struct {
 	Client *elastic.Client
 	Name   string
 }
 
+// String returns the name of the index, for convenient logging.
+func (i *Index) String() string {
+	return i.Name
+}
+
 // Index a document's properties, identified by id
-func (i *ESIndex) Index(ctx context.Context, id string, properties map[string]interface{}) error {
+func (i *Index) Index(ctx context.Context, id string, properties map[string]interface{}) error {
 	_, err := i.Client.Index().
 		Index(i.Name).
 		Type("_doc").
@@ -31,7 +36,7 @@ func (i *ESIndex) Index(ctx context.Context, id string, properties map[string]in
 }
 
 // Update a document's properties, given id
-func (i *ESIndex) Update(ctx context.Context, id string, properties map[string]interface{}) error {
+func (i *Index) Update(ctx context.Context, id string, properties map[string]interface{}) error {
 	_, err := i.Client.Update().
 		Index(i.Name).
 		Type("_doc").
@@ -52,7 +57,7 @@ func (i *ESIndex) Update(ctx context.Context, id string, properties map[string]i
 // - (true, decoding_error) if found (decoding error set when errors in json)
 // - (false, nil) when not found
 // - (false, error) otherwise
-func (i *ESIndex) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
+func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
 	fsc := elastic.NewFetchSourceContext(true)
 	fsc.Include(fields...)
 

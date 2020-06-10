@@ -10,6 +10,7 @@ func (c *Config) FactoryConfig() *factory.Config {
 		IpfsTimeout:      c.IPFS.IpfsTimeout,
 		ElasticSearchURL: c.ElasticSearch.ElasticSearchURL,
 		AMQPURL:          c.AMQP.AMQPURL,
+		Indexes:          c.Indexes,
 		CrawlerConfig:    c.CrawlerConfig(),
 	}
 }

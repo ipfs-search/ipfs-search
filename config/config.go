@@ -38,6 +38,7 @@ type Config struct {
 	AMQP          `yaml:"amqp"`
 	Crawler       `yaml:"crawler"`
 	Sniffer       `yaml:"sniffer"`
+	Indexes       `yaml:"indexes"`
 }
 
 // String renders config as YAML
