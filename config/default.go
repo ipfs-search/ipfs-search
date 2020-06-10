@@ -24,5 +24,6 @@ func Default() *Config {
 		},
 		CrawlerDefaults(),
 		SnifferDefaults(),
+		IndexesDefaults(),
 	}
 }

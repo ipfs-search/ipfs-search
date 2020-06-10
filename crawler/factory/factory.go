@@ -25,7 +25,7 @@ type Factory struct {
 }
 
 // New creates a new crawl worker factory
-func New(config *Config, errc chan<- error) (*Factory, error) {
+func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, error) {
 	pubConnection, err := queue.NewConnection(config.AMQPURL)
 	if err != nil {
 		return nil, err
@@ -40,29 +40,37 @@ func New(config *Config, errc chan<- error) (*Factory, error) {
 	sh := shell.NewShell(config.IpfsAPI)
 	sh.SetTimeout(config.IpfsTimeout)
 
-	el, err := getElastic(config.ElasticSearchURL)
+	es, err := getElastic(config.ElasticSearchURL)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: This should not happen here but before the factory.
+	// Factory should get a map[string]*Index parameter.
+	fi, err := getIndex(ctx, es, config.Indexes["files"])
+	if err != nil {
+		return nil, err
+	}
+
+	di, err := getIndex(ctx, es, config.Indexes["directories"])
+	if err != nil {
+		return nil, err
+	}
+
+	ii, err := getIndex(ctx, es, config.Indexes["invalids"])
 	if err != nil {
 		return nil, err
 	}
 
 	return &Factory{
-		crawlerConfig: config.CrawlerConfig,
-		pubConnection: pubConnection,
-		conConnection: conConnection,
-		errChan:       errc,
-		shell:         sh,
-		fileIndex: &index.ESIndex{
-			Client: el,
-			Name:   "ipfs_files_v0",
-		},
-		directoryIndex: &index.ESIndex{
-			Client: el,
-			Name:   "ipfs_directories_v0",
-		},
-		invalidIndex: &index.ESIndex{
-			Client: el,
-			Name:   "ipfs_invalids_v0",
-		},
+		crawlerConfig:  config.CrawlerConfig,
+		pubConnection:  pubConnection,
+		conConnection:  conConnection,
+		errChan:        errc,
+		shell:          sh,
+		fileIndex:      fi,
+		directoryIndex: di,
+		invalidIndex:   ii,
 	}, nil
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 func startWorkers(ctx context.Context, cfg *config.Config, errc chan<- error) (*errgroup.Group, error) {
-	factory, err := factory.New(cfg.FactoryConfig(), errc)
+	factory, err := factory.New(ctx, cfg.FactoryConfig(), errc)
 	if err != nil {
 		return nil, err
 	}
