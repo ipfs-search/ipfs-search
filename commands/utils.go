@@ -7,10 +7,8 @@ import (
 
 // block blocks until context is cancelled
 func block(ctx context.Context) error {
-	for {
-		<-ctx.Done()
-		return ctx.Err()
-	}
+	<-ctx.Done()
+	return ctx.Err()
 }
 
 // log errors from errc
