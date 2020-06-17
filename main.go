@@ -42,7 +42,7 @@ func main() {
 		},
 		{
 			Name:    "sniff",
-			Aliases: []string{"c"},
+			Aliases: []string{"s"},
 			Usage:   "start sniffer",
 			Action:  sniff,
 		},
