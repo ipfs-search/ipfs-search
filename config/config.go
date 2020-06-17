@@ -30,6 +30,7 @@ type AMQP struct {
 	AMQPURL string `yaml:"url" env:"AMQP_URL"`
 }
 
+// Config contains the configuration for commands.
 type Config struct {
 	Tika          `yaml:"tika"`
 	IPFS          `yaml:"ipfs"`
@@ -75,6 +76,7 @@ func (c *Config) ReadFromEnv() error {
 	return nil
 }
 
+// Check configuration file integrity.
 func (c *Config) Check() error {
 	zeroElements := findZeroElements(*c)
 	if len(zeroElements) > 0 {
@@ -85,6 +87,22 @@ func (c *Config) Check() error {
 	return nil
 }
 
+// Write writes configuration to file as YAML.
+func (c *Config) Write(configFile string) error {
+	bytes, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(configFile, bytes, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Get configuration from defaults, optional configuration file, or environment.
 func Get(configFile string) (*Config, error) {
 	// Start with empty configuration
 	cfg := Default()
@@ -102,12 +120,6 @@ func Get(configFile string) (*Config, error) {
 	err := cfg.ReadFromEnv()
 	if err != nil {
 		return nil, fmt.Errorf("Error reading configuration from env: %v", err)
-	}
-
-	// Check configuration before returning
-	err = cfg.Check()
-	if err != nil {
-		return nil, err
 	}
 
 	return cfg, nil

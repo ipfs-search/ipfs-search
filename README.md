@@ -10,6 +10,8 @@ Search engine for the [Interplanetary Filesystem](https://ipfs.io). Sniffs the D
 
 Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterbob/ipfs-tika), searching is done using ElasticSearch 5, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
 
+The ipfs-search command consists of two components: the crawler and the sniffer. The sniffer extracts hashes from the gossip between nodes. The crawler extracts data from the hashes and indexes them.
+
 ## Docs
 A preliminary start at providing a minimal amount of documentation can be found in the [docs](docs/) folder.
 
@@ -43,15 +45,27 @@ For discussing and suggesting features, look at the [project planning](https://g
 * NodeJS 9.x
 
 ## Configuration
-Configuration can be done using a YAML configuration file, see [`example_config.yml`](example_config.yml).
-
-The following configuration options can be overridden by environment variables:
+Configuration can be done using a YAML configuration file, or by specifying the following environment variables:
 * `IPFS_TIKA_URL`
 * `IPFS_API_URL`
 * `ELASTICSEARCH_URL`
 * `AMQP_URL`
 
-or by using environment variables.
+A default configuration can be generated with:
+```bash
+ipfs-search -c config.yml config generate
+```
+(substitute `config.yml` with the configuration file you'd like to use.)
+
+To use a configuration file, it is necessary to specify the `-c` option, as in:
+```bash
+ipfs-search -c config.yml crawl
+```
+
+The configuration can be (rudimentarily) checked with:
+```bash
+ipfs-search -c config.yml config check
+```
 
 ## Building
 ```bash
