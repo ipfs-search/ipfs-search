@@ -46,6 +46,23 @@ func main() {
 			Usage:   "start sniffer",
 			Action:  sniff,
 		},
+		{
+			Name:    "config",
+			Aliases: []string{},
+			Usage:   "configuration",
+			Subcommands: []cli.Command{
+				{
+					Name:   "generate",
+					Usage:  "generate default configuration",
+					Action: generateConfig,
+				},
+				{
+					Name:   "check",
+					Usage:  "check configuration",
+					Action: checkConfig,
+				},
+			},
+		},
 	}
 
 	app.Flags = []cli.Flag{
@@ -69,7 +86,35 @@ func getConfig(c *cli.Context) (*config.Config, error) {
 		return nil, err
 	}
 
+	err = cfg.Check()
+	if err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
+}
+
+func checkConfig(c *cli.Context) error {
+	_, err := getConfig(c)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	fmt.Println("Configuration checked.")
+
+	return nil
+}
+
+func generateConfig(c *cli.Context) error {
+	cfg := config.Default()
+
+	configFile := c.GlobalString("config")
+	if configFile == "" {
+		return cli.NewExitError("Configuration file not specified. Use the \"-c\" option.", 1)
+	}
+
+	fmt.Printf("Writing default configuration to: %s\n", configFile)
+	return cfg.Write(configFile)
 }
 
 func add(c *cli.Context) error {
