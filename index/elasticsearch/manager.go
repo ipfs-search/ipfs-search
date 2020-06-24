@@ -12,11 +12,11 @@ func (i *Index) Exists(ctx context.Context) (bool, error) {
 }
 
 // Create creates an index with given settings.
-func (i *Index) Create(ctx context.Context, settings interface{}, mapping interface{}) error {
+func (i *Index) Create(ctx context.Context) error {
 	_, err := i.Client.CreateIndex(i.Config.Name).BodyJson(map[string]interface{}{
-		"settings": settings,
+		"settings": i.Config.Settings,
 		"mappings": map[string]interface{}{
-			"_doc": mapping,
+			"_doc": i.Config.Mapping,
 		},
 	}).Do(ctx)
 	return err

@@ -11,7 +11,7 @@ type Exister interface {
 
 // Creator allows to create the index.
 type Creator interface {
-	Create(ctx context.Context, settings interface{}, mapping interface{}) error
+	Create(ctx context.Context) error
 }
 
 // SettingsGetter returns the settings for an index.
