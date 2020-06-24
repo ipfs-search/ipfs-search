@@ -18,10 +18,7 @@ func EnsureIndexes(ctx context.Context, esURL string, configs map[string]*index.
 	indexes = make(map[string]index.Index, len(configs))
 
 	for n, c := range configs {
-		i := &Index{
-			Client: es,
-			Config: c,
-		}
+		i := New(es, c)
 
 		if err = index.EnsureUpdated(ctx, i); err != nil {
 			return

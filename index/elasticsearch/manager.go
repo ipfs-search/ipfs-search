@@ -7,16 +7,16 @@ import (
 
 // Exists returns true if the index exists, false otherwise.
 func (i *Index) Exists(ctx context.Context) (bool, error) {
-	return i.Client.IndexExists(i.Config.Name).Do(ctx)
+	return i.es.IndexExists(i.cfg.Name).Do(ctx)
 
 }
 
 // Create creates an index with given settings.
 func (i *Index) Create(ctx context.Context) error {
-	_, err := i.Client.CreateIndex(i.Config.Name).BodyJson(map[string]interface{}{
-		"settings": i.Config.Settings,
+	_, err := i.es.CreateIndex(i.cfg.Name).BodyJson(map[string]interface{}{
+		"settings": i.cfg.Settings,
 		"mappings": map[string]interface{}{
-			"_doc": i.Config.Mapping,
+			"_doc": i.cfg.Mapping,
 		},
 	}).Do(ctx)
 	return err
@@ -24,14 +24,14 @@ func (i *Index) Create(ctx context.Context) error {
 
 // GetSettings returns the mapping for an index.
 func (i *Index) GetSettings(ctx context.Context) (interface{}, error) {
-	responseMap, err := i.Client.IndexGetSettings(i.Config.Name).Do(ctx)
+	responseMap, err := i.es.IndexGetSettings(i.cfg.Name).Do(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	response, found := responseMap[i.Config.Name]
+	response, found := responseMap[i.cfg.Name]
 	if !found {
-		return false, fmt.Errorf("index %s not found in result", i.Config.Name)
+		return false, fmt.Errorf("index %s not found in result", i.cfg.Name)
 	}
 
 	return response.Settings, nil
@@ -39,20 +39,20 @@ func (i *Index) GetSettings(ctx context.Context) (interface{}, error) {
 
 // SetSettings updates the settings of the index.
 func (i *Index) SetSettings(ctx context.Context, settings interface{}) error {
-	_, err := i.Client.IndexPutSettings(i.Config.Name).BodyJson(settings).Do(ctx)
+	_, err := i.es.IndexPutSettings(i.cfg.Name).BodyJson(settings).Do(ctx)
 	return err
 }
 
 // GetMapping returns the mapping for an index.
 func (i *Index) GetMapping(ctx context.Context) (interface{}, error) {
-	responseMap, err := i.Client.GetMapping().Index(i.Config.Name).Type("_doc").Do(ctx)
+	responseMap, err := i.es.GetMapping().Index(i.cfg.Name).Type("_doc").Do(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	response, found := responseMap[i.Config.Name]
+	response, found := responseMap[i.cfg.Name]
 	if !found {
-		return false, fmt.Errorf("index %s not found in result", i.Config.Name)
+		return false, fmt.Errorf("index %s not found in result", i.cfg.Name)
 	}
 
 	mappings, ok := response.(map[string]interface{})["mappings"]
@@ -65,6 +65,6 @@ func (i *Index) GetMapping(ctx context.Context) (interface{}, error) {
 
 // SetMapping updates the settings of the index.
 func (i *Index) SetMapping(ctx context.Context, mapping interface{}) error {
-	_, err := i.Client.PutMapping().Index(i.Config.Name).Type("_doc").BodyJson(mapping.(map[string]interface{})).Do(ctx)
+	_, err := i.es.PutMapping().Index(i.cfg.Name).Type("_doc").BodyJson(mapping.(map[string]interface{})).Do(ctx)
 	return err
 }
