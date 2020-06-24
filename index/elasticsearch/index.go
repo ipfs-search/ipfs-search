@@ -13,6 +13,11 @@ type Index struct {
 	Config *index.Config
 }
 
+// GetConfig returns the config for the index.
+func (i *Index) GetConfig() *index.Config {
+	return i.Config
+}
+
 // String returns the name of the index, for convenient logging.
 func (i *Index) String() string {
 	return i.Config.Name

@@ -6,3 +6,8 @@ type Config struct {
 	Settings map[string]interface{}
 	Mapping  map[string]interface{}
 }
+
+// ConfiguredIndex represents an index with configuration.
+type ConfiguredIndex interface {
+	GetConfig() *Config
+}
