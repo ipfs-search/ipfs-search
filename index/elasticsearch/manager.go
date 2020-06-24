@@ -44,7 +44,12 @@ func (i *Index) setSettings(ctx context.Context) error {
 	log.Printf("Ignoring update request for settings on index %s; feature unimplemented", i)
 	return nil
 	// Note; this needs to discriminate between settings which can and settings which cannot be modified.
+	// Error: index ipfs_files_v0, updating settings: update settings index ipfs_files_v0, elastic: Error 400 (Bad Request): final ipfs_files_v0 setting [index.number_of_shards], not updateable [type=illegal_argument_exception]
+	// Cannot be changed: index.number_of_shards,
 	// Ref; https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#index-modules-settings
+
+	// Quickfix; remove number_of_shards
+
 	// var err error
 
 	// // Close index
