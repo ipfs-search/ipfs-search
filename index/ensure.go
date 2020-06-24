@@ -45,7 +45,7 @@ func ensureConfigUpToDate(ctx context.Context, i ManagedIndex) error {
 		if equal {
 			log.Printf("Configuration updated for %v", i)
 		} else {
-			return fmt.Errorf("configuration update failed for %v", i)
+			return fmt.Errorf("configuration update result not equal for index '%v'", i)
 		}
 	}
 
