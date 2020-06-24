@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/index"
+	"github.com/ipfs-search/ipfs-search/index/elasticsearch"
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/ipfs/go-ipfs-api"
@@ -40,7 +41,7 @@ func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, erro
 	sh := shell.NewShell(config.IpfsAPI)
 	sh.SetTimeout(config.IpfsTimeout)
 
-	indexes, err := ensureIndexes(ctx, config.ElasticSearchURL, config.Indexes)
+	indexes, err := elasticsearch.EnsureIndexes(ctx, config.ElasticSearchURL, config.Indexes)
 	if err != nil {
 		return nil, err
 	}
