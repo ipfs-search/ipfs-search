@@ -23,7 +23,7 @@ func EnsureIndexes(ctx context.Context, esURL string, configs map[string]*index.
 			Config: c,
 		}
 
-		if err = index.EnsureUpdated(ctx, i, c); err != nil {
+		if err = index.EnsureUpdated(ctx, i); err != nil {
 			return
 		}
 

@@ -38,7 +38,14 @@ func wantGotEqual(want interface{}, got interface{}) bool {
 	return true
 }
 
-func ensureSettings(ctx context.Context, i ManagedIndex, settings interface{}) error {
+type EnsurableIndex interface {
+	ConfiguredIndex
+	ManagedIndex
+}
+
+func ensureSettings(ctx context.Context, i EnsurableIndex) error {
+	settings := i.GetConfig().Settings
+
 	existingSettings, err := i.GetSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("index %v, getting settings: %w", i, err)
@@ -72,7 +79,9 @@ func ensureSettings(ctx context.Context, i ManagedIndex, settings interface{}) e
 	return nil
 }
 
-func ensureMapping(ctx context.Context, i ManagedIndex, mapping interface{}) error {
+func ensureMapping(ctx context.Context, i EnsurableIndex) error {
+	mapping := i.GetConfig().Mapping
+
 	existingMapping, err := i.GetMapping(ctx)
 	if err != nil {
 		return fmt.Errorf("index %v, getting mapping: %w", i, err)
@@ -107,7 +116,7 @@ func ensureMapping(ctx context.Context, i ManagedIndex, mapping interface{}) err
 }
 
 // EnsureUpdated checks for the existence of an index with given settings, creates it if necessary and attempts to update them.
-func EnsureUpdated(ctx context.Context, i ManagedIndex, config *Config) error {
+func EnsureUpdated(ctx context.Context, i EnsurableIndex) error {
 	exists, err := i.Exists(ctx)
 	if err != nil {
 		return fmt.Errorf("index %v, exists: %w", i, err)
@@ -118,9 +127,9 @@ func EnsureUpdated(ctx context.Context, i ManagedIndex, config *Config) error {
 		return i.Create(ctx)
 	}
 
-	if err := ensureSettings(ctx, i, config.Settings); err != nil {
+	if err := ensureSettings(ctx, i); err != nil {
 		return err
 	}
 
-	return ensureMapping(ctx, i, config.Mapping)
+	return ensureMapping(ctx, i)
 }
