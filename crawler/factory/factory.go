@@ -47,12 +47,13 @@ func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, erro
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Connected to ElasticSearch")
+	log.Printf("Connected to ElasticSearch.")
 
 	indexes := elasticsearch.NewMulti(es, config.Indexes["files"], config.Indexes["directories"], config.Indexes["invalids"])
 	if err := index.EnsureExistsAndUpdatedMulti(ctx, indexes...); err != nil {
 		return nil, err
 	}
+	log.Printf("Index configuration up to date.")
 
 	return &Factory{
 		crawlerConfig:  config.CrawlerConfig,
