@@ -41,29 +41,33 @@ func (i *Index) getSettings(ctx context.Context) (interface{}, error) {
 
 // setSettings updates the settings of the index.
 func (i *Index) setSettings(ctx context.Context) error {
-	var err error
+	log.Printf("Ignoring update request for settings on index %s; feature unimplemented", i)
+	return nil
+	// Note; this needs to discriminate between settings which can and settings which cannot be modified.
+	// Ref; https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#index-modules-settings
+	// var err error
 
-	// Close index
-	_, err = i.es.CloseIndex(i.cfg.Name).Do(ctx)
-	if err != nil {
-		return fmt.Errorf("update settings index %s, close, %w", i, err)
-	}
+	// // Close index
+	// _, err = i.es.CloseIndex(i.cfg.Name).Do(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("update settings index %s, close, %w", i, err)
+	// }
 
-	// Update settings
-	_, err = i.es.IndexPutSettings(i.cfg.Name).
-		BodyJson(i.cfg.Settings).
-		Do(ctx)
-	if err != nil {
-		return fmt.Errorf("update settings index %s, %w", i, err)
-	}
+	// // Update settings
+	// _, err = i.es.IndexPutSettings(i.cfg.Name).
+	// 	BodyJson(i.cfg.Settings).
+	// 	Do(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("update settings index %s, %w", i, err)
+	// }
 
-	// Reopen index
-	_, err = i.es.OpenIndex(i.cfg.Name).Do(ctx)
-	if err != nil {
-		return fmt.Errorf("update settings index %s, reopen, %w", i, err)
-	}
+	// // Reopen index
+	// _, err = i.es.OpenIndex(i.cfg.Name).Do(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("update settings index %s, reopen, %w", i, err)
+	// }
 
-	return err
+	// return err
 }
 
 // getMapping returns the mapping for an index.
