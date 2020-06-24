@@ -2,11 +2,11 @@ package config
 
 import (
     "encoding/json"
-    "github.com/ipfs-search/ipfs-search/index"
+    "github.com/ipfs-search/ipfs-search/index/elasticsearch"
 )
 
 // Indexes represents the various indexes we're using
-type Indexes map[string]*index.Config
+type Indexes map[string]*elasticsearch.Config
 
 // IndexesDefaults returns the default indexes.
 func IndexesDefaults() Indexes {
@@ -26,17 +26,17 @@ func IndexesDefaults() Indexes {
     }
 
     return Indexes{
-        "files": &index.Config{
+        "files": &elasticsearch.Config{
             Name:     "ipfs_files_v0",
             Settings: indexSettings,
             Mapping:  fileMapping,
         },
-        "directories": &index.Config{
+        "directories": &elasticsearch.Config{
             Name:     "ipfs_directories_v0",
             Settings: indexSettings,
             Mapping:  dirMapping,
         },
-        "invalids": &index.Config{
+        "invalids": &elasticsearch.Config{
             Name:     "ipfs_invalids_v0",
             Settings: indexSettings,
             Mapping:  invalidMapping,
