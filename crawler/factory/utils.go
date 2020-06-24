@@ -22,13 +22,13 @@ func getElastic(url string) (*elastic.Client, error) {
 	return el, nil
 }
 
-func getIndex(ctx context.Context, el *elastic.Client, config *index.Config) (index.Index, error) {
+func getIndex(ctx context.Context, es *elastic.Client, config *index.Config) (index.Index, error) {
 	if config == nil {
 		panic("configuration for index nil")
 	}
 
 	i := &elasticsearch.Index{
-		Client: el,
+		Client: es,
 		Name:   config.Name,
 	}
 
