@@ -33,7 +33,7 @@ func (i *Index) getSettings(ctx context.Context) (interface{}, error) {
 
 	response, found := responseMap[i.cfg.Name]
 	if !found {
-		return false, fmt.Errorf("index %s not found in result", i.cfg.Name)
+		return false, fmt.Errorf("index %s not found in result", i)
 	}
 
 	return response.Settings, nil
@@ -41,9 +41,28 @@ func (i *Index) getSettings(ctx context.Context) (interface{}, error) {
 
 // setSettings updates the settings of the index.
 func (i *Index) setSettings(ctx context.Context) error {
-	_, err := i.es.IndexPutSettings(i.cfg.Name).
+	var err error
+
+	// Close index
+	_, err = i.es.CloseIndex(i.cfg.Name).Do(ctx)
+	if err != nil {
+		return fmt.Errorf("update settings index %s, close, %w", i, err)
+	}
+
+	// Update settings
+	_, err = i.es.IndexPutSettings(i.cfg.Name).
 		BodyJson(i.cfg.Settings).
 		Do(ctx)
+	if err != nil {
+		return fmt.Errorf("update settings index %s, %w", i, err)
+	}
+
+	// Reopen index
+	_, err = i.es.OpenIndex(i.cfg.Name).Do(ctx)
+	if err != nil {
+		return fmt.Errorf("update settings index %s, reopen, %w", i, err)
+	}
+
 	return err
 }
 
