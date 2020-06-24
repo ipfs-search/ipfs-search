@@ -40,24 +40,7 @@ func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, erro
 	sh := shell.NewShell(config.IpfsAPI)
 	sh.SetTimeout(config.IpfsTimeout)
 
-	es, err := getElastic(config.ElasticSearchURL)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: This should not happen here but before the factory.
-	// Factory should get a map[string]*Index parameter.
-	fi, err := getIndex(ctx, es, config.Indexes["files"])
-	if err != nil {
-		return nil, err
-	}
-
-	di, err := getIndex(ctx, es, config.Indexes["directories"])
-	if err != nil {
-		return nil, err
-	}
-
-	ii, err := getIndex(ctx, es, config.Indexes["invalids"])
+	indexes, err := ensureIndexes(ctx, config.ElasticSearchURL, config.Indexes)
 	if err != nil {
 		return nil, err
 	}
@@ -68,9 +51,9 @@ func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, erro
 		conConnection:  conConnection,
 		errChan:        errc,
 		shell:          sh,
-		fileIndex:      fi,
-		directoryIndex: di,
-		invalidIndex:   ii,
+		fileIndex:      indexes["files"],
+		directoryIndex: indexes["directories"],
+		invalidIndex:   indexes["invalids"],
 	}, nil
 }
 

@@ -39,3 +39,22 @@ func getIndex(ctx context.Context, es *elastic.Client, config *index.Config) (in
 
 	return i, nil
 }
+
+func ensureIndexes(ctx context.Context, esURL string, configs map[string]*index.Config) (indexes map[string]index.Index, err error) {
+	es, err := getElastic(esURL)
+
+	if err != nil {
+		return
+	}
+
+	indexes = make(map[string]index.Index, len(configs))
+
+	for n, c := range configs {
+		indexes[n], err = getIndex(ctx, es, c)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
