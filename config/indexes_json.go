@@ -21,14 +21,15 @@ const indexSettingsJSON = `{
 
 const fileMappingJSON = `{
     "_doc": {
-	    "dynamic": "false",
+	    "dynamic": "strict",
 	    "dynamic_templates": [
 	        {
 	            "default_noindex": {
 	                "match": "*",
 	                "mapping": {
-	                    "index": "no",
-	                    "doc_values": false
+	                    "index": false,
+	                    "doc_values": false,
+      					"norms": false
 	                }
 	            }
 	        }
@@ -36,121 +37,113 @@ const fileMappingJSON = `{
 	    "properties": {
 	        "first-seen": {
 	            "type": "date",
-	            "format": "strict_date_optional_time||epoch_millis",
-	            "index": true,
-	            "doc_values": true
+	            "format": "date_time_no_millis"
 	        },
 	        "last-seen": {
 	            "type": "date",
-	            "format": "strict_date_optional_time||epoch_millis",
-	            "index": true,
-	            "doc_values": true
+	            "format": "date_time_no_millis"
 	        },
 	        "content":  {
-	            "type": "text",
-	            "index": true
+	            "type": "text"
+	        },
+	        "ipfs_tika_version": {
+	        	"type": "keyword"
+	        },
+	        "language": {
+	        	"properties": {
+	        		"confidence": {
+	        			"type": "keyword"
+	        		},
+	        		"language": {
+	        			"type": "keyword"
+	        		},
+	        		"rawScore": {
+	        			"type": "double"
+	        		}
+	        	}
 	        },
 	        "metadata":  {
-	            "type":     "object",
-	            "dynamic":  true,
+	            "dynamic":  "true",
 	            "properties": {
 	                "title" : {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "name": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "author": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "description": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "producer": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "publisher": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	               	},
 	                "isbn": {
-	                    "type": "keyword",
-	                    "index": true
+	                    "type": "keyword"
 	               	},
 	                "language": {
-	                    "type": "keyword",
-	                    "index": true
+	                    "type": "keyword"
+	                },
+	                "resourceName": {
+	                	"type": "keyword"
 	                },
 	                "keywords": {
-	                   "type": "text",
-	                   "index": true
-	               },
+	                   "type": "text"
+	                },
 	                "xmpDM:album": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "xmpDM:albumArtist": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "xmpDM:artist": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "xmpDM:composer": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	               	},
 	                "Content-Type": {
-	                    "type": "keyword",
-	                    "index": true,
-	                    "doc_values": true
+	                    "type": "keyword"
 	                },
 	                "X-Parsed-By": {
-	                    "type": "keyword",
-	                    "index": true
+	                    "type": "keyword"
 	                },
+	                "created": {
+	                    "type": "date",
+	                    "format": "date_optional_time"
+	               	},
 	                "date": {
 	                    "type": "date",
-	                    "format": "strict_date_optional_time||epoch_millis",
-	                    "index": true
+	                    "format": "date_optional_time"
 	               	},
 	                "modified": {
 	                    "type": "date",
-	                    "format": "strict_date_optional_time||epoch_millis",
-	                    "index": true
+	                    "format": "date_optional_time"
 	               	}
 	            }
 	        },
 	        "urls": {
-	            "type": "keyword",
-	            "index": true
+	            "type": "keyword"
 	        },
 	        "size": {
 	            "type": "long",
-	            "ignore_malformed": true,
-	            "index": true
+	            "ignore_malformed": true
 	        },
 	        "references":  {
-	            "type":     "object",
-	            "dynamic":  true,
 	            "properties": {
 	                "name": {
-	                    "type": "text",
-	                    "index": true
+	                    "type": "text"
 	                },
 	                "hash": {
-	                    "type": "keyword",
-	                    "index": true
+	                    "type": "keyword"
 	                },
 	                "parent_hash": {
-	                    "type": "keyword",
-	                    "index": true
+	                    "type": "keyword"
 	                }
 	            }
 	        }
@@ -161,32 +154,16 @@ const fileMappingJSON = `{
 const dirMappingJSON = `{
     "_doc": {
 	    "dynamic": "strict",
-	    "dynamic_templates": [
-	        {
-	            "default_noindex": {
-	                "match": "*",
-	                "mapping": {
-	                    "index": "no",
-	                    "doc_values": false
-	                }
-	            }
-	        }
-	    ],
 	    "properties": {
 	        "first-seen": {
 	            "type": "date",
-	            "format": "strict_date_optional_time||epoch_millis",
-	            "index": true,
-	            "doc_values": true
+	            "format": "date_time_no_millis"
 	        },
 	        "last-seen": {
 	            "type": "date",
-	            "format": "strict_date_optional_time||epoch_millis",
-	            "index": true,
-	            "doc_values": true
+	            "format": "date_time_no_millis"
 	        },
 	        "links":  {
-	            "type":     "object",
 	            "dynamic":  true,
 	            "properties": {
 	                "Hash": {
@@ -198,25 +175,18 @@ const dirMappingJSON = `{
 	                },
 	                "Size": {
 	                   "type": "long",
-	                   "doc_values": true,
 	                   "ignore_malformed": true
 	                },
 	                "Type": {
-	                   "type": "keyword",
-	                   "index": true,
-	                   "doc_values": true
+	                   "type": "keyword"
 	                }
 	             }
 	        },
 	        "size": {
 	            "type": "long",
-	            "ignore_malformed": true,
-	            "index": true,
-	            "doc_values": true
+	            "ignore_malformed": true
 	        },
 	        "references":  {
-	            "type":     "object",
-	            "dynamic":  true,
 	            "properties": {
 	                "name": {
 	                    "type": "text",
@@ -245,7 +215,8 @@ const invalidMappingJSON = `{
 	                "mapping": {
 	                    "index": "no",
 	                    "doc_values": false,
-	                    "include_in_all": false
+	                    "include_in_all": false,
+	                    "norms": false
 	                }
 	            }
 	        }
