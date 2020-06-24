@@ -1,17 +1,13 @@
-package factory
+package elasticsearch
 
 import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/index"
-	"github.com/ipfs-search/ipfs-search/index/elasticsearch"
 	"github.com/olivere/elastic/v6"
 	"log"
-	// "os"
 )
 
 func getElastic(url string) (*elastic.Client, error) {
-	// logger := log.New(os.Stderr, "es", log.LstdFlags)
-	// elastic.SetTraceLog(logger)
 	el, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL(url))
 	if err != nil {
 		return nil, err
@@ -27,7 +23,7 @@ func getIndex(ctx context.Context, es *elastic.Client, config *index.Config) (in
 		panic("configuration for index nil")
 	}
 
-	i := &elasticsearch.Index{
+	i := &Index{
 		Client: es,
 		Name:   config.Name,
 	}
@@ -40,7 +36,7 @@ func getIndex(ctx context.Context, es *elastic.Client, config *index.Config) (in
 	return i, nil
 }
 
-func ensureIndexes(ctx context.Context, esURL string, configs map[string]*index.Config) (indexes map[string]index.Index, err error) {
+func EnsureIndexes(ctx context.Context, esURL string, configs map[string]*index.Config) (indexes map[string]index.Index, err error) {
 	es, err := getElastic(esURL)
 
 	if err != nil {
