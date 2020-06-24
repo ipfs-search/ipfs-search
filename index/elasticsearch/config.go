@@ -14,7 +14,7 @@ type Config struct {
 
 // configEqual returns whether the config we want is equal to what we've got
 func configEqual(want interface{}, got interface{}) bool {
-	log.Printf("Comparing %v to %v", want, got)
+	// log.Printf("Comparing %v to %v", want, got)
 
 	switch wantV := want.(type) {
 	case map[string]interface{}:

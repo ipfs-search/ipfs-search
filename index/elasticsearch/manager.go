@@ -41,38 +41,35 @@ func (i *Index) getSettings(ctx context.Context) (interface{}, error) {
 
 // setSettings updates the settings of the index.
 func (i *Index) setSettings(ctx context.Context) error {
-	log.Printf("Ignoring update request for settings on index %s; feature unimplemented", i)
+	var err error
+
+	// Remove number_of_shards, which cannot be updated
+	// Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#index-modules-settings
+	newSettings := i.cfg.Settings
+	indexSettings := newSettings["index"].(map[string]interface{})
+	delete(indexSettings, "number_of_shards")
+
+	// Close index, necessary for some settings
+	_, err = i.es.CloseIndex(i.cfg.Name).Do(ctx)
+	if err != nil {
+		return fmt.Errorf("update settings index %s, close, %w", i, err)
+	}
+
+	// Update settings
+	_, err = i.es.IndexPutSettings(i.cfg.Name).
+		BodyJson(i.cfg.Settings).
+		Do(ctx)
+	if err != nil {
+		return fmt.Errorf("update settings index %s, %w", i, err)
+	}
+
+	// Reopen index, necessary for some settings
+	_, err = i.es.OpenIndex(i.cfg.Name).Do(ctx)
+	if err != nil {
+		return fmt.Errorf("update settings index %s, reopen, %w", i, err)
+	}
+
 	return nil
-	// Note; this needs to discriminate between settings which can and settings which cannot be modified.
-	// Error: index ipfs_files_v0, updating settings: update settings index ipfs_files_v0, elastic: Error 400 (Bad Request): final ipfs_files_v0 setting [index.number_of_shards], not updateable [type=illegal_argument_exception]
-	// Cannot be changed: index.number_of_shards,
-	// Ref; https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#index-modules-settings
-
-	// Quickfix; remove number_of_shards
-
-	// var err error
-
-	// // Close index
-	// _, err = i.es.CloseIndex(i.cfg.Name).Do(ctx)
-	// if err != nil {
-	// 	return fmt.Errorf("update settings index %s, close, %w", i, err)
-	// }
-
-	// // Update settings
-	// _, err = i.es.IndexPutSettings(i.cfg.Name).
-	// 	BodyJson(i.cfg.Settings).
-	// 	Do(ctx)
-	// if err != nil {
-	// 	return fmt.Errorf("update settings index %s, %w", i, err)
-	// }
-
-	// // Reopen index
-	// _, err = i.es.OpenIndex(i.cfg.Name).Do(ctx)
-	// if err != nil {
-	// 	return fmt.Errorf("update settings index %s, reopen, %w", i, err)
-	// }
-
-	// return err
 }
 
 // getMapping returns the mapping for an index.
@@ -117,19 +114,24 @@ func (i *Index) ConfigUpToDate(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("index %v, getting mapping: %w", i, err)
 	}
 
-	got := &Config{
+	got := Config{
 		Name:     i.cfg.Name,
 		Settings: settings.(map[string]interface{}),
 		Mapping:  mapping.(map[string]interface{}),
 	}
 
-	equal := configEqual(i.cfg, got)
+	settingsEqual := configEqual(i.cfg.Settings, got.Settings)
+	mappingEqual := configEqual(i.cfg.Mapping, got.Mapping)
+
+	if settingsEqual && mappingEqual {
+		return true, nil
+	}
 
 	// Below is debug only
-	diff := cmp.Diff(i.cfg, got)
+	diff := cmp.Diff(i.cfg, &got)
 	log.Printf("Settings do not match (-want +got):\n%s", diff)
 
-	return equal, nil
+	return false, nil
 }
 
 // ConfigUpdate updates the Elasticsearch settings from the configuration.
@@ -141,6 +143,6 @@ func (i *Index) ConfigUpdate(ctx context.Context) error {
 		return fmt.Errorf("index %v, updating mapping: %w", i, err)
 	}
 
-	log.Printf("index %v configuration updated", i)
+	log.Printf("index %v configuration update requested", i)
 	return nil
 }
