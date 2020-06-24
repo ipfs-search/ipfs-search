@@ -8,7 +8,9 @@ import (
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/ipfs/go-ipfs-api"
+	"github.com/olivere/elastic/v6"
 	"github.com/streadway/amqp"
+	"log"
 )
 
 // Factory creates hash and file crawl workers
@@ -41,8 +43,14 @@ func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, erro
 	sh := shell.NewShell(config.IpfsAPI)
 	sh.SetTimeout(config.IpfsTimeout)
 
-	indexes, err := elasticsearch.EnsureIndexes(ctx, config.ElasticSearchURL, config.Indexes)
+	es, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL(config.ElasticSearchURL))
 	if err != nil {
+		return nil, err
+	}
+	log.Printf("Connected to ElasticSearch")
+
+	indexes := elasticsearch.NewMulti(es, config.Indexes["files"], config.Indexes["directories"], config.Indexes["invalids"])
+	if err := index.EnsureExistsAndUpdatedMulti(ctx, indexes...); err != nil {
 		return nil, err
 	}
 
@@ -52,9 +60,9 @@ func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, erro
 		conConnection:  conConnection,
 		errChan:        errc,
 		shell:          sh,
-		fileIndex:      indexes["files"],
-		directoryIndex: indexes["directories"],
-		invalidIndex:   indexes["invalids"],
+		fileIndex:      indexes[0],
+		directoryIndex: indexes[1],
+		invalidIndex:   indexes[2],
 	}, nil
 }
 

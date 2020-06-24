@@ -10,20 +10,26 @@ import (
 // Index wraps an Elasticsearch index to store documents
 type Index struct {
 	es  *elastic.Client
-	cfg *index.Config
+	cfg *Config
 }
 
 // New returns a new index.
-func New(es *elastic.Client, cfg *index.Config) *Index {
+func New(es *elastic.Client, cfg *Config) index.ManagedIndex {
 	return &Index{
 		es:  es,
 		cfg: cfg,
 	}
 }
 
-// GetConfig returns the config for the index.
-func (i *Index) GetConfig() *index.Config {
-	return i.cfg
+// NewMulti takes a mapping of named configurations and returns a mapping of indexes
+func NewMulti(es *elastic.Client, configs ...*Config) []index.ManagedIndex {
+	indexes := make([]index.ManagedIndex, len(configs))
+
+	for n, c := range configs {
+		indexes[n] = New(es, c)
+	}
+
+	return indexes
 }
 
 // String returns the name of the index, for convenient logging.

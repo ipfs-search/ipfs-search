@@ -3,6 +3,8 @@ package elasticsearch
 import (
 	"context"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
+	"log"
 )
 
 // Exists returns true if the index exists, false otherwise.
@@ -22,8 +24,8 @@ func (i *Index) Create(ctx context.Context) error {
 	return err
 }
 
-// GetSettings returns the mapping for an index.
-func (i *Index) GetSettings(ctx context.Context) (interface{}, error) {
+// getSettings returns the mapping for an index.
+func (i *Index) getSettings(ctx context.Context) (interface{}, error) {
 	responseMap, err := i.es.IndexGetSettings(i.cfg.Name).Do(ctx)
 	if err != nil {
 		return false, err
@@ -37,14 +39,16 @@ func (i *Index) GetSettings(ctx context.Context) (interface{}, error) {
 	return response.Settings, nil
 }
 
-// SetSettings updates the settings of the index.
-func (i *Index) SetSettings(ctx context.Context, settings interface{}) error {
-	_, err := i.es.IndexPutSettings(i.cfg.Name).BodyJson(settings).Do(ctx)
+// setSettings updates the settings of the index.
+func (i *Index) setSettings(ctx context.Context) error {
+	_, err := i.es.IndexPutSettings(i.cfg.Name).
+		BodyJson(i.cfg.Settings).
+		Do(ctx)
 	return err
 }
 
-// GetMapping returns the mapping for an index.
-func (i *Index) GetMapping(ctx context.Context) (interface{}, error) {
+// getMapping returns the mapping for an index.
+func (i *Index) getMapping(ctx context.Context) (interface{}, error) {
 	responseMap, err := i.es.GetMapping().Index(i.cfg.Name).Type("_doc").Do(ctx)
 	if err != nil {
 		return false, err
@@ -63,8 +67,52 @@ func (i *Index) GetMapping(ctx context.Context) (interface{}, error) {
 	return mappings, nil
 }
 
-// SetMapping updates the settings of the index.
-func (i *Index) SetMapping(ctx context.Context, mapping interface{}) error {
-	_, err := i.es.PutMapping().Index(i.cfg.Name).Type("_doc").BodyJson(mapping.(map[string]interface{})).Do(ctx)
+// setMapping updates the settings of the index.
+func (i *Index) setMapping(ctx context.Context) error {
+	_, err := i.es.PutMapping().
+		Index(i.cfg.Name).
+		Type("_doc").
+		BodyJson(i.cfg.Mapping).
+		Do(ctx)
 	return err
+}
+
+// ConfigUpToDate checks whether the settings in Elasticsearch matches the settings in the configuration.
+func (i *Index) ConfigUpToDate(ctx context.Context) (bool, error) {
+	settings, err := i.getSettings(ctx)
+	if err != nil {
+		return false, fmt.Errorf("index %v, getting settings: %w", i, err)
+	}
+
+	mapping, err := i.getMapping(ctx)
+	if err != nil {
+		return false, fmt.Errorf("index %v, getting mapping: %w", i, err)
+	}
+
+	got := &Config{
+		Name:     i.cfg.Name,
+		Settings: settings.(map[string]interface{}),
+		Mapping:  mapping.(map[string]interface{}),
+	}
+
+	equal := configEqual(i.cfg, got)
+
+	// Below is debug only
+	diff := cmp.Diff(i.cfg, got)
+	log.Printf("Settings do not match (-want +got):\n%s", diff)
+
+	return equal, nil
+}
+
+// ConfigUpdate updates the Elasticsearch settings from the configuration.
+func (i *Index) ConfigUpdate(ctx context.Context) error {
+	if err := i.setSettings(ctx); err != nil {
+		return fmt.Errorf("index %v, updating settings: %w", i, err)
+	}
+	if err := i.setMapping(ctx); err != nil {
+		return fmt.Errorf("index %v, updating mapping: %w", i, err)
+	}
+
+	log.Printf("index %v configuration updated", i)
+	return nil
 }

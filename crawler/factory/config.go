@@ -2,7 +2,7 @@ package factory
 
 import (
 	"github.com/ipfs-search/ipfs-search/crawler"
-	"github.com/ipfs-search/ipfs-search/index"
+	"github.com/ipfs-search/ipfs-search/index/elasticsearch"
 	"time"
 )
 
@@ -12,7 +12,7 @@ type Config struct {
 	ElasticSearchURL string
 	AMQPURL          string
 	IpfsTimeout      time.Duration // Timeout for IPFS gateway HTTPS requests
-	Indexes          map[string]*index.Config
+	Indexes          map[string]*elasticsearch.Config
 
 	CrawlerConfig *crawler.Config
 }
