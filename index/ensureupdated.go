@@ -115,7 +115,7 @@ func EnsureUpdated(ctx context.Context, i ManagedIndex, config *Config) error {
 
 	if !exists {
 		log.Printf("Creating index \"%v\"", i)
-		return i.Create(ctx, config.Settings, config.Mapping)
+		return i.Create(ctx)
 	}
 
 	if err := ensureSettings(ctx, i, config.Settings); err != nil {
