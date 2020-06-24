@@ -22,7 +22,7 @@ func getElastic(url string) (*elastic.Client, error) {
 	return el, nil
 }
 
-func getIndex(ctx context.Context, el *elastic.Client, config *IndexConfig) (index.Index, error) {
+func getIndex(ctx context.Context, el *elastic.Client, config *index.Config) (index.Index, error) {
 	if config == nil {
 		panic("configuration for index nil")
 	}
@@ -33,7 +33,7 @@ func getIndex(ctx context.Context, el *elastic.Client, config *IndexConfig) (ind
 	}
 
 	// Create index if it doesn't already exists, update if it is different (last parameter, true).
-	if err := index.Assert(ctx, i, config.Settings, config.Mapping, true); err != nil {
+	if err := index.EnsureUpdated(ctx, i, config); err != nil {
 		return nil, err
 	}
 

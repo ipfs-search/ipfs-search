@@ -38,7 +38,7 @@ func wantGotEqual(want interface{}, got interface{}) bool {
 	return true
 }
 
-func assertSettings(ctx context.Context, i ManagedIndex, settings interface{}, update bool) error {
+func ensureSettings(ctx context.Context, i ManagedIndex, settings interface{}) error {
 	existingSettings, err := i.GetSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("index %v, getting settings: %w", i, err)
@@ -53,31 +53,26 @@ func assertSettings(ctx context.Context, i ManagedIndex, settings interface{}, u
 	diff := cmp.Diff(settings, existingSettings)
 	log.Printf("Settings do not match (-want +got):\n%s", diff)
 
-	switch update {
-	case true:
-		if err := i.SetSettings(ctx, settings); err != nil {
-			return fmt.Errorf("index %v, updating settings: %w", i, err)
-		}
-
-		// Confirm update
-		if existingSettings, err = i.GetSettings(ctx); err != nil {
-			return fmt.Errorf("index %v, getting settings: %w", i, err)
-		}
-
-		// It should match now
-		if !wantGotEqual(settings, existingSettings) {
-			return fmt.Errorf("index %v, updated settings do not match target settings", i)
-		}
-
-		log.Println("settings updated")
-	case false:
-		log.Println("not updating settings")
+	if err := i.SetSettings(ctx, settings); err != nil {
+		return fmt.Errorf("index %v, updating settings: %w", i, err)
 	}
+
+	// Confirm update
+	if existingSettings, err = i.GetSettings(ctx); err != nil {
+		return fmt.Errorf("index %v, getting settings: %w", i, err)
+	}
+
+	// It should match now
+	if !wantGotEqual(settings, existingSettings) {
+		return fmt.Errorf("index %v, updated settings do not match target settings", i)
+	}
+
+	log.Println("settings updated")
 
 	return nil
 }
 
-func assertMapping(ctx context.Context, i ManagedIndex, mapping interface{}, update bool) error {
+func ensureMapping(ctx context.Context, i ManagedIndex, mapping interface{}) error {
 	existingMapping, err := i.GetMapping(ctx)
 	if err != nil {
 		return fmt.Errorf("index %v, getting mapping: %w", i, err)
@@ -92,32 +87,27 @@ func assertMapping(ctx context.Context, i ManagedIndex, mapping interface{}, upd
 	diff := cmp.Diff(mapping, existingMapping)
 	log.Printf("Mapping does not match (-want +got):\n%s", diff)
 
-	switch update {
-	case true:
-		if err := i.SetMapping(ctx, mapping); err != nil {
-			return fmt.Errorf("index %v, updating mapping: %w", i, err)
-		}
-
-		// Confirm update
-		if existingMapping, err = i.GetMapping(ctx); err != nil {
-			return fmt.Errorf("index %v, getting mapping: %w", i, err)
-		}
-
-		// It should match now
-		if !wantGotEqual(mapping, existingMapping) {
-			return fmt.Errorf("index %v, updated mapping do not match target mapping", i)
-		}
-
-		log.Println("mapping updated")
-	case false:
-		log.Println("not updating mapping")
+	if err := i.SetMapping(ctx, mapping); err != nil {
+		return fmt.Errorf("index %v, updating mapping: %w", i, err)
 	}
+
+	// Confirm update
+	if existingMapping, err = i.GetMapping(ctx); err != nil {
+		return fmt.Errorf("index %v, getting mapping: %w", i, err)
+	}
+
+	// It should match now
+	if !wantGotEqual(mapping, existingMapping) {
+		return fmt.Errorf("index %v, updated mapping do not match target mapping", i)
+	}
+
+	log.Println("mapping updated")
 
 	return nil
 }
 
-// Assert checks for the existence of an index with given settings, creates it if necessary and optionally attempts to update them.
-func Assert(ctx context.Context, i ManagedIndex, settings interface{}, mapping interface{}, update bool) error {
+// EnsureUpdated checks for the existence of an index with given settings, creates it if necessary and attempts to update them.
+func EnsureUpdated(ctx context.Context, i ManagedIndex, config *Config) error {
 	exists, err := i.Exists(ctx)
 	if err != nil {
 		return fmt.Errorf("index %v, exists: %w", i, err)
@@ -125,12 +115,12 @@ func Assert(ctx context.Context, i ManagedIndex, settings interface{}, mapping i
 
 	if !exists {
 		log.Printf("Creating index \"%v\"", i)
-		return i.Create(ctx, settings, mapping)
+		return i.Create(ctx, config.Settings, config.Mapping)
 	}
 
-	if err := assertSettings(ctx, i, settings, update); err != nil {
+	if err := ensureSettings(ctx, i, config.Settings); err != nil {
 		return err
 	}
 
-	return assertMapping(ctx, i, mapping, update)
+	return ensureMapping(ctx, i, config.Mapping)
 }
