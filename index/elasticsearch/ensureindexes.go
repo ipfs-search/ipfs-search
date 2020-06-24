@@ -25,7 +25,7 @@ func getIndex(ctx context.Context, es *elastic.Client, config *index.Config) (in
 
 	i := &Index{
 		Client: es,
-		Name:   config.Name,
+		Config: config,
 	}
 
 	// Create index if it doesn't already exists, update if it is different (last parameter, true).

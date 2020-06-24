@@ -3,24 +3,25 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
+	"github.com/ipfs-search/ipfs-search/index"
 	"github.com/olivere/elastic/v6"
 )
 
 // Index wraps an Elasticsearch index to store documents
 type Index struct {
 	Client *elastic.Client
-	Name   string
+	Config *index.Config
 }
 
 // String returns the name of the index, for convenient logging.
 func (i *Index) String() string {
-	return i.Name
+	return i.Config.Name
 }
 
 // Index a document's properties, identified by id
 func (i *Index) Index(ctx context.Context, id string, properties map[string]interface{}) error {
 	_, err := i.Client.Index().
-		Index(i.Name).
+		Index(i.Config.Name).
 		Type("_doc").
 		Id(id).
 		BodyJson(properties).
@@ -38,7 +39,7 @@ func (i *Index) Index(ctx context.Context, id string, properties map[string]inte
 // Update a document's properties, given id
 func (i *Index) Update(ctx context.Context, id string, properties map[string]interface{}) error {
 	_, err := i.Client.Update().
-		Index(i.Name).
+		Index(i.Config.Name).
 		Type("_doc").
 		Id(id).
 		Doc(properties).
@@ -63,7 +64,7 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	result, err := i.Client.
 		Get().
-		Index(i.Name).
+		Index(i.Config.Name).
 		Type("_doc").
 		FetchSourceContext(fsc).
 		Id(id).
