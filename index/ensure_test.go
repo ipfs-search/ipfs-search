@@ -16,6 +16,7 @@ type EnsureTestSuite struct {
 func (s *EnsureTestSuite) SetupTest() {
 	s.ctx = context.Background()
 	s.mock = &mockIndex{}
+	s.mock.Test(s.T())
 }
 
 func (s *EnsureTestSuite) TestEnsureExistsCreate() {
