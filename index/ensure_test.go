@@ -25,7 +25,7 @@ func (s *EnsureTestSuite) TestEnsureExistsCreate() {
 
 	err := ensureExists(s.ctx, s.mock)
 
-	s.Assert().NoError(err)
+	s.NoError(err)
 	s.mock.AssertExpectations(s.T())
 }
 
@@ -36,7 +36,7 @@ func (s *EnsureTestSuite) TestEnsureExistsCreateExistsError() {
 
 	err := ensureExists(s.ctx, s.mock)
 
-	s.Assert().True(errors.Is(err, existsErr))
+	s.True(errors.Is(err, existsErr))
 	s.mock.AssertExpectations(s.T())
 }
 
@@ -48,7 +48,7 @@ func (s *EnsureTestSuite) TestEnsureExistsCreateCreateError() {
 
 	err := ensureExists(s.ctx, s.mock)
 
-	s.Assert().True(errors.Is(err, createErr))
+	s.True(errors.Is(err, createErr))
 	s.mock.AssertExpectations(s.T())
 }
 
@@ -59,7 +59,7 @@ func (s *EnsureTestSuite) TestEnsureConfigUpToDateUpToDateErr() {
 
 	err := ensureConfigUpToDate(s.ctx, s.mock)
 
-	s.Assert().True(errors.Is(err, upToDateErr))
+	s.True(errors.Is(err, upToDateErr))
 	s.mock.AssertExpectations(s.T())
 }
 
@@ -71,7 +71,7 @@ func (s *EnsureTestSuite) TestEnsureConfigUpToDateUpdateErr() {
 
 	err := ensureConfigUpToDate(s.ctx, s.mock)
 
-	s.Assert().True(errors.Is(err, updateErr))
+	s.True(errors.Is(err, updateErr))
 	s.mock.AssertExpectations(s.T())
 }
 
@@ -82,7 +82,7 @@ func (s *EnsureTestSuite) TestEnsureConfigUpToDateUpdateSuccess() {
 
 	err := ensureConfigUpToDate(s.ctx, s.mock)
 
-	s.Assert().NoError(err)
+	s.NoError(err)
 	s.mock.AssertExpectations(s.T())
 }
 
@@ -93,7 +93,7 @@ func (s *EnsureTestSuite) TestEnsureConfigUpToDateUpdateFail() {
 
 	err := ensureConfigUpToDate(s.ctx, s.mock)
 
-	s.Assert().Error(err)
+	s.Error(err)
 	s.mock.AssertExpectations(s.T())
 }
 
@@ -103,7 +103,7 @@ func (s *EnsureTestSuite) TestEnsureExistsAndUpdated() {
 
 	err := ensureExistsAndUpdated(s.ctx, s.mock)
 
-	s.Assert().NoError(err)
+	s.NoError(err)
 	s.mock.AssertExpectations(s.T())
 }
 
@@ -113,7 +113,7 @@ func (s *EnsureTestSuite) TestEnsureExistsAndUpdatedMulti() {
 
 	err := EnsureExistsAndUpdatedMulti(s.ctx, s.mock, s.mock)
 
-	s.Assert().NoError(err)
+	s.NoError(err)
 	s.mock.AssertExpectations(s.T())
 }
 

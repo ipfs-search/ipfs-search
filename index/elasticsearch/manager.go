@@ -148,13 +148,27 @@ func (i *Index) ConfigUpToDate(ctx context.Context) (bool, error) {
 
 // ConfigUpdate updates the Elasticsearch settings from the configuration.
 func (i *Index) ConfigUpdate(ctx context.Context) error {
-	if err := i.setSettings(ctx); err != nil {
-		return fmt.Errorf("index %v, updating settings: %w", i, err)
-	}
-	if err := i.setMapping(ctx); err != nil {
-		return fmt.Errorf("index %v, updating mapping: %w", i, err)
+	settingsUpToDate, err := i.settingsUpToDate(ctx)
+	if err != nil {
+		return fmt.Errorf("index %v, getting mapping: %w", i, err)
 	}
 
-	log.Printf("index %v configuration update requested", i)
+	if !settingsUpToDate {
+		if err := i.setSettings(ctx); err != nil {
+			return fmt.Errorf("index %v, updating settings: %w", i, err)
+		}
+	}
+
+	mappingUpToDate, err := i.mappingUpToDate(ctx)
+	if err != nil {
+		return fmt.Errorf("index %v, getting mapping: %w", i, err)
+	}
+
+	if !mappingUpToDate {
+		if err := i.setMapping(ctx); err != nil {
+			return fmt.Errorf("index %v, updating mapping: %w", i, err)
+		}
+	}
+
 	return nil
 }
