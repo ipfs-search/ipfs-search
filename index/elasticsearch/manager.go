@@ -100,34 +100,48 @@ func (i *Index) setMapping(ctx context.Context) error {
 	return err
 }
 
-// ConfigUpToDate checks whether the settings in Elasticsearch matches the settings in the configuration.
-func (i *Index) ConfigUpToDate(ctx context.Context) (bool, error) {
+func (i *Index) settingsUpToDate(ctx context.Context) (bool, error) {
 	settings, err := i.getSettings(ctx)
 	if err != nil {
 		return false, fmt.Errorf("index %v, getting settings: %w", i, err)
 	}
 
+	// Below is debug only
+	diff := cmp.Diff(i.cfg.Settings, settings)
+	log.Printf("Settings do not match (-want +got):\n%s", diff)
+
+	return configEqual(i.cfg.Settings, settings), nil
+}
+
+func (i *Index) mappingUpToDate(ctx context.Context) (bool, error) {
 	mapping, err := i.getMapping(ctx)
 	if err != nil {
 		return false, fmt.Errorf("index %v, getting mapping: %w", i, err)
 	}
 
-	got := Config{
-		Name:     i.cfg.Name,
-		Settings: settings.(map[string]interface{}),
-		Mapping:  mapping.(map[string]interface{}),
+	// Below is debug only
+	diff := cmp.Diff(i.cfg.Mapping, mapping)
+	log.Printf("Settings do not match (-want +got):\n%s", diff)
+
+	return configEqual(i.cfg.Mapping, mapping), nil
+
+}
+
+// ConfigUpToDate checks whether the settings in Elasticsearch matches the settings in the configuration.
+func (i *Index) ConfigUpToDate(ctx context.Context) (bool, error) {
+	settingsEqual, err := i.settingsUpToDate(ctx)
+	if err != nil {
+		return false, err
 	}
 
-	settingsEqual := configEqual(i.cfg.Settings, got.Settings)
-	mappingEqual := configEqual(i.cfg.Mapping, got.Mapping)
+	mappingEqual, err := i.mappingUpToDate(ctx)
+	if err != nil {
+		return false, err
+	}
 
 	if settingsEqual && mappingEqual {
 		return true, nil
 	}
-
-	// Below is debug only
-	diff := cmp.Diff(i.cfg, &got)
-	log.Printf("Settings do not match (-want +got):\n%s", diff)
 
 	return false, nil
 }
