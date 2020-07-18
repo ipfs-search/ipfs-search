@@ -47,12 +47,16 @@ func (i *Index) setSettings(ctx context.Context) error {
 	// Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#index-modules-settings
 	newSettings := i.cfg.Settings
 	indexSettings := newSettings["index"].(map[string]interface{})
-	delete(indexSettings, "number_of_shards")
 
-	// Close index, necessary for some settings
-	_, err = i.es.CloseIndex(i.cfg.Name).Do(ctx)
-	if err != nil {
-		return fmt.Errorf("update settings index %s, close, %w", i, err)
+	// These settings can only be chanced on closed indexes, hence we should skip them.
+	// Missing: "shard.check_on_startup", requires "flat_settings".
+	staticSettings := []string{
+		"number_of_shards", "codec", "routing_partition_size",
+		"load_fixed_bitset_filters_eagerly", "hidden",
+	}
+
+	for _, s := range staticSettings {
+		delete(indexSettings, s)
 	}
 
 	// Update settings
@@ -61,12 +65,6 @@ func (i *Index) setSettings(ctx context.Context) error {
 		Do(ctx)
 	if err != nil {
 		return fmt.Errorf("update settings index %s, %w", i, err)
-	}
-
-	// Reopen index, necessary for some settings
-	_, err = i.es.OpenIndex(i.cfg.Name).Do(ctx)
-	if err != nil {
-		return fmt.Errorf("update settings index %s, reopen, %w", i, err)
 	}
 
 	return nil
