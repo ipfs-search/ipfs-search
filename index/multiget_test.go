@@ -2,48 +2,48 @@ package index
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
+type MultiGetTestSuite struct {
+	suite.Suite
+	ctx  context.Context
+	mock *mockIndex
+}
+
+func (s *MultiGetTestSuite) SetupTest() {
+	s.ctx = context.Background()
+	s.mock = &mockIndex{}
+	s.mock.Test(s.T())
+}
+
 // TestMultiGetNotFound tests "No document is found -> nil, 404 error"
-func TestMultiGetNotFound(t *testing.T) {
-	assert := assert.New(t)
+func (s *MultiGetTestSuite) TestMultiGetNotFound() {
+	dst := new(struct{})
 
-	ctx := context.Background()
+	s.mock.On("Get", s.ctx, "objId", dst, []string{"testField"}).Return(false, nil)
 
-	m := &mockIndex{
-		Found: false,
-	}
+	index, err := MultiGet(s.ctx, []Getter{s.mock}, "objId", dst, "testField")
 
-	var dst interface{}
-
-	index, err := MultiGet(ctx, []Getter{m}, "", &dst, "")
-
-	assert.Nil(index)
-	assert.Nil(err)
+	s.Nil(index)
+	s.NoError(err)
+	s.mock.AssertExpectations(s.T())
 }
 
 // TestMultiGetFound tests "Document is found, with field not set"
-func TestMultiGetFound(t *testing.T) {
-	assert := assert.New(t)
+func (s *MultiGetTestSuite) TestMultiGetFound() {
+	dst := new(struct{})
 
-	ctx := context.Background()
+	s.mock.On("Get", s.ctx, "objId", dst, []string{"testField"}).Return(true, nil)
 
-	// Container for query reference fetch results
-	dst := new(mockResult)
-	res := []string{"hoi", "doei"}
+	index, err := MultiGet(s.ctx, []Getter{s.mock}, "objId", dst, "testField")
 
-	m := &mockIndex{
-		Found: true,
-		Result: mockResult{
-			references: res,
-		},
-	}
+	s.NoError(err)
+	s.Equal(index, s.mock)
+	s.mock.AssertExpectations(s.T())
+}
 
-	index, err := MultiGet(ctx, []Getter{m}, "", dst, "references")
-
-	assert.Equal(index, m)
-	assert.Equal(res, dst.references)
-	assert.Nil(err)
+func TestMultiGetTestSuite(t *testing.T) {
+	suite.Run(t, new(MultiGetTestSuite))
 }

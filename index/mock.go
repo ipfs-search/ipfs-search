@@ -3,21 +3,10 @@ package index
 import (
 	"context"
 	"github.com/stretchr/testify/mock"
-	"reflect"
 )
-
-type mockResult struct {
-	references []string
-}
 
 type mockIndex struct {
 	mock.Mock
-
-	ID     string
-	Fields []string
-	Result mockResult
-	Found  bool
-	Error  error
 }
 
 func (m *mockIndex) Index(ctx context.Context, id string, properties map[string]interface{}) error {
@@ -31,16 +20,8 @@ func (m *mockIndex) Update(ctx context.Context, id string, properties map[string
 }
 
 func (m *mockIndex) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
-	// TODO; replace by generic mock
-
-	m.ID = id
-	m.Fields = fields
-
-	// Set result
-	v := reflect.ValueOf(dst).Elem()
-	v.Set(reflect.ValueOf(m.Result))
-
-	return m.Found, m.Error
+	args := m.Called(ctx, id, dst, fields)
+	return args.Bool(0), args.Error(1)
 }
 
 func (m *mockIndex) Exists(ctx context.Context) (bool, error) {
