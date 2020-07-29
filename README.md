@@ -8,7 +8,7 @@
 
 Search engine for the [Interplanetary Filesystem](https://ipfs.io). Sniffs the DHT gossip and indexes file and directory hashes.
 
-Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterbob/ipfs-tika), searching is done using ElasticSearch 5, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
+Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterbob/ipfs-tika), searching is done using ElasticSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
 
 The ipfs-search command consists of two components: the crawler and the sniffer. The sniffer extracts hashes from the gossip between nodes. The crawler extracts data from the hashes and indexes them.
 
@@ -40,7 +40,7 @@ For discussing and suggesting features, look at the [project planning](https://g
 ## Requirements
 
 * Go 1.13
-* Elasticsearch 6.x
+* Elasticsearch 7.x
 * RabbitMQ / AMQP server
 * NodeJS 9.x
 

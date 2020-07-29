@@ -8,7 +8,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/ipfs/go-ipfs-api"
-	"github.com/olivere/elastic/v6"
+	"github.com/olivere/elastic/v7"
 	"github.com/streadway/amqp"
 	"log"
 )
