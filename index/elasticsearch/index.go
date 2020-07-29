@@ -14,7 +14,7 @@ type Index struct {
 }
 
 // New returns a new index.
-func New(es *elastic.Client, cfg *Config) index.ManagedIndex {
+func New(es *elastic.Client, cfg *Config) index.Index {
 	return &Index{
 		es:  es,
 		cfg: cfg,
@@ -22,8 +22,8 @@ func New(es *elastic.Client, cfg *Config) index.ManagedIndex {
 }
 
 // NewMulti takes a mapping of named configurations and returns a mapping of indexes
-func NewMulti(es *elastic.Client, configs ...*Config) []index.ManagedIndex {
-	indexes := make([]index.ManagedIndex, len(configs))
+func NewMulti(es *elastic.Client, configs ...*Config) []index.Index {
+	indexes := make([]index.Index, len(configs))
 
 	for n, c := range configs {
 		indexes[n] = New(es, c)
