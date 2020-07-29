@@ -21,6 +21,7 @@ type ConfigUpdater interface {
 }
 
 // ManagedIndex is an index which allows management
+// TODO: Factor this into the index initialiser (automate it away) or add as specific -single- Bootstrap() or Prepare() method.
 type ManagedIndex interface {
 	Index
 	Exister
