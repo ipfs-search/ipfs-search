@@ -17,9 +17,7 @@ func (i *Index) Exists(ctx context.Context) (bool, error) {
 func (i *Index) Create(ctx context.Context) error {
 	_, err := i.es.CreateIndex(i.cfg.Name).BodyJson(map[string]interface{}{
 		"settings": i.cfg.Settings,
-		"mappings": map[string]interface{}{
-			"_doc": i.cfg.Mapping,
-		},
+		"mappings": i.cfg.Mapping,
 	}).Do(ctx)
 	return err
 }
@@ -72,7 +70,7 @@ func (i *Index) setSettings(ctx context.Context) error {
 
 // getMapping returns the mapping for an index.
 func (i *Index) getMapping(ctx context.Context) (interface{}, error) {
-	responseMap, err := i.es.GetMapping().Index(i.cfg.Name).Type("_doc").Do(ctx)
+	responseMap, err := i.es.GetMapping().Index(i.cfg.Name).Do(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -94,7 +92,6 @@ func (i *Index) getMapping(ctx context.Context) (interface{}, error) {
 func (i *Index) setMapping(ctx context.Context) error {
 	_, err := i.es.PutMapping().
 		Index(i.cfg.Name).
-		Type("_doc").
 		BodyJson(i.cfg.Mapping).
 		Do(ctx)
 	return err

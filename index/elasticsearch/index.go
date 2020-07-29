@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/ipfs-search/ipfs-search/index"
-	"github.com/olivere/elastic/v6"
+	"github.com/olivere/elastic/v7"
 )
 
 // Index wraps an Elasticsearch index to store documents
@@ -41,7 +41,6 @@ func (i *Index) String() string {
 func (i *Index) Index(ctx context.Context, id string, properties map[string]interface{}) error {
 	_, err := i.es.Index().
 		Index(i.cfg.Name).
-		Type("_doc").
 		Id(id).
 		BodyJson(properties).
 		Do(ctx)
@@ -59,7 +58,6 @@ func (i *Index) Index(ctx context.Context, id string, properties map[string]inte
 func (i *Index) Update(ctx context.Context, id string, properties map[string]interface{}) error {
 	_, err := i.es.Update().
 		Index(i.cfg.Name).
-		Type("_doc").
 		Id(id).
 		Doc(properties).
 		Do(ctx)
@@ -84,7 +82,6 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	result, err := i.es.
 		Get().
 		Index(i.cfg.Name).
-		Type("_doc").
 		FetchSourceContext(fsc).
 		Id(id).
 		Do(ctx)
@@ -94,7 +91,7 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 		// Found
 
 		// Decode resulting field json into `dst`
-		err = json.Unmarshal(*result.Source, dst)
+		err = json.Unmarshal(result.Source, dst)
 
 		return true, err
 	case elastic.IsNotFound(err):

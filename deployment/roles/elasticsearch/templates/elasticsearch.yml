@@ -1,5 +1,5 @@
-# Expose elasticsearch to local (non-global) IP's
-# network.host: [_site_, _local_]
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
 path.repo: ["/var/lib/elasticsearch/backup"]
 repositories.url.allowed_urls: ["http://localhost:8080/*"]
 http.cors.enabled: true
