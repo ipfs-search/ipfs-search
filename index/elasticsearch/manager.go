@@ -48,7 +48,7 @@ func (i *Index) setSettings(ctx context.Context) error {
 	newSettings := i.cfg.Settings
 	indexSettings := newSettings["index"].(map[string]interface{})
 
-	// These settings can only be chanced on closed indexes, hence we should skip them.
+	// These settings can only be changed on closed indexes, hence we should skip them.
 	// Missing: "shard.check_on_startup", requires "flat_settings".
 	staticSettings := []string{
 		"number_of_shards", "codec", "routing_partition_size",
