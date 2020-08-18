@@ -14,6 +14,7 @@ backend:
         address: <ip>
         private_key: !vault |
                 <encrypted_value>
+        listen_port: 51820
 
       influxdb_url: http://<wg_influxdb_url>:8086
 
