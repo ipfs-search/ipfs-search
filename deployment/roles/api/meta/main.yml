@@ -1,3 +1,5 @@
 ---
 dependencies:
   - role: nodejs
+    vars:
+      node_branch: node_10.x
