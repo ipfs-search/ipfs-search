@@ -59,7 +59,7 @@
     mode: 0755
   vars:
     - snapshot_name: "{{ snapshot_s3_name }}"
-- name: Elasticsearch daily snapshot cronjob
+- name: Elasticsearch S3 daily snapshot cronjob
   cron:
     name: "Elasticsearch S3 snapshot"
     cron_file: /etc/crontab

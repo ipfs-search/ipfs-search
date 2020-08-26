@@ -26,9 +26,9 @@
     mode: 0755
   vars:
     - snapshot_name: "{{ snapshot_disk_name }}"
-- name: Elasticsearch daily snapshot cronjob
+- name: Elasticsearch daily disk snapshot cronjob
   cron:
-    name: "Elasticsearch S3 snapshot"
+    name: "Elasticsearch disk snapshot"
     cron_file: /etc/crontab
     minute: 16
     hour: 4
