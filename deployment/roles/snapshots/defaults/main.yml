@@ -2,7 +2,7 @@
 snapshot_disk_name: ipfs_disk
 snapshot_disk_path: /var/lib/elasticsearch/backup
 snapshot_s3_name: ipfs_s3
-snapshot_s3_bucket: ipfs-search-snapshots
+snapshot_s3_bucket: ipfs-search-snapshots-v7
 snapshot_publish_state_path: "{{ ipfs_path }}/snapshots-publish-state"
 snapshot_publish_path: "{{ ipfs_path }}/snapshots-publish"
 snapshot_publish_keyname: "snapshot-key"
