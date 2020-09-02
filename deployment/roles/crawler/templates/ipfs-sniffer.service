@@ -6,6 +6,9 @@ After=ipfs.service rabbitmq-server.service
 [Service]
 ExecStart=/usr/local/bin/ipfs-search -c /etc/ipfs-crawler/config.yml sniff
 Restart=always
+RestartSec=3
+StartLimitBurst=40
+StartLimitIntervalSec=120
 User=ipfs-sniffer
 Group=ipfs-sniffer
 ProtectHome=true
