@@ -18,7 +18,7 @@ import (
 	"github.com/libp2p/go-eventbus"
 )
 
-const bufSize = 256
+const bufSize = 1
 
 type Sniffer struct {
 	es eventsource.EventSource
