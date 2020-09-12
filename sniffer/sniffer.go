@@ -51,7 +51,7 @@ func New(ds datastore.Batching) (*Sniffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	// defer conn.Close()
 
 	// Yielded hashes (of which type is unknown), should be added to hashes.
 	queue, err := conn.NewChannelQueue("hashes")
