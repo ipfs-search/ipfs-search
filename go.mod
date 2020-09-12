@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-datastore v0.4.5
+	github.com/libp2p/go-eventbus v0.2.1
 	github.com/libp2p/go-libp2p-core v0.6.1
 	github.com/libp2p/go-libp2p-kad-dht v0.10.0
 	github.com/multiformats/go-base32 v0.0.3
