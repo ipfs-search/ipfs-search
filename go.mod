@@ -3,8 +3,11 @@ module github.com/ipfs-search/ipfs-sniffer
 go 1.12
 
 require (
+	github.com/alanshaw/ipfs-hookds v0.3.0
+	github.com/ipfs/go-datastore v0.4.4
 	github.com/ipfs/go-ipfs-api v0.0.2
 	github.com/mdempsky/gocode v0.0.0-20190203001940-7fb65232883f // indirect
+	github.com/stretchr/testify v1.6.1
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
 	golang.org/x/lint v0.0.0-20190930215403-16217165b5de // indirect
 	golang.org/x/net v0.0.0-20191011234655-491137f69257 // indirect
