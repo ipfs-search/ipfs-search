@@ -8,8 +8,11 @@ import (
 	"github.com/ipfs-search/ipfs-sniffer/proxy"
 
 	"github.com/ipfs/go-datastore"
+	"github.com/libp2p/go-eventbus"
 	"github.com/libp2p/go-libp2p-core/event"
 )
+
+const bufSize = 256
 
 type EventSource struct {
 	bus     event.Bus
@@ -79,7 +82,7 @@ func (s *EventSource) Batching() datastore.Batching {
 
 // Subscribe handleFunc to EvtProviderPut events
 func (s *EventSource) Subscribe(ctx context.Context, handleFunc func(context.Context, EvtProviderPut) error) error {
-	sub, err := s.bus.Subscribe(new(EvtProviderPut))
+	sub, err := s.bus.Subscribe(new(EvtProviderPut), eventbus.BufSize(bufSize))
 	if err != nil {
 		return fmt.Errorf("subscribing: %w", err)
 	}
