@@ -37,8 +37,6 @@ func (q *Queuer) Queue(ctx context.Context) error {
 				Hash: p.ID,
 			}, 9)
 
-			log.Printf("Queued %v", p.Resource)
-
 			if err != nil {
 				return err
 			}

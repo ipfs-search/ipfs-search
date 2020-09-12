@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"log"
 	"time"
 
 	t "github.com/ipfs-search/ipfs-search/types"
@@ -20,8 +19,6 @@ func New(providers chan<- t.Provider) Handler {
 }
 
 func (h *Handler) HandleFunc(ctx context.Context, e eventsource.EvtProviderPut) error {
-	log.Printf("Handling event %+v", e)
-
 	p := t.Provider{
 		Resource: &t.Resource{
 			Protocol: "ipfs",
@@ -31,13 +28,10 @@ func (h *Handler) HandleFunc(ctx context.Context, e eventsource.EvtProviderPut) 
 		Provider: e.PeerID.String(),
 	}
 
-	log.Printf("Writing provider %+v", p)
-
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	case h.providers <- p:
-		log.Printf("Written provider %+v", p)
 		return nil
 	}
 }
