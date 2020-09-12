@@ -1,4 +1,4 @@
-package datastore
+package proxy
 
 import (
 	"testing"
@@ -34,7 +34,7 @@ func (s *DataStoreTestSuite) TearDownTest() {
 }
 
 func (s *DataStoreTestSuite) TestPut() {
-	ds := AfterPutProxy(s.ds, s.mock.AfterPut)
+	ds := New(s.ds, s.mock.AfterPut)
 
 	k := datastore.NewKey("test")
 	v := []byte("test")
@@ -48,7 +48,7 @@ func (s *DataStoreTestSuite) TestPut() {
 }
 
 func (s *DataStoreTestSuite) TestBatch() {
-	ds := AfterPutProxy(s.ds, s.mock.AfterPut)
+	ds := New(s.ds, s.mock.AfterPut)
 
 	k := datastore.NewKey("test")
 	v := []byte("test")
