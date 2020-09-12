@@ -15,6 +15,7 @@ type Sniffer struct {
 }
 
 func New(ds datastore.Batching) (*Sniffer, error) {
+	// Test update
 	bus := eventbus.NewBus()
 
 	es, err := eventsource.New(bus, ds)
