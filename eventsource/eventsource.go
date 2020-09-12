@@ -1,6 +1,7 @@
 package eventsource
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -76,7 +77,33 @@ func (s *EventSource) Batching() datastore.Batching {
 	return s.ds
 }
 
-// Subscribe to EvtProviderPut events. Don't forget to call Close() on the subscription!
-func (s *EventSource) Subscribe() (event.Subscription, error) {
-	return s.bus.Subscribe(new(EvtProviderPut))
+// Subscribe handleFunc to EvtProviderPut events
+func (s *EventSource) Subscribe(ctx context.Context, handleFunc func(context.Context, EvtProviderPut) error) error {
+	sub, err := s.bus.Subscribe(new(EvtProviderPut))
+	if err != nil {
+		return fmt.Errorf("subscribing: %w", err)
+	}
+	defer sub.Close()
+
+	c := sub.Out()
+	for {
+		select {
+		case <-ctx.Done():
+			return err
+		case e, ok := <-c:
+			if !ok {
+				return fmt.Errorf("reading from event bus")
+			}
+
+			evt, ok := e.(EvtProviderPut)
+			if !ok {
+				return fmt.Errorf("casting event: %v", evt)
+			}
+
+			err := handleFunc(ctx, evt)
+			if err != nil {
+				return err
+			}
+		}
+	}
 }
