@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"golang.org/x/sync/errgroup"
+	"log"
 	"time"
 
 	"github.com/ipfs-search/ipfs-search/queue"
@@ -72,18 +73,26 @@ func (s *Sniffer) Batching() datastore.Batching {
 	return s.es.Batching()
 }
 
-func (s *Sniffer) Sniff(ctx context.Context) error {
+func (s *Sniffer) Sniff(ctx context.Context) {
 	// Create error group and context
-	errg, ctx := errgroup.WithContext(ctx)
-	errg.Go(func() error {
-		return s.es.Subscribe(ctx, s.h.HandleFunc)
-	})
-	errg.Go(func() error {
-		return s.f.Filter(ctx)
-	})
-	errg.Go(func() error {
-		return s.q.Queue(ctx)
-	})
 
-	return errg.Wait()
+	for {
+		errg, ctx := errgroup.WithContext(ctx)
+		errg.Go(func() error {
+			return s.es.Subscribe(ctx, s.h.HandleFunc)
+		})
+		errg.Go(func() error {
+			return s.f.Filter(ctx)
+		})
+		errg.Go(func() error {
+			return s.q.Queue(ctx)
+		})
+
+		err := errg.Wait()
+
+		log.Printf("Wait group exited, error: %s", err)
+		log.Printf("Stubbornly restarting in 1s")
+		time.Sleep(time.Second)
+	}
+
 }
