@@ -19,13 +19,10 @@ import (
 	"github.com/libp2p/go-eventbus"
 )
 
-const bufSize = 256
+const bufSize = 512
 
 type Sniffer struct {
 	es eventsource.EventSource
-	h  handler.Handler
-	f  filter.Filter
-	q  queuer.Queuer
 }
 
 func New(ds datastore.Batching) (*Sniffer, error) {
@@ -37,33 +34,8 @@ func New(ds datastore.Batching) (*Sniffer, error) {
 		return nil, fmt.Errorf("failed to get eventsource: %w", err)
 	}
 
-	sniffedProviders := make(chan t.Provider, bufSize)
-	filteredProviders := make(chan t.Provider, bufSize)
-
-	handler := handler.New(sniffedProviders)
-
-	lastSeenFilter := filters.NewLastSeenFilter(60*time.Duration(time.Minute), 16383)
-	cidFilter := filters.NewCidFilter()
-	f := filters.NewMultiFilter(lastSeenFilter, cidFilter)
-
-	// Create and configure add queue
-	conn, err := queue.NewConnection("amqp://guest:guest@localhost:5672/")
-	if err != nil {
-		return nil, err
-	}
-	// defer conn.Close()
-
-	// Yielded hashes (of which type is unknown), should be added to hashes.
-	queue, err := conn.NewChannelQueue("hashes")
-	if err != nil {
-		return nil, err
-	}
-
 	s := Sniffer{
 		es: es,
-		h:  handler,
-		f:  filter.New(f, sniffedProviders, filteredProviders),
-		q:  queuer.New(queue, filteredProviders),
 	}
 
 	return &s, nil
@@ -74,18 +46,42 @@ func (s *Sniffer) Batching() datastore.Batching {
 }
 
 func (s *Sniffer) Sniff(ctx context.Context) {
-	// Create error group and context
+	sniffedProviders := make(chan t.Provider, bufSize)
+	filteredProviders := make(chan t.Provider, bufSize)
 
+	// Create error group and context
 	for {
 		errg, ctx := errgroup.WithContext(ctx)
 		errg.Go(func() error {
-			return s.es.Subscribe(ctx, s.h.HandleFunc)
+			h := handler.New(sniffedProviders)
+
+			return s.es.Subscribe(ctx, h.HandleFunc)
 		})
 		errg.Go(func() error {
-			return s.f.Filter(ctx)
+			lastSeenFilter := filters.NewLastSeenFilter(60*time.Duration(time.Minute), 32768)
+			cidFilter := filters.NewCidFilter()
+			mutliFilter := filters.NewMultiFilter(lastSeenFilter, cidFilter)
+			f := filter.New(mutliFilter, sniffedProviders, filteredProviders)
+
+			return f.Filter(ctx)
 		})
 		errg.Go(func() error {
-			return s.q.Queue(ctx)
+			// Create and configure add queue
+			conn, err := queue.NewConnection("amqp://guest:guest@localhost:5672/")
+			if err != nil {
+				return err
+			}
+			defer conn.Close()
+
+			// Yielded hashes (of which type is unknown), should be added to hashes.
+			queue, err := conn.NewChannelQueue("hashes")
+			if err != nil {
+				return err
+			}
+
+			q := queuer.New(queue, filteredProviders)
+
+			return q.Queue(ctx)
 		})
 
 		err := errg.Wait()
