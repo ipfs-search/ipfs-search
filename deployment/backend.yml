@@ -5,7 +5,9 @@
     - es_heap_size: 16g
     - ipfs_memlimit: 12G
     - crawler_memlimit: 4G
+    - golang_version: 1.14.4
   roles:
+    - { name: golang, tags: ['golang']}
     - { name: disable-eth-offloading, tags: ['disable-eth-offloading']}
     - { name: cgconfig, tags: ['cgconfig']}
     - { name: elasticsearch, tags: ['elasticsearch']}

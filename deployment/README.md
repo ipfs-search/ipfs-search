@@ -6,6 +6,12 @@ The default Ansible configuration we're using, `ansible.cfg` in the current dire
 
 In order to use Ansible deployment, `backend` and `frontend` host groups need to be configured here. An example is provided in [`inventory_example.yml`](inventory_example.yml).
 
+## Ansible Galaxy requirements
+May be installed with:
+```bash
+$ ansible-galaxy install -r requirements.yml
+```
+
 ## Vault
 In addition to the inventory, a succesful deployment requires several secrets to be configured in `vault/secrets.yml`. An example file is provided in [`vault/secrets_example.yml`](vault/secrets_example.yml), which you can encrypt with `ansible-vault encrypt` and later edited with `ansible-vault edit vault/secrets.yml`.
 

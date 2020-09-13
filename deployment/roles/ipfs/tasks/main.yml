@@ -1,16 +1,41 @@
 ---
-- name: download go-ipfs binary
-  get_url: url={{ binary_url }} checksum=sha512:{{ binary_sha512 }} dest=/tmp/go-ipfs.tar.gz
-  register: binary
+- name: build requirements
+  apt:
+    pkg:
+      - build-essential
+      - libssl-dev
+      - pkg-config
+    state: present
 - block:
-    - name: extract go-ipfs archive
-      unarchive: copy=no src=/tmp/go-ipfs.tar.gz dest=/tmp/
-    - name: install go-ipfs
-      copy: remote_src=True src=/tmp/go-ipfs/ipfs dest="{{ ipfs_binary }}" mode=755
-      notify: restart ipfs
-    - name: remove temporary files
-      file: state=absent path=/tmp/go-ipfs
-  when: binary.changed
+  - name: clone go-ipfs
+    git:
+      dest: "{{ ipfs_build }}"
+      repo: https://github.com/ipfs/go-ipfs.git
+      version: "{{ ipfs_version }}"
+    register: source
+  - block:
+    - name: clean go-ipfs
+      make:
+        chdir: "{{ ipfs_build }}"
+        target: clean
+    - name: make go-ipfs
+      make:
+        chdir: "{{ ipfs_build }}"
+        params:
+          GOTAGS=openssl
+        target: build
+  environment:
+    PATH: "{{ golang_install_dir }}/bin:{{ ansible_env.PATH }}"
+  become: false
+- name: Install ipfs binary
+  copy:
+    src: "{{ ipfs_build }}/cmd/ipfs/ipfs"
+    dest: "{{ ipfs_binary }}"
+    remote_src: True
+    mode: 755
+  become: true
+  notify: restart ipfs
+  # when: source.changed
 - group: name=ipfs system=true state=present
 - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}" shell=/usr/sbin/nologin
 - file: path="{{ ipfs_path }}" owner=ipfs group=ipfs mode=750 state=directory
