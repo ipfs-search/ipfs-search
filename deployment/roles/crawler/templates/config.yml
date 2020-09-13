@@ -14,8 +14,8 @@ crawler:
   hash_wait: 100ms  # Time between launching workers
   file_wait: 100ms
   partial_size: 256KB  # Size for partial items - this is the default chunker block size
-  hash_workers: 160
-  file_workers: 60
+  hash_workers: 360
+  file_workers: 30
 sniffer:
   lastseen_expiration: 60m
   lastseen_prunelen: 16383
