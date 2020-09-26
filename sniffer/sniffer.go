@@ -2,62 +2,93 @@ package sniffer
 
 import (
 	"context"
-	"github.com/ipfs-search/ipfs-search/sniffer/extractor"
+	"fmt"
+	"golang.org/x/sync/errgroup"
+	"log"
+	"time"
+
+	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/sniffer/filters"
 	t "github.com/ipfs-search/ipfs-search/types"
-	"golang.org/x/sync/errgroup"
+	"github.com/ipfs-search/ipfs-sniffer/eventsource"
+	"github.com/ipfs-search/ipfs-sniffer/filter"
+	"github.com/ipfs-search/ipfs-sniffer/handler"
+	"github.com/ipfs-search/ipfs-sniffer/queuer"
+
+	"github.com/ipfs/go-datastore"
+	"github.com/libp2p/go-eventbus"
 )
 
-// Sniffer is a worker sniffing for provider messages, filtering them and feeding
-// them into the crawler's queue.
+const bufSize = 512
+
 type Sniffer struct {
-	cfg     *Config
-	yielder *providerYielder
-	filter  *providerFilter
-	queuer  *providerQueuer
+	es eventsource.EventSource
 }
 
-// New returns a new sniffer.
-func New(cfg *Config) (*Sniffer, error) {
-	// Initialize yielder
-	x, err := extractor.New()
+func New(ds datastore.Batching) (*Sniffer, error) {
+	// Test update
+	bus := eventbus.NewBus()
+
+	es, err := eventsource.New(bus, ds)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get eventsource: %w", err)
 	}
-	py := &providerYielder{e: x, timeout: cfg.LoggerTimeout}
 
-	// Initialize filter
-	lastSeenFilter := filters.NewLastSeenFilter(cfg.LastSeenExpiration, cfg.LastSeenPruneLen)
-	cidFilter := filters.NewCidFilter()
-	pf := &providerFilter{f: filters.NewMultiFilter(lastSeenFilter, cidFilter)}
+	s := Sniffer{
+		es: es,
+	}
 
-	// Initialise queuer
-	pq := &providerQueuer{}
-
-	return &Sniffer{
-		cfg:     cfg,
-		yielder: py,
-		filter:  pf,
-		queuer:  pq,
-	}, nil
+	return &s, nil
 }
 
-// Sniff starts sniffing, only returning in error conditions.
-func (s *Sniffer) Sniff(ctx context.Context, logger Logger, queue Queue) error {
-	sniffedProviders := make(chan t.Provider, s.cfg.BufferSize)
-	filteredProviders := make(chan t.Provider, s.cfg.BufferSize)
+func (s *Sniffer) Batching() datastore.Batching {
+	return s.es.Batching()
+}
+
+func (s *Sniffer) Sniff(ctx context.Context) {
+	sniffedProviders := make(chan t.Provider, bufSize)
+	filteredProviders := make(chan t.Provider, bufSize)
 
 	// Create error group and context
-	errg, ctx := errgroup.WithContext(ctx)
-	errg.Go(func() error {
-		return s.yielder.yield(ctx, logger, sniffedProviders)
-	})
-	errg.Go(func() error {
-		return s.filter.filter(ctx, sniffedProviders, filteredProviders)
-	})
-	errg.Go(func() error {
-		return s.queuer.queue(ctx, filteredProviders, queue)
-	})
+	for {
+		errg, ctx := errgroup.WithContext(ctx)
+		errg.Go(func() error {
+			h := handler.New(sniffedProviders)
 
-	return errg.Wait()
+			return s.es.Subscribe(ctx, h.HandleFunc)
+		})
+		errg.Go(func() error {
+			lastSeenFilter := filters.NewLastSeenFilter(60*time.Duration(time.Minute), 32768)
+			cidFilter := filters.NewCidFilter()
+			mutliFilter := filters.NewMultiFilter(lastSeenFilter, cidFilter)
+			f := filter.New(mutliFilter, sniffedProviders, filteredProviders)
+
+			return f.Filter(ctx)
+		})
+		errg.Go(func() error {
+			// Create and configure add queue
+			conn, err := queue.NewConnection("amqp://guest:guest@localhost:5672/")
+			if err != nil {
+				return err
+			}
+			defer conn.Close()
+
+			// Yielded hashes (of which type is unknown), should be added to hashes.
+			queue, err := conn.NewChannelQueue("hashes")
+			if err != nil {
+				return err
+			}
+
+			q := queuer.New(queue, filteredProviders)
+
+			return q.Queue(ctx)
+		})
+
+		err := errg.Wait()
+
+		log.Printf("Wait group exited, error: %s", err)
+		log.Printf("Stubbornly restarting in 1s")
+		time.Sleep(time.Second)
+	}
+
 }
