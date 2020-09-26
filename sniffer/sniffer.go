@@ -8,25 +8,26 @@ import (
 	"time"
 
 	"github.com/ipfs-search/ipfs-search/queue"
-	"github.com/ipfs-search/ipfs-search/sniffer/filters"
+	"github.com/ipfs-search/ipfs-search/sniffer/eventsource"
+	"github.com/ipfs-search/ipfs-search/sniffer/handler"
+	filters "github.com/ipfs-search/ipfs-search/sniffer/providerfilters"
+	"github.com/ipfs-search/ipfs-search/sniffer/queuer"
+	filter "github.com/ipfs-search/ipfs-search/sniffer/streamfilter"
 	t "github.com/ipfs-search/ipfs-search/types"
-	"github.com/ipfs-search/ipfs-sniffer/eventsource"
-	"github.com/ipfs-search/ipfs-sniffer/filter"
-	"github.com/ipfs-search/ipfs-sniffer/handler"
-	"github.com/ipfs-search/ipfs-sniffer/queuer"
 
 	"github.com/ipfs/go-datastore"
 	"github.com/libp2p/go-eventbus"
 )
 
-const bufSize = 512
-
+// Sniffer allows sniffing Batching datastore's events, effectively allowing sniffing of the IPFS DHT.
 type Sniffer struct {
-	es eventsource.EventSource
+	cfg *Config
+	es  eventsource.EventSource
+	pub queue.PublisherFactory
 }
 
-func New(ds datastore.Batching) (*Sniffer, error) {
-	// Test update
+// New creates a new Sniffer or returns an error.
+func New(cfg *Config, ds datastore.Batching, pub queue.PublisherFactory) (*Sniffer, error) {
 	bus := eventbus.NewBus()
 
 	es, err := eventsource.New(bus, ds)
@@ -35,60 +36,64 @@ func New(ds datastore.Batching) (*Sniffer, error) {
 	}
 
 	s := Sniffer{
-		es: es,
+		cfg: cfg,
+		es:  es,
+		pub: pub,
 	}
 
 	return &s, nil
 }
 
+// Batching returns the datastore wrapped with sniffing hooks.
 func (s *Sniffer) Batching() datastore.Batching {
 	return s.es.Batching()
 }
 
-func (s *Sniffer) Sniff(ctx context.Context) {
-	sniffedProviders := make(chan t.Provider, bufSize)
-	filteredProviders := make(chan t.Provider, bufSize)
+// Sniff starts sniffing until the context is closed - it restarts itself on intermittant errors.
+func (s *Sniffer) Sniff(ctx context.Context) error {
+	sniffedProviders := make(chan t.Provider, s.cfg.BufferSize)
+	filteredProviders := make(chan t.Provider, s.cfg.BufferSize)
 
 	// Create error group and context
 	for {
-		errg, ctx := errgroup.WithContext(ctx)
+		errg, errCtx := errgroup.WithContext(ctx)
 		errg.Go(func() error {
 			h := handler.New(sniffedProviders)
 
-			return s.es.Subscribe(ctx, h.HandleFunc)
+			return s.es.Subscribe(errCtx, h.HandleFunc)
 		})
 		errg.Go(func() error {
-			lastSeenFilter := filters.NewLastSeenFilter(60*time.Duration(time.Minute), 32768)
+			lastSeenFilter := filters.NewLastSeenFilter(s.cfg.LastSeenExpiration, s.cfg.LastSeenPruneLen)
 			cidFilter := filters.NewCidFilter()
 			mutliFilter := filters.NewMultiFilter(lastSeenFilter, cidFilter)
 			f := filter.New(mutliFilter, sniffedProviders, filteredProviders)
 
-			return f.Filter(ctx)
+			return f.Filter(errCtx)
 		})
 		errg.Go(func() error {
-			// Create and configure add queue
-			conn, err := queue.NewConnection("amqp://guest:guest@localhost:5672/")
-			if err != nil {
-				return err
-			}
-			defer conn.Close()
-
-			// Yielded hashes (of which type is unknown), should be added to hashes.
-			queue, err := conn.NewChannelQueue("hashes")
+			publisher, err := s.pub.NewPublisher(ctx)
 			if err != nil {
 				return err
 			}
 
-			q := queuer.New(queue, filteredProviders)
+			q := queuer.New(publisher, filteredProviders)
 
-			return q.Queue(ctx)
+			return q.Queue(errCtx)
 		})
 
+		// Wait until context lose
 		err := errg.Wait()
 
-		log.Printf("Wait group exited, error: %s", err)
+		// Closing the parent context should cause a return.
+		if err := ctx.Err(); err != nil {
+			log.Printf("Parent context closed with error '%s', returning error", err)
+			return err
+		}
+
+		log.Printf("Wait group exited with error '%s', restarting", err)
+
+		// TODO: Add circuit breaker here
 		log.Printf("Stubbornly restarting in 1s")
 		time.Sleep(time.Second)
 	}
-
 }

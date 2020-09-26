@@ -1,8 +1,8 @@
-package filter
+package streamfilter
 
 import (
 	"context"
-	"github.com/ipfs-search/ipfs-search/sniffer/filters"
+	filters "github.com/ipfs-search/ipfs-search/sniffer/providerfilters"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 

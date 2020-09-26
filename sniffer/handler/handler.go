@@ -2,10 +2,11 @@ package handler
 
 import (
 	"context"
+	"log"
 	"time"
 
+	"github.com/ipfs-search/ipfs-search/sniffer/eventsource"
 	t "github.com/ipfs-search/ipfs-search/types"
-	"github.com/ipfs-search/ipfs-sniffer/eventsource"
 )
 
 type Handler struct {
@@ -27,6 +28,8 @@ func (h *Handler) HandleFunc(ctx context.Context, e eventsource.EvtProviderPut) 
 		Date:     time.Now(),
 		Provider: e.PeerID.String(),
 	}
+
+	log.Printf("Handling provider %s", p)
 
 	select {
 	case <-ctx.Done():

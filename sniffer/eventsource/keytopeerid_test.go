@@ -1,6 +1,21 @@
 package eventsource
 
-// writeProviderEntry where k=Cid.Hash()
-// https://github.com/libp2p/go-libp2p-kad-dht/blob/9304f5575ea4c578d1316c2cf695a06b65c88dbe/providers/providers_manager.go#L239
+import (
+	"github.com/ipfs/go-datastore"
+	"testing"
+)
 
-// Perhaps use: https://godoc.org/github.com/libp2p/go-libp2p-core/peer
+func TestKeyToPeerID(t *testing.T) {
+	// CID: QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp
+	// Provider: QmeTtFXm42Jb2todcKR538j6qHYxXt6suUzpF3rtT9FPSd
+	key := datastore.NewKey("/providers/CIQDWKPBHXLJ3XVELRJZA2SYY7OGCSX6FRSIZS2VQQPVKOA2Z4VXN2I/CIQO7FK6IWMEVZU2QU6QRJKMCLW4DXQGSVSVB3V56Y272TB3IPSBGFQ")
+
+	id, err := keyToPeerID(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if id.String() != "QmeTtFXm42Jb2todcKR538j6qHYxXt6suUzpF3rtT9FPSd" {
+		t.Fatal("Peer ID not equal")
+	}
+}

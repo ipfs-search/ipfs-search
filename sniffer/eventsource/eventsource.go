@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/ipfs-search/ipfs-sniffer/proxy"
 
@@ -13,6 +14,8 @@ import (
 )
 
 const bufSize = 256
+
+var handleTimeout = time.Second
 
 type EventSource struct {
 	bus     event.Bus
@@ -64,10 +67,14 @@ func (s *EventSource) afterPut(k datastore.Key, v []byte, err error) error {
 		return nil
 	}
 
-	err = s.emitter.Emit(EvtProviderPut{
+	e := EvtProviderPut{
 		CID:    cid,
 		PeerID: pid,
-	})
+	}
+
+	log.Printf("Emitting Put Event %s", e)
+
+	err = s.emitter.Emit(e)
 	if err != nil {
 		s.nonFatalError(fmt.Errorf("cid from key '%s': %w", k, err))
 		return nil
@@ -81,6 +88,8 @@ func (s *EventSource) Batching() datastore.Batching {
 }
 
 // Subscribe handleFunc to EvtProviderPut events
+// TODO: Make this return errgroup, err instead of blocking - leaving the caller to decide how to deal with it and separating
+// initialisation from listening.
 func (s *EventSource) Subscribe(ctx context.Context, handleFunc func(context.Context, EvtProviderPut) error) error {
 	sub, err := s.bus.Subscribe(new(EvtProviderPut), eventbus.BufSize(bufSize))
 	if err != nil {
@@ -89,6 +98,8 @@ func (s *EventSource) Subscribe(ctx context.Context, handleFunc func(context.Con
 	defer sub.Close()
 
 	c := sub.Out()
+
+	// TODO: Consider running this in a Goroutine through an errorgroup
 	for {
 		select {
 		case <-ctx.Done():
@@ -103,7 +114,12 @@ func (s *EventSource) Subscribe(ctx context.Context, handleFunc func(context.Con
 				return fmt.Errorf("casting event: %v", evt)
 			}
 
+			// Timeout handler to expose issues on the handler side
+			ctx, cancel := context.WithTimeout(ctx, handleTimeout)
+
 			err := handleFunc(ctx, evt)
+			cancel() // Frees up timeout context's resources
+
 			if err != nil {
 				return err
 			}

@@ -1,4 +1,4 @@
-package filters
+package providerfilters
 
 import (
 	"github.com/ipfs-search/ipfs-search/types"
