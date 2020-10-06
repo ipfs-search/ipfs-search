@@ -112,6 +112,11 @@ func generateConfig(c *cli.Context) error {
 }
 
 func add(c *cli.Context) error {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Allow SIGTERM / Control-C quit through context
+	onSigTerm(cancel)
+
 	if c.NArg() != 1 {
 		return cli.NewExitError("Please supply one hash as argument.", 1)
 	}
@@ -124,7 +129,7 @@ func add(c *cli.Context) error {
 
 	fmt.Printf("Adding hash '%s' to queue\n", hash)
 
-	err = commands.AddHash(cfg, hash)
+	err = commands.AddHash(ctx, cfg, hash)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}

@@ -7,15 +7,15 @@ import (
 	"github.com/ipfs-search/ipfs-search/queue"
 )
 
-// AMQPublisherFactory automates creation of AMQP Publishers.
-type AMQPPublisherFactory struct {
+// PublisherFactory automates creation of AMQP Publishers.
+type PublisherFactory struct {
 	AMQPURL string
 	Queue   string
 }
 
-func (f AMQPPublisherFactory) NewPublisher(ctx context.Context) (queue.Publisher, error) {
+func (f PublisherFactory) NewPublisher(ctx context.Context) (queue.Publisher, error) {
 	// Create and configure add queue
-	conn, err := queue.NewConnection(f.AMQPURL)
+	conn, err := NewConnection(f.AMQPURL)
 	if err != nil {
 		return nil, err
 	}

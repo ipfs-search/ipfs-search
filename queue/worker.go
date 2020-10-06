@@ -2,20 +2,21 @@ package queue
 
 import (
 	"context"
+	"fmt"
 	"log"
 )
 
 // Worker instantiates and calls MessageWorker for every Message in Queue
 type Worker struct {
 	errChan chan<- error
-	queue   *Queue
+	queue   Consumer
 	factory MessageWorkerFactory
 }
 
 // NewWorker returns a worker for a given queue with error channel. The
 // MessageWorkerFactory is itself wrapped in a messageWorker for proper
 // error handling etc.
-func NewWorker(errc chan<- error, queue *Queue, factory MessageWorkerFactory) *Worker {
+func NewWorker(errc chan<- error, queue Consumer, factory MessageWorkerFactory) *Worker {
 	return &Worker{
 		errChan: errc,
 		queue:   queue,
@@ -25,7 +26,7 @@ func NewWorker(errc chan<- error, queue *Queue, factory MessageWorkerFactory) *W
 
 // String returns the name of the worker queue
 func (w *Worker) String() string {
-	return w.queue.String()
+	return fmt.Sprintf("%s", w.queue)
 }
 
 // Work performs consumption of messages in the worker's Queue

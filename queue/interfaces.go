@@ -12,7 +12,7 @@ type Publisher interface {
 
 // Consumer allows consuming of published items.
 type Consumer interface {
-	Consume(<-chan amqp.Delivery, error)
+	Consume() (<-chan amqp.Delivery, error)
 }
 
 // PublisherFactory creates Publishers.

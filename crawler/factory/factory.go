@@ -6,18 +6,19 @@ import (
 	"github.com/ipfs-search/ipfs-search/index"
 	"github.com/ipfs-search/ipfs-search/index/elasticsearch"
 	"github.com/ipfs-search/ipfs-search/queue"
+	"github.com/ipfs-search/ipfs-search/queue/amqp"
 	"github.com/ipfs-search/ipfs-search/worker"
 	"github.com/ipfs/go-ipfs-api"
 	"github.com/olivere/elastic/v7"
-	"github.com/streadway/amqp"
+	samqp "github.com/streadway/amqp"
 	"log"
 )
 
 // Factory creates hash and file crawl workers
 type Factory struct {
 	crawlerConfig *crawler.Config
-	pubConnection *queue.Connection
-	conConnection *queue.Connection
+	pubConnection *amqp.Connection
+	conConnection *amqp.Connection
 	errChan       chan<- error
 
 	fileIndex      index.Index
@@ -29,12 +30,12 @@ type Factory struct {
 
 // New creates a new crawl worker factory
 func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, error) {
-	pubConnection, err := queue.NewConnection(config.AMQPURL)
+	pubConnection, err := amqp.NewConnection(config.AMQPURL)
 	if err != nil {
 		return nil, err
 	}
 
-	conConnection, err := queue.NewConnection(config.AMQPURL)
+	conConnection, err := amqp.NewConnection(config.AMQPURL)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +103,7 @@ func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, e
 	}
 
 	// A MessageWorkerFactory generates a worker for every message in a queue
-	messageWorkerFactory := func(msg *amqp.Delivery) worker.Worker {
+	messageWorkerFactory := func(msg *samqp.Delivery) worker.Worker {
 		return &Worker{
 			Crawler:   c,
 			Delivery:  msg,

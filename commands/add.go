@@ -1,28 +1,26 @@
 package commands
 
 import (
+	"context"
 	"github.com/ipfs-search/ipfs-search/config"
 	"github.com/ipfs-search/ipfs-search/crawler"
-	"github.com/ipfs-search/ipfs-search/queue"
+	"github.com/ipfs-search/ipfs-search/queue/amqp"
 )
 
 // AddHash queues a single IPFS hash for indexing
-func AddHash(cfg *config.Config, hash string) error {
-	conn, err := queue.NewConnection(cfg.AMQP.AMQPURL)
-	if err != nil {
-		return err
+func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
+	f := amqp.PublisherFactory{
+		AMQPURL: cfg.AMQP.AMQPURL,
+		Queue:   "hashes",
 	}
-	defer conn.Close()
 
-	queue, err := conn.NewChannelQueue("hashes")
+	queue, err := f.NewPublisher(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Add with highest priority, as this is supposed to be available
-	err = queue.Publish(&crawler.Args{
+	return queue.Publish(&crawler.Args{
 		Hash: hash,
 	}, 9)
-
-	return err
 }
