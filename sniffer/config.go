@@ -16,6 +16,6 @@ func DefaultConfig() *Config {
 		LastSeenExpiration: 60 * time.Duration(time.Minute),
 		LastSeenPruneLen:   32768,
 		LoggerTimeout:      60 * time.Duration(time.Second),
-		BufferSize:         256,
+		BufferSize:         512,
 	}
 }

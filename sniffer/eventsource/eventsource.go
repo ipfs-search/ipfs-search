@@ -17,7 +17,7 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
-const bufSize = 256
+const bufSize = 512
 
 var handleTimeout = time.Second
 
@@ -48,7 +48,7 @@ func New(b event.Bus, ds datastore.Batching) (EventSource, error) {
 }
 
 func (s *EventSource) afterPut(k datastore.Key, v []byte, err error) error {
-	ctx, span := s.Tracer.Start(context.TODO(), "eventsource.afterPut", trace.WithSpanKind(trace.SpanKindProducer))
+	ctx, span := s.Tracer.Start(context.TODO(), "eventsource.afterPut")
 	defer span.End()
 
 	// Ignore error'ed Put's
