@@ -6,7 +6,10 @@ import (
 	"github.com/ipfs-search/ipfs-search/queue"
 	t "github.com/ipfs-search/ipfs-search/types"
 	"log"
+	"time"
 )
+
+const queueTimeout = 5 * time.Minute
 
 type Queuer struct {
 	queue     queue.Publisher
@@ -21,22 +24,28 @@ func New(q queue.Publisher, providers <-chan t.Provider) Queuer {
 }
 
 func (q *Queuer) Queue(ctx context.Context) error {
-	// TODO: Consider running this in a goroutine through an errorgroup
+	var err error
+
 	for {
+		// Never wait more than queueTimeout for a message
+		ctx, cancel := context.WithTimeout(ctx, queueTimeout)
+
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			err = ctx.Err()
 		case p := <-q.providers:
 			log.Printf("Queueing %v", p.Resource)
 
 			// Add with highest priority (9), as this is supposed to be available
-			err := q.queue.Publish(&crawler.Args{
+			err = q.queue.Publish(&crawler.Args{
 				Hash: p.ID,
 			}, 9)
+		}
 
-			if err != nil {
-				return err
-			}
+		cancel()
+
+		if err != nil {
+			return err
 		}
 	}
 }

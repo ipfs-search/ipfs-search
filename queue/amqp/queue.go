@@ -18,6 +18,7 @@ func (q *Queue) String() string {
 
 // Publish adds a task with specified params to the Queue
 // priority: higher number, higher priority
+// TODO: Add context parameter, allow for timeouts etc
 func (q *Queue) Publish(params interface{}, priority uint8) error {
 	body, err := json.Marshal(params)
 	if err != nil {

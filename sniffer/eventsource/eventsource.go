@@ -72,13 +72,13 @@ func (s *EventSource) afterPut(k datastore.Key, v []byte, err error) error {
 		PeerID: pid,
 	}
 
-	log.Printf("Emitting Put Event %s", e)
-
 	err = s.emitter.Emit(e)
 	if err != nil {
 		s.nonFatalError(fmt.Errorf("cid from key '%s': %w", k, err))
 		return nil
 	}
+
+	log.Printf("Emitted put event %s", e)
 
 	return nil
 }
