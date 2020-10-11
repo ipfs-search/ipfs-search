@@ -2,34 +2,45 @@ package handler
 
 import (
 	"context"
-	"log"
 	"time"
 
+	"github.com/ipfs-search/ipfs-search/instrumentation"
 	"github.com/ipfs-search/ipfs-search/sniffer/eventsource"
 	t "github.com/ipfs-search/ipfs-search/types"
+
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/label"
 )
 
 type Handler struct {
 	providers chan<- t.Provider
+	*instrumentation.Instrumentation
 }
 
 func New(providers chan<- t.Provider) Handler {
 	return Handler{
-		providers: providers,
+		providers:       providers,
+		Instrumentation: instrumentation.New(),
 	}
 }
 
 func (h *Handler) HandleFunc(ctx context.Context, e eventsource.EvtProviderPut) error {
+	ctx = trace.ContextWithRemoteSpanContext(ctx, e.SpanContext)
+	ctx, span := h.Tracer.Start(ctx, "handler.HandleFunc", trace.WithAttributes(
+		label.Stringer("cid", e.CID),
+		label.Stringer("peerid", e.PeerID),
+	), trace.WithSpanKind(trace.SpanKindConsumer))
+	defer span.End()
+
 	p := t.Provider{
 		Resource: &t.Resource{
-			Protocol: "ipfs",
-			ID:       e.CID.String(),
+			Protocol:    "ipfs",
+			ID:          e.CID.String(),
+			SpanContext: span.SpanContext(),
 		},
 		Date:     time.Now(),
 		Provider: e.PeerID.String(),
 	}
-
-	log.Printf("Handling provider %s", p)
 
 	select {
 	case <-ctx.Done():

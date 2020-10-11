@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/ipfs-search/ipfs-search/instrumentation"
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/sniffer/eventsource"
 	"github.com/ipfs-search/ipfs-search/sniffer/handler"
@@ -14,6 +15,8 @@ import (
 	"github.com/ipfs-search/ipfs-search/sniffer/queuer"
 	filter "github.com/ipfs-search/ipfs-search/sniffer/streamfilter"
 	t "github.com/ipfs-search/ipfs-search/types"
+
+	// "go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs/go-datastore"
 	"github.com/libp2p/go-eventbus"
@@ -24,6 +27,8 @@ type Sniffer struct {
 	cfg *Config
 	es  eventsource.EventSource
 	pub queue.PublisherFactory
+
+	*instrumentation.Instrumentation
 }
 
 // New creates a new Sniffer or returns an error.
@@ -36,9 +41,10 @@ func New(cfg *Config, ds datastore.Batching, pub queue.PublisherFactory) (*Sniff
 	}
 
 	s := Sniffer{
-		cfg: cfg,
-		es:  es,
-		pub: pub,
+		cfg:             cfg,
+		es:              es,
+		pub:             pub,
+		Instrumentation: instrumentation.New(),
 	}
 
 	return &s, nil
@@ -49,44 +55,85 @@ func (s *Sniffer) Batching() datastore.Batching {
 	return s.es.Batching()
 }
 
-// Sniff starts sniffing until the context is closed - it restarts itself on intermittant errors.
-func (s *Sniffer) Sniff(ctx context.Context) error {
-	sniffedProviders := make(chan t.Provider, s.cfg.BufferSize)
-	filteredProviders := make(chan t.Provider, s.cfg.BufferSize)
+func (s *Sniffer) subscribe(ctx context.Context, c chan<- t.Provider) error {
+	// ctx, span := s.Tracer.Start(ctx, "sniffer.subscribe")
+	// defer span.End()
+
+	h := handler.New(c)
+
+	err := s.es.Subscribe(ctx, h.HandleFunc)
+	// span.RecordError(ctx, err)
+	// span.SetStatus(codes.Internal, err.Error())
+	return err
+}
+
+func (s *Sniffer) filter(ctx context.Context, in <-chan t.Provider, out chan<- t.Provider) error {
+	// ctx, span := s.Tracer.Start(ctx, "sniffer.filter")
+	// defer span.End()
+
+	lastSeenFilter := filters.NewLastSeenFilter(s.cfg.LastSeenExpiration, s.cfg.LastSeenPruneLen)
+	cidFilter := filters.NewCidFilter()
+	mutliFilter := filters.NewMultiFilter(lastSeenFilter, cidFilter)
+	f := filter.New(mutliFilter, in, out)
+
+	err := f.Filter(ctx)
+	// span.RecordError(ctx, err)
+	// span.SetStatus(codes.Internal, err.Error())
+	return err
+}
+
+func (s *Sniffer) queue(ctx context.Context, c <-chan t.Provider) error {
+	// ctx, span := s.Tracer.Start(ctx, "sniffer.Queue")
+	// defer span.End()
+
+	publisher, err := s.pub.NewPublisher(ctx)
+	if err != nil {
+		return err
+	}
+
+	q := queuer.New(publisher, c)
+
+	err = q.Queue(ctx)
+	// span.RecordError(ctx, err)
+	// span.SetStatus(codes.Internal, err.Error())
+	return err
+}
+
+func (s *Sniffer) iterate(ctx context.Context, sniffed, filtered chan t.Provider) error {
+	// ctx, span := s.Tracer.Start(ctx, "sniffer.iterate")
+	// defer span.End()
 
 	// Create error group and context
+	errg, ctx := errgroup.WithContext(ctx)
+	errg.Go(func() error { return s.subscribe(ctx, sniffed) })
+	errg.Go(func() error { return s.filter(ctx, sniffed, filtered) })
+	errg.Go(func() error { return s.queue(ctx, filtered) })
+
+	// Wait until all contexts are closed, then return *first* error
+	err := errg.Wait()
+
+	// span.RecordError(ctx, err)
+	// span.SetStatus(codes.Internal, err.Error())
+
+	return err
+}
+
+// Sniff starts sniffing until the context is closed - it restarts itself on intermittant errors.
+func (s *Sniffer) Sniff(ctx context.Context) error {
+	// ctx, span := s.Tracer.Start(ctx, "sniffer.Sniff")
+	// defer span.End()
+
+	sniffed := make(chan t.Provider, s.cfg.BufferSize)
+	filtered := make(chan t.Provider, s.cfg.BufferSize)
+
 	for {
-		errg, errCtx := errgroup.WithContext(ctx)
-		errg.Go(func() error {
-			h := handler.New(sniffedProviders)
+		err := s.iterate(ctx, sniffed, filtered)
 
-			return s.es.Subscribe(errCtx, h.HandleFunc)
-		})
-		errg.Go(func() error {
-			lastSeenFilter := filters.NewLastSeenFilter(s.cfg.LastSeenExpiration, s.cfg.LastSeenPruneLen)
-			cidFilter := filters.NewCidFilter()
-			mutliFilter := filters.NewMultiFilter(lastSeenFilter, cidFilter)
-			f := filter.New(mutliFilter, sniffedProviders, filteredProviders)
-
-			return f.Filter(errCtx)
-		})
-		errg.Go(func() error {
-			publisher, err := s.pub.NewPublisher(ctx)
-			if err != nil {
-				return err
-			}
-
-			q := queuer.New(publisher, filteredProviders)
-
-			return q.Queue(errCtx)
-		})
-
-		// Wait until context lose
-		err := errg.Wait()
-
-		// Closing the parent context should cause a return.
+		// Closing the parent context should cause a return, other errors cause a restart
 		if err := ctx.Err(); err != nil {
 			log.Printf("Parent context closed with error '%s', returning error", err)
+			// span.RecordError(ctx, err)
+			// span.SetStatus(codes.Internal, err.Error())
 			return err
 		}
 
