@@ -21,22 +21,17 @@ func (g *Group) Work(ctx context.Context) error {
 		err    error
 	)
 
-	// Create a pool of workers
+	// Create error group and context
+	errg, ctx := errgroup.WithContext(ctx)
+
+	// Create a pool of workers within errorgroup
 	for i := uint(0); i < g.Count; i++ {
+		log.Printf("Initialising worker %s (%d)", worker, i+1)
 		worker, err = g.Factory()
 		if err != nil {
 			return err
 		}
-	}
 
-	// Create error group and context
-	errg, ctx := errgroup.WithContext(ctx)
-
-	// Start the workers, passing them the error group's context
-	// This way, if one of the workers returns an error, the Done channel
-	// is closed and they'll all stop and they can be signalled to stop
-	// by cancelling the parent context.
-	for i := uint(0); i < g.Count; i++ {
 		log.Printf("Starting worker %s (%d)", worker, i+1)
 		errg.Go(func() error {
 			return worker.Work(ctx)
