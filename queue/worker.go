@@ -43,8 +43,8 @@ func (w *Worker) Work(ctx context.Context) error {
 			log.Printf("Stopping worker %s: %s", w, ctx.Err())
 			return ctx.Err()
 		case msg := <-msgs:
-			worker := w.factory(&msg)
-			err = worker.Work(ctx)
+			msgWorker := w.factory(&msg)
+			err = msgWorker.Work(ctx)
 			if err != nil {
 				w.errChan <- err
 			}
