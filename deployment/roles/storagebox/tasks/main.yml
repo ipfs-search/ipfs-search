@@ -1,0 +1,29 @@
+---
+- name: CIFS utils
+  apt:
+    name: cifs-utils
+    state: present
+- name: Loading secrets
+  include_vars:
+    file: ../../vault/secrets.yml
+- name: Credentials file
+  template:
+    src: credentials.txt
+    dest: "{{ storagebox_credentials_file }}"
+    owner: root
+    group: root
+    mode: '0600'
+- name: Create mountpoint
+  file:
+    path: "{{ storagebox_mountpoint }}"
+    state: directory
+    owner: "{{ storagebox_mountpoint_owner }}"
+    group: "{{ storagebox_mountpoint_group }}"
+    mode: '0750'
+- name: Mount storagebox
+  mount:
+    fstype: cifs
+    opts: "iocharset=utf8,rw,cache=loose,credentials={{ storagebox_credentials_file }},uid=elasticsearch,gid=elasticsearch,file_mode=0660,dir_mode=0770"
+    src: "//{{ storagebox_username }}.your-storagebox.de/backup"
+    path: "{{ storagebox_mountpoint }}"
+    state: mounted
