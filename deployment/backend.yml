@@ -15,5 +15,6 @@
     - { name: crawler, tags: ['crawler'] }
     - { name: nginx, tags: ['nginx']}
     - { name: api, tags: ['api']}
+    - { name: storagebox, tags: ['storagebox'] }
     - { name: snapshots, tags: ['snapshots'] }
     - { name: ipfs-cluster, tags: ['ipfs-cluster']}

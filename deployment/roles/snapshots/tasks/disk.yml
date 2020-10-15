@@ -4,6 +4,17 @@
     url: "http://127.0.0.1:9200/_snapshot/{{ snapshot_disk_name }}"
     status_code: 200, 404
   register: snapshot_check
+- name: Configure repository path in Elasticsearch
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: ^path.repo
+    backup: yes
+    line: "path.repo: [\"{{ snapshot_disk_path }}\"]"
+    state: present
+  register: repo_path
+- name: Restart elasticsearch
+  systemd: daemon_reload=yes state=restarted name=elasticsearch
+  when: repo_path.changed
 - name: Create snapshot repository
   uri:
     url: "http://127.0.0.1:9200/_snapshot/{{ snapshot_disk_name }}"
@@ -18,7 +29,6 @@
           "chunk_size": "524288000B"
         }
       }
-  when: snapshot_check.status == 404
 - name: Install snapshot script
   template:
     src: ipfs-search-snapshot.sh
