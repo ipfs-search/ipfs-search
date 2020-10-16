@@ -1,8 +1,12 @@
 ---
-- name: Install repository key
-  apt_key: url=https://www.rabbitmq.com/rabbitmq-release-signing-key.asc state=present id=6026DFCA
-- name: Add repository
-  apt_repository: repo='deb http://www.rabbitmq.com/debian/ testing main' state=present update_cache=yes
+- name: Install RabbitMQ repository key
+  apt_key: url=https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey state=present id=F6609E60DC62814E
+- name: Add RabbitMQ repository
+  apt_repository: repo='deb https://packagecloud.io/rabbitmq/rabbitmq-server/ubuntu/ xenial main' state=present update_cache=yes
+- name: Install Erlang repository key
+  apt_key: url=https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc state=present id=D208507CA14F4FCA
+- name: Add Erlang repository
+  apt_repository: repo='deb https://packages.erlang-solutions.com/ubuntu xenial contrib' state=present update_cache=yes
 - name: Install required packages
   apt: pkg=rabbitmq-server state=latest
   notify: restart rabbitmq
