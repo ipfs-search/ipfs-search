@@ -2,6 +2,7 @@ package amqp
 
 import (
 	"github.com/streadway/amqp"
+	"log"
 )
 
 // Connection wraps an AMQP connection
@@ -11,13 +12,24 @@ type Connection struct {
 
 // NewConnection returns new AMQP connection
 func NewConnection(url string) (*Connection, error) {
-	connection, err := amqp.Dial(url)
+	amqpConn, err := amqp.Dial(url)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Connection{conn: connection}, nil
+	blockings := amqpConn.NotifyBlocked(make(chan amqp.Blocking))
+	go func() {
+		for b := range blockings {
+			if b.Active {
+				log.Printf("TCP blocked: %q", b.Reason)
+			} else {
+				log.Printf("TCP unblocked")
+			}
+		}
+	}()
+
+	return &Connection{conn: amqpConn}, nil
 }
 
 // Channel creates an AMQP channel
