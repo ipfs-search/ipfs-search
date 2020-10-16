@@ -14,20 +14,19 @@ type Channel struct {
 func (c *Channel) Queue(name string) (*Queue, error) {
 	deadQueue := fmt.Sprintf("%s-dead", name)
 
-	args := amqp.Table{
-		"x-max-priority":            9,                   // Enable all 9 priorities
-		"x-message-ttl":             1000 * 60 * 60 * 24, // Expire messages after 24 hours
-		"x-dead-letter-exchange":    "",                  // Anything failing or expiring goes here
-		"x-dead-letter-routing-key": deadQueue,
-	}
-
 	_, err := c.ch.QueueDeclare(
 		name,  // name
 		true,  // durable
 		false, // delete when unused
 		false, // exclusive
 		false, // no-wait
-		args,  // arguments
+		amqp.Table{
+			"x-max-priority":            9,                   // Enable all 9 priorities
+			"x-message-ttl":             1000 * 60 * 60 * 24, // Expire messages after 24 hours
+			"x-dead-letter-exchange":    "",                  // Anything failing or expiring goes here
+			"x-dead-letter-routing-key": deadQueue,
+			"x-max-length":              100 * 1000, // Max 100.000 messages; prevent resource exhaustion in queue.
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -39,7 +38,10 @@ func (c *Channel) Queue(name string) (*Queue, error) {
 		false,     // delete when unused
 		false,     // exclusive
 		false,     // no-wait
-		nil,       // arguments
+		amqp.Table{
+			"x-message-ttl": 1000 * 60 * 60 * 24, // Expire messages after 24 hours,
+			"x-max-length":  100 * 1000,          // Max 100.000 messages; prevent resource exhaustion in queue.
+		},
 	)
 	if err != nil {
 		return nil, err
