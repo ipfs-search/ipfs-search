@@ -9,7 +9,7 @@ PermissionsStartOnly=true
 Restart=always
 RestartSec=3
 StartLimitBurst=40
-StartLimitIntervalSec=120
+StartLimitInterval=120
 User={{ ipfs_cluster_user }}
 Group={{ ipfs_cluster_group }}
 Environment="IPFS_CLUSTER_PATH={{ ipfs_cluster_path }}"
