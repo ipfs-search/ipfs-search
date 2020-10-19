@@ -32,11 +32,6 @@ func Install() (func(), error) {
 }
 
 func New() *Instrumentation {
-	_, err := Install()
-	if err != nil {
-		log.Printf("Error installing Jaeger pipeline: %s", err)
-	}
-
 	return &Instrumentation{
 		Tracer: global.Tracer(name),
 		Meter:  global.Meter(name),
