@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ipfs-search/ipfs-search/crawler"
-	"github.com/ipfs-search/ipfs-search/instrumentation"
+	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/queue"
 	t "github.com/ipfs-search/ipfs-search/types"
 
@@ -18,7 +18,7 @@ type Queuer struct {
 	queue        queue.Publisher
 	providers    <-chan t.Provider
 	queueTimeout time.Duration
-	*instrumentation.Instrumentation
+	*instr.Instrumentation
 }
 
 func New(q queue.Publisher, providers <-chan t.Provider) Queuer {
@@ -26,7 +26,7 @@ func New(q queue.Publisher, providers <-chan t.Provider) Queuer {
 		queue:           q,
 		providers:       providers,
 		queueTimeout:    5 * time.Minute, // Kamikaze after 5 minutes of waiting
-		Instrumentation: instrumentation.New(),
+		Instrumentation: instr.New(),
 	}
 }
 

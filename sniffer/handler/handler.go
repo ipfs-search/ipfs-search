@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ipfs-search/ipfs-search/instrumentation"
+	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/sniffer/eventsource"
 	t "github.com/ipfs-search/ipfs-search/types"
 
@@ -14,13 +14,13 @@ import (
 
 type Handler struct {
 	providers chan<- t.Provider
-	*instrumentation.Instrumentation
+	*instr.Instrumentation
 }
 
 func New(providers chan<- t.Provider) Handler {
 	return Handler{
 		providers:       providers,
-		Instrumentation: instrumentation.New(),
+		Instrumentation: instr.New(),
 	}
 }
 

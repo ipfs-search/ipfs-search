@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/ipfs-search/ipfs-search/commands"
 	"github.com/ipfs-search/ipfs-search/config"
-	"github.com/ipfs-search/ipfs-search/instrumentation"
+	"github.com/ipfs-search/ipfs-search/instr"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
@@ -67,7 +67,7 @@ func main() {
 		},
 	}
 
-	instFlusher, err := instrumentation.Install()
+	instFlusher, err := instr.Install()
 	if err != nil {
 		log.Fatal(err)
 	}

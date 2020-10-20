@@ -3,7 +3,7 @@ package streamfilter
 import (
 	"context"
 
-	"github.com/ipfs-search/ipfs-search/instrumentation"
+	"github.com/ipfs-search/ipfs-search/instr"
 	filters "github.com/ipfs-search/ipfs-search/sniffer/providerfilters"
 	t "github.com/ipfs-search/ipfs-search/types"
 
@@ -15,7 +15,7 @@ type Filter struct {
 	f   filters.Filter
 	in  <-chan t.Provider
 	out chan<- t.Provider
-	*instrumentation.Instrumentation
+	*instr.Instrumentation
 }
 
 func New(f filters.Filter, in <-chan t.Provider, out chan<- t.Provider) Filter {
@@ -23,7 +23,7 @@ func New(f filters.Filter, in <-chan t.Provider, out chan<- t.Provider) Filter {
 		f:               f,
 		in:              in,
 		out:             out,
-		Instrumentation: instrumentation.New(),
+		Instrumentation: instr.New(),
 	}
 }
 

@@ -1,4 +1,4 @@
-package instrumentation
+package instr
 
 import (
 	"log"
@@ -10,7 +10,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-const name = "github.com/ipfs-search/instrumentation"
+const name = "github.com/ipfs-search/instr"
 
 type Instrumentation struct {
 	Tracer trace.Tracer

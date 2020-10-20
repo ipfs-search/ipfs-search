@@ -7,7 +7,7 @@ import (
 
 	"github.com/ipfs-search/ipfs-sniffer/proxy"
 
-	"github.com/ipfs-search/ipfs-search/instrumentation"
+	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs/go-datastore"
 	"github.com/libp2p/go-eventbus"
 	"github.com/libp2p/go-libp2p-core/event"
@@ -27,7 +27,7 @@ type EventSource struct {
 	bus     event.Bus
 	emitter event.Emitter
 	ds      datastore.Batching
-	*instrumentation.Instrumentation
+	*instr.Instrumentation
 }
 
 func New(b event.Bus, ds datastore.Batching) (EventSource, error) {
@@ -39,7 +39,7 @@ func New(b event.Bus, ds datastore.Batching) (EventSource, error) {
 	s := EventSource{
 		bus:             b,
 		emitter:         e,
-		Instrumentation: instrumentation.New(),
+		Instrumentation: instr.New(),
 	}
 
 	s.ds = proxy.New(ds, s.afterPut)

@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/ipfs-search/ipfs-search/instrumentation"
+	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/sniffer/eventsource"
 	"github.com/ipfs-search/ipfs-search/sniffer/handler"
@@ -28,7 +28,7 @@ type Sniffer struct {
 	es  eventsource.EventSource
 	pub queue.PublisherFactory
 
-	*instrumentation.Instrumentation
+	*instr.Instrumentation
 }
 
 // New creates a new Sniffer or returns an error.
@@ -44,7 +44,7 @@ func New(cfg *Config, ds datastore.Batching, pub queue.PublisherFactory) (*Sniff
 		cfg:             cfg,
 		es:              es,
 		pub:             pub,
-		Instrumentation: instrumentation.New(),
+		Instrumentation: instr.New(),
 	}
 
 	return &s, nil
