@@ -23,14 +23,19 @@ func Crawl(ctx context.Context, cfg *config.Config) error {
 
 	errc := make(chan error, 1)
 
-	startWorkers := func(ctx context.Context, cfg *config.Config, errc chan<- error) (*errgroup.Group, error) {
+	// Create error group and context
+	// The derived Context is canceled the first time a function passed to Go returns a non-nil error or the
+	// first time Wait returns, whichever occurs first.
+	errg, ctx := errgroup.WithContext(ctx)
+
+	startWorkers := func(ctx context.Context, cfg *config.Config, errc chan<- error) error {
 		ctx, span := tracer.Start(ctx, "commands.startWorkers")
 		defer span.End()
 
 		factory, err := factory.New(ctx, cfg.FactoryConfig(), instrumentation, errc)
 		if err != nil {
 			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			return nil, err
+			return err
 		}
 
 		hashGroup := worker.Group{
@@ -44,26 +49,27 @@ func Crawl(ctx context.Context, cfg *config.Config) error {
 			Factory: factory.NewFileWorker,
 		}
 
-		// Create error group and context
-		errg, ctx := errgroup.WithContext(ctx)
-
 		// Start work loop
 		errg.Go(func() error {
 			ctx, span := tracer.Start(ctx, "commands.hashWorkers")
 			defer span.End()
-			return hashGroup.Work(ctx)
+			err := hashGroup.Work(ctx)
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			return err
+
 		})
 		errg.Go(func() error {
 			ctx, span := tracer.Start(ctx, "commands.fileWorkers")
 			defer span.End()
-			return fileGroup.Work(ctx)
+			err := fileGroup.Work(ctx)
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			return err
 		})
 
-		return errg, nil
+		return nil
 	}
 
-	errg, err := startWorkers(ctx, cfg, errc)
-	if err != nil {
+	if err := startWorkers(ctx, cfg, errc); err != nil {
 		return err
 	}
 
@@ -74,12 +80,15 @@ func Crawl(ctx context.Context, cfg *config.Config) error {
 	for {
 		select {
 		case <-ctx.Done():
+			// Errorgroup context closed (parent or error ocurred).
 			err := ctx.Err()
 			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 
 			log.Printf("Shutting down: %s", err)
-			log.Print("Waiting for processes to finish")
+			log.Print("Waiting for workers to finish")
 
+			// Wait blocks until all function calls from the Go method
+			// have returned, then returns the first non-nil error (if any) from them.
 			err = errg.Wait()
 			log.Printf("Error group finished: %s", err)
 			return err
