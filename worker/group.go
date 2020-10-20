@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// Factory returns a worker
+type Factory func(context.Context) (Worker, error)
+
 // Group represents a group of Count workers, created by Factory
 type Group struct {
 	Count   uint
@@ -21,7 +24,7 @@ func (g *Group) Work(ctx context.Context) error {
 
 	// Create a pool of workers within errorgroup
 	for i := uint(0); i < g.Count; i++ {
-		worker, err := g.Factory()
+		worker, err := g.Factory(ctx)
 		if err != nil {
 			return err
 		}

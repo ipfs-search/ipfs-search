@@ -22,6 +22,7 @@ func Install() (func(), error) {
 	log.Printf("Creating Jaeger pipeline")
 
 	sampler := sdktrace.ParentBased(sdktrace.TraceIDRatioBased(0.01))
+	// sampler := sdktrace.AlwaysSample()
 
 	return jaeger.InstallNewPipeline(
 		jaeger.WithAgentEndpoint("localhost:6831"),

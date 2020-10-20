@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ipfs-search/ipfs-search/index"
+	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs/go-ipfs-api"
 )
 
@@ -28,6 +29,8 @@ type Crawler struct {
 
 	FileQueue Queue
 	HashQueue Queue
+
+	*instr.Instrumentation
 }
 
 // IndexableFromJSON returns and Indexable associated with this crawler based on a JSON blob
