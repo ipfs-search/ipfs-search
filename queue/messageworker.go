@@ -41,6 +41,7 @@ func (m *messageWorker) Work(ctx context.Context) (err error) {
 			label.String("message", string(m.Body)),
 			label.Uint("priority", uint(m.Priority)),
 		),
+		trace.WithNewRoot(),
 	)
 	defer span.End()
 
