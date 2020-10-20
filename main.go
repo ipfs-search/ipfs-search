@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/ipfs-search/ipfs-search/commands"
 	"github.com/ipfs-search/ipfs-search/config"
-	"github.com/ipfs-search/ipfs-search/instr"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
@@ -67,8 +66,7 @@ func main() {
 		},
 	}
 
-	err = app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
 }
