@@ -16,24 +16,18 @@ type Group struct {
 
 // Work starts Count of workers, created by Factory
 func (g *Group) Work(ctx context.Context) error {
-	var (
-		worker Worker
-		err    error
-	)
-
 	// Create error group and context
 	errg, ctx := errgroup.WithContext(ctx)
 
 	// Create a pool of workers within errorgroup
 	for i := uint(0); i < g.Count; i++ {
-		log.Printf("Initialising worker %s (%d)", worker, i+1)
-		worker, err = g.Factory()
+		worker, err := g.Factory()
 		if err != nil {
 			return err
 		}
 
-		log.Printf("Starting worker %s (%d)", worker, i+1)
 		errg.Go(func() error {
+			log.Printf("Starting worker %s (%d)", worker, i+1)
 			return worker.Work(ctx)
 		})
 

@@ -3,6 +3,7 @@ package amqp
 import (
 	"fmt"
 	"github.com/streadway/amqp"
+	"log"
 )
 
 // Channel wraps an AMQP channel
@@ -12,6 +13,8 @@ type Channel struct {
 
 // Queue creates a named queue on a given chennel
 func (c *Channel) Queue(name string) (*Queue, error) {
+	log.Printf("Creating AMQP queue '%s'", name)
+
 	deadQueue := fmt.Sprintf("%s-dead", name)
 
 	_, err := c.ch.QueueDeclare(

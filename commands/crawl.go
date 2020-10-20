@@ -45,7 +45,7 @@ func Crawl(ctx context.Context, cfg *config.Config) error {
 		return err
 	}
 
-	log.Printf("Waiting for messages")
+	log.Printf("Workers started")
 
 	// Log messages, wait for context break
 	go errorLoop(errc)

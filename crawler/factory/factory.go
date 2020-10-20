@@ -39,6 +39,7 @@ func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, erro
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Connected to AMQP")
 
 	// Create and configure Ipfs shell
 	sh := shell.NewShell(config.IpfsAPI)
@@ -65,6 +66,8 @@ func New(ctx context.Context, config *Config, errc chan<- error) (*Factory, erro
 }
 
 func (f *Factory) newCrawler() (*crawler.Crawler, error) {
+	log.Printf("Initializing crawler")
+
 	fileQueue, err := f.pubConnection.NewChannelQueue("files")
 	if err != nil {
 		return nil, err
@@ -102,8 +105,12 @@ func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, e
 		return nil, err
 	}
 
+	log.Printf("Crawler initialised")
+
 	// A MessageWorkerFactory generates a worker for every message in a queue
 	messageWorkerFactory := func(msg *samqp.Delivery) worker.Worker {
+		log.Printf("Creating worker for message %s", msg.Body)
+
 		return &Worker{
 			Crawler:   c,
 			Delivery:  msg,
@@ -111,6 +118,7 @@ func (f *Factory) newWorker(queueName string, crawl CrawlFunc) (worker.Worker, e
 		}
 	}
 
+	log.Printf("Creating worker for queue %s", queueName)
 	return queue.NewWorker(f.errChan, conQueue, messageWorkerFactory), nil
 }
 

@@ -34,6 +34,8 @@ func NewConnection(url string) (*Connection, error) {
 
 // Channel creates an AMQP channel
 func (c *Connection) Channel() (*Channel, error) {
+	log.Printf("Creating AMQP channel")
+
 	// Create channel
 	ch, err := c.conn.Channel()
 	if err != nil {
