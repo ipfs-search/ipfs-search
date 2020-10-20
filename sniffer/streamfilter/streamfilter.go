@@ -34,7 +34,7 @@ func (f *Filter) iterate(ctx context.Context) error {
 		return ctx.Err()
 	case p := <-f.in:
 		return func() error {
-			ctx = trace.ContextWithRemoteSpanContext(ctx, p.Resource.SpanContext)
+			ctx = trace.ContextWithRemoteSpanContext(ctx, p.SpanContext)
 			ctx, span := f.Tracer.Start(ctx, "providerfilter.Filter", trace.WithAttributes(
 				label.String("cid", p.ID),
 				label.String("peerid", p.Provider),
@@ -50,7 +50,7 @@ func (f *Filter) iterate(ctx context.Context) error {
 
 			if include {
 				// Set new span context on resource
-				p.Resource.SpanContext = span.SpanContext()
+				p.SpanContext = span.SpanContext()
 
 				// Send or return on context close
 				select {

@@ -40,7 +40,7 @@ func (q *Queuer) iterate(ctx context.Context) error {
 		return ctx.Err()
 	case p := <-q.providers:
 		return func() error {
-			ctx = trace.ContextWithRemoteSpanContext(ctx, p.Resource.SpanContext)
+			ctx = trace.ContextWithRemoteSpanContext(ctx, p.SpanContext)
 			_, span := q.Tracer.Start(ctx, "queue.Publish", trace.WithAttributes(
 				label.String("cid", p.ID),
 				label.String("peerid", p.Provider),

@@ -2,14 +2,16 @@ package types
 
 import (
 	"fmt"
+	"go.opentelemetry.io/otel/api/trace"
 	"time"
 )
 
 // Provider represents a Resource available from an identified provider at a particular moment.
 type Provider struct {
 	*Resource
-	Date     time.Time
-	Provider string
+	Date        time.Time
+	Provider    string
+	SpanContext trace.SpanContext // SpanContext allows a Resource' processing to be traceable across the program
 }
 
 // String defaults to the URI

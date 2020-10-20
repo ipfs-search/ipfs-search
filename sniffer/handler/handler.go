@@ -34,12 +34,12 @@ func (h *Handler) HandleFunc(ctx context.Context, e eventsource.EvtProviderPut) 
 
 	p := t.Provider{
 		Resource: &t.Resource{
-			Protocol:    "ipfs",
-			ID:          e.CID.String(),
-			SpanContext: span.SpanContext(),
+			Protocol: "ipfs",
+			ID:       e.CID.String(),
 		},
-		Date:     time.Now(),
-		Provider: e.PeerID.String(),
+		Date:        time.Now(),
+		Provider:    e.PeerID.String(),
+		SpanContext: span.SpanContext(),
 	}
 
 	select {
