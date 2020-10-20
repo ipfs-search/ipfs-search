@@ -1,19 +1,25 @@
 package amqp
 
 import (
+	"context"
 	"fmt"
+	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/streadway/amqp"
-	"log"
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
 )
 
 // Channel wraps an AMQP channel
 type Channel struct {
 	ch *amqp.Channel
+	*instr.Instrumentation
 }
 
 // Queue creates a named queue on a given chennel
-func (c *Channel) Queue(name string) (*Queue, error) {
-	log.Printf("Creating AMQP queue '%s'", name)
+func (c *Channel) Queue(ctx context.Context, name string) (*Queue, error) {
+	ctx, span := c.Tracer.Start(ctx, "queue.amqp.Channel.Queue", trace.WithAttributes(label.String("queue", name)))
+	defer span.End()
 
 	deadQueue := fmt.Sprintf("%s-dead", name)
 
@@ -32,6 +38,7 @@ func (c *Channel) Queue(name string) (*Queue, error) {
 		},
 	)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
 	}
 
@@ -47,12 +54,14 @@ func (c *Channel) Queue(name string) (*Queue, error) {
 		},
 	)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
 	}
 
 	return &Queue{
-		channel: c,
-		name:    name,
+		channel:         c,
+		name:            name,
+		Instrumentation: c.Instrumentation,
 	}, nil
 }
 

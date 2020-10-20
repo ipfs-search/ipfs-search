@@ -7,12 +7,12 @@ import (
 
 // Publisher allows publishing of sniffed items.
 type Publisher interface {
-	Publish(interface{}, uint8) error
+	Publish(context.Context, interface{}, uint8) error
 }
 
 // Consumer allows consuming of published items.
 type Consumer interface {
-	Consume() (<-chan amqp.Delivery, error)
+	Consume(context.Context) (<-chan amqp.Delivery, error)
 }
 
 // PublisherFactory creates Publishers.

@@ -22,9 +22,10 @@ type Worker struct {
 // error handling etc.
 func NewWorker(errc chan<- error, queue Consumer, factory MessageWorkerFactory, i *instr.Instrumentation) *Worker {
 	return &Worker{
-		errChan: errc,
-		queue:   queue,
-		factory: newMessageWorker(factory),
+		errChan:         errc,
+		queue:           queue,
+		factory:         newMessageWorker(factory, i),
+		Instrumentation: i,
 	}
 }
 
@@ -38,7 +39,7 @@ func (w *Worker) Work(ctx context.Context) error {
 	ctx, span := w.Tracer.Start(ctx, "queue.Worker.Work")
 	defer span.End()
 
-	msgs, err := w.queue.Consume()
+	msgs, err := w.queue.Consume(ctx)
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err

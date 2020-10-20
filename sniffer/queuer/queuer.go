@@ -50,7 +50,7 @@ func (q *Queuer) iterate(ctx context.Context) error {
 			// TODO: Propagate context to queue.Publish()
 
 			// Add with highest priority (9), as this is supposed to be available
-			err := q.queue.Publish(&crawler.Args{
+			err := q.queue.Publish(ctx, &crawler.Args{
 				Hash: p.ID,
 			}, 9)
 

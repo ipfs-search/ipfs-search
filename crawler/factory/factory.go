@@ -41,13 +41,13 @@ func New(ctx context.Context, config *Config, i *instr.Instrumentation, errc cha
 	ctx, span := i.Tracer.Start(ctx, "crawler.factory.New")
 	defer span.End()
 
-	pubConnection, err := amqp.NewConnection(config.AMQPURL)
+	pubConnection, err := amqp.NewConnection(ctx, config.AMQPURL, i)
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
 	}
 
-	conConnection, err := amqp.NewConnection(config.AMQPURL)
+	conConnection, err := amqp.NewConnection(ctx, config.AMQPURL, i)
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
@@ -87,13 +87,13 @@ func (f *Factory) newCrawler(ctx context.Context) (*crawler.Crawler, error) {
 	ctx, span := f.Tracer.Start(ctx, "crawler.factory.newCrawler")
 	defer span.End()
 
-	fileQueue, err := f.pubConnection.NewChannelQueue("files")
+	fileQueue, err := f.pubConnection.NewChannelQueue(ctx, "files")
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
 	}
 
-	hashQueue, err := f.pubConnection.NewChannelQueue("hashes")
+	hashQueue, err := f.pubConnection.NewChannelQueue(ctx, "hashes")
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
@@ -123,7 +123,7 @@ func (f *Factory) newWorker(ctx context.Context, queueName string, crawl CrawlFu
 	ctx, span := f.Tracer.Start(ctx, "crawler.factory.newWorker", trace.WithAttributes(label.String("queue", queueName)))
 	defer span.End()
 
-	conQueue, err := f.conConnection.NewChannelQueue(queueName)
+	conQueue, err := f.conConnection.NewChannelQueue(ctx, queueName)
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
