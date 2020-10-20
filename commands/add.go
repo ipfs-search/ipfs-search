@@ -11,6 +11,12 @@ import (
 
 // AddHash queues a single IPFS hash for indexing
 func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
+	instFlusher, err := instr.Install("ipfs-search-add")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer instFlusher()
+
 	instrumentation := instr.New()
 
 	f := amqp.PublisherFactory{

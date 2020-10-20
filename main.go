@@ -67,12 +67,6 @@ func main() {
 		},
 	}
 
-	instFlusher, err := instr.Install()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer instFlusher()
-
 	err = app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
