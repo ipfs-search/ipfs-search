@@ -1,6 +1,10 @@
 package crawler
 
+import (
+	"context"
+)
+
 // Queue allows publishing of sniffed items.
 type Queue interface {
-	Publish(interface{}, uint8) error
+	Publish(context.Context, interface{}, uint8) error
 }

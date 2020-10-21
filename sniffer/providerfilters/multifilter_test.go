@@ -1,4 +1,4 @@
-package filters
+package providerfilters
 
 import (
 	"errors"

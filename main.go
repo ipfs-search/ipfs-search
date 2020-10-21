@@ -41,12 +41,6 @@ func main() {
 			Action:  crawl,
 		},
 		{
-			Name:    "sniff",
-			Aliases: []string{"s"},
-			Usage:   "start sniffer",
-			Action:  sniff,
-		},
-		{
 			Name:    "config",
 			Aliases: []string{},
 			Usage:   "configuration",
@@ -72,8 +66,7 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -118,6 +111,11 @@ func generateConfig(c *cli.Context) error {
 }
 
 func add(c *cli.Context) error {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Allow SIGTERM / Control-C quit through context
+	onSigTerm(cancel)
+
 	if c.NArg() != 1 {
 		return cli.NewExitError("Please supply one hash as argument.", 1)
 	}
@@ -130,7 +128,7 @@ func add(c *cli.Context) error {
 
 	fmt.Printf("Adding hash '%s' to queue\n", hash)
 
-	err = commands.AddHash(cfg, hash)
+	err = commands.AddHash(ctx, cfg, hash)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -174,27 +172,6 @@ func crawl(c *cli.Context) error {
 	}
 
 	err = commands.Crawl(ctx, cfg)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-
-	return nil
-}
-
-func sniff(c *cli.Context) error {
-	fmt.Println("Starting sniffer")
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	// Allow SIGTERM / Control-C quit through context
-	onSigTerm(cancel)
-
-	cfg, err := getConfig(c)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-
-	err = commands.Sniff(ctx, cfg)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}

@@ -1,6 +1,8 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Resource represents a resource on the dweb.
 type Resource struct {

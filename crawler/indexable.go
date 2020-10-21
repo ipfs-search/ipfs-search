@@ -137,10 +137,10 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 		switch link.Type {
 		case "File":
 			// Add file to crawl queue, with lower priority
-			err = i.FileQueue.Publish(dirArgs, priority)
+			err = i.FileQueue.Publish(ctx, dirArgs, priority)
 		case "Directory":
 			// Add directory to crawl queue, with lower priority
-			err = i.HashQueue.Publish(dirArgs, priority)
+			err = i.HashQueue.Publish(ctx, dirArgs, priority)
 		default:
 			log.Printf("Type '%s' skipped for %s", link.Type, i)
 			i.indexInvalid(ctx, fmt.Errorf("Unknown type: %s", link.Type))
@@ -164,7 +164,7 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 			ParentHash: i.ParentHash,
 		}
 
-		err = i.FileQueue.Publish(fileArgs, 9)
+		err = i.FileQueue.Publish(ctx, fileArgs, 9)
 	case "Directory":
 		// Queue indexing of linked items
 		err = i.queueList(ctx, list)
