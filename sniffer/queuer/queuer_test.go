@@ -9,6 +9,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/types"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -49,7 +50,7 @@ func (s *QueuerTestSuite) TestQueueContextCancel() {
 
 // TestQueuePublish tests whether a queued provider gets published.
 func (s *QueuerTestSuite) TestQueuePublish() {
-	s.q.On("Publish", &crawler.Args{Hash: s.p.ID}, uint8(9)).Return(nil)
+	s.q.On("Publish", mock.AnythingOfType("*context.valueCtx"), &crawler.Args{Hash: s.p.ID}, uint8(9)).Return(nil)
 
 	ch := make(chan types.Provider)
 
@@ -73,7 +74,7 @@ func (s *QueuerTestSuite) TestQueuePublish() {
 func (s *QueuerTestSuite) TestQueueError() {
 	mockErr := errors.New("mock")
 
-	s.q.On("Publish", &crawler.Args{Hash: s.p.ID}, uint8(9)).Return(mockErr)
+	s.q.On("Publish", mock.AnythingOfType("*context.valueCtx"), &crawler.Args{Hash: s.p.ID}, uint8(9)).Return(mockErr)
 
 	ch := make(chan types.Provider)
 
