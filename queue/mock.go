@@ -10,13 +10,13 @@ type Mock struct {
 	mock.Mock
 }
 
-func (m *Mock) Publish(pub interface{}, priority uint8) error {
-	args := m.Called(pub, priority)
+func (m *Mock) Publish(ctx context.Context, pub interface{}, priority uint8) error {
+	args := m.Called(ctx, pub, priority)
 	return args.Error(0)
 }
 
-func (m *Mock) Consume() (<-chan amqp.Delivery, error) {
-	args := m.Called()
+func (m *Mock) Consume(ctx context.Context) (<-chan amqp.Delivery, error) {
+	args := m.Called(ctx)
 	return args.Get(0).(<-chan amqp.Delivery), args.Error(1)
 }
 
