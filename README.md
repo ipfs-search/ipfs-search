@@ -43,6 +43,7 @@ For discussing and suggesting features, look at the [project planning](https://g
 * Elasticsearch 7.x
 * RabbitMQ / AMQP server
 * NodeJS 9.x
+* IPFS 0.7
 
 ## Configuration
 Configuration can be done using a YAML configuration file, or by specifying the following environment variables:
