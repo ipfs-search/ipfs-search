@@ -1,7 +1,7 @@
 ---
-binary_url: "https://dist.ipfs.io/go-ipfs/v0.4.23/go-ipfs_v0.4.23_linux-amd64.tar.gz"
-binary_sha512: "5eebebd4d4628a01c3b6615d96123a5c744f64da18fc0950e00d99a36abb02eee694c1bb67549341a645ebb99f30de9198c33b556cdee2609013409a510d1d2b"
+ipfs_version: v0.7.0
 ipfs_path: "/var/lib/ipfs"
+ipfs_build: "/tmp/go-ipfs"
 ipfs_binary: "/usr/local/bin/ipfs"
 ipfs_user: "ipfs"
 ipfs_group: "ipfs"

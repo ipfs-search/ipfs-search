@@ -128,7 +128,7 @@ func (s *SnifferTestSuite) TestHandleToPublish() {
 
 	// Setup Mock Queue
 	qMock := &queue.Mock{}
-	qMock.On("Publish", &crawler.Args{
+	qMock.On("Publish", mock.AnythingOfType("*context.valueCtx"), &crawler.Args{
 		Hash: cidStr,
 	}, uint8(9)).Return(nil).Run(func(args mock.Arguments) {
 		fmt.Println("Publish() called, closing context")
