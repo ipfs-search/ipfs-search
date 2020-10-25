@@ -23,7 +23,7 @@
 - name: Mount storagebox
   mount:
     fstype: cifs
-    opts: "iocharset=utf8,rw,cache=loose,credentials={{ storagebox_credentials_file }},uid=elasticsearch,gid=elasticsearch,file_mode=0660,dir_mode=0770"
+    opts: "iocharset=utf8,rw,cache=loose,noexec,nosuid,nodev,sign,hard,vers=3.0,uid=elasticsearch,gid=elasticsearch,file_mode=0660,dir_mode=0770,credentials={{ storagebox_credentials_file }}"
     src: "//{{ storagebox_username }}.your-storagebox.de/backup"
     path: "{{ storagebox_mountpoint }}"
     state: mounted
