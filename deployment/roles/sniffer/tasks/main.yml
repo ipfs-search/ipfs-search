@@ -1,0 +1,43 @@
+---
+- name: build requirements
+  apt:
+    pkg:
+      - build-essential
+      - libssl-dev
+      - pkg-config
+    state: present
+- block:
+  - name: clone ipfs-sniffer
+    git:
+      dest: "{{ sniffer_build }}"
+      repo: https://github.com/ipfs-search/ipfs-sniffer.git
+    register: source
+  - block:
+    - name: go get
+      command:
+        cmd: go get -tags=openssl
+        chdir: "{{ sniffer_build }}"
+    - name: go build
+      command:
+        cmd: go build -tags=openssl -o ipfs-sniffer
+        chdir: "{{ sniffer_build }}"
+    - name: Install ipfs-sniffer
+      copy:
+        src: "{{ sniffer_build }}/ipfs-sniffer"
+        dest: "{{ sniffer_binary }}"
+        remote_src: True
+        mode: 755
+      become: true
+      notify: restart sniffer
+    when: source.changed
+  environment:
+    PATH: "{{ golang_install_dir }}/bin:{{ ansible_env.PATH }}"
+  become: false
+- group: name=ipfs-sniffer system=true state=present
+- user: name=ipfs-sniffer group=ipfs-sniffer system=true state=present home="{{ sniffer_home }}" shell=/usr/sbin/nologin
+- file: path="{{ sniffer_home }}" owner=ipfs-sniffer group=ipfs-sniffer mode=750 state=directory
+- name: Configure service
+  template: src=ipfs-sniffer.service dest=/etc/systemd/system/ipfs-sniffer.service
+  notify: restart sniffer
+- name: Enable service
+  systemd: name=ipfs-sniffer daemon_reload=yes state=started enabled=yes

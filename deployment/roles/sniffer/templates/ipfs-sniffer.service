@@ -4,7 +4,8 @@ Requires=ipfs.service rabbitmq-server.service
 After=ipfs.service rabbitmq-server.service
 
 [Service]
-ExecStart=/usr/local/bin/ipfs-search -c /etc/ipfs-crawler/config.yml sniff
+WorkingDirectory={{ sniffer_home }}
+ExecStart={{ sniffer_binary }} -nheads={{ sniffer_heads }} -pstore hydra-peerstore -bootstrap-peers "/ip4/127.0.0.1/tcp/4001/p2p/{{ ipfs_peerid }}" -disable-prefetch
 Restart=always
 RestartSec=3
 StartLimitBurst=40
@@ -15,6 +16,9 @@ ProtectHome=true
 ProtectSystem=true
 PrivateDevices=true
 PrivateTmp=true
+LimitNOFILE=65536
+MemoryAccounting=yes
+MemoryLimit={{ sniffer_memlimit }}
 
 [Install]
 WantedBy=default.target
