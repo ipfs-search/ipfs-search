@@ -140,7 +140,9 @@
     "IPNS": "/ipns"
   },
   "Peering": {
-    "Peers": null
+    "Peers": [
+      {{ sniffer_head | to_json }}
+    ]
   },
   "Plugins": {
     "Plugins": null

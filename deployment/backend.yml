@@ -12,10 +12,10 @@
     - { name: cgconfig, tags: ['cgconfig']}
     - { name: elasticsearch, tags: ['elasticsearch']}
     - { name: rabbitmq, tags: ['rabbitmq'] }
+    - { name: sniffer, tags: ['sniffer'] }
     - { name: ipfs, tags: ['ipfs'] }
     - { name: ipfs-tika, tags: ['ipfs-tika'] }
     - { name: crawler, tags: ['crawler'] }
-    - { name: sniffer, tags: ['sniffer'] }
     - { name: nginx, tags: ['nginx']}
     - { name: api, tags: ['api']}
     - { name: storagebox, tags: ['storagebox'] }
