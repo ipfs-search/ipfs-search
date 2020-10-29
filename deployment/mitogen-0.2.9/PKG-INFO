@@ -1,0 +1,23 @@
+Metadata-Version: 1.1
+Name: mitogen
+Version: 0.2.9
+Summary: Library for writing distributed self-replicating programs.
+Home-page: https://github.com/dw/mitogen/
+Author: David Wilson
+Author-email: UNKNOWN
+License: New BSD
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Environment :: Console
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.4
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Topic :: System :: Distributed Computing
+Classifier: Topic :: System :: Systems Administration
