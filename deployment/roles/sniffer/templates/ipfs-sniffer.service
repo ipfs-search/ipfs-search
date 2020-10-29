@@ -1,7 +1,7 @@
 [Unit]
 Description=ipfs-search sniffer
-Requires=ipfs.service rabbitmq-server.service
-After=ipfs.service rabbitmq-server.service
+Requires=rabbitmq-server.service
+After=rabbitmq-server.service
 
 [Service]
 WorkingDirectory={{ sniffer_home }}

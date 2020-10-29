@@ -6,13 +6,13 @@
       - libssl-dev
       - pkg-config
     state: present
+- name: clone go-ipfs
+  git:
+    dest: "{{ ipfs_build }}"
+    repo: https://github.com/ipfs/go-ipfs.git
+    version: "{{ ipfs_version }}"
+  register: source
 - block:
-  - name: clone go-ipfs
-    git:
-      dest: "{{ ipfs_build }}"
-      repo: https://github.com/ipfs/go-ipfs.git
-      version: "{{ ipfs_version }}"
-    register: source
   - block:
     - name: clean go-ipfs
       make:
@@ -24,18 +24,18 @@
         params:
           GOTAGS=openssl
         target: build
-  environment:
-    PATH: "{{ golang_install_dir }}/bin:{{ ansible_env.PATH }}"
-  become: false
-- name: Install ipfs binary
-  copy:
-    src: "{{ ipfs_build }}/cmd/ipfs/ipfs"
-    dest: "{{ ipfs_binary }}"
-    remote_src: True
-    mode: 755
-  become: true
-  notify: restart ipfs
-  # when: source.changed
+    environment:
+      PATH: "{{ golang_install_dir }}/bin:{{ ansible_env.PATH }}"
+    become: false
+  - name: Install ipfs binary
+    copy:
+      src: "{{ ipfs_build }}/cmd/ipfs/ipfs"
+      dest: "{{ ipfs_binary }}"
+      remote_src: True
+      mode: 755
+    become: true
+    notify: restart ipfs
+  when: source.changed
 - group: name=ipfs system=true state=present
 - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}" shell=/usr/sbin/nologin
 - file: path="{{ ipfs_path }}" owner=ipfs group=ipfs mode=750 state=directory
