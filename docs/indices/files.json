@@ -13,6 +13,11 @@
                     "fingerprint",
                     "metadata.Content-Type",
                     "metadata.author",
+                    //"metadata.Author", // TO INDEX!!!
+                    //"metadata.Keywords"
+                    //"metadata.creator",
+                    //"metadata.contributor"
+                    //"metadata.subject",
                     "metadata.description",
                     "metadata.isbn",
                     "metadata.keywords",
