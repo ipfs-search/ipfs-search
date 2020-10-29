@@ -1,6 +1,6 @@
 sniffer_build: "/tmp/ipfs-sniffer"
 sniffer_binary: "/usr/local/bin/ipfs-sniffer"
 sniffer_home: "/var/lib/ipfs-sniffer"
-sniffer_heads: 12
+sniffer_heads: 8
 sniffer_memlimit: 4G
 ipfs_peerid: QmfPZcnVAEjXABiA7StETRUKkS8FzNt968Z8HynbJR7oci
