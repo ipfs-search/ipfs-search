@@ -4,3 +4,5 @@ path.repo: ["/var/lib/elasticsearch/backup"]
 repositories.url.allowed_urls: ["http://localhost:8080/*"]
 http.cors.enabled: true
 http.cors.allow-origin: "chrome-extension://hkedbapjpblbodpgbajblpnlpenaebaa"
+network.host: ["_local_", "_site_"]
+discovery.type: single-node
