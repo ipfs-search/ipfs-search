@@ -2,32 +2,63 @@
 Description=IPFS daemon
 
 [Service]
-ExecStart={{ ipfs_binary }} daemon --manage-fdlimit --migrate
+ExecStart={{ ipfs_binary }} daemon --migrate
+MemoryAccounting=yes
+MemoryLimit={{ ipfs_memlimit }}
+Environment="IPFS_PATH={{ ipfs_path }}"
+User={{ ipfs_user }}
+Group={{ ipfs_group }}
+
 PermissionsStartOnly=true
-ExecStartPost=/bin/bash -c "echo 0 > /sys/fs/cgroup/memory/system.slice/ipfs.service/memory.swappiness"
+
+# Restart/recovery behaviour
 Restart=always
 RestartSec=3
 StartLimitBurst=40
 StartLimitInterval=120
-User={{ ipfs_user }}
-Group={{ ipfs_group }}
-Environment="IPFS_PATH={{ ipfs_path }}"
-DevicePolicy=closed
-DeviceAllow=/dev/fuse
-# Some or all of these give problems with fuse
-#ProtectHome=true
-#ProtectSystem=true
-#PrivateDevices=true
-#PrivateTmp=true
-MemoryAccounting=yes
-MemoryLimit={{ ipfs_memlimit }}
-# As yet unsupported security options
-#PrivateUser=true
-#ReadOnlyPaths=*
-#ReadWritePaths={{ ipfs_path }}
-#MemoryMax=512M
+
 LimitNOFILE=65536
-Nice=10
+KillSignal=SIGINT
+Type=notify
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=true
+PrivateDevices=true
+DevicePolicy=closed
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+PrivateTmp=true
+SystemCallArchitectures=native
+ProtectHome=true
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+# enable for 1-1024 port listening
+# AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+# As yet unsupported options
+# PrivateUser=true
+# ReadOnlyPaths=*
+# ReadWritePaths="{{ ipfs_path }}"
+# MemoryMax=512M
+# MemorySwapMax=0
+# ProtectSystem=strict
+# ProtectKernelTunables=true
+# ProtectKernelModules=true
+# ProtectKernelLogs=true
+# ProtectControlGroups=true
+# ProtectHostname=true
+# ProtectClock=true
+# LockPersonality=true
+# RestrictNamespaces=true
+# RestrictRealtime=true
+# MemoryDenyWriteExecute=true
+# SystemCallFilter=@system-service
+# SystemCallFilter=~@privileged
+# RemoveIPC=true
+# RestrictSUIDSGID=true
+
+# Disable swapping
+ExecStartPost=/bin/bash -c "echo 0 > /sys/fs/cgroup/memory/system.slice/ipfs.service/memory.swappiness"
 
 [Install]
 WantedBy=default.target
