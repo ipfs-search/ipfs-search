@@ -29,6 +29,12 @@
         mode: 755
       become: true
       notify: restart sniffer
+    - include_role:
+        name: annotate
+      vars:
+        role: sniffer
+        version: "{{ source.after }}"
+        action: upgrade
     when: source.changed
   environment:
     PATH: "{{ golang_install_dir }}/bin:{{ ansible_env.PATH }}"

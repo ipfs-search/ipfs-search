@@ -6,6 +6,7 @@
     git:
       dest: "{{ api_install_path }}/search"
       repo: https://github.com/ipfs-search/ipfs-search-api.git
+    register: source
     notify: restart ipfs-search
   - name: Install search API
     command: npm install --no-package-lock
@@ -20,6 +21,13 @@
     command: npm install --no-package-lock
     args:
       chdir: "{{ api_install_path }}/metadata"
+  - include_role:
+      name: annotate
+    vars:
+      role: api
+      version: "{{ source.after }}"
+      action: upgrade
+  when: source.changed
   become: false
 - name: Create ipfs-search group
   group: name=ipfs-search system=true state=present

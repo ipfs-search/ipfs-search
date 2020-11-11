@@ -41,6 +41,12 @@
       notify: restart ipfs-cluster
     - name: remove ipfs-cluster-service temporary files
       file: state=absent path=/tmp/ipfs-cluster-service
+    - include_role:
+        name: annotate
+      vars:
+        role: cluster
+        version: "{{ ipfs_cluster_service_binary_url }}"
+        action: upgrade
   when: ipfs_cluster_service_download.changed
 - group: name="{{ ipfs_cluster_group }}" system=true state=present
 - user:

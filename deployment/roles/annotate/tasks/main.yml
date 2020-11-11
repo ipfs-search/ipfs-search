@@ -9,4 +9,4 @@
     host: "{{ ansible_fqdn }}"
     uuid: "{{ ansible_date_time.epoch | to_uuid }}"
     time_ns: "{{ ansible_date_time.epoch | int * 1000000000 }}"
-    text: "{{ action }} {{ role }}{% if version %} - {{ version }}{% endif %}"
+    text: "{{ action }} {{ role }}{% if version %} - {{ version[:7] }}{% endif %}"

@@ -35,6 +35,12 @@
       mode: 755
     become: true
     notify: restart ipfs
+  - include_role:
+      name: annotate
+    vars:
+      role: ipfs
+      version: "{{ source.after }}"
+      action: upgrade
   when: source.changed
 - group: name=ipfs system=true state=present
 - user: name=ipfs comment="IPFS daemon" group=ipfs system=true state=present home="{{ ipfs_path }}" shell=/usr/sbin/nologin
