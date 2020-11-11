@@ -1,0 +1,12 @@
+---
+- name: Annotating {{ action }} in InfluxDB/Chronograf
+  uri:
+    url: "{{ influxdb_url }}/write?db=chronograf"
+    method: POST
+    body: "annotations,host={{ host }},role={{ role }},id={{ uuid }},action={{ action }}{% if version %},version={{ version | tojson }}{% endif %} modified_time_ns={{ time_ns }}i,start_time={{ time_ns }}i,text={{ text | tojson }},deleted=false {{ time_ns }}"
+    status_code: 204
+  vars:
+    host: "{{ ansible_fqdn }}"
+    uuid: "{{ ansible_date_time.epoch | to_uuid }}"
+    time_ns: "{{ ansible_date_time.epoch | int * 1000000000 }}"
+    text: "{{ action }} {{ role }}{% if version %} - {{ version }}{% endif %}"
