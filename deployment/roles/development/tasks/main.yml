@@ -1,6 +1,10 @@
 ---
 - name: Install Golang, GIT
-  apt: name=['golang-go', 'git'] state=installed
+  apt:
+    pkg:
+      - golang-go
+      - git
+    state: installed
   become: true
 - block:
   - file: path="/home/vagrant/gocode" state=directory user=vagrant group=vagrant
