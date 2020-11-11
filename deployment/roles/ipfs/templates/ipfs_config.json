@@ -191,9 +191,9 @@
     "EnableAutoRelay": false,
     "EnableAutoNATService": false,
     "ConnMgr": {
-      "GracePeriod": "20s",
-      "HighWater": 900,
-      "LowWater": 600,
+      "GracePeriod": "90s",
+      "HighWater": 1800,
+      "LowWater": 900,
       "Type": "basic"
     }
   },

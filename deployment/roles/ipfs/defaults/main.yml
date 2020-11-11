@@ -5,4 +5,4 @@ ipfs_build: "/tmp/go-ipfs"
 ipfs_binary: "/usr/local/bin/ipfs"
 ipfs_user: "ipfs"
 ipfs_group: "ipfs"
-ipfs_memlimit: 2G
+ipfs_memlimit: 3G
