@@ -1,5 +1,0 @@
----
-- name: restart ipfs-search
-  systemd: name=ipfs-search daemon_reload=yes state=restarted
-- name: restart ipfs-metadata
-  systemd: name=ipfs-metadata daemon_reload=yes state=restarted

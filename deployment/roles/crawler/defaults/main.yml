@@ -1,4 +1,0 @@
----
-crawler_build: "/tmp/ipfs-crawler"
-crawler_binary: "/usr/local/bin/ipfs-crawler"
-crawler_memlimit: 2G

@@ -1,4 +1,0 @@
-vault/secrets.yml
-vault/passphrase.gpg
-inventory.yml
-*.retry

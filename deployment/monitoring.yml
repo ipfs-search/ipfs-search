@@ -1,8 +1,0 @@
-- hosts: backend
-  become: true
-  vars:
-    wireguard_networks:
-      - wg0
-  roles:
-     - adamruzicka.wireguard
-     - { name: telegraf, tags: ['telegraf']}

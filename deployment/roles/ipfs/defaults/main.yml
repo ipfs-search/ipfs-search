@@ -1,8 +1,0 @@
----
-ipfs_version: v0.7.0
-ipfs_path: "/var/lib/ipfs"
-ipfs_build: "/tmp/go-ipfs"
-ipfs_binary: "/usr/local/bin/ipfs"
-ipfs_user: "ipfs"
-ipfs_group: "ipfs"
-ipfs_memlimit: 2G

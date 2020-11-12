@@ -1,7 +1,5 @@
 .git
 docs
-deployment
-!deployment/docker
 build
 design
 Dockerfile

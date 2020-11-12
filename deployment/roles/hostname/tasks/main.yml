@@ -1,9 +1,0 @@
----
-- hostname:
-    name: "{{ hostname }}"
-- name: Update /etc/hosts
-  lineinfile:
-    dest=/etc/hosts
-    regexp="^127\.0\.0\.1"
-    line="127.0.0.1 {{ hostname }} {{ hostname.split('.').0 }} localhost"
-    state=present

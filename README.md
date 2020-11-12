@@ -27,6 +27,7 @@ To learn more about downloading and restoring snapshots, read [docs](docs/snapsh
 * [frontend](https://github.com/ipfs-search/ipfs-search-frontend)
 * [metadata API](https://github.com/ipfs-search/ipfs-metadata-api)
 * [search API](https://github.com/ipfs-search/ipfs-search-api)
+* [deployment](https://github.com/ipfs-search/ipfs-search-deployment)
 
 ## Contributors wanted
 Building a search engine like this takes a considerable amount of resources (money _and_ TLC).

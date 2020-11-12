@@ -1,5 +1,0 @@
----
-storagebox_credentials_file: /etc/storagebox-cifs-credentials.txt
-storagebox_mountpoint: /mnt/backup
-storagebox_mountpoint_owner: elasticsearch
-storagebox_mountpoint_group: elasticsearch

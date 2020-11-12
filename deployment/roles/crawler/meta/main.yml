@@ -1,6 +1,0 @@
-# ---
-# dependencies:
-#   - role: ipfs
-#   - role: elasticsearch
-#   - role: rabbitmq
-#   - role: tika

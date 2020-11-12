@@ -1,9 +1,0 @@
-[Unit]
-Description=read cgconfig at startup
-
-[Service]
-ExecStart=/usr/sbin/cgconfigparser -l /etc/cgconfig.conf
-Type=oneshot
-
-[Install]
-WantedBy=default.target
