@@ -2,15 +2,16 @@ package crawler
 
 import (
 	"context"
-	"github.com/ipfs-search/ipfs-search/index"
-	"github.com/ipfs-search/ipfs-search/types/references"
 	"log"
+
+	"github.com/ipfs-search/ipfs-search/index"
+	t "github.com/ipfs-search/ipfs-search/types"
 )
 
 type existingItem struct {
 	*Indexable
 	exists     bool
-	references references.References
+	references t.References
 	index      index.Index
 }
 
@@ -81,7 +82,7 @@ func (i *Indexable) getExistingItem(ctx context.Context) (*existingItem, error) 
 
 	// Container for query reference fetch results
 	src := &struct {
-		references references.References
+		references t.References
 	}{}
 
 	getterIndex, err := index.MultiGet(ctx, indexes, i.Hash, src, "references")

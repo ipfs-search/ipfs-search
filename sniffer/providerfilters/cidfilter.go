@@ -16,7 +16,7 @@ func NewCidFilter() *CidFilter {
 // Filter takes a Provider and returns true when it is to be included, false
 // when not and an error when unexpected condition occur.
 func (f *CidFilter) Filter(p t.Provider) (bool, error) {
-	if p.Resource.Protocol != "ipfs" {
+	if p.Resource.Protocol != t.IPFSProtocol {
 		return false, t.NewProviderErrorf(nil, p, "Unsupported protocol %s for %v", p.Resource.Protocol, p)
 	}
 

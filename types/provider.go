@@ -22,7 +22,7 @@ func (r *Provider) String() string {
 // MockProvider returns a provider to be used for mocking.
 func MockProvider() Provider {
 	resource := &Resource{
-		Protocol: "ipfs",
+		Protocol: IPFSProtocol,
 		ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 	}
 

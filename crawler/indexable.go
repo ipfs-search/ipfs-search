@@ -3,7 +3,6 @@ package crawler
 import (
 	"context"
 	"fmt"
-	"github.com/ipfs-search/ipfs-search/types/references"
 	"github.com/ipfs/go-ipfs-api"
 	"log"
 	"math/rand"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	t "github.com/ipfs-search/ipfs-search/types"
 )
 
 // Indexable consists of args with a Crawler
@@ -46,6 +47,7 @@ func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, erro
 }
 
 // handleURLError handles HTTP errors graceously, returns try again bool and original error
+// TODO: It is the work of the devil and it must go where dark things go.
 func (i *Indexable) handleURLError(err error) (bool, error) {
 	if uerr, ok := err.(*url.Error); ok {
 		if uerr.Timeout() {
@@ -151,7 +153,7 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 }
 
 // processList processes and indexes a file listing
-func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references references.References) (err error) {
+func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references t.References) (err error) {
 	now := nowISO()
 
 	switch list.Type {
@@ -190,7 +192,7 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 }
 
 // processList processes and indexes a single file
-func (i *Indexable) processFile(ctx context.Context, references references.References) error {
+func (i *Indexable) processFile(ctx context.Context, references t.References) error {
 	now := nowISO()
 
 	m := make(metadata)
@@ -267,8 +269,8 @@ func (i *Indexable) CrawlFile(ctx context.Context) error {
 }
 
 // ReferenceFromIndexable generates a new reference for a given indexable
-func ReferenceFromIndexable(i *Indexable) *references.Reference {
-	return &references.Reference{
+func ReferenceFromIndexable(i *Indexable) *t.Reference {
+	return &t.Reference{
 		Name:       i.Name,
 		ParentHash: i.ParentHash,
 	}
