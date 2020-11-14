@@ -3,9 +3,11 @@ package crawler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ipfs/go-ipfs-api"
+
 	"github.com/ipfs-search/ipfs-search/index"
 	"github.com/ipfs-search/ipfs-search/instr"
-	"github.com/ipfs/go-ipfs-api"
+	"github.com/ipfs-search/ipfs-search/queue"
 )
 
 // Args describe a resource to be crawled
@@ -27,8 +29,8 @@ type Crawler struct {
 	DirectoryIndex index.Index
 	InvalidIndex   index.Index
 
-	FileQueue Queue
-	HashQueue Queue
+	FileQueue queue.Publisher
+	HashQueue queue.Publisher
 
 	*instr.Instrumentation
 }
