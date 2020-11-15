@@ -1,7 +1,3 @@
-tika:
-  url: http://localhost:8081  # ipfs-tika endpoint URL, also TIKA_URL in env
-  timeout: 5m  # ipfs-tika request timeout
-  max_size: 50MB  # Don't attempt to get metadata for files over this size
 ipfs:
   api_url: localhost:5001  # IPFS API endpoint, also IPFS_API_URL in env
   timeout: 6m  # Timeout for IPFS gateway HTTPS requests
@@ -16,9 +12,22 @@ crawler:
   partial_size: 256KB  # Size for partial items - this is the default chunker block size
   hash_workers: 140
   file_workers: 120
+  metadata_max_size: 50MB  # Don't attempt to get metadata for files over this size
 sniffer:
-  lastseen_expiration: 30m
-  lastseen_prunelen: 1024
+  lastseen_expiration: 1h
+  lastseen_prunelen: 32768
+  logger_timeout: 1m
+  buffer_size: 512
+indexes:
+  directories:
+    name: ipfs_directories
+  files:
+    name: ipfs_files
+  invalids:
+    name: ipfs_invalids
+extractor:
+  url: http://localhost:8081  # ipfs-tika endpoint URL, also TIKA_URL in env
+  timeout: 5m  # ipfs-tika request timeout
 # Future features; automatic index upgrading and indexes per mime type
 index:
   types:

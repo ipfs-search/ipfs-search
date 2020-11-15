@@ -30,7 +30,7 @@ func (i *existingItem) updateReferences() {
 
 // updateItem updates references and last seen date
 func (i *existingItem) updateIndex(ctx context.Context) error {
-	properties := metadata{
+	properties := t.Metadata{
 		"references": i.references,
 		"last-seen":  nowISO(),
 	}

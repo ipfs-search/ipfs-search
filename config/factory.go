@@ -11,6 +11,7 @@ func (c *Config) FactoryConfig() *factory.Config {
 		ElasticSearchURL: c.ElasticSearch.ElasticSearchURL,
 		AMQPURL:          c.AMQP.AMQPURL,
 		Indexes:          c.Indexes,
+		ExtractorConfig:  c.ExtractorConfig(),
 		CrawlerConfig:    c.CrawlerConfig(),
 	}
 }

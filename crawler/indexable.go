@@ -111,7 +111,7 @@ func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, 
 // indexInvalid indexes invalid files to prevent indexing again
 func (i *Indexable) indexInvalid(ctx context.Context, err error) {
 	// Attempt to index panic to prevent re-indexing
-	m := metadata{
+	m := t.Metadata{
 		"error": err.Error(),
 	}
 
@@ -175,7 +175,7 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 		}
 
 		// Index name and size for directory and directory items
-		m := metadata{
+		m := t.Metadata{
 			"links":      list.Links,
 			"size":       list.Size,
 			"references": references,
@@ -193,14 +193,29 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 
 // processList processes and indexes a single file
 func (i *Indexable) processFile(ctx context.Context, references t.References) error {
-	now := nowISO()
+	m := make(t.Metadata)
 
-	m := make(metadata)
+	if i.Args.Size > 0 {
+		if i.Args.Size > i.Config.MetadataMaxSize {
+			// Fail hard for really large files, for now
+			return fmt.Errorf("%s too large, not extracting metadata", i)
+		}
 
-	err := i.getMetadata(&m)
-	if err != nil {
-		return err
+		// Until refactor, temporarily instantiate ReferencedResource here.
+		r := t.ReferencedResource{
+			&t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       i.Args.Hash,
+			},
+			references,
+		}
+
+		if err := i.Crawler.Extractor.Extract(ctx, r, m); err != nil {
+			return err
+		}
 	}
+
+	now := nowISO()
 
 	// Add previously found references now
 	m["size"] = i.Size

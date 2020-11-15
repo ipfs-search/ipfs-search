@@ -14,7 +14,7 @@ import (
 
 // Extractor extracts metadata using the ipfs-tika server.
 type Extractor struct {
-	config Config
+	config *Config
 	client http.Client
 }
 
@@ -107,7 +107,7 @@ func (e *Extractor) Extract(ctx context.Context, r t.ReferencedResource, m t.Met
 	return nil
 }
 
-func getClient(config Config) http.Client {
+func getClient(config *Config) http.Client {
 	// TODO: Get more advanced client with circuit breaking etc. over manual
 	// retrying get etc.
 	// Ref: https://github.com/gojek/heimdall#creating-a-hystrix-like-circuit-breaker
@@ -117,7 +117,7 @@ func getClient(config Config) http.Client {
 }
 
 // New returns a new Tika extractor.
-func New(config Config) extractor.Extractor {
+func New(config *Config) extractor.Extractor {
 	return &Extractor{
 		config: config,
 		client: getClient(config),

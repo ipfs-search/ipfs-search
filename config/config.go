@@ -3,19 +3,12 @@ package config
 import (
 	"fmt"
 	env "github.com/Netflix/go-env"
-	"github.com/c2h5oh/datasize"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"strings"
 	"time"
 )
-
-type Tika struct {
-	IpfsTikaURL     string            `yaml:"url" env:"IPFS_TIKA_URL"`
-	IpfsTikaTimeout time.Duration     `yaml:"timeout"`
-	MetadataMaxSize datasize.ByteSize `yaml:"max_size"`
-}
 
 type IPFS struct {
 	IpfsAPI     string        `yaml:"api_url" env:"IPFS_API_URL"`
@@ -32,13 +25,13 @@ type AMQP struct {
 
 // Config contains the configuration for commands.
 type Config struct {
-	Tika          `yaml:"tika"`
 	IPFS          `yaml:"ipfs"`
 	ElasticSearch `yaml:"elasticsearch"`
 	AMQP          `yaml:"amqp"`
 	Crawler       `yaml:"crawler"`
 	Sniffer       `yaml:"sniffer"`
 	Indexes       `yaml:"indexes"`
+	Extractor     `yaml:"extractor"`
 }
 
 // String renders config as YAML

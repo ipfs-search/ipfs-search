@@ -7,11 +7,6 @@ import (
 // Default() returns default configuration
 func Default() *Config {
 	return &Config{
-		Tika{
-			IpfsTikaURL:     "http://localhost:8081",
-			IpfsTikaTimeout: 300 * time.Duration(time.Second),
-			MetadataMaxSize: 50 * 1024 * 1024,
-		},
 		IPFS{
 			IpfsAPI:     "localhost:5001",
 			IpfsTimeout: 360 * time.Duration(time.Second),
@@ -25,5 +20,6 @@ func Default() *Config {
 		CrawlerDefaults(),
 		SnifferDefaults(),
 		IndexesDefaults(),
+		ExtractorDefaults(),
 	}
 }

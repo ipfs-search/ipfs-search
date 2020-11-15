@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ipfs/go-ipfs-api"
 
+	"github.com/ipfs-search/ipfs-search/extractor"
 	"github.com/ipfs-search/ipfs-search/index"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/queue"
@@ -23,7 +24,8 @@ type Args struct {
 type Crawler struct {
 	Config *Config
 
-	Shell *shell.Shell
+	Shell     *shell.Shell
+	Extractor extractor.Extractor
 
 	FileIndex      index.Index
 	DirectoryIndex index.Index

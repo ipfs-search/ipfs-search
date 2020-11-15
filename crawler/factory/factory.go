@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/ipfs-search/ipfs-search/crawler"
+	"github.com/ipfs-search/ipfs-search/extractor"
+	tika "github.com/ipfs-search/ipfs-search/extractor/tika"
 	"github.com/ipfs-search/ipfs-search/index"
 	"github.com/ipfs-search/ipfs-search/index/elasticsearch"
 	"github.com/ipfs-search/ipfs-search/instr"
@@ -28,11 +30,13 @@ type Factory struct {
 	conConnection *amqp.Connection
 	errChan       chan<- error
 
+	shell     *shell.Shell
+	extractor extractor.Extractor
+
 	fileIndex      index.Index
 	directoryIndex index.Index
 	invalidIndex   index.Index
 
-	shell *shell.Shell
 	*instr.Instrumentation
 }
 
@@ -55,9 +59,12 @@ func New(ctx context.Context, config *Config, i *instr.Instrumentation, errc cha
 	span.AddEvent(ctx, "amqp-connected")
 	log.Printf("Connected to AMQP")
 
-	// Create and configure Ipfs shell
+	// Create and configure IPFS shell
 	sh := shell.NewShell(config.IpfsAPI)
 	sh.SetTimeout(config.IpfsTimeout)
+
+	// Create extractor
+	tikaExtractor := tika.New(config.ExtractorConfig)
 
 	es, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL(config.ElasticSearchURL))
 	if err != nil {
@@ -76,6 +83,7 @@ func New(ctx context.Context, config *Config, i *instr.Instrumentation, errc cha
 		conConnection:   conConnection,
 		errChan:         errc,
 		shell:           sh,
+		extractor:       tikaExtractor,
 		fileIndex:       indexes[0],
 		directoryIndex:  indexes[1],
 		invalidIndex:    indexes[2],
@@ -103,7 +111,9 @@ func (f *Factory) newCrawler(ctx context.Context) (*crawler.Crawler, error) {
 
 	return &crawler.Crawler{
 		Config: f.crawlerConfig,
-		Shell:  f.shell,
+
+		Shell:     f.shell,
+		Extractor: f.extractor,
 
 		FileIndex:      f.fileIndex,
 		DirectoryIndex: f.directoryIndex,
