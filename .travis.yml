@@ -14,17 +14,21 @@ cache:
     - $HOME/.cache/go-build
     - $HOME/gopath/pkg/mod
 
-before_script:
-  # Install CodeClimate test reporter
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
+install: skip
 
-script:
-  - go test -v -race -coverprofile c.out ./...
+jobs:
+  - name: "unit tests"
+    before_script:
+      # Install CodeClimate test reporter
+      - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+      - chmod +x ./cc-test-reporter
+      - ./cc-test-reporter before-build
 
-after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+    script:
+      - go test -v -race -coverprofile c.out ./...
+
+    after_script:
+      - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 # Matrix/Riot webhook notifications
 notifications:
