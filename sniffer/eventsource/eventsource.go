@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ipfs-search/ipfs-sniffer/proxy"
-
-	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs/go-datastore"
 	"github.com/libp2p/go-eventbus"
 	"github.com/libp2p/go-libp2p-core/event"
@@ -15,6 +12,9 @@ import (
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
+
+	"github.com/ipfs-search/ipfs-search/instr"
+	"github.com/ipfs-search/ipfs-search/sniffer/proxy"
 )
 
 const bufSize = 512
