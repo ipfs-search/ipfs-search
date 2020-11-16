@@ -13,7 +13,7 @@ func TestNewProviderErrorf(t *testing.T) {
 
 	mockProvider := Provider{
 		Resource: &Resource{
-			Protocol: "mockProtocol",
+			Protocol: IPFSProtocol,
 			ID:       "mockKey",
 		},
 	}

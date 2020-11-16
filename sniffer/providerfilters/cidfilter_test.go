@@ -12,7 +12,7 @@ var filter = NewCidFilter()
 func makeProvider(resource *types.Resource) *types.Provider {
 	if resource == nil {
 		resource = &types.Resource{
-			Protocol: "ipfs",
+			Protocol: types.IPFSProtocol,
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		}
 	}
@@ -39,7 +39,7 @@ func TestCid1Rawleave(t *testing.T) {
 	assert := assert.New(t)
 
 	r := &types.Resource{
-		Protocol: "ipfs",
+		Protocol: types.IPFSProtocol,
 		ID:       "bafkreiblvqc3q73ygovlzaxz4iilm5fopppcdc3uzkrtepjsgkvyev3kgy",
 	}
 
@@ -55,7 +55,7 @@ func TestCid1Protobuf(t *testing.T) {
 	assert := assert.New(t)
 
 	r := &types.Resource{
-		Protocol: "ipfs",
+		Protocol: types.IPFSProtocol,
 		ID:       "bafybeihpsvpelgck42nikpiiuvgbf3ob3ydjkzkq5267mnp5jq5uhzatcy",
 	}
 
@@ -72,7 +72,7 @@ func TestUnsupported(t *testing.T) {
 
 	// Ethereum block
 	r := &types.Resource{
-		Protocol: "ipfs",
+		Protocol: types.IPFSProtocol,
 		ID:       "z43AaGEvwdfzjrCZ3Sq7DKxdDHrwoaPQDtqF4jfdkNEVTiqGVFW",
 	}
 
@@ -88,7 +88,7 @@ func TestInvalid(t *testing.T) {
 	assert := assert.New(t)
 
 	invalidResource := &types.Resource{
-		Protocol: "ipfs",
+		Protocol: types.IPFSProtocol,
 		ID:       "invalid",
 	}
 
@@ -104,7 +104,7 @@ func TestNonIpfs(t *testing.T) {
 	assert := assert.New(t)
 
 	invalidResource := &types.Resource{
-		Protocol: "bananafs",
+		Protocol: types.IPFSProtocol + 1,
 		ID:       "dontcare",
 	}
 
