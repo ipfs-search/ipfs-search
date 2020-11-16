@@ -4,8 +4,15 @@ go:
   - "1.13.x"
 
 # Only clone the most recent commit.
+# Ref: https://docs.travis-ci.com/user/customizing-the-build/#git-clone-depth
 git:
-  depth: 1
+  depth: 3
+
+# Setup caching of dependencies
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
 
 before_script:
   # Install CodeClimate test reporter
