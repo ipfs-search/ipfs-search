@@ -90,20 +90,6 @@ This will start the crawler, the sniffer and all its dependencies. Hashes can al
 docker-compose exec ipfs-crawler ipfs-search add QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv
 ```
 
-
-### Local setup
-Local installation is done using vagrant:
-
-```bash
-git clone https://github.com/ipfs-search/ipfs-search.git ipfs-search
-cd ipfs-search
-vagrant up
-```
-
-This starts up the API on port 9615, Elasticsearch on 9200 and RabbitMQ on 15672.
-
-Vagrant setup does not currently start up the frontend.
-
 ### Ansible deployment
 Automated deployment can be done on any (virtual) Ubuntu 16.04 machine. The full production stack is automated and can be found [here](deployment/).
 
