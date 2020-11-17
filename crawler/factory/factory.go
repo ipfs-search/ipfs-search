@@ -64,7 +64,7 @@ func New(ctx context.Context, config *Config, i *instr.Instrumentation, errc cha
 	sh.SetTimeout(config.IpfsTimeout)
 
 	// Create extractor
-	tikaExtractor := tika.New(config.ExtractorConfig)
+	tikaExtractor := tika.New(config.ExtractorConfig, i)
 
 	es, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL(config.ElasticSearchURL))
 	if err != nil {

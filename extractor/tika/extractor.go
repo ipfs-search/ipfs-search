@@ -8,7 +8,13 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
+
 	"github.com/ipfs-search/ipfs-search/extractor"
+	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -16,6 +22,8 @@ import (
 type Extractor struct {
 	config *Config
 	client http.Client
+
+	*instr.Instrumentation
 }
 
 // retryingGet is an infinitely retrying GET on intermittent errors (e.g. server goes)
@@ -65,19 +73,28 @@ func (e *Extractor) getExtractURL(r t.ReferencedResource) string {
 // Extract metadata from a (potentially) referenced resource, updating
 // Metadata or returning an error.
 func (e *Extractor) Extract(ctx context.Context, r t.ReferencedResource, m t.Metadata) error {
+	ctx, span := e.Tracer.Start(ctx, "extractor.tika.Extract",
+		trace.WithAttributes(label.String("cid", r.ID)),
+	)
+	defer span.End()
+
 	resp, err := e.retryingGet(ctx, e.getExtractURL(r))
 
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("undesired status '%s' from ipfs-tika", resp.Status)
+		err := fmt.Errorf("unexpected status '%s' from ipfs-tika", resp.Status)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
 	}
 
 	// Parse resulting JSON
 	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
@@ -112,14 +129,16 @@ func getClient(config *Config) http.Client {
 	// retrying get etc.
 	// Ref: https://github.com/gojek/heimdall#creating-a-hystrix-like-circuit-breaker
 	return http.Client{
-		Timeout: config.RequestTimeout,
+		Timeout:   config.RequestTimeout,
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
 }
 
 // New returns a new Tika extractor.
-func New(config *Config) extractor.Extractor {
+func New(config *Config, instr *instr.Instrumentation) extractor.Extractor {
 	return &Extractor{
-		config: config,
-		client: getClient(config),
+		config,
+		getClient(config),
+		instr,
 	}
 }
