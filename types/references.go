@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"net/url"
 )
 
 // Reference to indexed item
@@ -41,7 +42,7 @@ type ReferencedResource struct {
 func (r ReferencedResource) GatewayPath() string {
 	if len(r.References) > 0 && r.References[0].Name != "" {
 		// Named reference, use it for generating path
-		return fmt.Sprintf("/ipfs/%s/%s", r.References[0].ParentHash, r.References[0].Name)
+		return fmt.Sprintf("/ipfs/%s/%s", r.References[0].ParentHash, url.PathEscape(r.References[0].Name))
 	}
 
 	return fmt.Sprintf("/ipfs/%s", r.ID)
