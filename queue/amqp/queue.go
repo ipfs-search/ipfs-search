@@ -27,6 +27,7 @@ func (q *Queue) String() string {
 // TODO: Add context parameter, allow for timeouts etc
 func (q *Queue) Publish(ctx context.Context, params interface{}, priority uint8) error {
 	ctx, span := q.Tracer.Start(ctx, "queue.amqp.Publish",
+		trace.WithAttributes(label.String("queue", q.name)),
 		trace.WithAttributes(label.Any("params", params)),
 		trace.WithAttributes(label.Uint("priority", uint(priority))),
 	)

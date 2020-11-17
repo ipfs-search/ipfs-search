@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/streadway/amqp"
-	"go.opentelemetry.io/otel/api/trace"
 )
 
 // CrawlFunc returns a function crawling a particular indexable with

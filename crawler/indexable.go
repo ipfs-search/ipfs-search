@@ -219,11 +219,11 @@ func (i *Indexable) processFile(ctx context.Context, references t.References) er
 
 		// Until refactor, temporarily instantiate ReferencedResource here.
 		r := t.ReferencedResource{
-			&t.Resource{
+			Resource: &t.Resource{
 				Protocol: t.IPFSProtocol,
 				ID:       i.Args.Hash,
 			},
-			references,
+			References: references,
 		}
 
 		if err := i.Crawler.Extractor.Extract(ctx, r, m); err != nil {
@@ -244,7 +244,7 @@ func (i *Indexable) processFile(ctx context.Context, references t.References) er
 
 // preCrawl checks for and returns existing item and conditionally updates it
 func (i *Indexable) preCrawl(ctx context.Context) (*existingItem, error) {
-	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.CrawlHash")
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.preCrawl")
 	defer span.End()
 
 	e, err := i.getExistingItem(ctx)
@@ -319,8 +319,7 @@ func (i *Indexable) CrawlFile(ctx context.Context) error {
 
 	log.Printf("Crawling file %s", i)
 
-	i.processFile(ctx, existing.references)
-	if err != nil {
+	if err := i.processFile(ctx, existing.references); err != nil {
 		return err
 	}
 
