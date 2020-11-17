@@ -22,9 +22,7 @@ type Worker struct {
 // Work takes a message with JSON body, converts it to a crawlable and
 // calls CrawlFunc on it.
 func (c *Worker) Work(ctx context.Context) error {
-	ctx, span := c.Tracer.Start(ctx, "crawler.factory.Work",
-		trace.WithNewRoot(),
-	)
+	ctx, span := c.Tracer.Start(ctx, "crawler.factory.Work")
 	defer span.End()
 
 	// Create an Indexable from the message's body
