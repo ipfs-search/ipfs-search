@@ -29,7 +29,7 @@ func (e *Extractor) retryingGet(ctx context.Context, url string) (resp *http.Res
 		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 		if err != nil {
 			// Errors here are programming errors.
-			panic("error creating request")
+			panic(fmt.Sprintf("creating request: %s", err))
 		}
 
 		resp, err = e.client.Do(req)
