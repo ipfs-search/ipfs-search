@@ -12,6 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
+
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -91,15 +95,21 @@ func (i *Indexable) hashURL() string {
 
 // getFileList return list of files and/or type of item (directory/file)
 func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, err error) {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.getFileList")
+	defer span.End()
+
 	url := i.hashURL()
 
 	tryAgain := true
 	for tryAgain {
 		list, err = i.Shell.FileList(url)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 
 		tryAgain, err = i.handleShellError(ctx, err)
 
 		if tryAgain {
+			span.SetStatus(codes.Ok, "try_again")
+
 			log.Printf("Retrying in %s", i.Config.RetryWait)
 			time.Sleep(i.Config.RetryWait)
 		}
@@ -109,17 +119,20 @@ func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, 
 }
 
 // indexInvalid indexes invalid files to prevent indexing again
-func (i *Indexable) indexInvalid(ctx context.Context, err error) {
+func (i *Indexable) indexInvalid(ctx context.Context, err error) error {
 	// Attempt to index panic to prevent re-indexing
 	m := t.Metadata{
 		"error": err.Error(),
 	}
 
-	i.InvalidIndex.Index(ctx, i.Hash, m)
+	return i.InvalidIndex.Index(ctx, i.Hash, m)
 }
 
 // queueList queues any items in a given list/directory
 func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (err error) {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.queueList")
+	defer span.End()
+
 	for _, link := range list.Links {
 		dirArgs := &Args{
 			Hash:       link.Hash,
@@ -145,7 +158,7 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 			err = i.HashQueue.Publish(ctx, dirArgs, priority)
 		default:
 			log.Printf("Type '%s' skipped for %s", link.Type, i)
-			i.indexInvalid(ctx, fmt.Errorf("Unknown type: %s", link.Type))
+			err = i.indexInvalid(ctx, fmt.Errorf("Unknown type: %s", link.Type))
 		}
 	}
 
@@ -193,6 +206,9 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 
 // processList processes and indexes a single file
 func (i *Indexable) processFile(ctx context.Context, references t.References) error {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.processFile")
+	defer span.End()
+
 	m := make(t.Metadata)
 
 	if i.Args.Size > 0 {
@@ -203,11 +219,11 @@ func (i *Indexable) processFile(ctx context.Context, references t.References) er
 
 		// Until refactor, temporarily instantiate ReferencedResource here.
 		r := t.ReferencedResource{
-			&t.Resource{
+			Resource: &t.Resource{
 				Protocol: t.IPFSProtocol,
 				ID:       i.Args.Hash,
 			},
-			references,
+			References: references,
 		}
 
 		if err := i.Crawler.Extractor.Extract(ctx, r, m); err != nil {
@@ -228,8 +244,12 @@ func (i *Indexable) processFile(ctx context.Context, references t.References) er
 
 // preCrawl checks for and returns existing item and conditionally updates it
 func (i *Indexable) preCrawl(ctx context.Context) (*existingItem, error) {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.preCrawl")
+	defer span.End()
+
 	e, err := i.getExistingItem(ctx)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
 	}
 
@@ -238,22 +258,36 @@ func (i *Indexable) preCrawl(ctx context.Context) (*existingItem, error) {
 
 // CrawlHash crawls a particular hash (file or directory)
 func (i *Indexable) CrawlHash(ctx context.Context) error {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.CrawlHash", trace.WithAttributes(
+		label.String("cid", i.Args.Hash),
+	))
+	defer span.End()
+
 	existing, err := i.preCrawl(ctx)
 
-	if err != nil || !existing.shouldCrawl() {
-		log.Printf("Skipping hash %s", i)
+	if err != nil {
+		log.Printf("Error in preCrawl: %v", err)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
+	}
+
+	if !existing.shouldCrawl() {
+		log.Printf("Skipping hash %s", i)
+		span.AddEvent(ctx, "skip_hash")
+		return nil
 	}
 
 	log.Printf("Crawling hash %s", i)
 
 	list, err := i.getFileList(ctx)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
 	err = i.processList(ctx, list, existing.references)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
@@ -264,17 +298,28 @@ func (i *Indexable) CrawlHash(ctx context.Context) error {
 
 // CrawlFile crawls a single object, known to be a file
 func (i *Indexable) CrawlFile(ctx context.Context) error {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.CrawlFile", trace.WithAttributes(
+		label.String("cid", i.Args.Hash),
+	))
+	defer span.End()
+
 	existing, err := i.preCrawl(ctx)
 
-	if err != nil || !existing.shouldCrawl() {
-		log.Printf("Skipping file %s", i)
+	if err != nil {
+		log.Printf("Error in preCrawl: %v", err)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
+	}
+
+	if !existing.shouldCrawl() {
+		log.Printf("Skipping file %s", i)
+		span.AddEvent(ctx, "skip_file")
+		return nil
 	}
 
 	log.Printf("Crawling file %s", i)
 
-	i.processFile(ctx, existing.references)
-	if err != nil {
+	if err := i.processFile(ctx, existing.references); err != nil {
 		return err
 	}
 
