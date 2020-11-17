@@ -1,48 +1,34 @@
-env:
-  global:
-    - CC_TEST_REPORTER_ID=8682688bc269d0f558949836dc3a7da18cd504940d6a4034c4539203dbe3fa22
-
 language: go
 
 go:
-  - - "1.13.x"
+  - "1.13.x"
 
 # Only clone the most recent commit.
+# Ref: https://docs.travis-ci.com/user/customizing-the-build/#git-clone-depth
 git:
-  depth: 1
-
-services:
-  - rabbitmq
-  - elasticsearch
+  depth: 3
 
 # Setup caching of dependencies
-# before_cache:
-# - rm -rf $GOPATH/src/github.com/ipfs-search/*
-# - rm -rf $GOPATH/pkg/**/github.com/ipfs-search/ipfs-search
-# cache:
-#   directories:
-#     - $GOPATH/src
-#     - $GOPATH/pkg
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
 
-install: go get -t -v ./...
+install: skip
 
-before_script:
-  # Install CodeClimate test reporter
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
-  # We can download and extract the golangci-lint binary in one (long) command.
-  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $GOPATH/bin v1.25.1
+jobs:
+  - name: "unit tests"
+    before_script:
+      # Install CodeClimate test reporter
+      - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+      - chmod +x ./cc-test-reporter
+      - ./cc-test-reporter before-build
 
-script:
-  # Run a bunch of code checkers/linters in parallel
-  # TODO: Enable after code cleanup
-  # - golangci-lint run
-  # Run actual tests
-  - go test -v -race -coverprofile c.out ./...
+    script:
+      - go test -v -race -coverprofile c.out ./...
 
-after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+    after_script:
+      - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 # Matrix/Riot webhook notifications
 notifications:

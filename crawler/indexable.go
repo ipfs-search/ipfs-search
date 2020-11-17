@@ -3,7 +3,6 @@ package crawler
 import (
 	"context"
 	"fmt"
-	"github.com/ipfs-search/ipfs-search/types/references"
 	"github.com/ipfs/go-ipfs-api"
 	"log"
 	"math/rand"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	t "github.com/ipfs-search/ipfs-search/types"
 )
 
 // Indexable consists of args with a Crawler
@@ -46,6 +47,7 @@ func (i *Indexable) handleShellError(ctx context.Context, err error) (bool, erro
 }
 
 // handleURLError handles HTTP errors graceously, returns try again bool and original error
+// TODO: It is the work of the devil and it must go where dark things go.
 func (i *Indexable) handleURLError(err error) (bool, error) {
 	if uerr, ok := err.(*url.Error); ok {
 		if uerr.Timeout() {
@@ -109,7 +111,7 @@ func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, 
 // indexInvalid indexes invalid files to prevent indexing again
 func (i *Indexable) indexInvalid(ctx context.Context, err error) {
 	// Attempt to index panic to prevent re-indexing
-	m := metadata{
+	m := t.Metadata{
 		"error": err.Error(),
 	}
 
@@ -151,7 +153,7 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 }
 
 // processList processes and indexes a file listing
-func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references references.References) (err error) {
+func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references t.References) (err error) {
 	now := nowISO()
 
 	switch list.Type {
@@ -173,7 +175,7 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 		}
 
 		// Index name and size for directory and directory items
-		m := metadata{
+		m := t.Metadata{
 			"links":      list.Links,
 			"size":       list.Size,
 			"references": references,
@@ -190,15 +192,30 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 }
 
 // processList processes and indexes a single file
-func (i *Indexable) processFile(ctx context.Context, references references.References) error {
-	now := nowISO()
+func (i *Indexable) processFile(ctx context.Context, references t.References) error {
+	m := make(t.Metadata)
 
-	m := make(metadata)
+	if i.Args.Size > 0 {
+		if i.Args.Size > i.Config.MetadataMaxSize {
+			// Fail hard for really large files, for now
+			return fmt.Errorf("%s too large, not extracting metadata", i)
+		}
 
-	err := i.getMetadata(&m)
-	if err != nil {
-		return err
+		// Until refactor, temporarily instantiate ReferencedResource here.
+		r := t.ReferencedResource{
+			&t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       i.Args.Hash,
+			},
+			references,
+		}
+
+		if err := i.Crawler.Extractor.Extract(ctx, r, m); err != nil {
+			return err
+		}
 	}
+
+	now := nowISO()
 
 	// Add previously found references now
 	m["size"] = i.Size
@@ -267,8 +284,8 @@ func (i *Indexable) CrawlFile(ctx context.Context) error {
 }
 
 // ReferenceFromIndexable generates a new reference for a given indexable
-func ReferenceFromIndexable(i *Indexable) *references.Reference {
-	return &references.Reference{
+func ReferenceFromIndexable(i *Indexable) *t.Reference {
+	return &t.Reference{
 		Name:       i.Name,
 		ParentHash: i.ParentHash,
 	}

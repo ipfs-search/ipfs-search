@@ -3,10 +3,12 @@ package instr
 import (
 	"log"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/metric"
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
+	"go.opentelemetry.io/otel/propagators"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
@@ -19,8 +21,12 @@ type Instrumentation struct {
 
 func Install(serviceName string) (func(), error) {
 	// First parameter is a flusher, should be called on context close!
-	log.Printf("Creating Jaeger pipeline")
+	log.Printf("Creating Jaeger pipeline: %s", serviceName)
 
+	// Configure context propagation
+	global.SetTextMapPropagator(otel.NewCompositeTextMapPropagator(propagators.TraceContext{}, propagators.Baggage{}))
+
+	// Configure sampler; default 1% of incoming requests (sniffed hashes)
 	sampler := sdktrace.ParentBased(sdktrace.TraceIDRatioBased(0.01))
 	// sampler := sdktrace.AlwaysSample()
 

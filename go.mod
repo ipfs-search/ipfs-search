@@ -4,7 +4,6 @@ require (
 	github.com/Netflix/go-env v0.0.0-20200512170851-5660fe1ab40a
 	github.com/alanshaw/ipfs-hookds v0.3.0
 	github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee
-	github.com/ipfs-search/ipfs-sniffer v0.0.0-20200913112029-cb3ab010d334
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-datastore v0.4.5
 	github.com/ipfs/go-ipfs-api v0.0.3
@@ -18,6 +17,7 @@ require (
 	github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.6.1
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.13.0
 	go.opentelemetry.io/otel v0.13.0
 	go.opentelemetry.io/otel/exporters/trace/jaeger v0.13.0
 	go.opentelemetry.io/otel/sdk v0.13.0
