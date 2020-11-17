@@ -103,10 +103,13 @@ func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, 
 	tryAgain := true
 	for tryAgain {
 		list, err = i.Shell.FileList(url)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 
 		tryAgain, err = i.handleShellError(ctx, err)
 
 		if tryAgain {
+			span.SetStatus(codes.Ok, "try_again")
+
 			log.Printf("Retrying in %s", i.Config.RetryWait)
 			time.Sleep(i.Config.RetryWait)
 		}
@@ -116,13 +119,13 @@ func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, 
 }
 
 // indexInvalid indexes invalid files to prevent indexing again
-func (i *Indexable) indexInvalid(ctx context.Context, err error) {
+func (i *Indexable) indexInvalid(ctx context.Context, err error) error {
 	// Attempt to index panic to prevent re-indexing
 	m := t.Metadata{
 		"error": err.Error(),
 	}
 
-	i.InvalidIndex.Index(ctx, i.Hash, m)
+	return i.InvalidIndex.Index(ctx, i.Hash, m)
 }
 
 // queueList queues any items in a given list/directory
@@ -155,7 +158,7 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 			err = i.HashQueue.Publish(ctx, dirArgs, priority)
 		default:
 			log.Printf("Type '%s' skipped for %s", link.Type, i)
-			i.indexInvalid(ctx, fmt.Errorf("Unknown type: %s", link.Type))
+			err = i.indexInvalid(ctx, fmt.Errorf("Unknown type: %s", link.Type))
 		}
 	}
 
@@ -164,9 +167,6 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 
 // processList processes and indexes a file listing
 func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references t.References) (err error) {
-	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.processList")
-	defer span.End()
-
 	now := nowISO()
 
 	switch list.Type {
