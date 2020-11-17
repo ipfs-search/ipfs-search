@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 // CrawlFunc returns a function crawling a particular indexable with
@@ -21,6 +22,11 @@ type Worker struct {
 // Work takes a message with JSON body, converts it to a crawlable and
 // calls CrawlFunc on it.
 func (c *Worker) Work(ctx context.Context) error {
+	ctx, span := c.Tracer.Start(ctx, "crawler.factory.Work",
+		trace.WithNewRoot(),
+	)
+	defer span.End()
+
 	// Create an Indexable from the message's body
 	i, err := c.IndexableFromJSON(c.Delivery.Body)
 	if err != nil {

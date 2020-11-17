@@ -12,6 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
+
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -91,6 +95,9 @@ func (i *Indexable) hashURL() string {
 
 // getFileList return list of files and/or type of item (directory/file)
 func (i *Indexable) getFileList(ctx context.Context) (list *shell.UnixLsObject, err error) {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.getFileList")
+	defer span.End()
+
 	url := i.hashURL()
 
 	tryAgain := true
@@ -120,6 +127,9 @@ func (i *Indexable) indexInvalid(ctx context.Context, err error) {
 
 // queueList queues any items in a given list/directory
 func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (err error) {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.queueList")
+	defer span.End()
+
 	for _, link := range list.Links {
 		dirArgs := &Args{
 			Hash:       link.Hash,
@@ -154,6 +164,9 @@ func (i *Indexable) queueList(ctx context.Context, list *shell.UnixLsObject) (er
 
 // processList processes and indexes a file listing
 func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, references t.References) (err error) {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.processList")
+	defer span.End()
+
 	now := nowISO()
 
 	switch list.Type {
@@ -193,6 +206,9 @@ func (i *Indexable) processList(ctx context.Context, list *shell.UnixLsObject, r
 
 // processList processes and indexes a single file
 func (i *Indexable) processFile(ctx context.Context, references t.References) error {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.processFile")
+	defer span.End()
+
 	m := make(t.Metadata)
 
 	if i.Args.Size > 0 {
@@ -228,8 +244,12 @@ func (i *Indexable) processFile(ctx context.Context, references t.References) er
 
 // preCrawl checks for and returns existing item and conditionally updates it
 func (i *Indexable) preCrawl(ctx context.Context) (*existingItem, error) {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.CrawlHash")
+	defer span.End()
+
 	e, err := i.getExistingItem(ctx)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
 	}
 
@@ -238,22 +258,36 @@ func (i *Indexable) preCrawl(ctx context.Context) (*existingItem, error) {
 
 // CrawlHash crawls a particular hash (file or directory)
 func (i *Indexable) CrawlHash(ctx context.Context) error {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.CrawlHash", trace.WithAttributes(
+		label.String("cid", i.Args.Hash),
+	))
+	defer span.End()
+
 	existing, err := i.preCrawl(ctx)
 
-	if err != nil || !existing.shouldCrawl() {
-		log.Printf("Skipping hash %s", i)
+	if err != nil {
+		log.Printf("Error in preCrawl: %v", err)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
+	}
+
+	if !existing.shouldCrawl() {
+		log.Printf("Skipping hash %s", i)
+		span.AddEvent(ctx, "skip_hash")
+		return nil
 	}
 
 	log.Printf("Crawling hash %s", i)
 
 	list, err := i.getFileList(ctx)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
 	err = i.processList(ctx, list, existing.references)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
@@ -264,11 +298,23 @@ func (i *Indexable) CrawlHash(ctx context.Context) error {
 
 // CrawlFile crawls a single object, known to be a file
 func (i *Indexable) CrawlFile(ctx context.Context) error {
+	ctx, span := i.Tracer.Start(ctx, "crawler.indexable.CrawlFile", trace.WithAttributes(
+		label.String("cid", i.Args.Hash),
+	))
+	defer span.End()
+
 	existing, err := i.preCrawl(ctx)
 
-	if err != nil || !existing.shouldCrawl() {
-		log.Printf("Skipping file %s", i)
+	if err != nil {
+		log.Printf("Error in preCrawl: %v", err)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
+	}
+
+	if !existing.shouldCrawl() {
+		log.Printf("Skipping file %s", i)
+		span.AddEvent(ctx, "skip_file")
+		return nil
 	}
 
 	log.Printf("Crawling file %s", i)
