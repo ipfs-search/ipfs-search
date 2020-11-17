@@ -26,19 +26,17 @@ func shouldRetry(err error) bool {
 		case *net.OpError:
 			if t.Op == "dial" {
 				log.Printf("Unknown host %v", t)
-				return true
-
 			} else if t.Op == "read" {
 				log.Printf("Connection refused %v", t)
-				return true
 			}
 
 		case syscall.Errno:
 			if t == syscall.ECONNREFUSED {
 				log.Printf("Connection refused %v", t)
-				return true
 			}
 		}
+
+		return true
 	}
 
 	// Any other errors, usually imply proper failure scenario's.
