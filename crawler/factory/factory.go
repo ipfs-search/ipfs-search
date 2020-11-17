@@ -4,6 +4,13 @@ import (
 	"context"
 	"log"
 
+	"github.com/ipfs/go-ipfs-api"
+	samqp "github.com/streadway/amqp"
+
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
+
 	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/extractor"
 	tika "github.com/ipfs-search/ipfs-search/extractor/tika"
@@ -13,14 +20,6 @@ import (
 	"github.com/ipfs-search/ipfs-search/queue"
 	"github.com/ipfs-search/ipfs-search/queue/amqp"
 	"github.com/ipfs-search/ipfs-search/worker"
-
-	"github.com/ipfs/go-ipfs-api"
-	"github.com/olivere/elastic/v7"
-	samqp "github.com/streadway/amqp"
-
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 )
 
 // Factory creates hash and file crawl workers
@@ -66,7 +65,7 @@ func New(ctx context.Context, config *Config, i *instr.Instrumentation, errc cha
 	// Create extractor
 	tikaExtractor := tika.New(config.ExtractorConfig, i)
 
-	es, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL(config.ElasticSearchURL))
+	es, err := getElasticClient(config.ElasticSearchURL)
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err
