@@ -79,7 +79,7 @@ func (e *Extractor) getExtractURL(r *t.AnnotatedResource) string {
 
 // Extract metadata from a (potentially) referenced resource, updating
 // Metadata or returning an error.
-func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m t.Metadata) error {
+func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m interface{}) error {
 	ctx, span := e.Tracer.Start(ctx, "extractor.tika.Extract",
 		trace.WithAttributes(label.String("cid", r.ID)),
 	)
@@ -100,7 +100,7 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m t.Met
 	}
 
 	// Parse resulting JSON
-	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(m); err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}

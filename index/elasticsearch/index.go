@@ -39,7 +39,7 @@ func (i *Index) String() string {
 }
 
 // Index a document's properties, identified by id
-func (i *Index) Index(ctx context.Context, id string, properties map[string]interface{}) error {
+func (i *Index) Index(ctx context.Context, id string, properties interface{}) error {
 	_, err := i.es.Index().
 		Index(i.cfg.Name).
 		Id(id).
@@ -56,7 +56,7 @@ func (i *Index) Index(ctx context.Context, id string, properties map[string]inte
 }
 
 // Update a document's properties, given id
-func (i *Index) Update(ctx context.Context, id string, properties map[string]interface{}) error {
+func (i *Index) Update(ctx context.Context, id string, properties interface{}) error {
 	_, err := i.es.Update().
 		Index(i.cfg.Name).
 		Id(id).
