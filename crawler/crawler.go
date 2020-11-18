@@ -6,18 +6,15 @@ import (
 	"github.com/ipfs/go-ipfs-api"
 
 	"github.com/ipfs-search/ipfs-search/extractor"
-	"github.com/ipfs-search/ipfs-search/index"
-	"github.com/ipfs-search/ipfs-search/instr"
-	"github.com/ipfs-search/ipfs-search/queue"
+	index_types "github.com/ipfs-search/ipfs-search/index/types"
+	"github.com/ipfs-search/ipfs-search/protocol"
+	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-// Args describe a resource to be crawled
-type Args struct {
-	Hash       string
-	Name       string
-	Size       uint64
-	ParentHash string
-	ParentName string // This is legacy, should be removed
+type Crawler struct {
+	indexes   Indexes
+	protocol  protocol.Protocol
+	extractor extractor.Extractor
 }
 
 // Crawler consumes file and hash queues and indexes them
