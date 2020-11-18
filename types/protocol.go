@@ -1,8 +1,8 @@
 package types
 
 const (
-	// Invalid (default) value signifies an invalid protocol.
-	Invalid = iota
+	// InvalidProtocol (default) value signifies an invalid protocol.
+	InvalidProtocol = iota
 	// IPFSProtocol (currently only supported protocol)
 	IPFSProtocol
 )
