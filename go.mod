@@ -7,6 +7,7 @@ require (
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-datastore v0.4.5
 	github.com/ipfs/go-ipfs-api v0.0.3
+	github.com/ipfs/go-unixfs v0.2.4
 	github.com/kr/text v0.2.0 // indirect
 	github.com/libp2p/go-eventbus v0.2.1
 	github.com/libp2p/go-libp2p-core v0.6.1

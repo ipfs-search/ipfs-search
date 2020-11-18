@@ -1,8 +1,10 @@
 package types
 
 const (
+	// Invalid (default) value signifies an invalid protocol.
+	Invalid = iota
 	// IPFSProtocol (currently only supported protocol)
-	IPFSProtocol = iota
+	IPFSProtocol
 )
 
 // Protocol is an enum specifying the protocol.
