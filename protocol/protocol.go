@@ -8,7 +8,7 @@ import (
 
 // Protocol represents the interface with one or multiple protocols. It is concurrency-safe.
 type Protocol interface {
-	GatewayURL(*t.ReferencedResource) string
-	Stat(context.Context, *t.Resource) (*t.ReferencedResource, error)
-	Ls(context.Context, *t.Resource, chan<- t.ReferencedResource) error
+	GatewayURL(*t.AnnotatedResource) string
+	Stat(context.Context, *t.AnnotatedResource) error
+	Ls(context.Context, *t.AnnotatedResource, chan<- t.AnnotatedResource) error
 }

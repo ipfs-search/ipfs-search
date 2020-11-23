@@ -57,8 +57,12 @@ func (i *IPFS) Ls(ctx context.Context, r *t.ReferencedResource, out chan<- t.Ref
 
 	req := i.shell.Request(cmd, path).
 		Option("resolve-type", false).
-		// Option("size", false).
+		Option("size", false).
 		Option("stream", true)
+
+	// IMPORTANT - WE WANT TO AVOID STAT'ING OBJECTS WHILE WE'RE LISTING!
+	// Rather, we might make this quick and dirty (avoids a lot of duplicate work, e.g.
+	// not stat'ing existing items!!1)
 
 	resp, err := req.Send(ctx)
 	if err != nil {

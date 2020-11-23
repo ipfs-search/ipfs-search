@@ -73,13 +73,13 @@ func (e *Extractor) retryingGet(ctx context.Context, url string) (resp *http.Res
 	}
 }
 
-func (e *Extractor) getExtractURL(r *t.ReferencedResource) string {
+func (e *Extractor) getExtractURL(r *t.AnnotatedResource) string {
 	return e.protocol.GatewayURL(r)
 }
 
 // Extract metadata from a (potentially) referenced resource, updating
 // Metadata or returning an error.
-func (e *Extractor) Extract(ctx context.Context, r *t.ReferencedResource, m t.Metadata) error {
+func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m t.Metadata) error {
 	ctx, span := e.Tracer.Start(ctx, "extractor.tika.Extract",
 		trace.WithAttributes(label.String("cid", r.ID)),
 	)
