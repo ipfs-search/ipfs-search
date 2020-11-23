@@ -9,5 +9,5 @@ import (
 // Extract metadata from a (potentially) referenced resource, updating
 // Metadata or returning an error.
 type Extractor interface {
-	Extract(context.Context, *t.ReferencedResource, t.Metadata) error
+	Extract(context.Context, *t.AnnotatedResource, interface{}) error
 }

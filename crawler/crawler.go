@@ -1,9 +1,7 @@
 package crawler
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/ipfs/go-ipfs-api"
+	"context"
 
 	"github.com/ipfs-search/ipfs-search/extractor"
 	index_types "github.com/ipfs-search/ipfs-search/index/types"
@@ -17,41 +15,56 @@ type Crawler struct {
 	extractor extractor.Extractor
 }
 
-// Crawler consumes file and hash queues and indexes them
-type Crawler struct {
-	Config *Config
+func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
+	var err error
 
-	Shell     *shell.Shell
-	Extractor extractor.Extractor
+	existing, err := c.getExistingItem(ctx, r)
+	if err != nil {
+		return err
+	}
 
-	FileIndex      index.Index
-	DirectoryIndex index.Index
-	InvalidIndex   index.Index
+	// Process existing item
+	if existing != nil {
+		switch existing.Index {
+		case c.indexes.Unsupported, c.indexes.Invalid:
+			// Already indexed unsupported or invalid; we're done
+			return nil
+		}
 
-	FileQueue queue.Publisher
-	HashQueue queue.Publisher
+		// Update item and we're done.
+		return c.update(ctx, existing)
+	}
 
-	*instr.Instrumentation
+	// Ensure type is present
+	if r.Type == t.UndefinedType {
+		// Get size and type
+		if err := c.protocol.Stat(ctx, r); err != nil {
+			// Depending on error, index as invalid
+			return err
+		}
+	}
+
+	// TODO: Add PartialType to resource types, so partials can be abstracted away at protocol level,
+	// where they belong.
+
+	// Index new item
+	return c.index(ctx, r)
 }
 
-// IndexableFromJSON returns and Indexable associated with this crawler based on a JSON blob
-func (c *Crawler) IndexableFromJSON(input []byte) (*Indexable, error) {
-	// Unmarshall message into crawler Args
-	args := &Args{}
-	err := json.Unmarshal(input, args)
-	if err != nil {
-		return nil, err
+func (c *Crawler) crawlDirectory(ctx context.Context, r *t.AnnotatedResource, properties *index_types.Directory) error {
+	// TODO
+
+	// queue directory entries
+
+	// update entries in properties
+
+	return nil
+}
+
+func New(indexes Indexes, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
+	return &Crawler{
+		indexes,
+		protocol,
+		extractor,
 	}
-
-	// Later down, we assume this hash is set and we're seeing errors where
-	// this aparently seems not the case.
-	if args.Hash == "" {
-		return nil, fmt.Errorf("Empty hash in JSON: %s", input)
-	}
-
-	return &Indexable{
-		Args:    args,
-		Crawler: c,
-	}, nil
-
 }
