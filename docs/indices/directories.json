@@ -36,7 +36,7 @@
                 }
             },
             "size": {
-                "type": "long",
+                "type": "unsigned_long",
                 "ignore_malformed": true
             },
             "references": {
