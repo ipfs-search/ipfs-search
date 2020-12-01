@@ -91,7 +91,7 @@ docker-compose exec ipfs-crawler ipfs-search add QmS4ustL54uo8FzR9455qaxZwuMiUhy
 ```
 
 ### Ansible deployment
-Automated deployment can be done on any (virtual) Ubuntu 16.04 machine. The full production stack is automated and can be found [here](deployment/).
+Automated deployment can be done on any (virtual) Ubuntu 16.04 machine. The full production stack is automated and can be found in it's own [repository](https://github.com/ipfs-search/ipfs-search-deployment).
 
 ## Contributors
 
