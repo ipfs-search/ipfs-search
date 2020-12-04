@@ -3,11 +3,13 @@ package amqp
 import (
 	"context"
 	"encoding/json"
-	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
+
+	"github.com/ipfs-search/ipfs-search/instr"
+	"github.com/ipfs-search/ipfs-search/queue"
 )
 
 // Queue wraps an channel/queue for tasks
@@ -80,3 +82,6 @@ func (q *Queue) Consume(ctx context.Context) (<-chan amqp.Delivery, error) {
 
 	return c, err
 }
+
+// Compile-time assurance that implementation satisfies interface.
+var _ queue.Queue = &Queue{}

@@ -19,3 +19,8 @@ type Consumer interface {
 type PublisherFactory interface {
 	NewPublisher(context.Context) (Publisher, error)
 }
+
+type Queue interface {
+	Publisher
+	Consumer
+}

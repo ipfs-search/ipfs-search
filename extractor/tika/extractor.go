@@ -140,3 +140,6 @@ func New(config *Config, client *http.Client, protocol protocol.Protocol, instr 
 		instr,
 	}
 }
+
+// Compile-time assurance that implementation satisfies interface.
+var _ extractor.Extractor = &Extractor{}

@@ -25,3 +25,11 @@ func (m *Mock) Ls(ctx context.Context, r *t.AnnotatedResource, c chan<- t.Annota
 	args := m.Called(ctx, r, c)
 	return args.Error(0)
 }
+
+func (m *Mock) IsInvalidResourceErr(err error) bool {
+	args := m.Called(err)
+	return args.Bool(0)
+}
+
+// Compile-time assurance that implementation satisfies interface.
+var _ Protocol = &Mock{}

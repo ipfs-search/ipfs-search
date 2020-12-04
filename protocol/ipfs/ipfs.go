@@ -10,6 +10,7 @@ import (
 	unixfs_pb "github.com/ipfs/go-unixfs/pb"
 
 	"github.com/ipfs-search/ipfs-search/instr"
+	"github.com/ipfs-search/ipfs-search/protocol"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -85,3 +86,6 @@ func New(config *Config, client *http.Client, instr *instr.Instrumentation) *IPF
 		instr,
 	}
 }
+
+// Compile-time assurance that implementation satisfies interface.
+var _ protocol.Protocol = &IPFS{}
