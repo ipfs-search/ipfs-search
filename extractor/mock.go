@@ -15,3 +15,6 @@ func (m *Mock) Extract(ctx context.Context, r *t.AnnotatedResource, result inter
 	args := m.Called(ctx, r, result)
 	return args.Error(0)
 }
+
+// Compile-time assurance that implementation satisfies interface.
+var _ Extractor = &Mock{}

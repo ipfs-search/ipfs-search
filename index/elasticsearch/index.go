@@ -3,8 +3,9 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
-	"github.com/ipfs-search/ipfs-search/index"
 	"github.com/olivere/elastic/v7"
+
+	"github.com/ipfs-search/ipfs-search/index"
 )
 
 // Index wraps an Elasticsearch index to store documents
@@ -103,3 +104,6 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 		return false, err
 	}
 }
+
+// Compile-time assurance that implementation satisfies interface.
+var _ index.Index = &Index{}

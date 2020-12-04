@@ -23,3 +23,6 @@ func (m *Mock) Get(ctx context.Context, id string, dst interface{}, fields ...st
 	args := m.Called(ctx, id, dst, fields)
 	return args.Bool(0), args.Error(1)
 }
+
+// Compile-time assurance that implementation satisfies interface.
+var _ Index = &Mock{}

@@ -28,3 +28,7 @@ func (f *MockFactory) NewPublisher(ctx context.Context) (Publisher, error) {
 	args := f.Called(ctx)
 	return args.Get(0).(Publisher), args.Error(1)
 }
+
+// Compile-time assurance that implementation satisfies interface.
+var _ Queue = &Mock{}
+var _ PublisherFactory = &MockFactory{}
