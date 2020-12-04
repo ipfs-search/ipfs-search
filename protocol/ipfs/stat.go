@@ -6,14 +6,31 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
+const partialSize = 262144
+
 type statResult struct {
 	Hash string
 	Type string
 	Size int64 // unixfs size
 }
 
-// Stat returns a ReferencedResource with Type and Size populated.
-func (i *IPFS) Stat(ctx context.Context, r *t.Resource) (*t.ReferencedResource, error) {
+func typeFromString(strType string) t.ResourceType {
+	switch strType {
+	case "file":
+		return t.FileType
+	case "directory":
+		return t.DirectoryType
+	default:
+		return t.UnsupportedType
+	}
+}
+
+func isPartial(r *t.AnnotatedResource) bool {
+	return r.Size == partialSize
+}
+
+// Stat returns a AnnotatedResource with Type and Size populated.
+func (i *IPFS) Stat(ctx context.Context, r *t.Resource) (*t.AnnotatedResource, error) {
 	const cmd = "files/stat"
 
 	ctx, cancel := context.WithTimeout(ctx, i.config.StatTimeout)
@@ -28,11 +45,17 @@ func (i *IPFS) Stat(ctx context.Context, r *t.Resource) (*t.ReferencedResource, 
 		return nil, err
 	}
 
-	return &t.ReferencedResource{
+	annotatedResource := &t.AnnotatedResource{
 		Resource: r,
-		Reference: &t.Reference{
+		Stat: t.Stat{
 			Type: typeFromString(result.Type),
 			Size: uint64(result.Size),
 		},
-	}, nil
+	}
+
+	if isPartial(annotatedResource) {
+		annotatedResource.Type = t.PartialType
+	}
+
+	return annotatedResource, nil
 }

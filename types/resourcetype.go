@@ -12,6 +12,8 @@ const (
 	FileType
 	// DirectoryType is a directory.
 	DirectoryType
+	// PartialType represents a likely partial item.
+	PartialType
 )
 
 func (t ResourceType) String() string {
@@ -22,6 +24,8 @@ func (t ResourceType) String() string {
 		return "file"
 	case DirectoryType:
 		return "directory"
+	case PartialType:
+		return "partial"
 	default:
 		panic("Invalid value for ResourceType.")
 	}

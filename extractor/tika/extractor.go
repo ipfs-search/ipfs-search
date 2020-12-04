@@ -14,7 +14,7 @@ import (
 
 	"github.com/ipfs-search/ipfs-search/extractor"
 	"github.com/ipfs-search/ipfs-search/instr"
-	"github.com/ipfs-search/ipfs-search/protocols"
+	"github.com/ipfs-search/ipfs-search/protocol"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -22,7 +22,7 @@ import (
 type Extractor struct {
 	config   *Config
 	client   *http.Client
-	protocol protocols.Protocol
+	protocol protocol.Protocol
 
 	*instr.Instrumentation
 }
@@ -132,7 +132,7 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m t.Met
 }
 
 // New returns a new Tika extractor.
-func New(config *Config, client *http.Client, protocol protocols.Protocol, instr *instr.Instrumentation) extractor.Extractor {
+func New(config *Config, client *http.Client, protocol protocol.Protocol, instr *instr.Instrumentation) extractor.Extractor {
 	return &Extractor{
 		config,
 		client,

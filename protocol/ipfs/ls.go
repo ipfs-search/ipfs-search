@@ -49,8 +49,8 @@ func decodeLink(dec *json.Decoder) (*lsLink, error) {
 	return &link.Objects[0].Links[0], nil
 }
 
-// Ls returns a channel with ReferencedResource's with Type and Size populated.
-func (i *IPFS) Ls(ctx context.Context, r *t.ReferencedResource, out chan<- t.ReferencedResource) error {
+// Ls returns a channel with AnnotatedResource's with Type and Size populated.
+func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- t.AnnotatedResource) error {
 	const cmd = "ls"
 
 	path := absolutePath(r.Resource)
@@ -90,16 +90,18 @@ func (i *IPFS) Ls(ctx context.Context, r *t.ReferencedResource, out chan<- t.Ref
 			return err
 		}
 
-		refR := t.ReferencedResource{
+		refR := t.AnnotatedResource{
 			Resource: &t.Resource{
 				Protocol: t.IPFSProtocol,
 				ID:       link.Hash,
 			},
-			Reference: &t.Reference{
+			Reference: t.Reference{
 				Parent: r.Resource,
 				Name:   link.Name,
-				Type:   typeFromPb(link.Type),
-				Size:   link.Size,
+			},
+			Stat: t.Stat{
+				Type: typeFromPb(link.Type),
+				Size: link.Size,
 			},
 		}
 

@@ -31,7 +31,7 @@ func absolutePath(r *t.Resource) string {
 // namedPath returns the (escaped/raw) path for a resource.
 // If a reference is available, it is used to generate the filename to facilitate content
 // type detection (e.g. /ipfs/<parent_hash>/my_file.jpg instead of /ipfs/<file_hash>/).
-func namedPath(r *t.ReferencedResource) string {
+func namedPath(r *t.AnnotatedResource) string {
 	if ref := r.Reference; ref.Name != "" {
 		return fmt.Sprintf("/ipfs/%s/%s", ref.Parent.ID, url.PathEscape(ref.Name))
 	}
@@ -42,7 +42,7 @@ func namedPath(r *t.ReferencedResource) string {
 // GatewayURL returns the URL to request a resource from the gateway.
 // If a reference is available, it is used to generate the filename to facilitate content
 // type detection (e.g. /ipfs/<parent_hash>/my_file.jpg instead of /ipfs/<file_hash>/).
-func (i *IPFS) GatewayURL(r *t.ReferencedResource) string {
+func (i *IPFS) GatewayURL(r *t.AnnotatedResource) string {
 	url, err := i.gatewayURL.Parse(namedPath(r))
 
 	if err != nil {
@@ -57,17 +57,6 @@ func typeFromPb(pbType unixfs_pb.Data_DataType) t.ResourceType {
 	case unixfs.TRaw, unixfs.TFile:
 		return t.FileType
 	case unixfs.THAMTShard, unixfs.TDirectory, unixfs.TMetadata:
-		return t.DirectoryType
-	default:
-		return t.UnsupportedType
-	}
-}
-
-func typeFromString(strType string) t.ResourceType {
-	switch strType {
-	case "file":
-		return t.FileType
-	case "directory":
 		return t.DirectoryType
 	default:
 		return t.UnsupportedType
