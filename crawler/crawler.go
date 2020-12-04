@@ -11,6 +11,7 @@ import (
 
 type Crawler struct {
 	indexes   Indexes
+	queues    Queues
 	protocol  protocol.Protocol
 	extractor extractor.Extractor
 }
@@ -25,9 +26,8 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 
 	// Process existing item
 	if existing != nil {
-		switch existing.Index {
-		case c.indexes.Unsupported, c.indexes.Invalid:
-			// Already indexed unsupported or invalid; we're done
+		if existing.Index == c.indexes.Invalid {
+			// Already indexed as invalid; we're done
 			return nil
 		}
 
@@ -61,9 +61,10 @@ func (c *Crawler) crawlDirectory(ctx context.Context, r *t.AnnotatedResource, pr
 	return nil
 }
 
-func New(indexes Indexes, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
+func New(indexes Indexes, queues Queues, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
 	return &Crawler{
 		indexes,
+		queues,
 		protocol,
 		extractor,
 	}

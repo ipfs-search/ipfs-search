@@ -7,6 +7,5 @@ import (
 type Indexes struct {
 	Files       index.Index
 	Directories index.Index
-	Unsupported index.Index
 	Invalid     index.Index
 }
