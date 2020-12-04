@@ -53,7 +53,7 @@ func decodeLink(dec *json.Decoder) (*lsLink, error) {
 func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- t.AnnotatedResource) error {
 	const cmd = "ls"
 
-	path := absolutePath(r.Resource)
+	path := absolutePath(r)
 
 	req := i.shell.Request(cmd, path).
 		Option("resolve-type", false).

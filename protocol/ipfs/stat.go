@@ -6,6 +6,8 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
+// 256KB is the default chunker block size. Therefore, unreferenced files with exactly
+// this size are very likely to be chunks of files (partials) rather than full files.
 const partialSize = 262144
 
 type statResult struct {
@@ -25,12 +27,8 @@ func typeFromString(strType string) t.ResourceType {
 	}
 }
 
-func isPartial(r *t.AnnotatedResource) bool {
-	return r.Size == partialSize
-}
-
 // Stat returns a AnnotatedResource with Type and Size populated.
-func (i *IPFS) Stat(ctx context.Context, r *t.Resource) (*t.AnnotatedResource, error) {
+func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 	const cmd = "files/stat"
 
 	ctx, cancel := context.WithTimeout(ctx, i.config.StatTimeout)
@@ -42,20 +40,18 @@ func (i *IPFS) Stat(ctx context.Context, r *t.Resource) (*t.AnnotatedResource, e
 	result := new(statResult)
 
 	if err := req.Exec(ctx, result); err != nil {
-		return nil, err
+		return err
 	}
 
-	annotatedResource := &t.AnnotatedResource{
-		Resource: r,
-		Stat: t.Stat{
-			Type: typeFromString(result.Type),
-			Size: uint64(result.Size),
-		},
+	r.Stat = t.Stat{
+		Type: typeFromString(result.Type),
+		Size: uint64(result.Size),
 	}
 
-	if isPartial(annotatedResource) {
-		annotatedResource.Type = t.PartialType
+	// Override type for *unreferenced* partials, based on size
+	if r.Size == partialSize && r.Reference.Parent == nil {
+		r.Stat.Type = t.PartialType
 	}
 
-	return annotatedResource, nil
+	return nil
 }

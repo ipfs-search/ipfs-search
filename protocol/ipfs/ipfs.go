@@ -25,7 +25,7 @@ type IPFS struct {
 }
 
 // absolutePath returns the absolute (CID-only) path for a resource.
-func absolutePath(r *t.Resource) string {
+func absolutePath(r *t.AnnotatedResource) string {
 	return fmt.Sprintf("/ipfs/%s", r.ID)
 }
 
@@ -37,7 +37,7 @@ func namedPath(r *t.AnnotatedResource) string {
 		return fmt.Sprintf("/ipfs/%s/%s", ref.Parent.ID, url.PathEscape(ref.Name))
 	}
 
-	return absolutePath(r.Resource)
+	return absolutePath(r)
 }
 
 // GatewayURL returns the URL to request a resource from the gateway.
