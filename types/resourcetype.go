@@ -12,7 +12,7 @@ const (
 	FileType
 	// DirectoryType is a directory.
 	DirectoryType
-	// PartialType represents a likely partial item.
+	// PartialType represents *unreferenced* partial items.
 	PartialType
 )
 
