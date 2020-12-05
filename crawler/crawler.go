@@ -44,8 +44,10 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 		}
 	}
 
-	// TODO: Add PartialType to resource types, so partials can be abstracted away at protocol level,
-	// where they belong.
+	if r.Type == t.PartialType {
+		// Not indexing partials, we're done.
+		return nil
+	}
 
 	// Index new item
 	return c.index(ctx, r)
