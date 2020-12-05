@@ -20,6 +20,8 @@ func (t ResourceType) String() string {
 	switch t {
 	case UndefinedType:
 		return "undefined"
+	case UnsupportedType:
+		return "unsupported"
 	case FileType:
 		return "file"
 	case DirectoryType:

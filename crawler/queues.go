@@ -5,7 +5,6 @@ import (
 )
 
 type Queues struct {
-	Hashes      queue.Publisher
 	Files       queue.Publisher
 	Directories queue.Publisher
 }

@@ -50,7 +50,7 @@ func decodeLink(dec *json.Decoder) (*lsLink, error) {
 }
 
 // Ls returns a channel with AnnotatedResource's with Type and Size populated.
-func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- t.AnnotatedResource) error {
+func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.AnnotatedResource) error {
 	const cmd = "ls"
 
 	path := absolutePath(r)
@@ -108,7 +108,7 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- t.Anno
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case out <- refR:
+		case out <- &refR:
 		}
 	}
 }
