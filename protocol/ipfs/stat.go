@@ -28,6 +28,8 @@ func typeFromString(strType string) t.ResourceType {
 }
 
 // Stat returns a AnnotatedResource with Type and Size populated.
+// Ref: http://docs.ipfs.io.ipns.localhost:8080/reference/http/api/#api-v0-files-stat
+// 500 errors might be indicative of invalids
 func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 	const cmd = "files/stat"
 

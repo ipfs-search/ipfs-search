@@ -10,5 +10,5 @@ import (
 type Protocol interface {
 	GatewayURL(*t.AnnotatedResource) string
 	Stat(context.Context, *t.AnnotatedResource) error
-	Ls(context.Context, *t.AnnotatedResource, chan<- t.AnnotatedResource) error
+	Ls(context.Context, *t.AnnotatedResource, chan<- *t.AnnotatedResource) error
 }

@@ -21,7 +21,7 @@ func (m *Mock) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 	return args.Error(0)
 }
 
-func (m *Mock) Ls(ctx context.Context, r *t.AnnotatedResource, c chan<- t.AnnotatedResource) error {
+func (m *Mock) Ls(ctx context.Context, r *t.AnnotatedResource, c chan<- *t.AnnotatedResource) error {
 	args := m.Called(ctx, r, c)
 	return args.Error(0)
 }

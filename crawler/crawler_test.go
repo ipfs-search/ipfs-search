@@ -8,7 +8,7 @@ import (
 
 	"github.com/ipfs-search/ipfs-search/extractor"
 	"github.com/ipfs-search/ipfs-search/index"
-	// indexTypes "github.com/ipfs-search/ipfs-search/index/types"
+	indexTypes "github.com/ipfs-search/ipfs-search/index/types"
 	"github.com/ipfs-search/ipfs-search/protocol"
 	"github.com/ipfs-search/ipfs-search/queue"
 	t "github.com/ipfs-search/ipfs-search/types"
@@ -22,14 +22,15 @@ type CrawlerTestSuite struct {
 	queues  Queues
 	c       *Crawler
 
-	protocol   *protocol.Mock
-	extractor  *extractor.Mock
+	protocol  *protocol.Mock
+	extractor *extractor.Mock
+
 	fileIdx    *index.Mock
 	dirIdx     *index.Mock
 	invalidIdx *index.Mock
-	hashQ      *queue.Mock
-	dirQ       *queue.Mock
-	fileQ      *queue.Mock
+
+	dirQ  *queue.Mock
+	fileQ *queue.Mock
 }
 
 func (s *CrawlerTestSuite) SetupTest() {
@@ -44,12 +45,11 @@ func (s *CrawlerTestSuite) SetupTest() {
 		Invalid:     s.invalidIdx,
 	}
 
-	s.hashQ, s.fileQ, s.dirQ = &queue.Mock{}, &queue.Mock{}, &queue.Mock{}
+	s.fileQ, s.dirQ = &queue.Mock{}, &queue.Mock{}
 
 	s.queues = Queues{
-		Hashes:      s.hashQ,
-		Directories: s.fileQ,
-		Files:       s.dirQ,
+		Directories: s.dirQ,
+		Files:       s.fileQ,
 	}
 	s.protocol = &protocol.Mock{}
 	s.extractor = &extractor.Mock{}
@@ -62,7 +62,6 @@ func (s *CrawlerTestSuite) assertExpectations() {
 		s.fileIdx,
 		s.dirIdx,
 		s.invalidIdx,
-		s.hashQ,
 		s.fileQ,
 		s.dirQ,
 		s.protocol,
@@ -80,11 +79,7 @@ func (s *CrawlerTestSuite) TestCrawlInvalidProtocol() {
 	}
 
 	// Crawl
-	err := s.c.Crawl(s.ctx, r)
-
-	// This is a programming error, should fail hard.
-	s.Error(err)
-	s.assertExpectations()
+	s.Panics(func() { _ = s.c.Crawl(s.ctx, r) })
 }
 
 func (s *CrawlerTestSuite) TestCrawlUndefinedType() {
@@ -100,30 +95,26 @@ func (s *CrawlerTestSuite) TestCrawlUndefinedType() {
 	}
 
 	// Mock assertions
-	s.protocol.On("Stat", mock.Anything, r).Run(func(args mock.Arguments) {
-		r := args.Get(1).(*t.AnnotatedResource)
-		r.Stat = t.Stat{
-			Type: t.FileType,
-		}
-	}).Return(nil)
+	s.protocol.
+		On("Stat", mock.Anything, r).
+		Run(func(args mock.Arguments) {
+			r := args.Get(1).(*t.AnnotatedResource)
+			r.Stat = t.Stat{
+				Type: t.FileType,
+			}
+		}).
+		Return(nil).
+		Once()
 
-	s.extractor.On("Extract", mock.Anything, r, mock.Anything).Run(func(args mock.Arguments) {
-		// m := args.Get(2)
-		// Set metadata on this interface{}
-	}).Return(nil)
+	s.extractor.
+		On("Extract", mock.Anything, r, mock.Anything).
+		Return(nil).
+		Once()
 
-	// s.fileIdx.On("Index", mock.Anything, r.Resource.ID, indexTypes.File{
-	// FirstSeen  time.Time  `json:"first-seen"`
-	// LastSeen   time.Time  `json:"last-seen"`
-	// References References `json:"references"`
-	// Size       uint64     `json:"size"`
-
-	// Content         string   `json:"content"`
-	// IpfsTikaVersion string   `json:"ipfs_tika_version"`
-	// Language        Language `json:"language"`
-	// Metadata        Metadata `json:"metadata"`
-	// Urls            []string `json:"urls"`
-	// }).Return(nil)
+	s.fileIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.IsType(&indexTypes.File{})).
+		Return(nil).
+		Once()
 
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
@@ -145,6 +136,14 @@ func (s *CrawlerTestSuite) TestCrawlUnsupportedType() {
 		},
 	}
 
+	// Mock assertions
+	s.invalidIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Invalid) bool {
+			return s.Equal(f.Error, "unsupported type")
+		})).
+		Return(nil).
+		Once()
+
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
 
@@ -153,7 +152,7 @@ func (s *CrawlerTestSuite) TestCrawlUnsupportedType() {
 	s.assertExpectations()
 }
 
-func (s *CrawlerTestSuite) TestCrawlUnreferencedPartialType() {
+func (s *CrawlerTestSuite) TestCrawlPartialType() {
 	// Prepare resource
 	r := &t.AnnotatedResource{
 		Resource: &t.Resource{
@@ -164,38 +163,13 @@ func (s *CrawlerTestSuite) TestCrawlUnreferencedPartialType() {
 			Type: t.PartialType,
 		},
 	}
+
+	// Note how nothing is indexed here!
 
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
 
 	// Unreferenced partial should be skipped.
-	s.NoError(err)
-	s.assertExpectations()
-}
-
-func (s *CrawlerTestSuite) TestCrawlReferencedPartialType() {
-	// Prepare resource
-	r := &t.AnnotatedResource{
-		Resource: &t.Resource{
-			Protocol: t.IPFSProtocol,
-			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
-		},
-		Reference: t.Reference{
-			Parent: &t.Resource{
-				Protocol: t.IPFSProtocol,
-				ID:       "QmafrLBfzRLV4XSH1XcaMMeaXEUhDJjmtDfsYU95TrWG87",
-			},
-			Name: "fileName.pdf",
-		},
-		Stat: t.Stat{
-			Type: t.PartialType,
-		},
-	}
-
-	// Crawl
-	err := s.c.Crawl(s.ctx, r)
-
-	// Referenced partials should be indexed.
 	s.NoError(err)
 	s.assertExpectations()
 }
@@ -207,17 +181,33 @@ func (s *CrawlerTestSuite) TestCrawlFileType() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
-		Reference: t.Reference{
-			Parent: &t.Resource{
-				Protocol: t.IPFSProtocol,
-				ID:       "QmafrLBfzRLV4XSH1XcaMMeaXEUhDJjmtDfsYU95TrWG87",
-			},
-			Name: "fileName.pdf",
-		},
 		Stat: t.Stat{
 			Type: t.FileType,
+			Size: 15,
 		},
 	}
+
+	// Mock assertions
+	testMetadata := indexTypes.Metadata{"TestField": "TestValue"}
+
+	s.extractor.
+		On("Extract", mock.Anything, r, mock.Anything).
+		Run(func(args mock.Arguments) {
+			f := args.Get(2).(*indexTypes.File)
+			f.Content = "testContent"
+			f.Metadata = testMetadata
+		}).
+		Return(nil).
+		Once()
+
+	s.fileIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.File) bool {
+			return s.Equal(f.Metadata, testMetadata) &&
+				s.Equal(f.Content, "testContent") &&
+				s.Equal(f.Size, uint64(15))
+		})).
+		Return(nil).
+		Once()
 
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
@@ -234,17 +224,94 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
+		Stat: t.Stat{
+			Type: t.DirectoryType,
+			Size: 23,
+		},
+	}
+
+	// Mock assertions
+	fileEntry := t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmafrLBfzRLV4XSH1XcaMMeaXEUhDJjmtDfsYU95TrWG87",
+		},
 		Reference: t.Reference{
 			Parent: &t.Resource{
 				Protocol: t.IPFSProtocol,
-				ID:       "QmafrLBfzRLV4XSH1XcaMMeaXEUhDJjmtDfsYU95TrWG87",
+				ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 			},
-			Name: "directoryName",
+			Name: "fileName.pdf",
+		},
+		Stat: t.Stat{
+			Type: t.FileType,
+			Size: 3431,
+		},
+	}
+
+	dirEntry := t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+			},
+			Name: "dirName",
 		},
 		Stat: t.Stat{
 			Type: t.DirectoryType,
+			Size: 4534543,
 		},
 	}
+
+	s.protocol.
+		On("Ls", mock.Anything, r, mock.AnythingOfType("chan<- *types.AnnotatedResource")).
+		Run(func(args mock.Arguments) {
+			// Write bogus directory entry
+			entryChan := args.Get(2).(chan<- *t.AnnotatedResource)
+			entryChan <- &fileEntry
+			entryChan <- &dirEntry
+		}).
+		Return(nil).
+		Once()
+
+	s.dirIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Directory) bool {
+			return s.Equal(f.Size, r.Size) &&
+				s.Equal(f.Links, indexTypes.Links{
+					indexTypes.Link{
+						Hash: fileEntry.ID,
+						Name: fileEntry.Reference.Name,
+						Size: fileEntry.Size,
+						Type: indexTypes.FileLinkType,
+					},
+					indexTypes.Link{
+						Hash: dirEntry.ID,
+						Name: dirEntry.Reference.Name,
+						Size: dirEntry.Size,
+						Type: indexTypes.DirectoryLinkType,
+					},
+				})
+		})).
+		Return(nil).
+		Once()
+
+	s.fileQ.
+		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
+			return s.Equal(*f, fileEntry)
+		}), mock.AnythingOfType("uint8")).
+		Return(nil).
+		Once()
+
+	s.dirQ.
+		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
+			return s.Equal(*f, dirEntry)
+		}), mock.AnythingOfType("uint8")).
+		Return(nil).
+		Once()
 
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
