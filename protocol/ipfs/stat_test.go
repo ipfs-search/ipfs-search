@@ -1,5 +1,204 @@
 package ipfs
 
+import (
+	"context"
+	"fmt"
+	"github.com/dankinder/httpmock"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+	"net/http"
+	"testing"
+
+	"github.com/ipfs-search/ipfs-search/instr"
+	t "github.com/ipfs-search/ipfs-search/types"
+)
+
+type StatTestSuite struct {
+	suite.Suite
+
+	ctx  context.Context
+	ipfs *IPFS
+
+	mockAPIHandler *httpmock.MockHandler
+	mockAPIServer  *httpmock.Server
+}
+
+func (s *StatTestSuite) SetupTest() {
+	s.ctx = context.Background()
+
+	s.mockAPIHandler = &httpmock.MockHandler{}
+	s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
+
+	cfg := DefaultConfig()
+	cfg.IPFSAPIURL = s.mockAPIServer.URL()
+
+	s.ipfs = New(cfg, http.DefaultClient, instr.New())
+}
+
+func (s *StatTestSuite) TearDownTest() {
+	s.mockAPIServer.Close()
+}
+
+func (s *StatTestSuite) TestDirectory() {
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv",
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
+
+	// Setup mock handler
+	s.mockAPIHandler.
+		On("Handle", "POST", rURL, mock.Anything).
+		Return(httpmock.Response{
+			Body: []byte(`{"Hash":"QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv","Size":0,"CumulativeSize":6544,"Blocks":7,"Type":"directory"}`),
+		}).
+		Once()
+
+	err := s.ipfs.Stat(s.ctx, r)
+
+	s.NoError(err)
+	s.mockAPIHandler.AssertExpectations(s.T())
+
+	s.Equal(r.Stat, t.Stat{
+		Type: t.DirectoryType,
+		Size: 6544,
+	})
+}
+
+func (s *StatTestSuite) TestSinglePartFile() {
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB",
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
+
+	// Setup mock handler
+	s.mockAPIHandler.
+		On("Handle", "POST", rURL, mock.Anything).
+		Return(httpmock.Response{
+			Body: []byte(`{"Hash":"QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB","Size":1091,"CumulativeSize":1102,"Blocks":0,"Type":"file"}`),
+		}).
+		Once()
+
+	err := s.ipfs.Stat(s.ctx, r)
+
+	s.NoError(err)
+	s.mockAPIHandler.AssertExpectations(s.T())
+
+	s.Equal(r.Stat, t.Stat{
+		Type: t.FileType,
+		Size: 1091,
+	})
+}
+
+func (s *StatTestSuite) TestMultiPartFile() {
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi",
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
+
+	// Setup mock handler
+	s.mockAPIHandler.
+		On("Handle", "POST", rURL, mock.Anything).
+		Return(httpmock.Response{
+			Body: []byte(`{"Hash":"Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi","Size":4475792,"CumulativeSize":4476917,"Blocks":18,"Type":"file"}`),
+		}).
+		Once()
+
+	err := s.ipfs.Stat(s.ctx, r)
+
+	s.NoError(err)
+	s.mockAPIHandler.AssertExpectations(s.T())
+
+	s.Equal(r.Stat, t.Stat{
+		Type: t.FileType,
+		Size: 4475792,
+	})
+}
+
+func (s *StatTestSuite) TestUnreferencedPartial() {
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p",
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
+
+	// Setup mock handler
+	s.mockAPIHandler.
+		On("Handle", "POST", rURL, mock.Anything).
+		Return(httpmock.Response{
+			Body: []byte(`{"Hash":"QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p","Size":262144,"CumulativeSize":262158,"Blocks":0,"Type":"file"}`),
+		}).
+		Once()
+
+	err := s.ipfs.Stat(s.ctx, r)
+
+	s.NoError(err)
+	s.mockAPIHandler.AssertExpectations(s.T())
+
+	s.Equal(r.Stat, t.Stat{
+		Type: t.PartialType,
+		Size: 262144,
+	})
+}
+
+func (s *StatTestSuite) TestReferencedPartial() {
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+			},
+			Name: "fileName.pdf",
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
+
+	// Setup mock handler
+	s.mockAPIHandler.
+		On("Handle", "POST", rURL, mock.Anything).
+		Return(httpmock.Response{
+			Body: []byte(`{"Hash":"QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p","Size":262144,"CumulativeSize":262158,"Blocks":0,"Type":"file"}`),
+		}).
+		Once()
+
+	err := s.ipfs.Stat(s.ctx, r)
+
+	s.NoError(err)
+	s.mockAPIHandler.AssertExpectations(s.T())
+
+	s.Equal(r.Stat, t.Stat{
+		Type: t.FileType,
+		Size: 262144,
+	})
+}
+
+// TODO: TestInvalid()
+
+// TODO: TestGeneralError()
+
+func TestStatTestSuite(t *testing.T) {
+	suite.Run(t, new(StatTestSuite))
+}
+
 // Protobuf ref: http://docs.ipfs.io.ipns.localhost:8080/concepts/file-systems/#unix-file-system-unixfs
 // Multicodec type reference: https://github.com/multiformats/multicodec/blob/master/table.csv
 
@@ -14,9 +213,6 @@ package ipfs
 // bafkreia2whgx2vblgdpwim5ugz7ofhxoo2vtpyart633mj6gbpwsj7yfxq -> file/ls: expected protobuf dag node
 // QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8 -> file/ls: proto: required field "Type" not set
 // QmQkaTUmqcdGAXKaFXpe8t8yaEDGHe7xGQJHcfihrzAFTj -> file/ls: proto: unixfs_pb.Data: illegal tag 0 (wire type 0)
-
-// Partial:
-// QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq -> file/ls: unexpected EOF
 
 // Unsupported in Ls (but supported in Stat!):
 // QmToQ3m6g8XdnMhoMR2hdxrvFtKAEX2DMcWpnFM6YifXQD -> file/ls: unrecognized type: Raw
@@ -89,6 +285,8 @@ package ipfs
 //   "Code": 0,
 //   "Type": "error"
 // }
+
+// QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq -> file/ls: unexpected EOF
 
 // $ curl -v -X POST "http://127.0.0.1:5001/api/v0/files/stat?arg=/ipfs/QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq" | jq
 //   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current

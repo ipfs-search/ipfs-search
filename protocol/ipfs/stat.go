@@ -11,9 +11,9 @@ import (
 const partialSize = 262144
 
 type statResult struct {
-	Hash string
-	Type string
-	Size int64 // unixfs size
+	Type           string
+	Size           uint64
+	CumulativeSize uint64
 }
 
 func typeFromString(strType string) t.ResourceType {
@@ -33,9 +33,6 @@ func typeFromString(strType string) t.ResourceType {
 func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 	const cmd = "files/stat"
 
-	ctx, cancel := context.WithTimeout(ctx, i.config.StatTimeout)
-	defer cancel()
-
 	path := absolutePath(r)
 	req := i.shell.Request(cmd, path)
 
@@ -45,9 +42,20 @@ func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 		return err
 	}
 
+	rType := typeFromString(result.Type)
+
+	var size uint64
+	switch rType {
+	case t.FileType:
+		size = result.Size
+	case t.DirectoryType:
+		// For directories, the size is always 0, hence CumulativeSize is appropriate.
+		size = result.CumulativeSize
+	}
+
 	r.Stat = t.Stat{
-		Type: typeFromString(result.Type),
-		Size: uint64(result.Size),
+		Type: rType,
+		Size: size,
 	}
 
 	// Override type for *unreferenced* partials, based on size

@@ -6,8 +6,6 @@ import (
 	"net/url"
 
 	ipfs "github.com/ipfs/go-ipfs-api"
-	unixfs "github.com/ipfs/go-unixfs"
-	unixfs_pb "github.com/ipfs/go-unixfs/pb"
 
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/protocol"
@@ -51,17 +49,6 @@ func (i *IPFS) GatewayURL(r *t.AnnotatedResource) string {
 	}
 
 	return url.String()
-}
-
-func typeFromPb(pbType unixfs_pb.Data_DataType) t.ResourceType {
-	switch pbType {
-	case unixfs.TRaw, unixfs.TFile:
-		return t.FileType
-	case unixfs.THAMTShard, unixfs.TDirectory, unixfs.TMetadata:
-		return t.DirectoryType
-	default:
-		return t.UnsupportedType
-	}
 }
 
 // New returns a new IPFS protocol.
