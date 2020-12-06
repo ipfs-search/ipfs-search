@@ -24,6 +24,11 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 		panic("invalid protocol")
 	}
 
+	if r.Type == t.UnsupportedType {
+		// Crawl should never be called with an unsupported type.
+		panic("unsupported type")
+	}
+
 	existing, err := c.getExistingItem(ctx, r)
 	if err != nil {
 		return err

@@ -132,9 +132,21 @@ func (s *CrawlerTestSuite) TestCrawlUnsupportedType() {
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
 		Stat: t.Stat{
-			Type: t.UnsupportedType,
+			Type: t.UndefinedType,
 		},
 	}
+
+	// Mock assertions
+	s.protocol.
+		On("Stat", mock.Anything, r).
+		Run(func(args mock.Arguments) {
+			r := args.Get(1).(*t.AnnotatedResource)
+			r.Stat = t.Stat{
+				Type: t.UnsupportedType,
+			}
+		}).
+		Return(nil).
+		Once()
 
 	// Mock assertions
 	s.invalidIdx.
