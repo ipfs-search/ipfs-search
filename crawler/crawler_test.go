@@ -333,6 +333,8 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 	s.assertExpectations()
 }
 
+// TODO: Test updates!
+
 func TestCrawlerTestSuite(t *testing.T) {
 	suite.Run(t, new(CrawlerTestSuite))
 }
