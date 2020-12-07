@@ -2,7 +2,7 @@ package crawler
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"golang.org/x/sync/errgroup"
 	"math/rand"
 
@@ -31,15 +31,18 @@ func (c *Crawler) crawlDir(ctx context.Context, r *t.AnnotatedResource, properti
 	return wg.Wait()
 }
 
-func resourceIndexType(r *t.AnnotatedResource) indexTypes.LinkType {
+func resourceToLinkType(r *t.AnnotatedResource) (indexTypes.LinkType, error) {
 	switch r.Type {
 	case t.FileType:
-		return indexTypes.FileLinkType
+		return indexTypes.FileLinkType, nil
 	case t.DirectoryType:
-		return indexTypes.DirectoryLinkType
+		return indexTypes.DirectoryLinkType, nil
+	case t.UndefinedType:
+		return indexTypes.UnknownLinkType, nil
+	case t.UnsupportedType:
+		return indexTypes.UnsupportedLinkType, nil
 	default:
-		// Behaviour for other types not (yet) defined.
-		panic(fmt.Sprintf("Unsupported type returned from listing: %s", r.Type))
+		return "", UnexpectedTypeError{r.Type}
 	}
 }
 
@@ -58,18 +61,22 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 			// TODO: Implement timeout waiting for new directory entries here.
 
 			// Add link
+			linkType, err := resourceToLinkType(entry)
+			if err != nil {
+				return err
+			}
+
 			properties.Links = append(properties.Links, indexTypes.Link{
 				Hash: entry.ID,
 				Name: entry.Reference.Name,
 				Size: entry.Size,
-				Type: resourceIndexType(entry),
+				Type: linkType,
 			})
 
 			// Queue directory entry. Fail hard on error; prefer less over incomplete
 			// or inconsistent data.
 			// TODO: Consider doing this in a separate Goroutine, as it's blocking.
-			err := c.queueDirEntry(ctx, entry)
-			if err != nil {
+			if err := c.queueDirEntry(ctx, entry); err != nil {
 				return err
 			}
 		}
@@ -86,12 +93,15 @@ func (c *Crawler) queueDirEntry(ctx context.Context, r *t.AnnotatedResource) err
 	priority := uint8(1 + rand.Intn(7))
 
 	switch r.Type {
+	case t.UndefinedType:
+		return c.queues.Hashes.Publish(ctx, r, priority)
 	case t.FileType:
 		return c.queues.Files.Publish(ctx, r, priority)
 	case t.DirectoryType:
 		return c.queues.Directories.Publish(ctx, r, priority)
+	case t.UnsupportedType:
+		return c.indexInvalid(ctx, r, errors.New(indexTypes.UnsupportedTypeError))
 	default:
-		// Behaviour for other types not (yet) defined.
-		panic(fmt.Sprintf("Unsupported type returned from listing: %s", r.Type))
+		return UnexpectedTypeError{r.Type}
 	}
 }

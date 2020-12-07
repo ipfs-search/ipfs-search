@@ -32,6 +32,7 @@ type CrawlerTestSuite struct {
 
 	dirQ  *queue.Mock
 	fileQ *queue.Mock
+	hashQ *queue.Mock
 }
 
 func (s *CrawlerTestSuite) SetupTest() {
@@ -46,11 +47,12 @@ func (s *CrawlerTestSuite) SetupTest() {
 		Invalid:     s.invalidIdx,
 	}
 
-	s.fileQ, s.dirQ = &queue.Mock{}, &queue.Mock{}
+	s.fileQ, s.dirQ, s.hashQ = &queue.Mock{}, &queue.Mock{}, &queue.Mock{}
 
 	s.queues = Queues{
 		Directories: s.dirQ,
 		Files:       s.fileQ,
+		Hashes:      s.hashQ,
 	}
 	s.protocol = &protocol.Mock{}
 	s.extractor = &extractor.Mock{}
@@ -65,6 +67,7 @@ func (s *CrawlerTestSuite) assertExpectations() {
 		s.invalidIdx,
 		s.fileQ,
 		s.dirQ,
+		s.hashQ,
 		s.protocol,
 		s.extractor,
 	)
@@ -321,6 +324,26 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 		},
 	}
 
+	unsupportedEntry := t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv",
+		},
+		Stat: t.Stat{
+			Type: t.UnsupportedType,
+		},
+	}
+
+	unknownEntry := t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv",
+		},
+		Stat: t.Stat{
+			Type: t.UndefinedType,
+		},
+	}
+
 	s.protocol.
 		On("Ls", mock.Anything, r, mock.AnythingOfType("chan<- *types.AnnotatedResource")).
 		Run(func(args mock.Arguments) {
@@ -328,6 +351,8 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 			entryChan := args.Get(2).(chan<- *t.AnnotatedResource)
 			entryChan <- &fileEntry
 			entryChan <- &dirEntry
+			entryChan <- &unsupportedEntry
+			entryChan <- &unknownEntry
 		}).
 		Return(nil).
 		Once()
@@ -348,7 +373,26 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 						Size: dirEntry.Size,
 						Type: indexTypes.DirectoryLinkType,
 					},
+					indexTypes.Link{
+						Hash: unsupportedEntry.ID,
+						Name: unsupportedEntry.Reference.Name,
+						Size: unsupportedEntry.Size,
+						Type: indexTypes.UnsupportedLinkType,
+					},
+					indexTypes.Link{
+						Hash: unknownEntry.ID,
+						Name: unknownEntry.Reference.Name,
+						Size: unknownEntry.Size,
+						Type: indexTypes.UnknownLinkType,
+					},
 				})
+		})).
+		Return(nil).
+		Once()
+
+	s.invalidIdx.
+		On("Index", mock.Anything, unsupportedEntry.ID, mock.MatchedBy(func(f *indexTypes.Invalid) bool {
+			return s.Equal(f.Error, "unsupported type")
 		})).
 		Return(nil).
 		Once()
@@ -363,6 +407,13 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 	s.dirQ.
 		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
 			return s.Equal(*f, dirEntry)
+		}), mock.AnythingOfType("uint8")).
+		Return(nil).
+		Once()
+
+	s.hashQ.
+		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
+			return s.Equal(*f, unknownEntry)
 		}), mock.AnythingOfType("uint8")).
 		Return(nil).
 		Once()

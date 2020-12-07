@@ -3,8 +3,10 @@ package types
 type LinkType string
 
 const (
-	DirectoryLinkType = "Directory"
-	FileLinkType      = "File"
+	DirectoryLinkType   = "Directory"
+	FileLinkType        = "File"
+	UnknownLinkType     = "Unknown"
+	UnsupportedLinkType = "Unsupported"
 )
 
 type Link struct {
