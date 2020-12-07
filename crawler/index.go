@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/ipfs-search/ipfs-search/index"
@@ -34,6 +35,13 @@ func makeDocument(r *t.AnnotatedResource) indexTypes.Document {
 		// Ref: https://www.elastic.co/guide/en/elasticsearch/reference/master/keyword.html#constant-keyword-field-type
 		// Type: r.Type,
 	}
+}
+
+func (c *Crawler) indexInvalid(ctx context.Context, r *t.AnnotatedResource, err error) error {
+	// Index unsupported items as invalid.
+	return c.indexes.Invalid.Index(ctx, r.ID, &indexTypes.Invalid{
+		Error: err.Error(),
+	})
 }
 
 func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
@@ -70,10 +78,7 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 
 	case t.UnsupportedType:
 		// Index unsupported items as invalid.
-		index = c.indexes.Invalid
-		properties = &indexTypes.Invalid{
-			Error: indexTypes.UnsupportedTypeError,
-		}
+		return c.indexInvalid(ctx, r, errors.New(indexTypes.UnsupportedTypeError))
 
 	case t.PartialType:
 		// Not indexing partials, we're done.

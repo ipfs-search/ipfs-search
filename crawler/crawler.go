@@ -52,7 +52,10 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 		// TODO: Implement a timeout for Stat calls here.
 
 		if err := c.protocol.Stat(ctx, r); err != nil {
-			// Depending on error, index as invalid
+			if c.protocol.IsInvalidResourceErr(err) {
+				// Resource is invalid, index as such, overwriting previous error.
+				return c.indexInvalid(ctx, r, err)
+			}
 			return err
 		}
 	}
