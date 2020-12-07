@@ -85,11 +85,13 @@ func (s *LsTestSuite) TestLsHAMTDirectory() {
 			Body: []byte(`
 				{"Objects":[{"Hash":"/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp","Links":[{"Name":"Back_of_the_moon.html","Hash":"bafkreidnsi74hf7n2dtidxnqjdyr6lxidnsikdgwxktd7m3duwkuwl2u5u","Size":5169,"Type":2,"Target":""}]}]}
 				{"Objects":[{"Hash":"/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp","Links":[{"Name":"Munchh..html","Hash":"bafkreice7raasrty3makrm3gyg7sjqimdhhx6pdezh2noh3jlzwmvdcooy","Size":4986,"Type":2,"Target":""}]}]}
+				{"Objects":[{"Hash":"/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp","Links":[{"Name":"directory","Hash":"bafkreice7raasrty3makrm3gyg7sjqimdhhx6pdezh2noh3jlzwmvdcooy","Size":4986,"Type":1,"Target":""}]}]}
+				{"Objects":[{"Hash":"/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp","Links":[{"Name":"unsupported","Hash":"bafkreice7raasrty3makrm3gyg7sjqimdhhx6pdezh2noh3jlzwmvdcooy","Size":4986,"Type":4,"Target":""}]}]}
 			`),
 		}).
 		Once()
 
-	resultChan := make(chan *t.AnnotatedResource, 2)
+	resultChan := make(chan *t.AnnotatedResource, 4)
 	err := s.ipfs.Ls(s.ctx, r, resultChan)
 
 	s.NoError(err)
@@ -125,6 +127,38 @@ func (s *LsTestSuite) TestLsHAMTDirectory() {
 		},
 		Stat: t.Stat{
 			Type: t.FileType,
+			Size: 4986,
+		},
+	})
+
+	lsRes = <-resultChan
+	s.Equal(lsRes, &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "bafkreice7raasrty3makrm3gyg7sjqimdhhx6pdezh2noh3jlzwmvdcooy",
+		},
+		Reference: t.Reference{
+			Parent: r.Resource,
+			Name:   "directory",
+		},
+		Stat: t.Stat{
+			Type: t.DirectoryType,
+			Size: 4986,
+		},
+	})
+
+	lsRes = <-resultChan
+	s.Equal(lsRes, &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "bafkreice7raasrty3makrm3gyg7sjqimdhhx6pdezh2noh3jlzwmvdcooy",
+		},
+		Reference: t.Reference{
+			Parent: r.Resource,
+			Name:   "unsupported",
+		},
+		Stat: t.Stat{
+			Type: t.UnsupportedType,
 			Size: 4986,
 		},
 	})
@@ -236,6 +270,42 @@ func (s *LsTestSuite) TestLsInvalid() {
 
 		s.True(s.ipfs.IsInvalidResourceErr(err))
 	}
+}
+
+func (s *LsTestSuite) TestLsNonInvalid500() {
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8", // file/ls: proto: required field "Type" not set
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/ls?arg=%%2Fipfs%%2F%s&resolve-type=false&size=false&stream=true", r.ID)
+
+	msgStruct := &struct {
+		Message string
+		Code    int
+		Type    string
+	}{
+		"oek oek", 0, "error",
+	}
+
+	s.mockAPIHandler.
+		On("Handle", "POST", rURL, mock.Anything).
+		Return(httpmock.Response{
+			Header: s.responseHeader,
+			Status: 500,
+			Body:   httpmock.ToJSON(msgStruct),
+		}).
+		Once()
+
+	resultChan := make(chan<- *t.AnnotatedResource)
+	err := s.ipfs.Ls(s.ctx, r, resultChan)
+
+	s.Error(err)
+	s.mockAPIHandler.AssertExpectations(s.T())
+
+	s.False(s.ipfs.IsInvalidResourceErr(err))
 }
 
 func TestLsTestSuite(t *testing.T) {
