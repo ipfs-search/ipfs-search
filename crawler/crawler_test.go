@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -152,6 +153,47 @@ func (s *CrawlerTestSuite) TestCrawlUnsupportedType() {
 	s.invalidIdx.
 		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Invalid) bool {
 			return s.Equal(f.Error, "unsupported type")
+		})).
+		Return(nil).
+		Once()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Undefined types should index as invalid.
+	s.NoError(err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlInvalid() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Stat: t.Stat{
+			Type: t.UndefinedType,
+		},
+	}
+
+	invalidErr := errors.New("invalid")
+
+	// Mock assertions
+	s.protocol.
+		On("Stat", mock.Anything, r).
+		Return(invalidErr).
+		Once()
+
+	s.protocol.
+		On("IsInvalidResourceErr", invalidErr).
+		Return(true).
+		Once()
+
+	// Mock assertions
+	s.invalidIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Invalid) bool {
+			return s.Equal(f.Error, invalidErr.Error())
 		})).
 		Return(nil).
 		Once()

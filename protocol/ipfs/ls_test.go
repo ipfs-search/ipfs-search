@@ -21,6 +21,7 @@ type LsTestSuite struct {
 
 	mockAPIHandler *httpmock.MockHandler
 	mockAPIServer  *httpmock.Server
+	responseHeader http.Header
 }
 
 func (s *LsTestSuite) SetupTest() {
@@ -28,6 +29,9 @@ func (s *LsTestSuite) SetupTest() {
 
 	s.mockAPIHandler = &httpmock.MockHandler{}
 	s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
+	s.responseHeader = http.Header{
+		"Content-Type": []string{"application/json"},
+	}
 
 	cfg := DefaultConfig()
 	cfg.IPFSAPIURL = s.mockAPIServer.URL()
@@ -189,6 +193,14 @@ func (s *LsTestSuite) TestNormalDirectory() {
 }
 
 func (s *LsTestSuite) TestLsInvalid() {
+	errors := []string{
+		"proto: required field \"Type\" not set",             // Example: QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8
+		"proto: unixfs_pb.Data: illegal tag 0 (wire type 0)", // Example: QmQkaTUmqcdGAXKaFXpe8t8yaEDGHe7xGQJHcfihrzAFTj
+		"unexpected EOF",                 // Example: QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq
+		"unrecognized object type: 144",  // Example: z43AaGEvwdfzjrCZ3Sq7DKxdDHrwoaPQDtqF4jfdkNEVTiqGVFW
+		"not unixfs node (proto or raw)", // Example: z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE
+	}
+
 	r := &t.AnnotatedResource{
 		Resource: &t.Resource{
 			Protocol: t.IPFSProtocol,
@@ -198,21 +210,32 @@ func (s *LsTestSuite) TestLsInvalid() {
 
 	rURL := fmt.Sprintf("/api/v0/ls?arg=%%2Fipfs%%2F%s&resolve-type=false&size=false&stream=true", r.ID)
 
-	// Setup mock handler
-	s.mockAPIHandler.
-		On("Handle", "POST", rURL, mock.Anything).
-		Return(httpmock.Response{
-			Status: 500,
-			Body:   []byte(`{"Message":"proto: required field \"Type\" not set","Code":0,"Type":"error"}`),
-		}).
-		Once()
+	for _, errStr := range errors {
+		msgStruct := &struct {
+			Message string
+			Code    int
+			Type    string
+		}{
+			errStr, 0, "error",
+		}
 
-	resultChan := make(chan<- *t.AnnotatedResource)
-	err := s.ipfs.Ls(s.ctx, r, resultChan)
+		s.mockAPIHandler.
+			On("Handle", "POST", rURL, mock.Anything).
+			Return(httpmock.Response{
+				Header: s.responseHeader,
+				Status: 500,
+				Body:   httpmock.ToJSON(msgStruct),
+			}).
+			Once()
 
-	// TODO: Test for error contents
-	s.Error(err)
-	s.mockAPIHandler.AssertExpectations(s.T())
+		resultChan := make(chan<- *t.AnnotatedResource)
+		err := s.ipfs.Ls(s.ctx, r, resultChan)
+
+		s.Error(err)
+		s.mockAPIHandler.AssertExpectations(s.T())
+
+		s.True(s.ipfs.IsInvalidResourceErr(err))
+	}
 }
 
 func TestLsTestSuite(t *testing.T) {

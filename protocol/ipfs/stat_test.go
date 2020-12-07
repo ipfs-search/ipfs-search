@@ -21,6 +21,7 @@ type StatTestSuite struct {
 
 	mockAPIHandler *httpmock.MockHandler
 	mockAPIServer  *httpmock.Server
+	responseHeader http.Header
 }
 
 func (s *StatTestSuite) SetupTest() {
@@ -28,6 +29,9 @@ func (s *StatTestSuite) SetupTest() {
 
 	s.mockAPIHandler = &httpmock.MockHandler{}
 	s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
+	s.responseHeader = http.Header{
+		"Content-Type": []string{"application/json"},
+	}
 
 	cfg := DefaultConfig()
 	cfg.IPFSAPIURL = s.mockAPIServer.URL()
@@ -53,7 +57,8 @@ func (s *StatTestSuite) TestDirectory() {
 	s.mockAPIHandler.
 		On("Handle", "POST", rURL, mock.Anything).
 		Return(httpmock.Response{
-			Body: []byte(`{"Hash":"QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv","Size":0,"CumulativeSize":6544,"Blocks":7,"Type":"directory"}`),
+			Header: s.responseHeader,
+			Body:   []byte(`{"Hash":"QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv","Size":0,"CumulativeSize":6544,"Blocks":7,"Type":"directory"}`),
 		}).
 		Once()
 
@@ -82,7 +87,8 @@ func (s *StatTestSuite) TestSinglePartFile() {
 	s.mockAPIHandler.
 		On("Handle", "POST", rURL, mock.Anything).
 		Return(httpmock.Response{
-			Body: []byte(`{"Hash":"QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB","Size":1091,"CumulativeSize":1102,"Blocks":0,"Type":"file"}`),
+			Header: s.responseHeader,
+			Body:   []byte(`{"Hash":"QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB","Size":1091,"CumulativeSize":1102,"Blocks":0,"Type":"file"}`),
 		}).
 		Once()
 
@@ -111,7 +117,8 @@ func (s *StatTestSuite) TestMultiPartFile() {
 	s.mockAPIHandler.
 		On("Handle", "POST", rURL, mock.Anything).
 		Return(httpmock.Response{
-			Body: []byte(`{"Hash":"Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi","Size":4475792,"CumulativeSize":4476917,"Blocks":18,"Type":"file"}`),
+			Header: s.responseHeader,
+			Body:   []byte(`{"Hash":"Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi","Size":4475792,"CumulativeSize":4476917,"Blocks":18,"Type":"file"}`),
 		}).
 		Once()
 
@@ -140,7 +147,8 @@ func (s *StatTestSuite) TestUnreferencedPartial() {
 	s.mockAPIHandler.
 		On("Handle", "POST", rURL, mock.Anything).
 		Return(httpmock.Response{
-			Body: []byte(`{"Hash":"QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p","Size":262144,"CumulativeSize":262158,"Blocks":0,"Type":"file"}`),
+			Header: s.responseHeader,
+			Body:   []byte(`{"Hash":"QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p","Size":262144,"CumulativeSize":262158,"Blocks":0,"Type":"file"}`),
 		}).
 		Once()
 
@@ -176,7 +184,8 @@ func (s *StatTestSuite) TestReferencedPartial() {
 	s.mockAPIHandler.
 		On("Handle", "POST", rURL, mock.Anything).
 		Return(httpmock.Response{
-			Body: []byte(`{"Hash":"QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p","Size":262144,"CumulativeSize":262158,"Blocks":0,"Type":"file"}`),
+			Header: s.responseHeader,
+			Body:   []byte(`{"Hash":"QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p","Size":262144,"CumulativeSize":262158,"Blocks":0,"Type":"file"}`),
 		}).
 		Once()
 
@@ -191,7 +200,51 @@ func (s *StatTestSuite) TestReferencedPartial() {
 	})
 }
 
-// TODO: TestInvalid()
+func (s *StatTestSuite) TestInvalid() {
+	errors := []string{
+		"proto: required field \"Type\" not set",             // Example: QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8
+		"proto: unixfs_pb.Data: illegal tag 0 (wire type 0)", // Example: QmQkaTUmqcdGAXKaFXpe8t8yaEDGHe7xGQJHcfihrzAFTj
+		"unexpected EOF",                 // Example: QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq
+		"unrecognized object type: 144",  // Example: z43AaGEvwdfzjrCZ3Sq7DKxdDHrwoaPQDtqF4jfdkNEVTiqGVFW
+		"not unixfs node (proto or raw)", // Example: z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE
+	}
+
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8", // proto: required field \"Type\" not set
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
+
+	for _, errStr := range errors {
+		msgStruct := &struct {
+			Message string
+			Code    int
+			Type    string
+		}{
+			errStr, 0, "error",
+		}
+
+		s.mockAPIHandler.
+			On("Handle", "POST", rURL, mock.Anything).
+			Return(httpmock.Response{
+				Header: s.responseHeader,
+				Status: 500,
+				Body:   httpmock.ToJSON(msgStruct),
+			}).
+			Once()
+
+		err := s.ipfs.Stat(s.ctx, r)
+
+		s.Error(err)
+		s.mockAPIHandler.AssertExpectations(s.T())
+
+		s.True(s.ipfs.IsInvalidResourceErr(err))
+	}
+
+}
 
 // TODO: TestGeneralError()
 
@@ -226,98 +279,6 @@ func TestStatTestSuite(t *testing.T) {
 //   "Type": "file"
 // }
 
-// $ curl -v -X POST "http://127.0.0.1:5001/api/v0/files/stat?arg=/ipfs/QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8" | jq
-//   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//                                  Dload  Upload   Total   Spent    Left  Speed
-//   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1...
-// * TCP_NODELAY set
-// * Connected to 127.0.0.1 (127.0.0.1) port 5001 (#0)
-// > POST /api/v0/files/stat?arg=/ipfs/QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8 HTTP/1.1
-// > Host: 127.0.0.1:5001
-// > User-Agent: curl/7.54.0
-// > Accept: */*
-// >
-// < HTTP/1.1 500 Internal Server Error
-// < Access-Control-Allow-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Access-Control-Expose-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Content-Type: application/json
-// < Server: go-ipfs/0.6.0
-// < Trailer: X-Stream-Error
-// < Vary: Origin
-// < Date: Sun, 06 Dec 2020 14:05:48 GMT
-// < Transfer-Encoding: chunked
-// <
-// { [88 bytes data]
-// 100    77    0    77    0     0  59597      0 --:--:-- --:--:-- --:--:-- 77000
-// * Connection #0 to host 127.0.0.1 left intact
-// {
-//   "Message": "proto: required field \"Type\" not set",
-//   "Code": 0,
-//   "Type": "error"
-// }
-
-// $ curl -v -X POST "http://127.0.0.1:5001/api/v0/files/stat?arg=/ipfs/QmQkaTUmqcdGAXKaFXpe8t8yaEDGHe7xGQJHcfihrzAFTj" | jq
-//   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//                                  Dload  Upload   Total   Spent    Left  Speed
-//   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1...
-// * TCP_NODELAY set
-// * Connected to 127.0.0.1 (127.0.0.1) port 5001 (#0)
-// > POST /api/v0/files/stat?arg=/ipfs/QmQkaTUmqcdGAXKaFXpe8t8yaEDGHe7xGQJHcfihrzAFTj HTTP/1.1
-// > Host: 127.0.0.1:5001
-// > User-Agent: curl/7.54.0
-// > Accept: */*
-// >
-// < HTTP/1.1 500 Internal Server Error
-// < Access-Control-Allow-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Access-Control-Expose-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Content-Type: application/json
-// < Server: go-ipfs/0.6.0
-// < Trailer: X-Stream-Error
-// < Vary: Origin
-// < Date: Sun, 06 Dec 2020 14:06:15 GMT
-// < Transfer-Encoding: chunked
-// <
-// { [100 bytes data]
-// 100    89    0    89    0     0  24211      0 --:--:-- --:--:-- --:--:-- 29666
-// * Connection #0 to host 127.0.0.1 left intact
-// {
-//   "Message": "proto: unixfs_pb.Data: illegal tag 0 (wire type 0)",
-//   "Code": 0,
-//   "Type": "error"
-// }
-
-// QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq -> file/ls: unexpected EOF
-
-// $ curl -v -X POST "http://127.0.0.1:5001/api/v0/files/stat?arg=/ipfs/QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq" | jq
-//   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//                                  Dload  Upload   Total   Spent    Left  Speed
-//   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1...
-// * TCP_NODELAY set
-// * Connected to 127.0.0.1 (127.0.0.1) port 5001 (#0)
-// > POST /api/v0/files/stat?arg=/ipfs/QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq HTTP/1.1
-// > Host: 127.0.0.1:5001
-// > User-Agent: curl/7.54.0
-// > Accept: */*
-// >
-// < HTTP/1.1 500 Internal Server Error
-// < Access-Control-Allow-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Access-Control-Expose-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Content-Type: application/json
-// < Server: go-ipfs/0.6.0
-// < Trailer: X-Stream-Error
-// < Vary: Origin
-// < Date: Sun, 06 Dec 2020 14:06:48 GMT
-// < Transfer-Encoding: chunked
-// <
-// { [64 bytes data]
-// 100    53    0    53    0     0  46207      0 --:--:-- --:--:-- --:--:-- 53000
-// * Connection #0 to host 127.0.0.1 left intact
-// {
-//   "Message": "unexpected EOF",
-//   "Code": 0,
-//   "Type": "error"
-// }
-
 // $ curl -v -X POST "http://127.0.0.1:5001/api/v0/files/stat?arg=/ipfs/QmToQ3m6g8XdnMhoMR2hdxrvFtKAEX2DMcWpnFM6YifXQD" | jq
 //   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
 //                                  Dload  Upload   Total   Spent    Left  Speed
@@ -348,68 +309,6 @@ func TestStatTestSuite(t *testing.T) {
 //   "CumulativeSize": 262158,
 //   "Blocks": 0,
 //   "Type": "file"
-// }
-
-// Ethereum block
-// $ curl -v -X POST "http://127.0.0.1:5001/api/v0/files/stat?arg=/ipfs/z43AaGEvwdfzjrCZ3Sq7DKxdDHrwoaPQDtqF4jfdkNEVTiqGVFW" | jq
-//   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//                                  Dload  Upload   Total   Spent    Left  Speed
-//   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1...
-// * TCP_NODELAY set
-// * Connected to 127.0.0.1 (127.0.0.1) port 5001 (#0)
-// > POST /api/v0/files/stat?arg=/ipfs/z43AaGEvwdfzjrCZ3Sq7DKxdDHrwoaPQDtqF4jfdkNEVTiqGVFW HTTP/1.1
-// > Host: 127.0.0.1:5001
-// > User-Agent: curl/7.54.0
-// > Accept: */*
-// >
-// < HTTP/1.1 500 Internal Server Error
-// < Access-Control-Allow-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Access-Control-Expose-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Content-Type: application/json
-// < Server: go-ipfs/0.6.0
-// < Trailer: X-Stream-Error
-// < Vary: Origin
-// < Date: Sun, 06 Dec 2020 14:09:57 GMT
-// < Transfer-Encoding: chunked
-// <
-// { [79 bytes data]
-// 100    68    0    68    0     0  55737      0 --:--:-- --:--:-- --:--:-- 68000
-// * Connection #0 to host 127.0.0.1 left intact
-// {
-//   "Message": "unrecognized object type: 144",
-//   "Code": 0,
-//   "Type": "error"
-// }
-
-// Git repo
-// $ curl -v -X POST "http://127.0.0.1:5001/api/v0/files/stat?arg=/ipfs/z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE" | jq
-//   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//                                  Dload  Upload   Total   Spent    Left  Speed
-//   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1...
-// * TCP_NODELAY set
-// * Connected to 127.0.0.1 (127.0.0.1) port 5001 (#0)
-// > POST /api/v0/files/stat?arg=/ipfs/z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE HTTP/1.1
-// > Host: 127.0.0.1:5001
-// > User-Agent: curl/7.54.0
-// > Accept: */*
-// >
-// < HTTP/1.1 500 Internal Server Error
-// < Access-Control-Allow-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Access-Control-Expose-Headers: X-Stream-Output, X-Chunked-Output, X-Content-Length
-// < Content-Type: application/json
-// < Server: go-ipfs/0.6.0
-// < Trailer: X-Stream-Error
-// < Vary: Origin
-// < Date: Sun, 06 Dec 2020 14:10:29 GMT
-// < Transfer-Encoding: chunked
-// <
-// { [80 bytes data]
-// 100    69    0    69    0     0  63129      0 --:--:-- --:--:-- --:--:-- 69000
-// * Connection #0 to host 127.0.0.1 left intact
-// {
-//   "Message": "not unixfs node (proto or raw)",
-//   "Code": 0,
-//   "Type": "error"
 // }
 
 // Correct directory
