@@ -7,5 +7,5 @@ import (
 type Indexes struct {
 	Files       index.Index
 	Directories index.Index
-	Invalid     index.Index
+	Invalids    index.Index
 }

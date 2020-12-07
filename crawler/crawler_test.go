@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"testing"
+	"time"
 
 	"github.com/ipfs-search/ipfs-search/extractor"
 	"github.com/ipfs-search/ipfs-search/index"
@@ -44,7 +45,7 @@ func (s *CrawlerTestSuite) SetupTest() {
 	s.indexes = Indexes{
 		Files:       s.fileIdx,
 		Directories: s.dirIdx,
-		Invalid:     s.invalidIdx,
+		Invalids:    s.invalidIdx,
 	}
 
 	s.fileQ, s.dirQ, s.hashQ = &queue.Mock{}, &queue.Mock{}, &queue.Mock{}
@@ -71,6 +72,23 @@ func (s *CrawlerTestSuite) assertExpectations() {
 		s.protocol,
 		s.extractor,
 	)
+}
+
+func (s *CrawlerTestSuite) assertNotExists(rID string) {
+	s.fileIdx.
+		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Once()
+
+	s.dirIdx.
+		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Once()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Once()
 }
 
 func (s *CrawlerTestSuite) TestCrawlInvalidProtocol() {
@@ -120,6 +138,8 @@ func (s *CrawlerTestSuite) TestCrawlUndefinedType() {
 		Return(nil).
 		Once()
 
+	s.assertNotExists(r.Resource.ID)
+
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
 
@@ -159,6 +179,8 @@ func (s *CrawlerTestSuite) TestCrawlUnsupportedType() {
 		})).
 		Return(nil).
 		Once()
+
+	s.assertNotExists(r.Resource.ID)
 
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
@@ -201,6 +223,8 @@ func (s *CrawlerTestSuite) TestCrawlInvalid() {
 		Return(nil).
 		Once()
 
+	s.assertNotExists(r.Resource.ID)
+
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
 
@@ -217,9 +241,22 @@ func (s *CrawlerTestSuite) TestCrawlPartialType() {
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
 		Stat: t.Stat{
-			Type: t.PartialType,
+			Type: t.UndefinedType,
 		},
 	}
+
+	s.protocol.
+		On("Stat", mock.Anything, r).
+		Run(func(args mock.Arguments) {
+			r := args.Get(1).(*t.AnnotatedResource)
+			r.Stat = t.Stat{
+				Type: t.PartialType,
+			}
+		}).
+		Return(nil).
+		Once()
+
+	s.assertNotExists(r.Resource.ID)
 
 	// Note how nothing is indexed here!
 
@@ -265,6 +302,8 @@ func (s *CrawlerTestSuite) TestCrawlFileType() {
 		})).
 		Return(nil).
 		Once()
+
+	s.assertNotExists(r.Resource.ID)
 
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
@@ -418,6 +457,8 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 		Return(nil).
 		Once()
 
+	s.assertNotExists(r.Resource.ID)
+
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
 
@@ -426,7 +467,234 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 	s.assertExpectations()
 }
 
-// TODO: Test updates!
+func (s *CrawlerTestSuite) TestCrawlUpdateLastSeen() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+	}
+
+	// File is found, last seen 1 hour
+	s.fileIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Run(func(args mock.Arguments) {
+			u := args.Get(2).(*indexTypes.Update)
+			u.LastSeen = time.Now().Add(-2 * time.Hour)
+		}).
+		Return(true, nil).
+		Once()
+
+	s.dirIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.fileIdx.
+		On("Update", mock.Anything, r.Resource.ID, mock.MatchedBy(func(u *indexTypes.Update) bool {
+			return s.Empty(u.References) &&
+				s.WithinDuration(u.LastSeen, time.Now(), time.Second)
+		})).
+		Return(nil).
+		Once()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlAddReference() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+			},
+			Name: "NewReference.pdf",
+		},
+	}
+
+	// File is found, very recently, but a new reference is found.
+	s.fileIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Run(func(args mock.Arguments) {
+			u := args.Get(2).(*indexTypes.Update)
+			u.LastSeen = time.Now()
+			u.References = indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: "Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi",
+					Name:       "ExistingReference.pdf",
+				},
+			}
+		}).
+		Return(true, nil).
+		Once()
+
+	s.dirIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.fileIdx.
+		On("Update", mock.Anything, r.Resource.ID, mock.MatchedBy(func(u *indexTypes.Update) bool {
+			return s.ElementsMatch(u.References, indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: "Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi",
+					Name:       "ExistingReference.pdf",
+				},
+				indexTypes.Reference{
+					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+					Name:       "NewReference.pdf",
+				},
+			}) &&
+				s.WithinDuration(u.LastSeen, time.Now(), time.Second)
+		})).
+		Return(nil).
+		Once()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlSameReference() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+			},
+			Name: "NewReference.pdf",
+		},
+	}
+
+	// File is found, very recently, but a new reference is found.
+	s.fileIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Run(func(args mock.Arguments) {
+			u := args.Get(2).(*indexTypes.Update)
+			u.LastSeen = time.Now()
+			u.References = indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+					Name:       "NewReference.pdf",
+				},
+			}
+		}).
+		Return(true, nil).
+		Once()
+
+	s.dirIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlSameReferenceDifferentName() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+			},
+			Name: "NewReference.pdf",
+		},
+	}
+
+	// File is found, very recently, but a new reference is found.
+	s.fileIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Run(func(args mock.Arguments) {
+			u := args.Get(2).(*indexTypes.Update)
+			u.LastSeen = time.Now()
+			u.References = indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+					Name:       "NewName.pdf",
+				},
+			}
+		}).
+		Return(true, nil).
+		Once()
+
+	s.dirIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.fileIdx.
+		On("Update", mock.Anything, r.Resource.ID, mock.MatchedBy(func(u *indexTypes.Update) bool {
+			return s.ElementsMatch(u.References, indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+					Name:       "NewName.pdf",
+				},
+				indexTypes.Reference{
+					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+					Name:       "NewReference.pdf",
+				},
+			}) &&
+				s.WithinDuration(u.LastSeen, time.Now(), time.Second)
+		})).
+		Return(nil).
+		Once()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
 
 func TestCrawlerTestSuite(t *testing.T) {
 	suite.Run(t, new(CrawlerTestSuite))
