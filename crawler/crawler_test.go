@@ -605,6 +605,39 @@ func (s *CrawlerTestSuite) TestCrawlUpdateLastSeen() {
 	s.assertExpectations()
 }
 
+func (s *CrawlerTestSuite) TestCrawlNotUpdateInvalid() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+	}
+
+	// File is found, last seen 1 hour
+	s.fileIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Once()
+
+	s.dirIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(true, nil).
+		Maybe()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
+
 func (s *CrawlerTestSuite) TestCrawlAddReference() {
 	// Prepare resource
 	r := &t.AnnotatedResource{
