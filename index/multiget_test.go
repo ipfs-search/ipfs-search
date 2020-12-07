@@ -9,12 +9,12 @@ import (
 type MultiGetTestSuite struct {
 	suite.Suite
 	ctx  context.Context
-	mock *mockIndex
+	mock *Mock
 }
 
 func (s *MultiGetTestSuite) SetupTest() {
 	s.ctx = context.Background()
-	s.mock = &mockIndex{}
+	s.mock = &Mock{}
 	s.mock.Test(s.T())
 }
 
@@ -24,7 +24,7 @@ func (s *MultiGetTestSuite) TestMultiGetNotFound() {
 
 	s.mock.On("Get", s.ctx, "objId", dst, []string{"testField"}).Return(false, nil)
 
-	index, err := MultiGet(s.ctx, []Getter{s.mock}, "objId", dst, "testField")
+	index, err := MultiGet(s.ctx, []Index{s.mock}, "objId", dst, "testField")
 
 	s.Nil(index)
 	s.NoError(err)
@@ -37,7 +37,7 @@ func (s *MultiGetTestSuite) TestMultiGetFound() {
 
 	s.mock.On("Get", s.ctx, "objId", dst, []string{"testField"}).Return(true, nil)
 
-	index, err := MultiGet(s.ctx, []Getter{s.mock}, "objId", dst, "testField")
+	index, err := MultiGet(s.ctx, []Index{s.mock}, "objId", dst, "testField")
 
 	s.NoError(err)
 	s.Equal(index, s.mock)
