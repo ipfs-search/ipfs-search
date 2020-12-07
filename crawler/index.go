@@ -39,7 +39,7 @@ func makeDocument(r *t.AnnotatedResource) indexTypes.Document {
 
 func (c *Crawler) indexInvalid(ctx context.Context, r *t.AnnotatedResource, err error) error {
 	// Index unsupported items as invalid.
-	return c.indexes.Invalid.Index(ctx, r.ID, &indexTypes.Invalid{
+	return c.indexes.Invalids.Index(ctx, r.ID, &indexTypes.Invalid{
 		Error: err.Error(),
 	})
 }

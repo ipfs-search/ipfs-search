@@ -69,7 +69,6 @@ func (i *Index) Update(ctx context.Context, id string, properties map[string]int
 	}
 
 	return nil
-
 }
 
 // Get retreives `fields` from document with `id` from the index, returning:

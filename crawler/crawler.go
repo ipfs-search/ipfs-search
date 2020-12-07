@@ -24,32 +24,26 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 		panic("invalid protocol")
 	}
 
-	if r.Type == t.UnsupportedType {
-		// Crawl should never be called with an unsupported type.
-		panic("unsupported type")
+	switch r.Type {
+	case t.UnsupportedType, t.PartialType:
+		// Crawler should never be called with these types, this is unsupported behaviour.
+		panic("invalid type for crawler")
 	}
 
-	existing, err := c.getExistingItem(ctx, r)
+	exists, err := c.updateMaybeExisting(ctx, r)
 	if err != nil {
 		return err
 	}
 
-	// Process existing item
-	if existing != nil {
-		if existing.Index == c.indexes.Invalid {
-			// Already indexed as invalid; we're done
-			return nil
-		}
-
-		// Update item and we're done.
-		return c.update(ctx, existing)
+	if exists {
+		return nil
 	}
 
 	// Ensure type is present
 	if r.Type == t.UndefinedType {
 		// Get size and type
 
-		// TODO: Implement a timeout for Stat calls here.
+		// TODO: Implement a timeout for Stat call here.
 
 		if err := c.protocol.Stat(ctx, r); err != nil {
 			if c.protocol.IsInvalidResourceErr(err) {

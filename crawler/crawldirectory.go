@@ -100,6 +100,9 @@ func (c *Crawler) queueDirEntry(ctx context.Context, r *t.AnnotatedResource) err
 	case t.DirectoryType:
 		return c.queues.Directories.Publish(ctx, r, priority)
 	case t.UnsupportedType:
+		// Index right away as invalid.
+		// Rationale: as no additional protocol request is required and queue'ing returns
+		// similarly fast as indexing.
 		return c.indexInvalid(ctx, r, errors.New(indexTypes.UnsupportedTypeError))
 	default:
 		return UnexpectedTypeError{r.Type}
