@@ -15,6 +15,16 @@ type Crawler struct {
 	extractor extractor.Extractor
 }
 
+func (c *Crawler) ensureType(ctx context.Context, r *t.AnnotatedResource) error {
+	if r.Type == t.UndefinedType {
+		// TODO: Implement a timeout for Stat call here.
+
+		return c.protocol.Stat(ctx, r)
+	}
+
+	return nil
+}
+
 func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	var err error
 
@@ -39,19 +49,14 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 		return nil
 	}
 
-	// Ensure type is present
-	if r.Type == t.UndefinedType {
-		// Get size and type
-
-		// TODO: Implement a timeout for Stat call here.
-
-		if err := c.protocol.Stat(ctx, r); err != nil {
-			if c.protocol.IsInvalidResourceErr(err) {
-				// Resource is invalid, index as such, overwriting previous error.
-				return c.indexInvalid(ctx, r, err)
-			}
-			return err
+	if err := c.ensureType(ctx, r); err != nil {
+		if c.protocol.IsInvalidResourceErr(err) {
+			// Resource is invalid, index as such, overwriting previous error.
+			err = c.indexInvalid(ctx, r, err)
 		}
+
+		// Errors from ensureType imply that no type could be found, hence we can't index.
+		return err
 	}
 
 	// Index new item
