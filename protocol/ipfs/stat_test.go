@@ -246,7 +246,41 @@ func (s *StatTestSuite) TestInvalid() {
 
 }
 
-// TODO: TestGeneralError()
+func (s *StatTestSuite) TestNonInvalid500() {
+	// http://docs.ipfs.io.ipns.localhost:8080/reference/http/api/#http-status-codes
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
+
+	msgStruct := &struct {
+		Message string
+		Code    int
+		Type    string
+	}{
+		"banana error", 0, "error",
+	}
+
+	s.mockAPIHandler.
+		On("Handle", "POST", rURL, mock.Anything).
+		Return(httpmock.Response{
+			Header: s.responseHeader,
+			Status: 500,
+			Body:   httpmock.ToJSON(msgStruct),
+		}).
+		Once()
+
+	err := s.ipfs.Stat(s.ctx, r)
+
+	s.Error(err)
+	s.mockAPIHandler.AssertExpectations(s.T())
+
+	s.False(s.ipfs.IsInvalidResourceErr(err))
+}
 
 func TestStatTestSuite(t *testing.T) {
 	suite.Run(t, new(StatTestSuite))

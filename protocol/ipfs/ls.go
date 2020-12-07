@@ -134,12 +134,10 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.Ann
 	if err != nil {
 		return err
 	}
-	// TODO: Make sure implementation errors are appropriately wrapped.
-	// https://godoc.org/github.com/ipfs/go-ipfs-api#Error
+	defer resp.Close()
 	if resp.Error != nil {
 		return resp.Error
 	}
-	defer resp.Close()
 
 	dec := json.NewDecoder(resp.Output)
 
