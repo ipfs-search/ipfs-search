@@ -7,4 +7,5 @@ import (
 type Queues struct {
 	Files       queue.Publisher
 	Directories queue.Publisher
+	Hashes      queue.Publisher
 }
