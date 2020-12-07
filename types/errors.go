@@ -4,6 +4,8 @@ import (
 	"fmt"
 )
 
+// TODO: Remove this.
+
 // WrappedError is a generic error type wrapping underlying errors.
 type WrappedError struct {
 	Err error
