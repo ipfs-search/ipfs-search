@@ -313,6 +313,99 @@ func (s *CrawlerTestSuite) TestCrawlFileType() {
 	s.assertExpectations()
 }
 
+func (s *CrawlerTestSuite) TestCrawlReferencedFile() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+			},
+			Name: "fileName.pdf",
+		},
+		Stat: t.Stat{
+			Type: t.FileType,
+		},
+	}
+
+	s.extractor.
+		On("Extract", mock.Anything, r, mock.Anything).
+		Return(nil).
+		Once()
+
+	s.fileIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.File) bool {
+			return s.Equal(f.References, indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: r.Reference.Parent.ID,
+					Name:       r.Reference.Name,
+				},
+			})
+		})).
+		Return(nil).
+		Once()
+
+	s.assertNotExists(r.Resource.ID)
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlReferencedDirectory() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+			},
+			Name: "dirName",
+		},
+		Stat: t.Stat{
+			Type: t.DirectoryType,
+		},
+	}
+
+	// Empty dir
+	s.protocol.
+		On("Ls", mock.Anything, r, mock.AnythingOfType("chan<- *types.AnnotatedResource")).
+		Return(nil).
+		Once()
+
+	s.dirIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Directory) bool {
+			return s.Equal(f.References, indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: r.Reference.Parent.ID,
+					Name:       r.Reference.Name,
+				},
+			})
+		})).
+		Return(nil).
+		Once()
+
+	s.assertNotExists(r.Resource.ID)
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
+
 func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 	// Prepare resource
 	r := &t.AnnotatedResource{
