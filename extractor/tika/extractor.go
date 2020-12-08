@@ -74,6 +74,7 @@ func (e *Extractor) retryingGet(ctx context.Context, url string) (resp *http.Res
 }
 
 func (e *Extractor) getExtractURL(r *t.AnnotatedResource) string {
+	// TODO: This should be TIKAURL?url=GATEWAYURL (or something similar)
 	return e.protocol.GatewayURL(r)
 }
 
