@@ -8,6 +8,7 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
+// Crawler allows crawling of resources.
 type Crawler struct {
 	config    *Config
 	indexes   Indexes
@@ -16,16 +17,7 @@ type Crawler struct {
 	extractor extractor.Extractor
 }
 
-func (c *Crawler) ensureType(ctx context.Context, r *t.AnnotatedResource) error {
-	if r.Type == t.UndefinedType {
-		// TODO: Implement a timeout for Stat call here.
-
-		return c.protocol.Stat(ctx, r)
-	}
-
-	return nil
-}
-
+// Crawl updates existing or crawls new resources, extracting metadata where applicable.
 func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	var err error
 
@@ -64,6 +56,7 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	return c.index(ctx, r)
 }
 
+// New instantiates a Crawler.
 func New(config *Config, indexes Indexes, queues Queues, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
 	return &Crawler{
 		config,
@@ -72,4 +65,17 @@ func New(config *Config, indexes Indexes, queues Queues, protocol protocol.Proto
 		protocol,
 		extractor,
 	}
+}
+
+func (c *Crawler) ensureType(ctx context.Context, r *t.AnnotatedResource) error {
+	if r.Type == t.UndefinedType {
+
+		// TODO: Test coverage
+		ctx, cancel := context.WithTimeout(ctx, c.config.StatTimeout)
+		defer cancel()
+
+		return c.protocol.Stat(ctx, r)
+	}
+
+	return nil
 }
