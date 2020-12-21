@@ -200,6 +200,36 @@ func (s *StatTestSuite) TestReferencedPartial() {
 	})
 }
 
+func (s *StatTestSuite) TestUnsupported() {
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv",
+		},
+	}
+
+	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
+
+	// Setup mock handler
+	s.mockAPIHandler.
+		On("Handle", "POST", rURL, mock.Anything).
+		Return(httpmock.Response{
+			Header: s.responseHeader,
+			Body:   []byte(`{"Hash":"QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv","Size":0,"CumulativeSize":6544,"Blocks":7,"Type":"other"}`),
+		}).
+		Once()
+
+	err := s.ipfs.Stat(s.ctx, r)
+
+	s.NoError(err)
+	s.mockAPIHandler.AssertExpectations(s.T())
+
+	s.Equal(r.Stat, t.Stat{
+		Type: t.UnsupportedType,
+		Size: 6544,
+	})
+}
+
 func (s *StatTestSuite) TestInvalid() {
 	errors := []string{
 		"proto: required field \"Type\" not set",             // Example: QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8
