@@ -16,14 +16,12 @@ func (c *Crawler) crawlDir(ctx context.Context, r *t.AnnotatedResource, properti
 	wg, ctx := errgroup.WithContext(ctx)
 
 	wg.Go(func() error {
-		err := c.processDirEntries(ctx, entries, properties)
-		return err
+		return c.processDirEntries(ctx, entries, properties)
 	})
 
 	wg.Go(func() error {
-		err := c.protocol.Ls(ctx, r, entries)
-		close(entries)
-		return err
+		defer close(entries)
+		return c.protocol.Ls(ctx, r, entries)
 	})
 
 	return wg.Wait()
@@ -44,41 +42,52 @@ func resourceToLinkType(r *t.AnnotatedResource) (indexTypes.LinkType, error) {
 	}
 }
 
+// errEndOfLs is an internal error to communicate the end of hte list from processNextDirEntry to processDirEntries.
+var errEndOfLs = errors.New("end of list")
+
 func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.AnnotatedResource, properties *indexTypes.Directory) error {
 	// Question: do we need a maximum entry cutoff point? E.g. 10^6 entries or something?
 	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case entry, ok := <-entries:
-			if !ok {
-				// Channel closed, we're done
+		if err := c.processNextDirEntry(ctx, entries, properties); err != nil {
+			if errors.Is(err, errEndOfLs) {
+				// End of list; we're done
 				return nil
 			}
 
-			// TODO: Implement timeout waiting for new directory entries here.
+			// Fail hard on error; prefer less over incomplete or inconsistent data.
+			return err
+		}
+	}
+}
 
-			// Add link
-			linkType, err := resourceToLinkType(entry)
-			if err != nil {
-				return err
-			}
+func (c *Crawler) processNextDirEntry(ctx context.Context, entries <-chan *t.AnnotatedResource, properties *indexTypes.Directory) error {
+	// Create (and cancel!) a new timeout context for every entry.
+	ctx, cancel := context.WithTimeout(ctx, c.config.DirEntryTimeout)
+	defer cancel()
 
-			properties.Links = append(properties.Links, indexTypes.Link{
-				Hash: entry.ID,
-				Name: entry.Reference.Name,
-				Size: entry.Size,
-				Type: linkType,
-			})
-
-			// Queue directory entry. Fail hard on error; prefer less over incomplete
-			// or inconsistent data.
-			// TODO: Consider doing this in a separate Goroutine, as it's blocking.
-			if err := c.queueDirEntry(ctx, entry); err != nil {
-				return err
-			}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case entry, ok := <-entries:
+		if !ok {
+			return errEndOfLs
 		}
 
+		// Add link
+		linkType, err := resourceToLinkType(entry)
+		if err != nil {
+			return err
+		}
+
+		properties.Links = append(properties.Links, indexTypes.Link{
+			Hash: entry.ID,
+			Name: entry.Reference.Name,
+			Size: entry.Size,
+			Type: linkType,
+		})
+
+		// TODO: Consider doing this in a separate Goroutine, as it's blocking.
+		return c.queueDirEntry(ctx, entry)
 	}
 }
 
