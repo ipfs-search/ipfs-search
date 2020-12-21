@@ -30,7 +30,7 @@ func makeDocument(r *t.AnnotatedResource) indexTypes.Document {
 		LastSeen:   now,
 		References: references,
 		Size:       r.Size,
-		// TODO: Add this as constant field for file/directory and as string for invalids.
+		// TODO: Add type as constant field for file/directory and as string for invalids.
 		// That natively allows us to know about unsupported types (so that we may index them later when supported).
 		// Ref: https://www.elastic.co/guide/en/elasticsearch/reference/master/keyword.html#constant-keyword-field-type
 		// Type: r.Type,
