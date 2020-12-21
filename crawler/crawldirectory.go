@@ -10,10 +10,8 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-const entryBufferSize = 256 // Size of buffer for processing channels. TODO: Make configurable.
-
 func (c *Crawler) crawlDir(ctx context.Context, r *t.AnnotatedResource, properties *indexTypes.Directory) error {
-	entries := make(chan *t.AnnotatedResource, entryBufferSize)
+	entries := make(chan *t.AnnotatedResource, c.config.DirEntryBufferSize)
 
 	wg, ctx := errgroup.WithContext(ctx)
 

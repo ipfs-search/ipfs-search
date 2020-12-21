@@ -8,10 +8,6 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-var (
-	minUpdateAge = time.Duration(time.Hour)
-)
-
 func appendReference(refs index_types.References, r *t.Reference) (index_types.References, bool) {
 	if r.Parent == nil {
 		// No new reference, not updating
@@ -36,7 +32,7 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 	refs, refUpdated := appendReference(i.References, &i.AnnotatedResource.Reference)
 
 	now := time.Now()
-	isRecent := now.Sub(i.LastSeen) > minUpdateAge
+	isRecent := now.Sub(i.LastSeen) > c.config.MinUpdateAge
 
 	if refUpdated || isRecent {
 		return i.Index.Update(ctx, i.AnnotatedResource.ID, &index_types.Update{
