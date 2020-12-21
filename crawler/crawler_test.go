@@ -20,6 +20,7 @@ type CrawlerTestSuite struct {
 	suite.Suite
 
 	ctx     context.Context
+	cfg     *Config
 	indexes Indexes
 	queues  Queues
 	c       *Crawler
@@ -58,7 +59,9 @@ func (s *CrawlerTestSuite) SetupTest() {
 	s.protocol = &protocol.Mock{}
 	s.extractor = &extractor.Mock{}
 
-	s.c = New(s.indexes, s.queues, s.protocol, s.extractor)
+	s.cfg = DefaultConfig()
+
+	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor)
 }
 
 func (s *CrawlerTestSuite) assertExpectations() {

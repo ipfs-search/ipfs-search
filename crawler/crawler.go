@@ -9,6 +9,7 @@ import (
 )
 
 type Crawler struct {
+	config    *Config
 	indexes   Indexes
 	queues    Queues
 	protocol  protocol.Protocol
@@ -63,8 +64,9 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	return c.index(ctx, r)
 }
 
-func New(indexes Indexes, queues Queues, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
+func New(config *Config, indexes Indexes, queues Queues, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
 	return &Crawler{
+		config,
 		indexes,
 		queues,
 		protocol,
