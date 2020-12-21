@@ -27,6 +27,14 @@ func typeFromString(strType string) t.ResourceType {
 	}
 }
 
+func getSize(rType t.ResourceType, result *statResult) uint64 {
+	if rType == t.FileType {
+		return result.Size
+	}
+
+	return result.CumulativeSize
+}
+
 // Stat returns a AnnotatedResource with Type and Size populated.
 // Ref: http://docs.ipfs.io.ipns.localhost:8080/reference/http/api/#api-v0-files-stat
 func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
@@ -42,15 +50,7 @@ func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 	}
 
 	rType := typeFromString(result.Type)
-
-	var size uint64
-	switch rType {
-	case t.FileType:
-		size = result.Size
-	case t.DirectoryType:
-		// For directories, the size is always 0, hence CumulativeSize is appropriate.
-		size = result.CumulativeSize
-	}
+	size := getSize(rType, result)
 
 	r.Stat = t.Stat{
 		Type: rType,
