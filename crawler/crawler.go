@@ -69,8 +69,6 @@ func New(config *Config, indexes Indexes, queues Queues, protocol protocol.Proto
 
 func (c *Crawler) ensureType(ctx context.Context, r *t.AnnotatedResource) error {
 	if r.Type == t.UndefinedType {
-
-		// TODO: Test coverage
 		ctx, cancel := context.WithTimeout(ctx, c.config.StatTimeout)
 		defer cancel()
 

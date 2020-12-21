@@ -316,6 +316,37 @@ func (s *CrawlerTestSuite) TestCrawlFileType() {
 	s.assertExpectations()
 }
 
+func (s *CrawlerTestSuite) TestCrawlStatTimeout() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Stat: t.Stat{
+			Type: t.UndefinedType,
+		},
+	}
+
+	s.protocol.
+		On("Stat", mock.Anything, r).
+		Return(context.DeadlineExceeded).
+		Once()
+
+	s.protocol.
+		On("IsInvalidResourceErr", context.DeadlineExceeded).
+		Return(false).
+		Once()
+
+	s.assertNotExists(r.Resource.ID)
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	s.Equal(err, context.DeadlineExceeded)
+	s.assertExpectations()
+}
+
 func (s *CrawlerTestSuite) TestCrawlReferencedFile() {
 	// Prepare resource
 	r := &t.AnnotatedResource{
@@ -560,6 +591,90 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 
 	// Test result, side effects
 	s.NoError(err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlDirEntryTimeout() {
+	s.cfg = DefaultConfig()
+
+	// Override dir entry timeout
+	s.cfg.DirEntryTimeout = 5 * time.Millisecond
+
+	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor)
+
+	entryDelay := 2 * s.cfg.DirEntryTimeout
+
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Stat: t.Stat{
+			Type: t.DirectoryType,
+		},
+	}
+
+	fileEntry := t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmafrLBfzRLV4XSH1XcaMMeaXEUhDJjmtDfsYU95TrWG87",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+			},
+			Name: "fileName.pdf",
+		},
+		Stat: t.Stat{
+			Type: t.FileType,
+			Size: 3431,
+		},
+	}
+
+	dirEntry := t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+			},
+			Name: "dirName",
+		},
+		Stat: t.Stat{
+			Type: t.DirectoryType,
+			Size: 4534543,
+		},
+	}
+
+	s.fileQ.
+		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
+			return s.Equal(*f, fileEntry)
+		}), mock.AnythingOfType("uint8")).
+		Return(nil).
+		Once()
+
+	s.protocol.
+		On("Ls", mock.Anything, r, mock.AnythingOfType("chan<- *types.AnnotatedResource")).
+		Run(func(args mock.Arguments) {
+			entryChan := args.Get(2).(chan<- *t.AnnotatedResource)
+			entryChan <- &fileEntry
+			time.Sleep(entryDelay)
+			entryChan <- &dirEntry
+		}).
+		Return(nil).
+		Once()
+
+	s.assertNotExists(r.Resource.ID)
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	s.Equal(err, context.DeadlineExceeded)
 	s.assertExpectations()
 }
 
