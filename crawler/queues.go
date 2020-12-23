@@ -6,7 +6,7 @@ import (
 
 // Queues used for crawling.
 type Queues struct {
-	Files       queue.Publisher
-	Directories queue.Publisher
-	Hashes      queue.Publisher
+	Files       queue.Queue
+	Directories queue.Queue
+	Hashes      queue.Queue
 }

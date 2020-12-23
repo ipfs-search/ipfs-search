@@ -19,7 +19,7 @@ type IPFSTestSuite struct {
 
 func (s *IPFSTestSuite) SetupTest() {
 	cfg := DefaultConfig()
-	cfg.IPFSGatewayURL = gatewayURL
+	cfg.GatewayURL = gatewayURL
 
 	s.ipfs = New(cfg, http.DefaultClient, instr.New())
 }

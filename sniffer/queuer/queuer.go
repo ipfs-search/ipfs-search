@@ -48,8 +48,13 @@ func (q *Queuer) iterate(ctx context.Context) error {
 
 			// TODO: Provider channel should be pointer stream, preventing copying of data.
 
+			// TODO: Merge Provider and AnnotatedResource types
+			r := t.AnnotatedResource{
+				Resource: p.Resource,
+			}
+
 			// Add with highest priority (9), as this is supposed to be available
-			err := q.queue.Publish(ctx, &p, 9)
+			err := q.queue.Publish(ctx, &r, 9)
 
 			if err != nil {
 				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))

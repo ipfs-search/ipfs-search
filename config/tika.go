@@ -5,18 +5,18 @@ import (
 	"time"
 )
 
-// Extractor is configuration pertaining to the sniffer
-type Extractor struct {
+// Tika is configuration pertaining to the sniffer
+type Tika struct {
 	TikaServerURL  string        `yaml:"url" env:"IPFS_TIKA_URL"`
 	RequestTimeout time.Duration `yaml:"timeout"`
 	RetryWait      time.Duration `yaml:"retry_wait"`
 }
 
-func (c *Config) ExtractorConfig() *tika.Config {
-	cfg := tika.Config(c.Extractor)
+func (c *Config) TikaConfig() *tika.Config {
+	cfg := tika.Config(c.Tika)
 	return &cfg
 }
 
-func ExtractorDefaults() Extractor {
-	return Extractor(*tika.DefaultConfig())
+func TikaDefaults() Tika {
+	return Tika(*tika.DefaultConfig())
 }

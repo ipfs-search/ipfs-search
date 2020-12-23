@@ -34,7 +34,7 @@ func (s *LsTestSuite) SetupTest() {
 	}
 
 	cfg := DefaultConfig()
-	cfg.IPFSAPIURL = s.mockAPIServer.URL()
+	cfg.APIURL = s.mockAPIServer.URL()
 
 	s.ipfs = New(cfg, http.DefaultClient, instr.New())
 }

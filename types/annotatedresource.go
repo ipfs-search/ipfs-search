@@ -2,6 +2,6 @@ package types
 
 type AnnotatedResource struct {
 	*Resource
-	Reference
-	Stat
+	Reference `json:",omitempty"`
+	Stat      `json:",omitempty"`
 }
