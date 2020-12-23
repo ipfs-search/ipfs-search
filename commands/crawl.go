@@ -1,31 +1,32 @@
 package commands
 
-// import (
-// 	"context"
-// 	"github.com/ipfs-search/ipfs-search/config"
-// 	"github.com/ipfs-search/ipfs-search/crawler/factory"
-// 	"github.com/ipfs-search/ipfs-search/instr"
-// 	"github.com/ipfs-search/ipfs-search/worker"
-// 	"golang.org/x/sync/errgroup"
-// 	"log"
+import (
+	"context"
+	"github.com/ipfs-search/ipfs-search/config"
+	"github.com/ipfs-search/ipfs-search/instr"
+	"github.com/ipfs-search/ipfs-search/worker"
+	"golang.org/x/sync/errgroup"
+	"log"
 
-// 	"go.opentelemetry.io/otel/api/trace"
-// 	"go.opentelemetry.io/otel/codes"
-// )
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+)
 
-// // Crawl configures and initializes crawling
-// func Crawl(ctx context.Context, cfg *config.Config) error {
-// 	instFlusher, err := instr.Install("ipfs-crawler")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer instFlusher()
+// Crawl configures and initializes crawling
+func Crawl(ctx context.Context, cfg *config.Config) error {
+	instFlusher, err := instr.Install("ipfs-crawler")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer instFlusher()
 
-// 	instrumentation := instr.New()
-// 	tracer := instrumentation.Tracer
+	instrumentation := instr.New()
+	tracer := instrumentation.Tracer
 
-// 	ctx, span := tracer.Start(ctx, "commands.Crawl")
-// 	defer span.End()
+	ctx, span := tracer.Start(ctx, "commands.Crawl")
+	defer span.End()
+
+}
 
 // 	errc := make(chan error, 1)
 
