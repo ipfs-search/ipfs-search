@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/queue"
 	t "github.com/ipfs-search/ipfs-search/types"
@@ -47,12 +46,10 @@ func (q *Queuer) iterate(ctx context.Context) error {
 			), trace.WithSpanKind(trace.SpanKindProducer))
 			defer span.End()
 
-			// TODO: Propagate context to queue.Publish()
+			// TODO: Provider channel should be pointer stream, preventing copying of data.
 
 			// Add with highest priority (9), as this is supposed to be available
-			err := q.queue.Publish(ctx, &crawler.Args{
-				Hash: p.ID,
-			}, 9)
+			err := q.queue.Publish(ctx, &p, 9)
 
 			if err != nil {
 				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
