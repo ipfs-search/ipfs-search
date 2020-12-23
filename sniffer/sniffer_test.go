@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/queue"
+	t "github.com/ipfs-search/ipfs-search/types"
 
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
@@ -128,12 +128,21 @@ func (s *SnifferTestSuite) TestHandleToPublish() {
 
 	// Setup Mock Queue
 	qMock := &queue.Mock{}
-	qMock.On("Publish", mock.AnythingOfType("*context.valueCtx"), &crawler.Args{
-		Hash: cidStr,
-	}, uint8(9)).Return(nil).Run(func(args mock.Arguments) {
-		fmt.Println("Publish() called, closing context")
-		s.cancel()
-	})
+	qMock.On("Publish", mock.AnythingOfType("*context.valueCtx"), mock.MatchedBy(func(providerIf interface{}) bool {
+		p := providerIf.(*t.Provider)
+		s.Equal(p.Resource, &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       cidStr,
+		})
+		s.WithinDuration(p.Date, now, time.Second)
+		s.Equal(p.Provider, provStr)
+		return true
+	}), uint8(9)).
+		Return(nil).
+		Run(func(args mock.Arguments) {
+			fmt.Println("Publish() called, closing context")
+			s.cancel()
+		})
 
 	// Setup Mock Queue Factory
 	s.f.On("NewPublisher", mock.AnythingOfType("*context.cancelCtx")).Return(qMock, nil)

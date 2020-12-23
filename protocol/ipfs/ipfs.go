@@ -55,7 +55,7 @@ func (i *IPFS) GatewayURL(r *t.AnnotatedResource) string {
 // New returns a new IPFS protocol.
 func New(config *Config, client *http.Client, instr *instr.Instrumentation) *IPFS {
 	// Initialize gatewayURL
-	gatewayURL, err := url.Parse(config.IPFSGatewayURL)
+	gatewayURL, err := url.Parse(config.GatewayURL)
 	if err != nil {
 		panic(fmt.Sprintf("could not parse IPFS Gateway URL, error: %v", err))
 	}
@@ -65,7 +65,7 @@ func New(config *Config, client *http.Client, instr *instr.Instrumentation) *IPF
 	}
 
 	// Create IPFS shell
-	shell := ipfs.NewShellWithClient(config.IPFSAPIURL, client)
+	shell := ipfs.NewShellWithClient(config.APIURL, client)
 
 	return &IPFS{
 		config,

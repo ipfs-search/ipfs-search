@@ -6,10 +6,6 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-// 256KB is the default chunker block size. Therefore, unreferenced files with exactly
-// this size are very likely to be chunks of files (partials) rather than full files.
-const partialSize = 262144
-
 type statResult struct {
 	Type           string
 	Size           uint64
@@ -58,7 +54,7 @@ func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 	}
 
 	// Override type for *unreferenced* partials, based on size
-	if r.Size == partialSize && r.Reference.Parent == nil {
+	if r.Size == uint64(i.config.PartialSize) && r.Reference.Parent == nil {
 		r.Stat.Type = t.PartialType
 	}
 

@@ -14,3 +14,9 @@ type UnexpectedTypeError struct {
 func (e UnexpectedTypeError) Error() string {
 	return fmt.Sprintf("unexpected type: %s", e.ResourceType)
 }
+
+// IsTemporaryErr returns true whenever an underlying error signifies a known temporary outage condition rather than permanent failure.
+func IsTemporaryErr(err error) bool {
+	// TODO: Implement & test me.
+	return true
+}

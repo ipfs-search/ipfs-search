@@ -11,8 +11,8 @@ import (
 // Crawler allows crawling of resources.
 type Crawler struct {
 	config    *Config
-	indexes   Indexes
-	queues    Queues
+	indexes   *Indexes
+	queues    *Queues
 	protocol  protocol.Protocol
 	extractor extractor.Extractor
 }
@@ -57,7 +57,7 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 }
 
 // New instantiates a Crawler.
-func New(config *Config, indexes Indexes, queues Queues, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
+func New(config *Config, indexes *Indexes, queues *Queues, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
 	return &Crawler{
 		config,
 		indexes,

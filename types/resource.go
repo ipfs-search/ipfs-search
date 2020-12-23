@@ -20,3 +20,8 @@ func (r *Resource) URI() string {
 func (r *Resource) String() string {
 	return r.URI()
 }
+
+// IsValid returns true when resource contains a valid value.
+func (r *Resource) IsValid() bool {
+	return r.Protocol != InvalidProtocol && r.ID != ""
+}

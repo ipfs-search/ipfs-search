@@ -21,8 +21,8 @@ type CrawlerTestSuite struct {
 
 	ctx     context.Context
 	cfg     *Config
-	indexes Indexes
-	queues  Queues
+	indexes *Indexes
+	queues  *Queues
 	c       *Crawler
 
 	protocol  *protocol.Mock
@@ -43,7 +43,7 @@ func (s *CrawlerTestSuite) SetupTest() {
 	// Creat a crawler with mocked dependencies
 	s.fileIdx, s.dirIdx, s.invalidIdx = &index.Mock{}, &index.Mock{}, &index.Mock{}
 
-	s.indexes = Indexes{
+	s.indexes = &Indexes{
 		Files:       s.fileIdx,
 		Directories: s.dirIdx,
 		Invalids:    s.invalidIdx,
@@ -51,7 +51,7 @@ func (s *CrawlerTestSuite) SetupTest() {
 
 	s.fileQ, s.dirQ, s.hashQ = &queue.Mock{}, &queue.Mock{}, &queue.Mock{}
 
-	s.queues = Queues{
+	s.queues = &Queues{
 		Directories: s.dirQ,
 		Files:       s.fileQ,
 		Hashes:      s.hashQ,
