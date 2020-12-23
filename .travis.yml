@@ -3,32 +3,25 @@ language: go
 go:
   - "1.13.x"
 
-# Only clone the most recent commit.
-# Ref: https://docs.travis-ci.com/user/customizing-the-build/#git-clone-depth
-git:
-  depth: 3
-
 # Setup caching of dependencies
 cache:
   directories:
     - $HOME/.cache/go-build
     - $HOME/gopath/pkg/mod
 
-install: skip
+install: go get -v ./...
 
-jobs:
-  - name: "unit tests"
-    before_script:
-      # Install CodeClimate test reporter
-      - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-      - chmod +x ./cc-test-reporter
-      - ./cc-test-reporter before-build
+before_script:
+  # Install CodeClimate test reporter
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
-    script:
-      - go test -v -race -coverprofile c.out ./...
+script:
+  - go test -v -race -coverprofile c.out ./...
 
-    after_script:
-      - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 # Matrix/Riot webhook notifications
 notifications:
