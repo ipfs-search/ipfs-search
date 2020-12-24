@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"golang.org/x/sync/errgroup"
+	"log"
 	"math/rand"
 
 	indexTypes "github.com/ipfs-search/ipfs-search/index/types"
@@ -72,6 +73,8 @@ func (c *Crawler) processNextDirEntry(ctx context.Context, entries <-chan *t.Ann
 		if !ok {
 			return errEndOfLs
 		}
+
+		log.Printf("Processing directory entry: %v", entry)
 
 		// Add link
 		linkType, err := resourceToLinkType(entry)

@@ -109,6 +109,8 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 		return err
 	}
 
+	log.Printf("Got metadata metadata for '%v'", r)
+
 	// TODO
 	// Check for IPFS links in urls extracted from resource
 	/*

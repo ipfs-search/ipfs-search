@@ -134,7 +134,7 @@ func crawlDelivery(ctx context.Context, d samqp.Delivery, c *crawler.Crawler) er
 		return fmt.Errorf("Invalid resource: %v", r)
 	}
 
-	fmt.Printf("Crawling: %v\n", r)
+	log.Printf("Crawling: %v\n", r)
 
 	return c.Crawl(ctx, r)
 }
@@ -153,14 +153,18 @@ func work(ctx context.Context, consumeChan <-chan samqp.Delivery, c *crawler.Cra
 				shouldRetry := crawler.IsTemporaryErr(err)
 
 				if err := d.Reject(shouldRetry); err != nil {
+					log.Printf("Reject error %s\n", d.Body)
 					// span.RecordError(ctx, err)
 				}
 				log.Printf("Error '%s' in delivery '%s'", err, d.Body)
 				// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 			} else {
 				if err := d.Ack(false); err != nil {
+					log.Printf("Ack error %s\n", d.Body)
+
 					// span.RecordError(ctx, err)
 				}
+				log.Printf("Done crawling: %s\n", d.Body)
 			}
 		}
 	}
