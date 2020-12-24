@@ -29,8 +29,9 @@ type Extractor struct {
 }
 
 func (e *Extractor) get(ctx context.Context, url string) (resp *http.Response, err error) {
-	ctx, cancel := context.WithTimeout(ctx, e.config.RequestTimeout)
-	defer cancel()
+	// Temporarily disabled due to bug - the connection needs to be open until the response body has been read!
+	// ctx, cancel := context.WithTimeout(ctx, e.config.RequestTimeout)
+	// defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
