@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"go.opentelemetry.io/otel/api/trace"
@@ -75,7 +76,9 @@ func (e *Extractor) retryingGet(ctx context.Context, url string) (resp *http.Res
 
 func (e *Extractor) getExtractURL(r *t.AnnotatedResource) string {
 	// TODO: This should be TIKAURL?url=GATEWAYURL (or something similar)
-	return e.protocol.GatewayURL(r)
+	gwURL := e.protocol.GatewayURL(r)
+	u, _ := url.Parse(gwURL)
+	return e.config.TikaServerURL + u.Path
 }
 
 // Extract metadata from a (potentially) referenced resource, updating
