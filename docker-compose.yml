@@ -38,7 +38,7 @@ services:
       - ipfs-tika
     environment:
       - IPFS_TIKA_URL=http://ipfs-tika:8081
-      - IPFS_API_URL=ipfs:5001
+      - IPFS_API_URL=http://ipfs:5001
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
     deploy:
