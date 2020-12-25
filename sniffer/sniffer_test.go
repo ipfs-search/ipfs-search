@@ -128,14 +128,15 @@ func (s *SnifferTestSuite) TestHandleToPublish() {
 
 	// Setup Mock Queue
 	qMock := &queue.Mock{}
-	qMock.On("Publish", mock.AnythingOfType("*context.valueCtx"), mock.MatchedBy(func(providerIf interface{}) bool {
-		p := providerIf.(*t.Provider)
+	qMock.On("Publish", mock.AnythingOfType("*context.valueCtx"), mock.MatchedBy(func(resource interface{}) bool {
+		p := resource.(*t.AnnotatedResource)
 		s.Equal(p.Resource, &t.Resource{
 			Protocol: t.IPFSProtocol,
 			ID:       cidStr,
 		})
-		s.WithinDuration(p.Date, now, time.Second)
-		s.Equal(p.Provider, provStr)
+		// TODO: Add these back once provider and annotated resource are reunited.
+		// s.WithinDuration(p.Date, now, time.Second)
+		// s.Equal(p.Provider, provStr)
 		return true
 	}), uint8(9)).
 		Return(nil).
