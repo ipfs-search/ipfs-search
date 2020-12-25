@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/ipfs-search/ipfs-search/queue"
-	"github.com/ipfs-search/ipfs-search/types"
+	t "github.com/ipfs-search/ipfs-search/types"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -17,14 +17,18 @@ type QueuerTestSuite struct {
 	q      *queue.Mock
 	ctx    context.Context
 	cancel func()
-	p      types.Provider
+	p      t.Provider
+	r      *t.AnnotatedResource
 }
 
 func (s *QueuerTestSuite) SetupTest() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	s.q = &queue.Mock{}
 	s.q.Test(s.T())
-	s.p = types.MockProvider()
+	s.p = t.MockProvider()
+	s.r = &t.AnnotatedResource{
+		Resource: s.p.Resource,
+	}
 }
 
 func (s *QueuerTestSuite) TearDownTest() {
@@ -33,7 +37,7 @@ func (s *QueuerTestSuite) TearDownTest() {
 
 // TestQueueContextCancel tests whether we're returning an error on context cancellation
 func (s *QueuerTestSuite) TestQueueContextCancel() {
-	ch := make(chan types.Provider)
+	ch := make(chan t.Provider)
 
 	// Cancel context immediately
 	s.cancel()
@@ -49,9 +53,9 @@ func (s *QueuerTestSuite) TestQueueContextCancel() {
 
 // TestQueuePublish tests whether a queued provider gets published.
 func (s *QueuerTestSuite) TestQueuePublish() {
-	s.q.On("Publish", mock.AnythingOfType("*context.valueCtx"), &s.p, uint8(9)).Return(nil)
+	s.q.On("Publish", mock.Anything, s.r, uint8(9)).Return(nil)
 
-	ch := make(chan types.Provider)
+	ch := make(chan t.Provider)
 
 	go func() {
 		// Process provider
@@ -73,9 +77,9 @@ func (s *QueuerTestSuite) TestQueuePublish() {
 func (s *QueuerTestSuite) TestQueueError() {
 	mockErr := errors.New("mock")
 
-	s.q.On("Publish", mock.AnythingOfType("*context.valueCtx"), &s.p, uint8(9)).Return(mockErr)
+	s.q.On("Publish", mock.Anything, s.r, uint8(9)).Return(mockErr)
 
-	ch := make(chan types.Provider)
+	ch := make(chan t.Provider)
 
 	go func() {
 		// Process provider

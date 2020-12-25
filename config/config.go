@@ -19,7 +19,7 @@ type Config struct {
 	IPFS          `yaml:"ipfs"`
 	ElasticSearch `yaml:"elasticsearch"`
 	AMQP          `yaml:"amqp"`
-	Tika          `yaml:"extractor"`
+	Tika          `yaml:"tika"`
 
 	Crawler `yaml:"crawler"`
 	Sniffer `yaml:"sniffer"`
