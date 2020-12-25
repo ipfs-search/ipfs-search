@@ -12,20 +12,20 @@ import (
 
 // PublisherFactory automates creation of AMQP Publishers.
 type PublisherFactory struct {
-	AMQPURL string
-	Queue   string
+	*Config
+	Queue string
 	*instr.Instrumentation
 }
 
 func (f PublisherFactory) NewPublisher(ctx context.Context) (queue.Publisher, error) {
 	ctx, span := f.Tracer.Start(ctx, "queue.amqp.NewPublisher",
-		trace.WithAttributes(label.String("amqp_url", f.AMQPURL)),
+		trace.WithAttributes(label.String("amqp_url", f.Config.URL)),
 		trace.WithAttributes(label.String("queue", f.Queue)),
 	)
 	defer span.End()
 
 	// Create and configure add queue
-	conn, err := NewConnection(ctx, f.AMQPURL, f.Instrumentation)
+	conn, err := NewConnection(ctx, f.Config, f.Instrumentation)
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err

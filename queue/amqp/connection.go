@@ -11,23 +11,19 @@ import (
 	"time"
 )
 
-const (
-	maxReconnect  = 100
-	reconnectTime = 2 * time.Second
-)
-
 // Connection wraps an AMQP connection
 type Connection struct {
-	conn *amqp.Connection
+	config *Config
+	conn   *amqp.Connection
 	*instr.Instrumentation
 }
 
 // NewConnection returns new AMQP connection
-func NewConnection(ctx context.Context, url string, i *instr.Instrumentation) (*Connection, error) {
-	ctx, span := i.Tracer.Start(ctx, "queue.amqp.NewConnection", trace.WithAttributes(label.String("amqp_url", url)))
+func NewConnection(ctx context.Context, cfg *Config, i *instr.Instrumentation) (*Connection, error) {
+	ctx, span := i.Tracer.Start(ctx, "queue.amqp.NewConnection", trace.WithAttributes(label.String("amqp_url", cfg.URL)))
 	defer span.End()
 
-	amqpConn, err := amqp.Dial(url)
+	amqpConn, err := amqp.Dial(cfg.URL)
 
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
@@ -35,8 +31,10 @@ func NewConnection(ctx context.Context, url string, i *instr.Instrumentation) (*
 	}
 
 	c := &Connection{
+		config:          cfg,
 		conn:            amqpConn,
-		Instrumentation: i}
+		Instrumentation: i,
+	}
 
 	blockChan := amqpConn.NotifyBlocked(make(chan amqp.Blocking))
 	closeChan := amqpConn.NotifyClose(make(chan *amqp.Error))
@@ -64,12 +62,12 @@ func NewConnection(ctx context.Context, url string, i *instr.Instrumentation) (*
 				}
 			case err := <-closeChan:
 				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-				log.Printf("AMQP connection lost, attempting reconnect in %s", reconnectTime)
-				time.Sleep(reconnectTime)
+				log.Printf("AMQP connection lost, attempting reconnect in %s", cfg.ReconnectTime)
+				time.Sleep(cfg.ReconnectTime)
 
-				amqpConn, amqpErr := amqp.Dial(url)
+				amqpConn, amqpErr := amqp.Dial(cfg.URL)
 				if amqpErr != nil {
-					if errCnt > maxReconnect {
+					if errCnt > cfg.MaxReconnect {
 						// TODO: Proper error propagation/recovery
 						span.RecordError(ctx, amqpErr, trace.WithErrorStatus(codes.Error))
 						panic("Repeated AMQP reconnect errors")
