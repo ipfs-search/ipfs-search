@@ -2,7 +2,6 @@ package amqp
 
 import (
 	"context"
-	"fmt"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel/api/trace"
@@ -20,8 +19,6 @@ type Channel struct {
 func (c *Channel) Queue(ctx context.Context, name string) (*Queue, error) {
 	ctx, span := c.Tracer.Start(ctx, "queue.amqp.Channel.Queue", trace.WithAttributes(label.String("queue", name)))
 	defer span.End()
-
-	deadQueue := fmt.Sprintf("%s-dead", name)
 
 	_, err := c.ch.QueueDeclare(
 		name,  // name
