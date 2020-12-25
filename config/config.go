@@ -14,10 +14,6 @@ type ElasticSearch struct {
 	URL string `yaml:"url" env:"ELASTICSEARCH_URL"`
 }
 
-type AMQP struct {
-	URL string `yaml:"url" env:"AMQP_URL"`
-}
-
 // Config contains the configuration for commands.
 type Config struct {
 	IPFS          `yaml:"ipfs"`
