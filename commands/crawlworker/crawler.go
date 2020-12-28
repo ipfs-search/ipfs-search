@@ -172,6 +172,7 @@ func (w *Worker) startWorker(ctx context.Context, c *crawler.Crawler, deliveries
 func (w *Worker) startWorkers(ctx context.Context, c *crawler.Crawler, deliveries <-chan samqp.Delivery, workers uint) {
 	var i uint
 	for i = 0; i < workers; i++ {
+		log.Println("Starting worker.")
 		go w.startWorker(ctx, c, deliveries)
 	}
 }
