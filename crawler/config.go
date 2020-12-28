@@ -15,7 +15,7 @@ type Config struct {
 // DefaultConfig generates a default configuration for a Crawler.
 func DefaultConfig() *Config {
 	return &Config{
-		DirEntryBufferSize: 256,
+		DirEntryBufferSize: 2048,
 		MinUpdateAge:       time.Hour,
 		StatTimeout:        60 * time.Second,
 		DirEntryTimeout:    60 * time.Second,
