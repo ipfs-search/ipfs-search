@@ -7,9 +7,7 @@ func Default() *Config {
         ElasticSearch{
             URL: "http://localhost:9200",
         },
-        AMQP{
-            URL: "amqp://guest:guest@localhost:5672/",
-        },
+        AMQPDefaults(),
         TikaDefaults(),
         CrawlerDefaults(),
         SnifferDefaults(),
