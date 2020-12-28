@@ -78,6 +78,30 @@ func (s *GatewayURLTestSuite) TestGatewayURLUnnamedReference() {
 	s.Equal(url, gatewayURL+"/ipfs/QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p")
 }
 
+func (s *GatewayURLTestSuite) TestEscapeURL() {
+	// Regression test:
+	// http://ipfs-tika:8081/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp/Killing_Yourself_to_Live:_85%_of_a_True_Story.html
+	// panic: creating request: parse http://ipfs-tika:8081/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp/Killing_Yourself_to_Live:_85%_of_a_True_Story.html: invalid URL escape "%_o"
+
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmcBLKyRHjbGeLnjnmj74FFJpGJDz4YxFqUDYqMU7Mny1p",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp",
+			},
+			Name: "Killing_Yourself_to_Live:_85%_of_a_True_Story.html",
+		},
+	}
+
+	url := s.ipfs.GatewayURL(r)
+
+	s.Equal(url, gatewayURL+"/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp/Killing_Yourself_to_Live:_85%25_of_a_True_Story.html")
+}
+
 func TestGatewayURLTestSuite(t *testing.T) {
 	suite.Run(t, new(GatewayURLTestSuite))
 }
