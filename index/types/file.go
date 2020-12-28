@@ -15,5 +15,5 @@ type File struct {
 	IpfsTikaVersion string   `json:"ipfs_tika_version"`
 	Language        Language `json:"language"`
 	Metadata        Metadata `json:"metadata"`
-	Urls            []string `json:"urls"`
+	URLs            []string `json:"urls"`
 }
