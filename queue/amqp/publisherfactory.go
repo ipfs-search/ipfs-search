@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/queue"
+	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
@@ -13,7 +14,8 @@ import (
 // PublisherFactory automates creation of AMQP Publishers.
 type PublisherFactory struct {
 	*Config
-	Queue string
+	AMQPConfig *amqp.Config
+	Queue      string
 	*instr.Instrumentation
 }
 
@@ -25,7 +27,7 @@ func (f PublisherFactory) NewPublisher(ctx context.Context) (queue.Publisher, er
 	defer span.End()
 
 	// Create and configure add queue
-	conn, err := NewConnection(ctx, f.Config, f.Instrumentation)
+	conn, err := NewConnection(ctx, f.Config, f.AMQPConfig, f.Instrumentation)
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return nil, err

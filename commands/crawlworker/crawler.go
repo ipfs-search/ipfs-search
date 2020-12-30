@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"time"
 
 	"github.com/olivere/elastic/v7"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/ipfs-search/ipfs-search/config"
 	"github.com/ipfs-search/ipfs-search/crawler"
@@ -23,42 +24,47 @@ import (
 )
 
 type Worker struct {
-	config     *config.Config
-	httpClient *http.Client
-	instr      *instr.Instrumentation
+	config       *config.Config
+	httpClient   *http.Client
+	instr        *instr.Instrumentation
+	dialer       *RetryingDialer
+	consumeChans struct {
+		Files       <-chan samqp.Delivery
+		Directories <-chan samqp.Delivery
+		Hashes      <-chan samqp.Delivery
+	}
+	crawler *crawler.Crawler
 }
 
-func (f *Worker) getCrawler(ctx context.Context) (*crawler.Crawler, error) {
-	queues, err := f.getQueues(ctx)
-	if err != nil {
-		return nil, err
+func (w *Worker) makeCrawler(ctx context.Context) error {
+	var (
+		queues  *crawler.Queues
+		indexes *crawler.Indexes
+		err     error
+	)
+
+	log.Println("Getting publish queues.")
+	if queues, err = w.getQueues(ctx); err != nil {
+		return err
 	}
 
-	indexes, err := f.getIndexes(ctx)
-	if err != nil {
-		return nil, err
+	log.Println("Getting indexes.")
+	if indexes, err = w.getIndexes(ctx); err != nil {
+		return err
 	}
 
-	protocol := ipfs.New(f.config.IPFSConfig(), f.httpClient, f.instr)
-	extractor := tika.New(f.config.TikaConfig(), f.httpClient, protocol, f.instr)
+	protocol := ipfs.New(w.config.IPFSConfig(), w.httpClient, w.instr)
+	extractor := tika.New(w.config.TikaConfig(), w.httpClient, protocol, w.instr)
 
-	return crawler.New(f.config.CrawlerConfig(), indexes, queues, protocol, extractor), nil
-}
+	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractor)
 
-func getHttpClient() *http.Client {
-	// TODO: Get more advanced client with circuit breaking etc. over manual
-	// retrying get etc.
-	// Ref: https://github.com/gojek/heimdall#creating-a-hystrix-like-circuit-breaker
-	return &http.Client{
-		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}
+	return nil
 }
 
 func New(c *config.Config, i *instr.Instrumentation) *Worker {
 	return &Worker{
-		config:     c,
-		httpClient: getHttpClient(),
-		instr:      i,
+		config: c,
+		instr:  i,
 	}
 }
 
@@ -93,11 +99,17 @@ func (f *Worker) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 }
 
 func (f *Worker) getQueues(ctx context.Context) (*crawler.Queues, error) {
-	amqpConnection, err := amqp.NewConnection(ctx, f.config.AMQPConfig(), f.instr)
+	amqpConfig := &samqp.Config{
+		Dial: f.dialer.Dial,
+	}
+
+	log.Println("Connecting to AMQP.")
+	amqpConnection, err := amqp.NewConnection(ctx, f.config.AMQPConfig(), amqpConfig, f.instr)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Println("Creating AMQP channels.")
 	fq, err := amqpConnection.NewChannelQueue(ctx, f.config.Queues.Files.Name)
 	if err != nil {
 		return nil, err
@@ -120,7 +132,7 @@ func (f *Worker) getQueues(ctx context.Context) (*crawler.Queues, error) {
 	}, nil
 }
 
-func (w *Worker) crawlDelivery(ctx context.Context, c *crawler.Crawler, d samqp.Delivery) error {
+func (w *Worker) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
 	r := &t.AnnotatedResource{
 		Resource: &t.Resource{},
 	}
@@ -135,10 +147,10 @@ func (w *Worker) crawlDelivery(ctx context.Context, c *crawler.Crawler, d samqp.
 
 	log.Printf("Crawling: %v\n", r)
 
-	return c.Crawl(ctx, r)
+	return w.crawler.Crawl(ctx, r)
 }
 
-func (w *Worker) startWorker(ctx context.Context, c *crawler.Crawler, deliveries <-chan samqp.Delivery) {
+func (w *Worker) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -148,7 +160,7 @@ func (w *Worker) startWorker(ctx context.Context, c *crawler.Crawler, deliveries
 				// This is a fatal error; it should never happen - crash the program!
 				panic("unexpected channel close")
 			}
-			if err := w.crawlDelivery(ctx, c, d); err != nil {
+			if err := w.crawlDelivery(ctx, d); err != nil {
 				shouldRetry := crawler.IsTemporaryErr(err)
 
 				if err := d.Reject(shouldRetry); err != nil {
@@ -169,75 +181,68 @@ func (w *Worker) startWorker(ctx context.Context, c *crawler.Crawler, deliveries
 	}
 }
 
-func (w *Worker) startWorkers(ctx context.Context, c *crawler.Crawler, deliveries <-chan samqp.Delivery, workers uint) {
+func (w *Worker) startWorkers(ctx context.Context, deliveries <-chan samqp.Delivery, workers uint) {
 	var i uint
 	for i = 0; i < workers; i++ {
 		log.Println("Starting worker.")
-		go w.startWorker(ctx, c, deliveries)
+		go w.startWorker(ctx, deliveries)
 	}
 }
 
-// TODO: This would prevent us from passing crawlers around and it would make Start not return errors.
-// func (w *Worker) Initialize() error {
-// 	w.crawler, err := w.getCrawler(ctx)
-// 	if err != nil {
-// 		return err
-// 	}
+func (w *Worker) Initialize(ctx context.Context) error {
+	w.dialer = &RetryingDialer{
+		Dialer: net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: false,
+		},
+		Context: ctx,
+	}
+	w.httpClient = getHTTPClient(w.dialer.DialContext)
 
-// 	w.consumeChans, err := w.getConsumeChans(ctx)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-func (w *Worker) Start(ctx context.Context) error {
-	c, err := w.getCrawler(ctx)
-	if err != nil {
+	log.Println("Initializing crawler.")
+	if err := w.makeCrawler(ctx); err != nil {
 		return err
 	}
 
-	consumeChans, err := w.getConsumeChans(ctx)
-	if err != nil {
+	log.Println("Initializing consuming channels.")
+	return w.makeConsumeChans(ctx)
+}
+
+func (w *Worker) Start(ctx context.Context) {
+	if w.crawler == nil {
+		panic("Must call Initialize() before Start()")
+	}
+
+	log.Println("Starting workers.")
+	// TODO: Clean this up, generating the queue when initializing a worker, perhaps even give workers an 'identity'
+	// for better debugging.
+	w.startWorkers(ctx, w.consumeChans.Files, w.config.Workers.FileWorkers)
+	w.startWorkers(ctx, w.consumeChans.Hashes, w.config.Workers.HashWorkers)
+	w.startWorkers(ctx, w.consumeChans.Directories, w.config.Workers.DirectoryWorkers)
+}
+
+func (w *Worker) makeConsumeChans(ctx context.Context) error {
+	var (
+		queues *crawler.Queues
+		err    error
+	)
+
+	if queues, err = w.getQueues(ctx); err != nil {
 		return err
 	}
 
-	w.startWorkers(ctx, c, consumeChans.Files, w.config.Workers.FileWorkers)
-	w.startWorkers(ctx, c, consumeChans.Hashes, w.config.Workers.HashWorkers)
-	w.startWorkers(ctx, c, consumeChans.Directories, w.config.Workers.DirectoryWorkers)
+	if w.consumeChans.Files, err = queues.Files.Consume(ctx); err != nil {
+		return err
+	}
+
+	if w.consumeChans.Directories, err = queues.Directories.Consume(ctx); err != nil {
+		return err
+	}
+
+	if w.consumeChans.Hashes, err = queues.Hashes.Consume(ctx); err != nil {
+		return err
+	}
 
 	return nil
-}
-
-type consumeChans struct {
-	Files       <-chan samqp.Delivery
-	Directories <-chan samqp.Delivery
-	Hashes      <-chan samqp.Delivery
-}
-
-func (w *Worker) getConsumeChans(ctx context.Context) (*consumeChans, error) {
-	var c consumeChans
-
-	queues, err := w.getQueues(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	c.Files, err = queues.Files.Consume(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	c.Directories, err = queues.Directories.Consume(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	c.Hashes, err = queues.Hashes.Consume(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &c, nil
 }
