@@ -45,6 +45,8 @@ func (e *Extractor) get(ctx context.Context, url string) (resp *http.Response, e
 // retryingGet is an infinitely retrying GET on intermittent errors (e.g. server goes)
 // TODO: Replace by proper circuit breakers.
 func (e *Extractor) retryingGet(ctx context.Context, url string) (resp *http.Response, err error) {
+	// It *seems* as if this retryer is too eager.
+
 	retries := 0
 
 	for {
