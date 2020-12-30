@@ -36,8 +36,8 @@ func NewConnection(ctx context.Context, cfg *Config, i *instr.Instrumentation) (
 		Instrumentation: i,
 	}
 
-	blockChan := amqpConn.NotifyBlocked(make(chan amqp.Blocking))
-	closeChan := amqpConn.NotifyClose(make(chan *amqp.Error))
+	blockChan := amqpConn.NotifyBlocked(make(chan amqp.Blocking, 1))
+	closeChan := amqpConn.NotifyClose(make(chan *amqp.Error, 1))
 
 	monitorConn := func() {
 		ctx, span := i.Tracer.Start(ctx, "queue.amqp.monitorConn", trace.WithAttributes(label.Stringer("connection", c)))
@@ -55,10 +55,10 @@ func NewConnection(ctx context.Context, cfg *Config, i *instr.Instrumentation) (
 					span.AddEvent(ctx, "amqp-connection-blocked",
 						label.String("reason", b.Reason),
 					)
-					log.Printf("AMQP connection blocked")
+					log.Println("AMQP connection blocked")
 				} else {
 					span.AddEvent(ctx, "amqp-connection-unblocked")
-					log.Printf("AMQP connection unblocked")
+					log.Println("AMQP connection unblocked")
 				}
 			case err := <-closeChan:
 				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
