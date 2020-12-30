@@ -2,8 +2,12 @@ package commands
 
 import (
 	"context"
+	"net"
 	"time"
 
+	samqp "github.com/streadway/amqp"
+
+	"github.com/ipfs-search/ipfs-search/commands/crawlworker"
 	"github.com/ipfs-search/ipfs-search/config"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/queue/amqp"
@@ -20,9 +24,23 @@ func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
 
 	i := instr.New()
 
+	dialer := &crawlworker.RetryingDialer{
+		Dialer: net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: false,
+		},
+		Context: ctx,
+	}
+
+	amqpConfig := &samqp.Config{
+		Dial: dialer.Dial,
+	}
+
 	f := amqp.PublisherFactory{
 		Config:          cfg.AMQPConfig(),
 		Queue:           "hashes",
+		AMQPConfig:      amqpConfig,
 		Instrumentation: i,
 	}
 

@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
@@ -42,41 +41,6 @@ func (e *Extractor) get(ctx context.Context, url string) (resp *http.Response, e
 	return e.client.Do(req)
 }
 
-// retryingGet is an infinitely retrying GET on intermittent errors (e.g. server goes)
-// TODO: Replace by proper circuit breakers.
-func (e *Extractor) retryingGet(ctx context.Context, url string) (resp *http.Response, err error) {
-	// It *seems* as if this retryer is too eager.
-
-	retries := 0
-
-	for {
-		log.Printf("Fetching metadata from '%s'", url)
-
-		resp, err := e.get(ctx, url)
-
-		if err == nil {
-			// Success, we're done here.
-			return resp, nil
-		}
-
-		if !shouldRetry(err) {
-			// TODO: shouldRetry is probably a sensible update to go, which might simplify
-			// shouldRetry - but better to have tracing infra in place before we go there.
-			//
-			// Any returned error will be of type *url.Error. The url.Error value's Timeout
-			// method will report true if request timed out or was canceled.
-			// Ref: https://golang.org/pkg/net/http/#Client.Do
-			// Fatal error, don't retry
-			return nil, err
-		}
-
-		retries++
-
-		log.Printf("Retrying (%d) in %s", retries, e.config.RetryWait)
-		time.Sleep(e.config.RetryWait)
-	}
-}
-
 func (e *Extractor) getExtractURL(r *t.AnnotatedResource) string {
 	// TODO: This should be TIKAURL?url=GATEWAYURL (or something similar)
 	gwURL := e.protocol.GatewayURL(r)
@@ -95,8 +59,7 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	)
 	defer span.End()
 
-	resp, err := e.retryingGet(ctx, e.getExtractURL(r))
-
+	resp, err := e.get(ctx, e.getExtractURL(r))
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err

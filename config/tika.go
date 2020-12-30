@@ -9,7 +9,6 @@ import (
 type Tika struct {
 	TikaServerURL  string        `yaml:"url" env:"IPFS_TIKA_URL"`
 	RequestTimeout time.Duration `yaml:"timeout"`
-	RetryWait      time.Duration `yaml:"retry_wait"`
 }
 
 func (c *Config) TikaConfig() *tika.Config {

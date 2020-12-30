@@ -27,10 +27,12 @@ func Crawl(ctx context.Context, cfg *config.Config) error {
 	defer span.End()
 
 	c := crawlworker.New(cfg, instr)
-	err = c.Start(ctx)
+	err = c.Initialize(ctx)
 	if err != nil {
 		return err
 	}
+
+	c.Start(ctx)
 
 	// Context closure or panic is the only way to stop crawling
 	<-ctx.Done()

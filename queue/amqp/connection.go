@@ -19,11 +19,11 @@ type Connection struct {
 }
 
 // NewConnection returns new AMQP connection
-func NewConnection(ctx context.Context, cfg *Config, i *instr.Instrumentation) (*Connection, error) {
+func NewConnection(ctx context.Context, cfg *Config, amqpConfig *amqp.Config, i *instr.Instrumentation) (*Connection, error) {
 	ctx, span := i.Tracer.Start(ctx, "queue.amqp.NewConnection", trace.WithAttributes(label.String("amqp_url", cfg.URL)))
 	defer span.End()
 
-	amqpConn, err := amqp.Dial(cfg.URL)
+	amqpConn, err := amqp.DialConfig(cfg.URL, *amqpConfig)
 
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
