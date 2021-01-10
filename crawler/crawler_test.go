@@ -2,7 +2,7 @@ package crawler
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -205,17 +205,12 @@ func (s *CrawlerTestSuite) TestCrawlInvalid() {
 		},
 	}
 
-	invalidErr := errors.New("invalid")
+	invalidErr := fmt.Errorf("%w: %s", t.ErrInvalidResource, "test error")
 
 	// Mock assertions
 	s.protocol.
 		On("Stat", mock.Anything, r).
 		Return(invalidErr).
-		Once()
-
-	s.protocol.
-		On("IsInvalidResourceErr", invalidErr).
-		Return(true).
 		Once()
 
 	// Mock assertions
@@ -331,11 +326,6 @@ func (s *CrawlerTestSuite) TestCrawlStatTimeout() {
 	s.protocol.
 		On("Stat", mock.Anything, r).
 		Return(context.DeadlineExceeded).
-		Once()
-
-	s.protocol.
-		On("IsInvalidResourceErr", context.DeadlineExceeded).
-		Return(false).
 		Once()
 
 	s.assertNotExists(r.Resource.ID)
@@ -558,28 +548,28 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 
 	s.invalidIdx.
 		On("Index", mock.Anything, unsupportedEntry.ID, mock.MatchedBy(func(f *indexTypes.Invalid) bool {
-			return s.Equal(f.Error, "unsupported type")
+			return s.Equal("unsupported type", f.Error)
 		})).
 		Return(nil).
 		Once()
 
 	s.fileQ.
 		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
-			return s.Equal(*f, fileEntry)
+			return s.Equal(fileEntry, *f)
 		}), mock.AnythingOfType("uint8")).
 		Return(nil).
 		Once()
 
 	s.dirQ.
 		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
-			return s.Equal(*f, dirEntry)
+			return s.Equal(dirEntry, *f)
 		}), mock.AnythingOfType("uint8")).
 		Return(nil).
 		Once()
 
 	s.hashQ.
 		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
-			return s.Equal(*f, unknownEntry)
+			return s.Equal(unknownEntry, *f)
 		}), mock.AnythingOfType("uint8")).
 		Return(nil).
 		Once()

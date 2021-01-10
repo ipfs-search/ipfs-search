@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/ipfs-search/ipfs-search/extractor"
@@ -40,13 +41,13 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	}
 
 	if exists {
-		log.Printf("Indexing invalid resource %v", r)
+		log.Printf("Not updating existing resource %v", r)
 		return nil
 	}
 
 	if err := c.ensureType(ctx, r); err != nil {
-		if c.protocol.IsInvalidResourceErr(err) {
-			// Resource is invalid, index as such, overwriting previous error.
+		if errors.Is(err, t.ErrInvalidResource) {
+			// Resource is invalid, index as such, throwing away ErrInvalidResource in favor of the result of indexing operation.
 			log.Printf("Indexing invalid resource %v", r)
 
 			err = c.indexInvalid(ctx, r, err)

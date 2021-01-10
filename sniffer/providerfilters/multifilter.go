@@ -1,7 +1,13 @@
 package providerfilters
 
 import (
+	"errors"
+	"fmt"
 	t "github.com/ipfs-search/ipfs-search/types"
+)
+
+var (
+	ErrFilter = errors.New("filter error")
 )
 
 // MultiFilter efficiently combines multiple filters into a single filter.
@@ -23,7 +29,7 @@ func (m *MultiFilter) Filter(p t.Provider) (bool, error) {
 		include, err := f.Filter(p)
 
 		if err != nil {
-			return false, t.NewProviderErrorf(err, p, "Error %s with filter %v", err, f)
+			return false, fmt.Errorf("%w: %s with filter %v", ErrFilter, err, f)
 		}
 
 		if !include {

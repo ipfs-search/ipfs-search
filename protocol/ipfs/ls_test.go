@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/dankinder/httpmock"
 	"github.com/stretchr/testify/mock"
@@ -227,7 +228,7 @@ func (s *LsTestSuite) TestNormalDirectory() {
 }
 
 func (s *LsTestSuite) TestLsInvalid() {
-	errors := []string{
+	errStrs := []string{
 		"proto: required field \"Type\" not set",             // Example: QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8
 		"proto: unixfs_pb.Data: illegal tag 0 (wire type 0)", // Example: QmQkaTUmqcdGAXKaFXpe8t8yaEDGHe7xGQJHcfihrzAFTj
 		"unexpected EOF",                 // Example: QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq
@@ -244,7 +245,7 @@ func (s *LsTestSuite) TestLsInvalid() {
 
 	rURL := fmt.Sprintf("/api/v0/ls?arg=%%2Fipfs%%2F%s&resolve-type=false&size=false&stream=true", r.ID)
 
-	for _, errStr := range errors {
+	for _, errStr := range errStrs {
 		msgStruct := &struct {
 			Message string
 			Code    int
@@ -267,8 +268,8 @@ func (s *LsTestSuite) TestLsInvalid() {
 
 		s.Error(err)
 		s.mockAPIHandler.AssertExpectations(s.T())
-
-		s.True(s.ipfs.IsInvalidResourceErr(err))
+		fmt.Printf("%T:%v\n", err, err)
+		s.True(errors.Is(err, t.ErrInvalidResource))
 	}
 }
 
@@ -305,7 +306,7 @@ func (s *LsTestSuite) TestLsNonInvalid500() {
 	s.Error(err)
 	s.mockAPIHandler.AssertExpectations(s.T())
 
-	s.False(s.ipfs.IsInvalidResourceErr(err))
+	s.False(errors.Is(t.ErrInvalidResource, err))
 }
 
 func TestLsTestSuite(t *testing.T) {

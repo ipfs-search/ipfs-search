@@ -1,22 +1,16 @@
 package crawler
 
 import (
-	"fmt"
-
-	t "github.com/ipfs-search/ipfs-search/types"
+	"errors"
 )
 
-// UnexpectedTypeError is returned when encountering an unexpected resource type.
-type UnexpectedTypeError struct {
-	t.ResourceType
-}
-
-func (e UnexpectedTypeError) Error() string {
-	return fmt.Sprintf("unexpected type: %s", e.ResourceType)
-}
+var (
+	ErrUnexpectedType = errors.New("unexpected type")
+)
 
 // IsTemporaryErr returns true whenever an underlying error signifies a known temporary outage condition rather than permanent failure.
 func IsTemporaryErr(err error) bool {
 	// TODO: Implement & test me.
-	return true
+	// TODO: Decide whether, with the retrying GET, we actually want this!
+	return false
 }

@@ -6,11 +6,13 @@ import (
 )
 
 // Crawler contains configuration for a Crawler.
+// TODO: Provide yaml names for these.
 type Crawler struct {
 	DirEntryBufferSize uint          // Size of buffer for processing directory entry channels.
 	MinUpdateAge       time.Duration // The minimum age for items to be updated.
 	StatTimeout        time.Duration // Timeout for Stat() calls.
 	DirEntryTimeout    time.Duration // Timeout *between* directory entries.
+	MaxDirSize         uint          // Maximum number of directory entries
 }
 
 func (c *Config) CrawlerConfig() *crawler.Config {

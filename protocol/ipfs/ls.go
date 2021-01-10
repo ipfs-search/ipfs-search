@@ -136,6 +136,9 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.Ann
 	}
 	defer resp.Close()
 	if resp.Error != nil {
+		if isInvalidResourceErr(resp.Error) {
+			return fmt.Errorf("%w: %v", t.ErrInvalidResource, resp.Error)
+		}
 		return resp.Error
 	}
 

@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"context"
+	"fmt"
 
 	t "github.com/ipfs-search/ipfs-search/types"
 )
@@ -42,6 +43,9 @@ func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 	result := new(statResult)
 
 	if err := req.Exec(ctx, result); err != nil {
+		if isInvalidResourceErr(err) {
+			return fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
+		}
 		return err
 	}
 

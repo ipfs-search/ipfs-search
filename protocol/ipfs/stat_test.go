@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/dankinder/httpmock"
 	"github.com/stretchr/testify/mock"
@@ -231,7 +232,7 @@ func (s *StatTestSuite) TestUnsupported() {
 }
 
 func (s *StatTestSuite) TestInvalid() {
-	errors := []string{
+	errStrs := []string{
 		"proto: required field \"Type\" not set",             // Example: QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8
 		"proto: unixfs_pb.Data: illegal tag 0 (wire type 0)", // Example: QmQkaTUmqcdGAXKaFXpe8t8yaEDGHe7xGQJHcfihrzAFTj
 		"unexpected EOF",                 // Example: QmdtMPULYK2xBVt2stYdAdxmuQukbJNFEgsdB5KV3jvsBq
@@ -248,7 +249,7 @@ func (s *StatTestSuite) TestInvalid() {
 
 	rURL := fmt.Sprintf("/api/v0/files/stat?arg=%%2Fipfs%%2F%s", r.ID)
 
-	for _, errStr := range errors {
+	for _, errStr := range errStrs {
 		msgStruct := &struct {
 			Message string
 			Code    int
@@ -270,8 +271,7 @@ func (s *StatTestSuite) TestInvalid() {
 
 		s.Error(err)
 		s.mockAPIHandler.AssertExpectations(s.T())
-
-		s.True(s.ipfs.IsInvalidResourceErr(err))
+		s.True(errors.Is(err, t.ErrInvalidResource))
 	}
 
 }
@@ -309,7 +309,7 @@ func (s *StatTestSuite) TestNonInvalid500() {
 	s.Error(err)
 	s.mockAPIHandler.AssertExpectations(s.T())
 
-	s.False(s.ipfs.IsInvalidResourceErr(err))
+	s.False(errors.Is(err, t.ErrInvalidResource))
 }
 
 func TestStatTestSuite(t *testing.T) {
