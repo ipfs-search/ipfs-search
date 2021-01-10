@@ -1,10 +1,12 @@
 package providerfilters
 
 import (
-	"github.com/ipfs-search/ipfs-search/types"
-	"github.com/stretchr/testify/assert"
+	"errors"
 	"testing"
 	"time"
+
+	"github.com/ipfs-search/ipfs-search/types"
+	"github.com/stretchr/testify/assert"
 )
 
 var filter = NewCidFilter()
@@ -80,8 +82,7 @@ func TestUnsupported(t *testing.T) {
 
 	_, err := filter.Filter(*p)
 
-	assert.Error(err)
-	assert.Contains(err.Error(), "Unsupported codec")
+	assert.True(errors.Is(err, ErrUnsupportedCodec))
 }
 
 func TestInvalid(t *testing.T) {
@@ -96,8 +97,7 @@ func TestInvalid(t *testing.T) {
 
 	_, err := filter.Filter(*p)
 
-	assert.Error(err)
-	assert.Contains(err.Error(), "decoding CID")
+	assert.True(errors.Is(err, ErrDecodingCID))
 }
 
 func TestNonIpfs(t *testing.T) {
@@ -112,7 +112,5 @@ func TestNonIpfs(t *testing.T) {
 
 	_, err := filter.Filter(*p)
 
-	assert.Error(err)
-	assert.Contains(err.Error(), "Unsupported protocol")
-
+	assert.True(errors.Is(err, ErrUnsupportedProtocol))
 }

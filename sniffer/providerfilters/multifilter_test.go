@@ -2,9 +2,10 @@ package providerfilters
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/ipfs-search/ipfs-search/types"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestPassSingle(t *testing.T) {
@@ -105,6 +106,6 @@ func TestError(t *testing.T) {
 	m := NewMultiFilter(&f)
 	_, err := m.Filter(types.Provider{})
 
-	assert.Error(err)
-	assert.True(errors.Is(err, mockErr))
+	assert.True(errors.Is(err, ErrFilter))
+	assert.Contains(err.Error(), "filter error: test")
 }

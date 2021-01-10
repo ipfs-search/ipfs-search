@@ -3,6 +3,7 @@ package crawler
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/ipfs-search/ipfs-search/index"
@@ -44,6 +45,10 @@ func (c *Crawler) indexInvalid(ctx context.Context, r *t.AnnotatedResource, err 
 	})
 }
 
+type unwrappableErr interface {
+	Unwrap() error
+}
+
 func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	var (
 		err        error
@@ -57,9 +62,6 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 			Document: makeDocument(r),
 		}
 		err = c.extractor.Extract(ctx, r, f)
-		// TODO
-		// This might yield an unexpected end of file, or a non-timeout or IPFS daemon related
-		// error which renders a file invalid!
 
 		index = c.indexes.Files
 		properties = f
@@ -69,16 +71,14 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 			Document: makeDocument(r),
 		}
 		err = c.crawlDir(ctx, r, d)
-		// TODO
-		// Depending on err, this might be invalid!
-		// (although unlikely, as stat was above)
 
 		index = c.indexes.Directories
 		properties = d
 
 	case t.UnsupportedType:
 		// Index unsupported items as invalid.
-		return c.indexInvalid(ctx, r, errors.New(indexTypes.UnsupportedTypeError))
+		// TODO: Ensure test coverage.
+		err = t.ErrUnsupportedType
 
 	case t.PartialType:
 		// Not indexing partials, we're done.
@@ -90,6 +90,11 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	}
 
 	if err != nil {
+		if errors.Is(err, t.ErrInvalidResource) {
+			log.Printf("Indexing invalid '%v', err: %v", r, err)
+			// TODO: Ensure test coverage.
+			return c.indexInvalid(ctx, r, err)
+		}
 		return err
 	}
 

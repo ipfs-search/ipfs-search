@@ -10,14 +10,16 @@ type Config struct {
 	MinUpdateAge       time.Duration // The minimum age for items to be updated.
 	StatTimeout        time.Duration // Timeout for Stat() calls.
 	DirEntryTimeout    time.Duration // Timeout *between* directory entries.
+	MaxDirSize         uint          // Maximum number of directory entries
 }
 
 // DefaultConfig generates a default configuration for a Crawler.
 func DefaultConfig() *Config {
 	return &Config{
-		DirEntryBufferSize: 2048,
+		DirEntryBufferSize: 8192,
 		MinUpdateAge:       time.Hour,
 		StatTimeout:        60 * time.Second,
 		DirEntryTimeout:    60 * time.Second,
+		MaxDirSize:         32768,
 	}
 }
