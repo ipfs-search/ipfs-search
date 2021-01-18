@@ -29,6 +29,7 @@ func (c *Channel) Queue(ctx context.Context, name string) (*Queue, error) {
 		amqp.Table{
 			"x-max-priority": 9,                   // Enable all 9 priorities
 			"x-message-ttl":  1000 * 60 * 60 * 24, // Expire messages after 24 hours
+			"x-queue-mode":   "lazy",              // Allow RabbitMQ to write queue to disk as fast as possible
 		},
 	)
 	if err != nil {
