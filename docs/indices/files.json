@@ -194,7 +194,7 @@
                 "type": "keyword"
             },
             "size": {
-                "type": "unsigned_long",
+                "type": "long",
                 "ignore_malformed": true
             },
             "references": {
