@@ -21,6 +21,7 @@ type Config struct {
 	AMQP          `yaml:"amqp"`
 	Tika          `yaml:"tika"`
 
+	Instr   `yaml:"instrumentation"`
 	Crawler `yaml:"crawler"`
 	Sniffer `yaml:"sniffer"`
 	Indexes `yaml:"indexes"`

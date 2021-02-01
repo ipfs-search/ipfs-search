@@ -16,7 +16,7 @@ import (
 
 // AddHash queues a single IPFS hash for indexing
 func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
-	instFlusher, err := instr.Install("ipfs-search-add")
+	instFlusher, err := instr.Install(cfg.InstrConfig(), "ipfs-crawler add")
 	if err != nil {
 		return err
 	}

@@ -41,6 +41,7 @@ services:
       - IPFS_API_URL=http://ipfs:5001
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
+      - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces
     deploy:
       restart_policy:
         condition: on-failure
@@ -61,3 +62,11 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+  jaeger:
+    image: jaegertracing/all-in-one
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+    ports:
+      - "6831:6831/udp" # Agent
+      - "16686:16686"   # Frontend
