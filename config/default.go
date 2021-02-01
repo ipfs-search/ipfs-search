@@ -9,6 +9,7 @@ func Default() *Config {
         },
         AMQPDefaults(),
         TikaDefaults(),
+        InstrDefaults(),
         CrawlerDefaults(),
         SnifferDefaults(),
         IndexesDefaults(),

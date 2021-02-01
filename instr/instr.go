@@ -12,29 +12,29 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-const name = "github.com/ipfs-search/instr"
+const (
+	name = "github.com/ipfs-search"
+)
 
 type Instrumentation struct {
 	Tracer trace.Tracer
 	Meter  metric.Meter
 }
 
-func Install(serviceName string) (func(), error) {
-	// First parameter is a flusher, should be called on context close!
-	log.Printf("Creating Jaeger pipeline: %s", serviceName)
+// Install configures and installs a Jaeger tracing pipeline. The first returned argument is a flusher, which should be called on program exit.
+func Install(config *Config, serviceName string) (func(), error) {
+	log.Printf("Creating Jaeger pipeline for service '%s' at ratio %f to endpoint %s", serviceName, config.SamplingRatio, config.JaegerEndpoint)
 
 	// Configure context propagation
 	global.SetTextMapPropagator(otel.NewCompositeTextMapPropagator(propagators.TraceContext{}, propagators.Baggage{}))
 
 	// Configure sampler; default 1% of incoming requests (sniffed hashes)
-	sampler := sdktrace.ParentBased(sdktrace.TraceIDRatioBased(0.01))
-	// sampler := sdktrace.AlwaysSample()
+	sampler := sdktrace.ParentBased(sdktrace.TraceIDRatioBased(config.SamplingRatio))
 
 	return jaeger.InstallNewPipeline(
-		jaeger.WithAgentEndpoint("localhost:6831"),
+		jaeger.WithCollectorEndpoint(config.JaegerEndpoint),
 		jaeger.WithProcess(jaeger.Process{ServiceName: serviceName}),
 		jaeger.WithSDK(&sdktrace.Config{DefaultSampler: sampler}),
-		// jaeger.WithCollectorEndpoint("http://localhost:14268/api/traces"),
 	)
 }
 

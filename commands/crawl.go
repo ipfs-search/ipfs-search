@@ -14,7 +14,7 @@ import (
 
 // Crawl configures and initializes crawling
 func Crawl(ctx context.Context, cfg *config.Config) error {
-	instFlusher, err := instr.Install("ipfs-crawler")
+	instFlusher, err := instr.Install(cfg.InstrConfig(), "ipfs-crawler")
 	if err != nil {
 		log.Fatal(err)
 	}

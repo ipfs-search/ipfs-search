@@ -12,11 +12,11 @@ type IPFS struct {
 	PartialSize datasize.ByteSize `yaml:"partial_size"`
 }
 
-func IPFSDefaults() IPFS {
-	return IPFS(*ipfs.DefaultConfig())
-}
-
 func (c *Config) IPFSConfig() *ipfs.Config {
 	cfg := ipfs.Config(c.IPFS)
 	return &cfg
+}
+
+func IPFSDefaults() IPFS {
+	return IPFS(*ipfs.DefaultConfig())
 }
