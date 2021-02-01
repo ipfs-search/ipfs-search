@@ -12,7 +12,7 @@ COPY go.mod go.sum /src/
 # Because of how the layer caching system works in Docker, the  go mod download
 # command will _ only_ be re-run when the go.mod or go.sum file change
 # (or when we add another docker instruction this line)
-RUN go mod download
+RUN go mod download && go mod graph | awk '{if ($1 !~ "@") print $2}' | xargs go get -v
 
 # Here we copy the rest of the source code
 COPY . /src/
