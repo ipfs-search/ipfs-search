@@ -1,4 +1,4 @@
-package crawlworker
+package worker
 
 import (
 	"context"
@@ -19,6 +19,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/protocol/ipfs"
 	"github.com/ipfs-search/ipfs-search/queue/amqp"
 	t "github.com/ipfs-search/ipfs-search/types"
+	"github.com/ipfs-search/ipfs-search/utils"
 
 	samqp "github.com/streadway/amqp"
 )
@@ -27,7 +28,7 @@ type Worker struct {
 	config       *config.Config
 	httpClient   *http.Client
 	instr        *instr.Instrumentation
-	dialer       *RetryingDialer
+	dialer       *utils.RetryingDialer
 	consumeChans struct {
 		Files       <-chan samqp.Delivery
 		Directories <-chan samqp.Delivery
@@ -189,7 +190,7 @@ func (w *Worker) startWorkers(ctx context.Context, deliveries <-chan samqp.Deliv
 }
 
 func (w *Worker) Initialize(ctx context.Context) error {
-	w.dialer = &RetryingDialer{
+	w.dialer = &utils.RetryingDialer{
 		Dialer: net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
@@ -197,7 +198,7 @@ func (w *Worker) Initialize(ctx context.Context) error {
 		},
 		Context: ctx,
 	}
-	w.httpClient = getHTTPClient(w.dialer.DialContext)
+	w.httpClient = utils.GetHTTPClient(w.dialer.DialContext)
 
 	log.Println("Initializing crawler.")
 	if err := w.makeCrawler(ctx); err != nil {

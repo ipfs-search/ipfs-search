@@ -1,4 +1,4 @@
-package crawlworker
+package utils
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func getHTTPClient(dialcontext func(ctx context.Context, network, address string) (net.Conn, error)) *http.Client {
+func GetHTTPClient(dialcontext func(ctx context.Context, network, address string) (net.Conn, error)) *http.Client {
 	transport := otelhttp.NewTransport(&http.Transport{
 		Proxy:               nil,
 		DialContext:         dialcontext,

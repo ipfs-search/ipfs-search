@@ -7,11 +7,11 @@ import (
 
 	samqp "github.com/streadway/amqp"
 
-	"github.com/ipfs-search/ipfs-search/commands/crawlworker"
 	"github.com/ipfs-search/ipfs-search/config"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/queue/amqp"
 	t "github.com/ipfs-search/ipfs-search/types"
+	"github.com/ipfs-search/ipfs-search/utils"
 )
 
 // AddHash queues a single IPFS hash for indexing
@@ -24,7 +24,7 @@ func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
 
 	i := instr.New()
 
-	dialer := &crawlworker.RetryingDialer{
+	dialer := &utils.RetryingDialer{
 		Dialer: net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
