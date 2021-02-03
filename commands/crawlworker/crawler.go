@@ -181,9 +181,8 @@ func (w *Worker) startWorker(ctx context.Context, deliveries <-chan samqp.Delive
 	}
 }
 
-func (w *Worker) startWorkers(ctx context.Context, deliveries <-chan samqp.Delivery, workers uint) {
-	var i uint
-	for i = 0; i < workers; i++ {
+func (w *Worker) startWorkers(ctx context.Context, deliveries <-chan samqp.Delivery, workers int) {
+	for i := 0; i < workers; i++ {
 		log.Println("Starting worker.")
 		go w.startWorker(ctx, deliveries)
 	}
