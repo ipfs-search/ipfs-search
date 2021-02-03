@@ -122,11 +122,9 @@ func decodeLink(dec *json.Decoder) (*lsLink, error) {
 
 // Ls returns a channel with AnnotatedResource's with Type and Size populated.
 func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.AnnotatedResource) error {
-	const cmd = "ls"
-
 	path := absolutePath(r)
 
-	resp, err := i.shell.Request(cmd, path).
+	resp, err := i.shell.Request("ls", path).
 		Option("resolve-type", false).
 		Option("size", false).
 		Option("stream", true).
@@ -134,31 +132,35 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.Ann
 	if err != nil {
 		return err
 	}
+
+	// If err == nil, response might be nil and cannot be closed.
 	defer resp.Close()
-	if resp.Error != nil {
+
+	if err := resp.Error; err != nil {
 		if isInvalidResourceErr(resp.Error) {
+			// Wrap original error with ErrInvalidResource.
 			return fmt.Errorf("%w: %v", t.ErrInvalidResource, resp.Error)
 		}
-		return resp.Error
+		return err
 	}
 
 	dec := json.NewDecoder(resp.Output)
 
 	for {
 		link, err := decodeLink(dec)
-		if errors.Is(err, io.EOF) {
-			// EOF; end of the list is a happy return
-
-			// Question: should we close the channel on return?
-			// Probably not: channel created and 'owner' by calling context.
-			return nil
-		}
-
-		// TODO: Consider using an error channel here; don't abort on individual decoding errors?
-		// Alternativel: propagate an InvalidType object instead and log the error without propagating.
-		// Needs real world testing. How many directories with invalid entries are there,
-		// and should we care about them?
 		if err != nil {
+			// Decoding errors result in termination of the loop.
+
+			// TODO: Consider using an error channel here; don't abort on individual decoding errors?
+			// Alternativel: propagate an InvalidType object instead and log the error without propagating.
+			// Needs real world testing. How many directories with invalid entries are there,
+			// and should we care about them?
+
+			if errors.Is(err, io.EOF) {
+				// EOF means we're done, hence err is cleared
+				err = nil
+			}
+
 			return err
 		}
 
