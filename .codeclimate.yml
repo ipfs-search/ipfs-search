@@ -3,6 +3,3 @@ checks:
   return-statements:
     config:
       threshold: 5
-plugins:
-  fixme:
-    enabled: true
