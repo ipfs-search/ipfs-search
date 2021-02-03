@@ -1,14 +1,18 @@
 package config
 
 import (
-	"github.com/ipfs-search/ipfs-search/extractor/tika"
 	"time"
+
+	"github.com/c2h5oh/datasize"
+
+	"github.com/ipfs-search/ipfs-search/extractor/tika"
 )
 
 // Tika is configuration pertaining to the sniffer
 type Tika struct {
-	TikaServerURL  string        `yaml:"url" env:"IPFS_TIKA_URL"`
-	RequestTimeout time.Duration `yaml:"timeout"`
+	TikaServerURL  string            `yaml:"url" env:"IPFS_TIKA_URL"`
+	RequestTimeout time.Duration     `yaml:"timeout"`
+	MaxFileSize    datasize.ByteSize `yaml:"max_file_size"`
 }
 
 func (c *Config) TikaConfig() *tika.Config {

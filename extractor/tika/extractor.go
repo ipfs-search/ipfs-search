@@ -59,6 +59,17 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	)
 	defer span.End()
 
+	if r.Size > uint64(e.config.MaxFileSize) {
+		// TODO: Coverage.
+		err := fmt.Errorf("%w: %d", extractor.ErrFileTooLarge, r.Size)
+		span.RecordError(
+			ctx, extractor.ErrFileTooLarge, trace.WithErrorStatus(codes.Error),
+			// TODO: Enable after otel upgrade.
+			// label.Int64("file.size", r.Size),
+		)
+		return err
+	}
+
 	resp, err := e.get(ctx, e.getExtractURL(r))
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
@@ -67,13 +78,14 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		err := fmt.Errorf("unexpected status '%s' from ipfs-tika", resp.Status)
+		err := fmt.Errorf("%w: unexpected status %s", extractor.ErrUnexpectedResponse, resp.Status)
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
 	// Parse resulting JSON
 	if err := json.NewDecoder(resp.Body).Decode(m); err != nil {
+		err := fmt.Errorf("%w: %v", extractor.ErrUnexpectedResponse, err)
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}

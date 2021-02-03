@@ -3,9 +3,11 @@ package crawler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/ipfs-search/ipfs-search/extractor"
 	"github.com/ipfs-search/ipfs-search/index"
 	indexTypes "github.com/ipfs-search/ipfs-search/index/types"
 	t "github.com/ipfs-search/ipfs-search/types"
@@ -58,6 +60,11 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 			Document: makeDocument(r),
 		}
 		err = c.extractor.Extract(ctx, r, f)
+		if errors.Is(err, extractor.ErrFileTooLarge) {
+			// TODO: Test me.
+			// Interpret files which are too large as invalid resources; prevent repeated attempts.
+			err = fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
+		}
 
 		index = c.indexes.Files
 		properties = f
@@ -78,7 +85,7 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 
 	case t.PartialType:
 		// Not indexing partials, we're done.
-		// TODO: Consider indexing partials to avoid future crawling.
+		// TODO: Consider indexing partials (similar but not identical to invalids) as to avoid repeated crawling, unless they are referred to.
 		return nil
 
 	case t.UndefinedType:
@@ -91,6 +98,7 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 			// TODO: Ensure test coverage.
 			return c.indexInvalid(ctx, r, err)
 		}
+
 		return err
 	}
 
