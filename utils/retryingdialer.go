@@ -1,6 +1,4 @@
-package crawlworker
-
-// TODO: Factor this out to separate component.
+package utils
 
 import (
 	"context"

@@ -5,6 +5,7 @@ import (
 )
 
 var (
+	// ErrUnexpectedType is returned when an unexpected type was encountered.
 	ErrUnexpectedType = errors.New("unexpected type")
 )
 

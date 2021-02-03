@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 
-	"github.com/ipfs-search/ipfs-search/commands/crawlworker"
 	"github.com/ipfs-search/ipfs-search/config"
+	"github.com/ipfs-search/ipfs-search/crawler/worker"
 	"github.com/ipfs-search/ipfs-search/instr"
 
 	"log"
@@ -20,14 +20,12 @@ func Crawl(ctx context.Context, cfg *config.Config) error {
 	}
 	defer instFlusher()
 
-	instr := instr.New()
-	tracer := instr.Tracer
+	i := instr.New()
 
-	ctx, span := tracer.Start(ctx, "commands.Crawl")
+	ctx, span := i.Tracer.Start(ctx, "commands.Crawl")
 	defer span.End()
 
-	c := crawlworker.New(cfg, instr)
-	err = c.Initialize(ctx)
+	c, err := worker.NewPool(ctx, cfg, i)
 	if err != nil {
 		return err
 	}

@@ -45,10 +45,6 @@ func (c *Crawler) indexInvalid(ctx context.Context, r *t.AnnotatedResource, err 
 	})
 }
 
-type unwrappableErr interface {
-	Unwrap() error
-}
-
 func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	var (
 		err        error
