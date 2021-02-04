@@ -23,6 +23,7 @@ var handleTimeout = time.Second
 
 type handleFunc func(context.Context, EvtProviderPut) error
 
+// EventSource generates events on a Bus after Put operations by proxying a Batching datastore.
 type EventSource struct {
 	bus     event.Bus
 	emitter event.Emitter
@@ -30,6 +31,7 @@ type EventSource struct {
 	*instr.Instrumentation
 }
 
+// New sets up a new EventSource or returns an error.
 func New(b event.Bus, ds datastore.Batching) (EventSource, error) {
 	e, err := b.Emitter(new(EvtProviderPut))
 	if err != nil {
@@ -96,6 +98,7 @@ func (s *EventSource) afterPut(k datastore.Key, v []byte, err error) error {
 	return err
 }
 
+// Batching returns the proxied Batching datastore.
 func (s *EventSource) Batching() datastore.Batching {
 	return s.ds
 }
@@ -122,7 +125,7 @@ func (s *EventSource) iterate(ctx context.Context, c <-chan interface{}, h handl
 	}
 }
 
-// Subscribe handleFunc to EvtProviderPut events
+// Subscribe handleFunc to EvtProviderPut events.
 func (s *EventSource) Subscribe(ctx context.Context, h handleFunc) error {
 	sub, err := s.bus.Subscribe(new(EvtProviderPut), eventbus.BufSize(bufSize))
 	if err != nil {

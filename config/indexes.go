@@ -1,5 +1,6 @@
 package config
 
+// Index represents the configuration for a single Index.
 type Index struct {
     Name string
 }

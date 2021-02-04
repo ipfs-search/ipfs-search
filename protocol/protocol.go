@@ -1,3 +1,4 @@
+// Package protocol is grouped around the Protocol component, the interface with one or multiple protocols. It is concurrency-safe.
 package protocol
 
 import (

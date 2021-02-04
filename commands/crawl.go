@@ -8,8 +8,6 @@ import (
 	"github.com/ipfs-search/ipfs-search/instr"
 
 	"log"
-	// "go.opentelemetry.io/otel/api/trace"
-	// "go.opentelemetry.io/otel/codes"
 )
 
 // Crawl configures and initializes crawling

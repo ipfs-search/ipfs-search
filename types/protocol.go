@@ -1,14 +1,14 @@
 package types
 
+// Protocol is an enum specifying the protocol.
+type Protocol uint8
+
 const (
 	// InvalidProtocol (default) value signifies an invalid protocol.
-	InvalidProtocol = iota
+	InvalidProtocol Protocol = iota
 	// IPFSProtocol (currently only supported protocol)
 	IPFSProtocol
 )
-
-// Protocol is an enum specifying the protocol.
-type Protocol uint8
 
 func (p Protocol) String() string {
 	switch p {

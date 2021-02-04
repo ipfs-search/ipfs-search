@@ -10,11 +10,13 @@ type Instr struct {
 	JaegerEndpoint string  `yaml:"jaeger_endpoint" env:"OTEL_EXPORTER_JAEGER_ENDPOINT"` // Send spans to Jaeger HTTP endpoint, for example `http://jaeger:14268/api/traces`.
 }
 
+// InstrConfig returns component-specific configuration from the canonical central configuration.
 func (c *Config) InstrConfig() *instr.Config {
 	cfg := instr.Config(c.Instr)
 	return &cfg
 }
 
+// InstrDefaults returns the defaults for component configuration, based on the component-specific configuration.
 func InstrDefaults() Instr {
 	return Instr(*instr.DefaultConfig())
 }

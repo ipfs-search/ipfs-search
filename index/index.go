@@ -1,3 +1,5 @@
+// Package index is grouped around the Index component, representing an index which stores and retrieves document properties.
+
 package index
 
 import (

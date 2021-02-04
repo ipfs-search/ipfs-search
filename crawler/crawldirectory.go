@@ -63,7 +63,7 @@ func addLink(e *t.AnnotatedResource, properties *indexTypes.Directory) {
 func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.AnnotatedResource, properties *indexTypes.Directory) error {
 	var (
 		dirCnt  uint = 0
-		isLarge      = false
+		isLarge bool = false
 	)
 
 	// Question: do we need a maximum entry cutoff point? E.g. 10^6 entries or something?

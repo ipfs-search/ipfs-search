@@ -1,3 +1,4 @@
+// Package crawler is grouped around the Crawler component, crawling and indexing content from an AnnotatedResource.
 package crawler
 
 import (

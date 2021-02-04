@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
+// Filter filters a stream of Providers through filters.Filter.
 type Filter struct {
 	f   filters.Filter
 	in  <-chan t.Provider
@@ -18,6 +19,7 @@ type Filter struct {
 	*instr.Instrumentation
 }
 
+// New creates a new Filter based on a Filter, an incoming and an outgoing channel.
 func New(f filters.Filter, in <-chan t.Provider, out chan<- t.Provider) Filter {
 	return Filter{
 		f:               f,

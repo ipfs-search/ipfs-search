@@ -13,11 +13,13 @@ type Sniffer struct {
 	BufferSize         uint          `yaml:"buffer_size"`
 }
 
+// SnifferConfig returns component-specific configuration from the canonical central configuration.
 func (c *Config) SnifferConfig() *sniffer.Config {
 	cfg := sniffer.Config(c.Sniffer)
 	return &cfg
 }
 
+// SnifferDefaults returns the defaults for component configuration, based on the component-specific configuration.
 func SnifferDefaults() Sniffer {
 	return Sniffer(*sniffer.DefaultConfig())
 }

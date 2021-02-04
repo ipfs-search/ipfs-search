@@ -19,6 +19,7 @@ type PublisherFactory struct {
 	*instr.Instrumentation
 }
 
+// NewPublisher generates a new publisher or returns an error.
 func (f PublisherFactory) NewPublisher(ctx context.Context) (queue.Publisher, error) {
 	ctx, span := f.Tracer.Start(ctx, "queue.amqp.NewPublisher",
 		trace.WithAttributes(label.String("amqp_url", f.Config.URL)),

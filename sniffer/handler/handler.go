@@ -12,11 +12,13 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
+// Handler handles EvtProviderPut events by writing Provider's to a channel.
 type Handler struct {
 	providers chan<- t.Provider
 	*instr.Instrumentation
 }
 
+// New returns a new handler, writing Provider's to providers.
 func New(providers chan<- t.Provider) Handler {
 	return Handler{
 		providers:       providers,
@@ -24,6 +26,7 @@ func New(providers chan<- t.Provider) Handler {
 	}
 }
 
+// HandleFunc writes a Provider to the Handler's providers channel for every EvtProviderPut it is called with.
 func (h *Handler) HandleFunc(ctx context.Context, e eventsource.EvtProviderPut) error {
 	ctx = trace.ContextWithRemoteSpanContext(ctx, e.SpanContext)
 	ctx, span := h.Tracer.Start(ctx, "handler.HandleFunc", trace.WithAttributes(

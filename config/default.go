@@ -1,12 +1,10 @@
 package config
 
-// Default() returns default configuration
+// Default returns default configuration.
 func Default() *Config {
     return &Config{
         IPFSDefaults(),
-        ElasticSearch{
-            URL: "http://localhost:9200",
-        },
+        ElasticSearchDefaults(),
         AMQPDefaults(),
         TikaDefaults(),
         InstrDefaults(),

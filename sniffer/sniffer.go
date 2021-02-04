@@ -1,3 +1,8 @@
+/*
+Package sniffer contains sniffer components which can be wired into a libp2p dht node by proxying the datastore.
+
+The canonical implementation thereof can be found in: https://github.com/ipfs-search/ipfs-sniffer
+*/
 package sniffer
 
 import (
@@ -23,6 +28,7 @@ import (
 )
 
 // Sniffer allows sniffing Batching datastore's events, effectively allowing sniffing of the IPFS DHT.
+// To effectively use the Sniffer, the proxied datastore needs to be acquired by calling `Batching()` on the Sniffer.
 type Sniffer struct {
 	cfg *Config
 	es  eventsource.EventSource
@@ -31,7 +37,7 @@ type Sniffer struct {
 	*instr.Instrumentation
 }
 
-// New creates a new Sniffer or returns an error.
+// New creates a new Sniffer based on a datastore, or returns an error.
 func New(cfg *Config, ds datastore.Batching, pub queue.PublisherFactory) (*Sniffer, error) {
 	bus := eventbus.NewBus()
 

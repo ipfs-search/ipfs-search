@@ -12,11 +12,13 @@ type IPFS struct {
 	PartialSize datasize.ByteSize `yaml:"partial_size"`
 }
 
+// IPFSConfig returns component-specific configuration from the canonical central configuration.
 func (c *Config) IPFSConfig() *ipfs.Config {
 	cfg := ipfs.Config(c.IPFS)
 	return &cfg
 }
 
+// IPFSDefaults returns the defaults for component configuration, based on the component-specific configuration.
 func IPFSDefaults() IPFS {
 	return IPFS(*ipfs.DefaultConfig())
 }

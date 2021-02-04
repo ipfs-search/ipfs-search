@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
+// Queuer publishes an AnnotatedResource to a queue Publisher for Provider's it receives on a channel.
 type Queuer struct {
 	queue        queue.Publisher
 	providers    <-chan t.Provider
@@ -20,6 +21,7 @@ type Queuer struct {
 	*instr.Instrumentation
 }
 
+// New creates a new Queuer.
 func New(q queue.Publisher, providers <-chan t.Provider) Queuer {
 	return Queuer{
 		queue:           q,
@@ -64,6 +66,7 @@ func (q *Queuer) iterate(ctx context.Context) error {
 	}
 }
 
+// Queue reads from the providers channel and queue's its items.
 func (q *Queuer) Queue(ctx context.Context) error {
 	for {
 		if err := q.iterate(ctx); err != nil {

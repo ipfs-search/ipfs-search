@@ -1,3 +1,4 @@
+// Package instr contains components pertaining to observability and instrumentation.
 package instr
 
 import (
@@ -16,6 +17,7 @@ const (
 	name = "github.com/ipfs-search"
 )
 
+// Instrumentation provides a canonical representation of instrumentation.
 type Instrumentation struct {
 	Tracer trace.Tracer
 	Meter  metric.Meter
@@ -38,6 +40,7 @@ func Install(config *Config, serviceName string) (func(), error) {
 	)
 }
 
+// New generates a representation of instrumentation containing the globally registered tracer and meter.
 func New() *Instrumentation {
 	return &Instrumentation{
 		Tracer: global.Tracer(name),

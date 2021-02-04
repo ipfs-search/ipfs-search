@@ -1,3 +1,4 @@
+// Package extractor is grouped around the Extractor component, extracting metadata from an AnnotatedResource.
 package extractor
 
 import (
@@ -6,8 +7,7 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
-// Extract metadata from a (potentially) referenced resource, updating
-// Metadata or returning an error.
+// Extractor extracts metadata from an AnnotatedResource, updating the metadata interface or returning an error.
 type Extractor interface {
-	Extract(context.Context, *t.AnnotatedResource, interface{}) error
+	Extract(ctx context.Context, resource *t.AnnotatedResource, metadata interface{}) error
 }

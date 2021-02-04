@@ -1,3 +1,4 @@
+// Package queue provides queueing semantics.
 package queue
 
 import (
@@ -20,6 +21,7 @@ type PublisherFactory interface {
 	NewPublisher(context.Context) (Publisher, error)
 }
 
+// Queue allows both publishing as well as consuming.
 type Queue interface {
 	Publisher
 	Consumer
