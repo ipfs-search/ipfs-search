@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -193,6 +194,22 @@ func (s *CrawlerTestSuite) TestCrawlUnsupportedType() {
 	s.assertExpectations()
 }
 
+func (s *CrawlerTestSuite) TestCrawlUnexpectedType() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Stat: t.Stat{
+			Type: 254,
+		},
+	}
+
+	// Unexpected types yield a panic; undefined behaviour
+	s.Panics(func() { _ = s.c.Crawl(s.ctx, r) })
+}
+
 func (s *CrawlerTestSuite) TestCrawlInvalid() {
 	// Prepare resource
 	r := &t.AnnotatedResource{
@@ -297,6 +314,43 @@ func (s *CrawlerTestSuite) TestCrawlFileType() {
 			return s.Equal(f.Metadata, testMetadata) &&
 				s.Equal(f.Content, "testContent") &&
 				s.Equal(f.Size, uint64(15))
+		})).
+		Return(nil).
+		Once()
+
+	s.assertNotExists(r.Resource.ID)
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlLargeFile() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Stat: t.Stat{
+			Type: t.FileType,
+			Size: 15,
+		},
+	}
+
+	largeFileErr := fmt.Errorf("blabla %w", extractor.ErrFileTooLarge)
+
+	s.extractor.
+		On("Extract", mock.Anything, r, mock.Anything).
+		Return(largeFileErr).
+		Once()
+
+	s.invalidIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Invalid) bool {
+			return s.Equal("resource invalid: blabla file too large", f.Error)
 		})).
 		Return(nil).
 		Once()
@@ -584,6 +638,120 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryType() {
 	s.assertExpectations()
 }
 
+func (s *CrawlerTestSuite) TestCrawlDirectoryUnexpectedType() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Stat: t.Stat{
+			Type: t.DirectoryType,
+			Size: 23,
+		},
+	}
+
+	unexpectedEntry := t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv",
+		},
+		Stat: t.Stat{
+			Type: 255,
+		},
+	}
+
+	s.protocol.
+		On("Ls", mock.Anything, r, mock.AnythingOfType("chan<- *types.AnnotatedResource")).
+		Run(func(args mock.Arguments) {
+			// Write bogus directory entry
+			entryChan := args.Get(2).(chan<- *t.AnnotatedResource)
+			entryChan <- &unexpectedEntry
+		}).
+		Return(nil).
+		Once()
+
+	// Unexpected types yield a panic; undefined behaviour
+	s.Panics(func() { _ = s.c.Crawl(s.ctx, r) })
+}
+
+func (s *CrawlerTestSuite) TestCrawlLargeDirectory() {
+	s.cfg = DefaultConfig()
+
+	// Override MaxDirSize
+	s.cfg.MaxDirSize = 3
+
+	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor)
+
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Stat: t.Stat{
+			Type: t.DirectoryType,
+			Size: 23,
+		},
+	}
+
+	// Mock assertions
+	fileEntry := t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmafrLBfzRLV4XSH1XcaMMeaXEUhDJjmtDfsYU95TrWG87",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+			},
+			Name: "fileName.pdf",
+		},
+		Stat: t.Stat{
+			Type: t.FileType,
+			Size: 3431,
+		},
+	}
+
+	s.protocol.
+		On("Ls", mock.Anything, r, mock.AnythingOfType("chan<- *types.AnnotatedResource")).
+		Run(func(args mock.Arguments) {
+			// Write bogus directory entry
+			entryChan := args.Get(2).(chan<- *t.AnnotatedResource)
+			entryChan <- &fileEntry
+			entryChan <- &fileEntry
+			entryChan <- &fileEntry
+			entryChan <- &fileEntry
+			entryChan <- &fileEntry
+		}).
+		Return(nil).
+		Once()
+
+	s.invalidIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Invalid) bool {
+			return s.Equal("directory too large", f.Error)
+		})).
+		Return(nil).
+		Once()
+
+	s.fileQ.
+		On("Publish", mock.Anything, mock.MatchedBy(func(f *t.AnnotatedResource) bool {
+			return s.Equal(fileEntry, *f)
+		}), mock.AnythingOfType("uint8")).
+		Return(nil).
+		Times(5)
+
+	s.assertNotExists(r.Resource.ID)
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.NoError(err)
+	s.assertExpectations()
+}
+
 func (s *CrawlerTestSuite) TestCrawlDirEntryTimeout() {
 	s.cfg = DefaultConfig()
 
@@ -810,6 +978,116 @@ func (s *CrawlerTestSuite) TestCrawlAddReference() {
 
 	// Test result, side effects
 	s.NoError(err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlUpdateGetError() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+			},
+			Name: "NewReference.pdf",
+		},
+	}
+
+	testErr := errors.New("test")
+
+	s.fileIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, testErr).
+		Maybe()
+
+	s.dirIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.Equal(testErr, err)
+	s.assertExpectations()
+}
+
+func (s *CrawlerTestSuite) TestCrawlUpdateUpdateError() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+			},
+			Name: "NewReference.pdf",
+		},
+	}
+
+	// File is found, very recently, but a new reference is found.
+	s.fileIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Run(func(args mock.Arguments) {
+			u := args.Get(2).(*indexTypes.Update)
+			u.LastSeen = time.Now()
+			u.References = indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: "Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi",
+					Name:       "ExistingReference.pdf",
+				},
+			}
+		}).
+		Return(true, nil).
+		Once()
+
+	testErr := errors.New("test")
+
+	s.dirIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.fileIdx.
+		On("Update", mock.Anything, r.Resource.ID, mock.MatchedBy(func(u *indexTypes.Update) bool {
+			return s.ElementsMatch(u.References, indexTypes.References{
+				indexTypes.Reference{
+					ParentHash: "Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi",
+					Name:       "ExistingReference.pdf",
+				},
+				indexTypes.Reference{
+					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
+					Name:       "NewReference.pdf",
+				},
+			}) &&
+				s.WithinDuration(u.LastSeen, time.Now(), time.Second)
+		})).
+		Return(testErr).
+		Once()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Test result, side effects
+	s.Equal(testErr, err)
 	s.assertExpectations()
 }
 

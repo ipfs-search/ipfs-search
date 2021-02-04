@@ -19,6 +19,15 @@ type Crawler struct {
 	extractor extractor.Extractor
 }
 
+func isSupportedType(rType t.ResourceType) bool {
+	switch rType {
+	case t.UndefinedType, t.FileType, t.DirectoryType:
+		return true
+	default:
+		return false
+	}
+}
+
 // Crawl updates existing or crawls new resources, extracting metadata where applicable.
 func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	var err error
@@ -29,9 +38,8 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 		panic("invalid protocol")
 	}
 
-	switch r.Type {
-	case t.UnsupportedType, t.PartialType:
-		// Crawler should never be called with these types, this is unsupported behaviour.
+	if !isSupportedType(r.Type) {
+		// Calling crawler with unsupported types is undefined behaviour.
 		panic("invalid type for crawler")
 	}
 

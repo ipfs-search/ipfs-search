@@ -3,7 +3,6 @@ package crawler
 import (
 	"context"
 	"errors"
-	"fmt"
 	"golang.org/x/sync/errgroup"
 	"log"
 	"math/rand"
@@ -37,40 +36,35 @@ func (c *Crawler) crawlDir(ctx context.Context, r *t.AnnotatedResource, properti
 	return wg.Wait()
 }
 
-func resourceToLinkType(r *t.AnnotatedResource) (indexTypes.LinkType, error) {
+func resourceToLinkType(r *t.AnnotatedResource) indexTypes.LinkType {
 	switch r.Type {
 	case t.FileType:
-		return indexTypes.FileLinkType, nil
+		return indexTypes.FileLinkType
 	case t.DirectoryType:
-		return indexTypes.DirectoryLinkType, nil
+		return indexTypes.DirectoryLinkType
 	case t.UndefinedType:
-		return indexTypes.UnknownLinkType, nil
+		return indexTypes.UnknownLinkType
 	case t.UnsupportedType:
-		return indexTypes.UnsupportedLinkType, nil
+		return indexTypes.UnsupportedLinkType
 	default:
-		// TODO: Test this
-		return "", fmt.Errorf("%w: %v", ErrUnexpectedType, r.Type)
+		panic("unexpected type")
 	}
 }
 
-func addLink(entry *t.AnnotatedResource, properties *indexTypes.Directory) error {
-	linkType, err := resourceToLinkType(entry)
-	if err != nil {
-		return err
-	}
-
+func addLink(e *t.AnnotatedResource, properties *indexTypes.Directory) {
 	properties.Links = append(properties.Links, indexTypes.Link{
-		Hash: entry.ID,
-		Name: entry.Reference.Name,
-		Size: entry.Size,
-		Type: linkType,
+		Hash: e.ID,
+		Name: e.Reference.Name,
+		Size: e.Size,
+		Type: resourceToLinkType(e),
 	})
-
-	return nil
 }
 
 func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.AnnotatedResource, properties *indexTypes.Directory) error {
-	var dirCnt uint = 0
+	var (
+		dirCnt  uint = 0
+		isLarge      = false
+	)
 
 	// Question: do we need a maximum entry cutoff point? E.g. 10^6 entries or something?
 	processNextDirEntry := func() error {
@@ -91,12 +85,14 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 				log.Printf("Latest entry: %v", entry)
 			}
 
-			// Only add to properties up to limit (preventing oversized directory entries) - but queue nonetheless.
-			if dirCnt <= c.config.MaxDirSize {
-				// TODO: Ensure coverage.
-				if err := addLink(entry, properties); err != nil {
-					return err
-				}
+			// Only add to properties up to limit (preventing oversized directory entries) - but queue entries nonetheless.
+			if dirCnt == c.config.MaxDirSize {
+				log.Printf("Directory %v is large: %d", entry.Parent, dirCnt)
+				isLarge = true
+			}
+
+			if !isLarge {
+				addLink(entry, properties)
 			}
 
 			return c.queueDirEntry(ctx, entry)
@@ -112,17 +108,18 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 	}
 
 	if errors.Is(err, errEndOfLs) {
-		// End of list; we're done
+		// Normal exit of loop, reset error condition
+		err = nil
 
-		if dirCnt == c.config.MaxDirSize {
-			// TODO: Ensure coverage.
-			return ErrDirectoryTooLarge
+		if isLarge {
+			err = ErrDirectoryTooLarge
 		}
-
-		return nil
+	} else {
+		// Unknown error situation: fail hard
+		// Prefer less over incomplete or inconsistent data.
+		log.Printf("Unexpected error processing directory entries: %v", err)
 	}
 
-	// Fail hard on error; prefer less over incomplete or inconsistent data.
 	return err
 }
 
@@ -147,6 +144,6 @@ func (c *Crawler) queueDirEntry(ctx context.Context, r *t.AnnotatedResource) err
 		// similarly fast as indexing.
 		return c.indexInvalid(ctx, r, t.ErrUnsupportedType)
 	default:
-		return fmt.Errorf("%w: %v", ErrUnexpectedType, r.Type)
+		panic("unexpected type")
 	}
 }

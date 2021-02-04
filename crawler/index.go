@@ -56,7 +56,6 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 		}
 		err = c.extractor.Extract(ctx, r, f)
 		if errors.Is(err, extractor.ErrFileTooLarge) {
-			// TODO: Test me.
 			// Interpret files which are too large as invalid resources; prevent repeated attempts.
 			err = fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
 		}
@@ -78,11 +77,14 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 		err = t.ErrUnsupportedType
 
 	case t.PartialType:
-		// Not indexing partials, we're done.
+		// Not indexing partials (for now), we're done.
 		return nil
 
 	case t.UndefinedType:
 		panic("undefined type after Stat call")
+
+	default:
+		panic("unexpected type")
 	}
 
 	if err != nil {

@@ -29,12 +29,12 @@ func appendReference(refs index_types.References, r *t.Reference) (index_types.R
 
 // updateExisting updates known existing items.
 func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
-	refs, refUpdated := appendReference(i.References, &i.AnnotatedResource.Reference)
+	refs, refsUpdated := appendReference(i.References, &i.AnnotatedResource.Reference)
 
 	now := time.Now()
 	isRecent := now.Sub(i.LastSeen) > c.config.MinUpdateAge
 
-	if refUpdated || isRecent {
+	if refsUpdated || isRecent {
 		return i.Index.Update(ctx, i.AnnotatedResource.ID, &index_types.Update{
 			LastSeen:   now,
 			References: refs,
