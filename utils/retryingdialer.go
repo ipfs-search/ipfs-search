@@ -10,9 +10,10 @@ import (
 	"time"
 )
 
-// TODO: Make this configurable
-const retryWait = 2 * time.Second
-const maxTries = 60
+const (
+	retryWait = 2 * time.Second
+	maxTries  = 60
+)
 
 // ErrRetriesExhausted signifies that the maximum amount of connection attempts have been exhausted while dialing.
 var ErrRetriesExhausted = errors.New("Dial retries exhausted")

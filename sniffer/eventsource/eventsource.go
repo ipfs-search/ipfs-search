@@ -123,8 +123,6 @@ func (s *EventSource) iterate(ctx context.Context, c <-chan interface{}, h handl
 }
 
 // Subscribe handleFunc to EvtProviderPut events
-// TODO: Make this return errgroup, err instead of blocking - leaving the caller to decide how to deal with it and separating
-// initialisation from listening.
 func (s *EventSource) Subscribe(ctx context.Context, h handleFunc) error {
 	sub, err := s.bus.Subscribe(new(EvtProviderPut), eventbus.BufSize(bufSize))
 	if err != nil {

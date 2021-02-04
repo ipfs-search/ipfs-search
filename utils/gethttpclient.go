@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+// GetHTTPClient initializes a HTTP client with OpenTelemetry transport for tracing.
 func GetHTTPClient(dialcontext func(ctx context.Context, network, address string) (net.Conn, error)) *http.Client {
 	transport := otelhttp.NewTransport(&http.Transport{
 		Proxy:               nil,

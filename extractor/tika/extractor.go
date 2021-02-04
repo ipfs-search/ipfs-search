@@ -92,29 +92,6 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 
 	log.Printf("Got metadata metadata for '%v'", r)
 
-	// TODO
-	// Check for IPFS links in urls extracted from resource
-	/*
-	   for raw_url := range metadata.urls {
-	       url, err := URL.Parse(raw_url)
-
-	       if err != nil {
-	           return err
-	       }
-
-	       if strings.HasPrefix(url.Path, "/ipfs/") {
-	           // Found IPFS link!
-	           args := crawlerArgs{
-	               Hash:       link.Hash,
-	               Name:       link.Name,
-	               Size:       link.Size,
-	               ParentHash: hash,
-	           }
-
-	       }
-	   }
-	*/
-
 	return nil
 }
 

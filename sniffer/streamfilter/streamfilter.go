@@ -44,7 +44,6 @@ func (f *Filter) iterate(ctx context.Context) error {
 			include, err := f.f.Filter(p)
 
 			if err != nil {
-				// TODO: Discriminate between fatal and non-fatal errors.
 				span.RecordError(ctx, err)
 			}
 

@@ -10,7 +10,6 @@ import (
 
 // Source: https://github.com/libp2p/go-libp2p-kad-dht/blob/9304f5575ea4c578d1316c2cf695a06b65c88dbe/providers/providers_manager.go#L339
 func keyToPeerID(k datastore.Key) (peer.ID, error) {
-	// TODO: Use actual key methods instead of copied workaround
 	kStr := k.String()
 
 	lix := strings.LastIndex(kStr, "/")

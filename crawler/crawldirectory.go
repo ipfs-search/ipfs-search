@@ -99,7 +99,6 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 				}
 			}
 
-			// TODO: Consider doing this in a separate Goroutine, as it's blocking.
 			return c.queueDirEntry(ctx, entry)
 		}
 	}

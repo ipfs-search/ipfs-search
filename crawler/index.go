@@ -14,7 +14,6 @@ import (
 )
 
 func makeDocument(r *t.AnnotatedResource) indexTypes.Document {
-	// TODO: Get this through AnnotatedResource from the sniffer.
 	now := time.Now().UTC()
 
 	var references []indexTypes.Reference
@@ -33,10 +32,6 @@ func makeDocument(r *t.AnnotatedResource) indexTypes.Document {
 		LastSeen:   now,
 		References: references,
 		Size:       r.Size,
-		// TODO: Add type as constant field for file/directory and as string for invalids.
-		// That natively allows us to know about unsupported types (so that we may index them later when supported).
-		// Ref: https://www.elastic.co/guide/en/elasticsearch/reference/master/keyword.html#constant-keyword-field-type
-		// Type: r.Type,
 	}
 }
 
@@ -80,12 +75,10 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 
 	case t.UnsupportedType:
 		// Index unsupported items as invalid.
-		// TODO: Ensure test coverage.
 		err = t.ErrUnsupportedType
 
 	case t.PartialType:
 		// Not indexing partials, we're done.
-		// TODO: Consider indexing partials (similar but not identical to invalids) as to avoid repeated crawling, unless they are referred to.
 		return nil
 
 	case t.UndefinedType:
@@ -95,7 +88,6 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	if err != nil {
 		if errors.Is(err, t.ErrInvalidResource) {
 			log.Printf("Indexing invalid '%v', err: %v", r, err)
-			// TODO: Ensure test coverage.
 			return c.indexInvalid(ctx, r, err)
 		}
 

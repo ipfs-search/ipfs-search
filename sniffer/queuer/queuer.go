@@ -46,9 +46,6 @@ func (q *Queuer) iterate(ctx context.Context) error {
 			), trace.WithSpanKind(trace.SpanKindProducer))
 			defer span.End()
 
-			// TODO: Provider channel should be pointer stream, preventing copying of data.
-
-			// TODO: Merge Provider and AnnotatedResource types
 			r := t.AnnotatedResource{
 				Resource: p.Resource,
 			}
