@@ -29,10 +29,6 @@ type Extractor struct {
 }
 
 func (e *Extractor) get(ctx context.Context, url string) (resp *http.Response, err error) {
-	// Temporarily disabled due to bug - the connection needs to be open until the response body has been read!
-	// ctx, cancel := context.WithTimeout(ctx, e.config.RequestTimeout)
-	// defer cancel()
-
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		// Errors here are programming errors.
@@ -59,6 +55,10 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 		trace.WithAttributes(label.String("cid", r.ID)),
 	)
 	defer span.End()
+
+	// Timeout if extraction hasn't fully completed within this time.
+	ctx, cancel := context.WithTimeout(ctx, e.config.RequestTimeout)
+	defer cancel()
 
 	if r.Size > uint64(e.config.MaxFileSize) {
 		err := fmt.Errorf("%w: %d", extractor.ErrFileTooLarge, r.Size)
