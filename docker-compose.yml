@@ -36,6 +36,7 @@ services:
       - elasticsearch
       - ipfs
       - ipfs-tika
+      - jaeger
     environment:
       - IPFS_TIKA_URL=http://ipfs-tika:8081
       - IPFS_API_URL=http://ipfs:5001
@@ -68,5 +69,5 @@ services:
       - SPAN_STORAGE_TYPE=elasticsearch
       - ES_SERVER_URLS=http://elasticsearch:9200
     ports:
-      - "6831:6831/udp" # Agent
-      - "16686:16686"   # Frontend
+      - "14268:14268" # HTTP Collector
+      - "16686:16686" # Frontend
