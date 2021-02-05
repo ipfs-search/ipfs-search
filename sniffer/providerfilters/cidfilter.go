@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	ErrUnsupportedProtocol = errors.New("unsupported protocol")
-	ErrDecodingCID         = errors.New("unable to decode CID")
-	ErrUnsupportedCodec    = errors.New("unsupported codec")
+	errUnsupportedProtocol = errors.New("unsupported protocol")
+	errDecodingCID         = errors.New("unable to decode CID")
+	errUnsupportedCodec    = errors.New("unsupported codec")
 )
 
 // CidFilter filters out invalid CID's or those which are not Raw or DagProtobuf.
@@ -25,13 +25,13 @@ func NewCidFilter() *CidFilter {
 // when not and an error when unexpected condition occur.
 func (f *CidFilter) Filter(p t.Provider) (bool, error) {
 	if p.Resource.Protocol != t.IPFSProtocol {
-		return false, fmt.Errorf("%w: %s for %v", ErrUnsupportedProtocol, p.Resource.Protocol, p)
+		return false, fmt.Errorf("%w: %s for %v", errUnsupportedProtocol, p.Resource.Protocol, p)
 	}
 
 	c, err := cid.Decode(p.ID)
 
 	if err != nil {
-		return false, fmt.Errorf("%w: %s decoding CID %v", ErrDecodingCID, err, p)
+		return false, fmt.Errorf("%w: %s decoding CID %v", errDecodingCID, err, p)
 	}
 
 	switch cidType := c.Type(); cidType {
@@ -40,6 +40,6 @@ func (f *CidFilter) Filter(p t.Provider) (bool, error) {
 		return true, nil
 	default:
 		// Can't handle other types (for now)
-		return false, fmt.Errorf("%w: %s for %v", ErrUnsupportedCodec, cid.CodecToStr[cidType], p)
+		return false, fmt.Errorf("%w: %s for %v", errUnsupportedCodec, cid.CodecToStr[cidType], p)
 	}
 }

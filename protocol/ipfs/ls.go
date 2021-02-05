@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	ErrUnexpectedObjectsLen = errors.New("unexpected Objects len")
-	ErrUnexpectedLinksLen   = errors.New("unexpected Links len")
+	errUnexpectedObjectsLen = errors.New("unexpected Objects len")
+	errUnexpectedLinksLen   = errors.New("unexpected Links len")
 )
 
 // Note: copied from https://github.com/ipfs/go-ipfs-http-client/blob/6062f4dc5c9edafa6f1b8301e420b8439588f2fa/unixfs.go#L133
@@ -110,11 +110,11 @@ func decodeLink(dec *json.Decoder) (*lsLink, error) {
 	}
 
 	if len(link.Objects) != 1 {
-		return nil, ErrUnexpectedObjectsLen
+		return nil, errUnexpectedObjectsLen
 	}
 
 	if len(link.Objects[0].Links) != 1 {
-		return nil, ErrUnexpectedLinksLen
+		return nil, errUnexpectedLinksLen
 	}
 
 	return &link.Objects[0].Links[0], nil

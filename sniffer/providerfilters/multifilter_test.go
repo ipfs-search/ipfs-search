@@ -106,6 +106,6 @@ func TestError(t *testing.T) {
 	m := NewMultiFilter(&f)
 	_, err := m.Filter(types.Provider{})
 
-	assert.True(errors.Is(err, ErrFilter))
+	assert.True(errors.Is(err, errFilter))
 	assert.Contains(err.Error(), "filter error: test")
 }

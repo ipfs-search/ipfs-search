@@ -82,7 +82,7 @@ func TestUnsupported(t *testing.T) {
 
 	_, err := filter.Filter(*p)
 
-	assert.True(errors.Is(err, ErrUnsupportedCodec))
+	assert.True(errors.Is(err, errUnsupportedCodec))
 }
 
 func TestInvalid(t *testing.T) {
@@ -97,7 +97,7 @@ func TestInvalid(t *testing.T) {
 
 	_, err := filter.Filter(*p)
 
-	assert.True(errors.Is(err, ErrDecodingCID))
+	assert.True(errors.Is(err, errDecodingCID))
 }
 
 func TestNonIpfs(t *testing.T) {
@@ -112,5 +112,5 @@ func TestNonIpfs(t *testing.T) {
 
 	_, err := filter.Filter(*p)
 
-	assert.True(errors.Is(err, ErrUnsupportedProtocol))
+	assert.True(errors.Is(err, errUnsupportedProtocol))
 }

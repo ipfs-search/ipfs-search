@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	ErrFilter = errors.New("filter error")
+	errFilter = errors.New("filter error")
 )
 
 // MultiFilter efficiently combines multiple filters into a single filter.
@@ -29,7 +29,7 @@ func (m *MultiFilter) Filter(p t.Provider) (bool, error) {
 		include, err := f.Filter(p)
 
 		if err != nil {
-			return false, fmt.Errorf("%w: %s with filter %v", ErrFilter, err, f)
+			return false, fmt.Errorf("%w: %s with filter %v", errFilter, err, f)
 		}
 
 		if !include {
