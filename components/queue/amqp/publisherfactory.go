@@ -44,5 +44,5 @@ func (f PublisherFactory) NewPublisher(ctx context.Context) (queue.Publisher, er
 		conn.Close()
 	}()
 
-	return conn.NewChannelQueue(ctx, f.Queue)
+	return conn.NewChannelQueue(ctx, f.Queue, 1)
 }

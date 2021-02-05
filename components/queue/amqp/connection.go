@@ -92,7 +92,7 @@ func NewConnection(ctx context.Context, cfg *Config, amqpConfig *amqp.Config, i 
 }
 
 // Channel creates an AMQP channel
-func (c *Connection) Channel(ctx context.Context) (*Channel, error) {
+func (c *Connection) Channel(ctx context.Context, prefetchCount int) (*Channel, error) {
 	ctx, span := c.Tracer.Start(ctx, "queue.amqp.Channel")
 	defer span.End()
 
@@ -105,7 +105,7 @@ func (c *Connection) Channel(ctx context.Context) (*Channel, error) {
 
 	// Set Qos
 	err = ch.Qos(
-		1,     // prefetch count
+		prefetchCount,
 		0,     // prefetch size
 		false, // global
 	)
@@ -121,11 +121,11 @@ func (c *Connection) Channel(ctx context.Context) (*Channel, error) {
 }
 
 // NewChannelQueue returns a new queue on a new channel
-func (c *Connection) NewChannelQueue(ctx context.Context, name string) (*Queue, error) {
+func (c *Connection) NewChannelQueue(ctx context.Context, name string, prefetchCount int) (*Queue, error) {
 	ctx, span := c.Tracer.Start(ctx, "queue.amqp.NewChannelQueue", trace.WithAttributes(label.String("queue", name)))
 	defer span.End()
 
-	ch, err := c.Channel(ctx)
+	ch, err := c.Channel(ctx, prefetchCount)
 	if err != nil {
 		return nil, err
 	}

@@ -112,17 +112,17 @@ func (w *Pool) getQueues(ctx context.Context) (*crawler.Queues, error) {
 	}
 
 	log.Println("Creating AMQP channels.")
-	fq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Files.Name)
+	fq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Files.Name, w.config.Workers.FileWorkers)
 	if err != nil {
 		return nil, err
 	}
 
-	dq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Directories.Name)
+	dq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Directories.Name, w.config.Workers.DirectoryWorkers)
 	if err != nil {
 		return nil, err
 	}
 
-	hq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Hashes.Name)
+	hq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Hashes.Name, w.config.Workers.HashWorkers)
 	if err != nil {
 		return nil, err
 	}
