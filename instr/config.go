@@ -9,7 +9,7 @@ type Config struct {
 // DefaultConfig returns the default configuration for the instrumentation.
 func DefaultConfig() *Config {
 	return &Config{
-		SamplingRatio:  1.0,
+		SamplingRatio:  0.01,
 		JaegerEndpoint: "http://localhost:14268/api/traces",
 	}
 }
