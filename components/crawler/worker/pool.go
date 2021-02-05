@@ -155,8 +155,9 @@ func (w *Pool) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
 		return err
 	}
 
-	log.Printf("Crawling: %v", r)
+	log.Printf("Crawling '%s'", r)
 	err := w.crawler.Crawl(ctx, r)
+	log.Printf("Done crawling '%s', result: %v", r, err)
 
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
@@ -201,7 +202,6 @@ func (w *Pool) startPool(ctx context.Context, deliveries <-chan samqp.Delivery, 
 	defer span.End()
 
 	for i := 0; i < workers; i++ {
-		log.Println("Starting worker.")
 		go w.startWorker(ctx, deliveries)
 	}
 }
@@ -211,11 +211,13 @@ func (w *Pool) Start(ctx context.Context) {
 	ctx, span := w.Tracer.Start(ctx, "crawler.worker.Start")
 	defer span.End()
 
-	log.Println("Starting workers.")
-	// TODO: Clean this up, generating the queue when initializing a worker, perhaps even give workers an 'identity'
-	// for better debugging.
+	log.Printf("Starting %d workers for files", w.config.Workers.FileWorkers)
 	w.startPool(ctx, w.consumeChans.Files, w.config.Workers.FileWorkers)
+
+	log.Printf("Starting %d workers for hashes", w.config.Workers.HashWorkers)
 	w.startPool(ctx, w.consumeChans.Hashes, w.config.Workers.HashWorkers)
+
+	log.Printf("Starting %d workers for directories", w.config.Workers.DirectoryWorkers)
 	w.startPool(ctx, w.consumeChans.Directories, w.config.Workers.DirectoryWorkers)
 }
 
