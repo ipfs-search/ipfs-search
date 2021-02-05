@@ -126,6 +126,57 @@ func (s TikaTestSuite) TestExtract() {
     s.Contains(f.URLs, "https://proto.school/#/tutorials?course=filecoin")
 }
 
+func (s TikaTestSuite) TestExtractMaxFileSize() {
+    s.cfg.MaxFileSize = 100
+    s.e = New(s.cfg, http.DefaultClient, s.protocol, instr.New())
+
+    r := &t.AnnotatedResource{
+        Resource: &t.Resource{
+            Protocol: t.IPFSProtocol,
+            ID:       testCID,
+        },
+        Stat: t.Stat{
+            Size: uint64(s.cfg.MaxFileSize + 1),
+        },
+    }
+
+    f := &indexTypes.File{}
+    err := s.e.Extract(s.ctx, r, &f)
+
+    s.Error(err, extractor.ErrFileTooLarge)
+    s.mockAPIHandler.AssertExpectations(s.T())
+}
+
+func (s TikaTestSuite) TestExtractRequestError() {
+    r := &t.AnnotatedResource{
+        Resource: &t.Resource{
+            Protocol: t.IPFSProtocol,
+            ID:       testCID,
+        },
+        Stat: t.Stat{
+            Size: 400,
+        },
+    }
+
+    tikaURL := fmt.Sprintf("/ipfs/%s", testCID)
+    gwURL := "http://localhost:8080" + tikaURL
+
+    s.protocol.
+        On("GatewayURL", r).
+        Return(gwURL).
+        Once()
+
+    f := &indexTypes.File{
+        Document: indexTypes.Document{
+            Size: r.Size,
+        },
+    }
+
+    err := s.e.Extract(s.ctx, r, &f)
+
+    s.Error(err, extractor.ErrRequest)
+}
+
 func (s TikaTestSuite) TestURLEscape() {
     // Regression test:
     // http://ipfs-tika:8081/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp/Killing_Yourself_to_Live:_85%_of_a_True_Story.html
@@ -190,7 +241,47 @@ func (s TikaTestSuite) TestTika500() {
 
     err := s.e.Extract(s.ctx, r, &f)
 
-    s.Error(err)
+    s.Error(err, extractor.ErrUnexpectedResponse)
+    s.mockAPIHandler.AssertExpectations(s.T())
+}
+
+func (s TikaTestSuite) TestExtractInvalidJSON() {
+    testJSON := []byte(`invalid JSON`)
+
+    r := &t.AnnotatedResource{
+        Resource: &t.Resource{
+            Protocol: t.IPFSProtocol,
+            ID:       testCID,
+        },
+        Stat: t.Stat{
+            Size: 400,
+        },
+    }
+
+    tikaURL := fmt.Sprintf("/ipfs/%s", testCID)
+    gwURL := "http://localhost:8080" + tikaURL
+
+    s.protocol.
+        On("GatewayURL", r).
+        Return(gwURL).
+        Once()
+
+    s.mockAPIHandler.
+        On("Handle", "GET", tikaURL, mock.Anything).
+        Return(httpmock.Response{
+            Body: testJSON,
+        }).
+        Once()
+
+    f := &indexTypes.File{
+        Document: indexTypes.Document{
+            Size: r.Size,
+        },
+    }
+
+    err := s.e.Extract(s.ctx, r, &f)
+
+    s.Error(err, extractor.ErrUnexpectedResponse)
     s.mockAPIHandler.AssertExpectations(s.T())
 }
 

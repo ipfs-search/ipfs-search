@@ -10,4 +10,7 @@ var (
 
 	// ErrUnexpectedResponse is returned upon unexpected responses from the backend.
 	ErrUnexpectedResponse = errors.New("unexpected response from backend")
+
+	// ErrRequest is returned on errors performing upstream requests.
+	ErrRequest = errors.New("request error")
 )

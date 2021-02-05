@@ -61,7 +61,6 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	defer span.End()
 
 	if r.Size > uint64(e.config.MaxFileSize) {
-		// TODO: Coverage.
 		err := fmt.Errorf("%w: %d", extractor.ErrFileTooLarge, r.Size)
 		span.RecordError(
 			ctx, extractor.ErrFileTooLarge, trace.WithErrorStatus(codes.Error),
@@ -73,6 +72,7 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 
 	resp, err := e.get(ctx, e.getExtractURL(r))
 	if err != nil {
+		err := fmt.Errorf("%w: %v", extractor.ErrRequest, err)
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
