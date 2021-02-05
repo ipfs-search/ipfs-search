@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 
+	"github.com/ipfs-search/ipfs-search/components/crawler/worker"
 	"github.com/ipfs-search/ipfs-search/config"
-	"github.com/ipfs-search/ipfs-search/crawler/worker"
 	"github.com/ipfs-search/ipfs-search/instr"
 
 	"log"

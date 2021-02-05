@@ -5,7 +5,7 @@ import (
 
 	"github.com/c2h5oh/datasize"
 
-	"github.com/ipfs-search/ipfs-search/extractor/tika"
+	"github.com/ipfs-search/ipfs-search/components/extractor/tika"
 )
 
 // Tika is configuration pertaining to the sniffer

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/ipfs-search/ipfs-search/sniffer"
+	"github.com/ipfs-search/ipfs-search/components/sniffer"
 	"time"
 )
 

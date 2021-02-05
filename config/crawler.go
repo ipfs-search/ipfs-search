@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/ipfs-search/ipfs-search/crawler"
+	"github.com/ipfs-search/ipfs-search/components/crawler"
 	"time"
 )
 

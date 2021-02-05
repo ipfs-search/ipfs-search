@@ -7,9 +7,9 @@ import (
 
 	samqp "github.com/streadway/amqp"
 
+	"github.com/ipfs-search/ipfs-search/components/queue/amqp"
 	"github.com/ipfs-search/ipfs-search/config"
 	"github.com/ipfs-search/ipfs-search/instr"
-	"github.com/ipfs-search/ipfs-search/queue/amqp"
 	t "github.com/ipfs-search/ipfs-search/types"
 	"github.com/ipfs-search/ipfs-search/utils"
 )

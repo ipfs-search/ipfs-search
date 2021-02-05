@@ -1,4 +1,4 @@
-// Package instr contains components pertaining to observability and instrumentation.
+// Package instr contains common instrumentation tooling.
 package instr
 
 import (

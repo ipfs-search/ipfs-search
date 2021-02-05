@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/ipfs-search/ipfs-search/queue/amqp"
+	"github.com/ipfs-search/ipfs-search/components/queue/amqp"
 	"time"
 )
 
