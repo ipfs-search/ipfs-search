@@ -1,7 +1,7 @@
 module github.com/ipfs-search/ipfs-search
 
 require (
-	github.com/Netflix/go-env v0.0.0-20200512170851-5660fe1ab40a
+	github.com/Netflix/go-env v0.0.0-20210116210345-8f74e74141f7
 	github.com/alanshaw/ipfs-hookds v0.3.0
 	github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee
 	github.com/dankinder/httpmock v1.0.1
