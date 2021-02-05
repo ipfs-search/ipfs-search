@@ -2,7 +2,7 @@ package ipfs
 
 import (
 	ipfs "github.com/ipfs/go-ipfs-api"
-	"log"
+	// "log"
 )
 
 // isInvalidResourceErr determines whether an error returned by protocol methods represents invalid content.
@@ -10,7 +10,7 @@ func isInvalidResourceErr(err error) bool {
 	ipfsErr, ok := err.(*ipfs.Error)
 
 	if !ok {
-		log.Printf("Couldnt get *ipfs.Error: %T", err)
+		// log.Printf("Couldnt get *ipfs.Error: %T", err)
 		return false
 	}
 
