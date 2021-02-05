@@ -10,7 +10,6 @@ import (
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/protocol"
@@ -51,9 +50,7 @@ func (e *Extractor) getExtractURL(r *t.AnnotatedResource) string {
 // Extract metadata from a (potentially) referenced resource, updating
 // Metadata or returning an error.
 func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m interface{}) error {
-	ctx, span := e.Tracer.Start(ctx, "extractor.tika.Extract",
-		trace.WithAttributes(label.String("cid", r.ID)),
-	)
+	ctx, span := e.Tracer.Start(ctx, "extractor.tika.Extract")
 	defer span.End()
 
 	// Timeout if extraction hasn't fully completed within this time.

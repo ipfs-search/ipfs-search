@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -35,6 +38,9 @@ func getSize(rType t.ResourceType, result *statResult) uint64 {
 // Stat returns a AnnotatedResource with Type and Size populated.
 // Ref: http://docs.ipfs.io.ipns.localhost:8080/reference/http/api/#api-v0-files-stat
 func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
+	ctx, span := i.Tracer.Start(ctx, "protocol.ipfs.Stat")
+	defer span.End()
+
 	const cmd = "files/stat"
 
 	path := absolutePath(r)
@@ -44,8 +50,10 @@ func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 
 	if err := req.Exec(ctx, result); err != nil {
 		if isInvalidResourceErr(err) {
-			return fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
+			err = fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
 		}
+
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 

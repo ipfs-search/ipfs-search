@@ -7,6 +7,9 @@ import (
 	"log"
 	"time"
 
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/label"
+
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/index"
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
@@ -43,6 +46,11 @@ func (c *Crawler) indexInvalid(ctx context.Context, r *t.AnnotatedResource, err 
 }
 
 func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
+	ctx, span := c.Tracer.Start(ctx, "crawler.index",
+		trace.WithAttributes(label.Stringer("type", r.Type)),
+	)
+	defer span.End()
+
 	var (
 		err        error
 		index      index.Index
@@ -57,6 +65,7 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 		err = c.extractor.Extract(ctx, r, f)
 		if errors.Is(err, extractor.ErrFileTooLarge) {
 			// Interpret files which are too large as invalid resources; prevent repeated attempts.
+			span.RecordError(ctx, err)
 			err = fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
 		}
 
@@ -74,10 +83,12 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 
 	case t.UnsupportedType:
 		// Index unsupported items as invalid.
+		span.RecordError(ctx, err)
 		err = t.ErrUnsupportedType
 
 	case t.PartialType:
 		// Not indexing partials (for now), we're done.
+		span.AddEvent(ctx, "partial")
 		return nil
 
 	case t.UndefinedType:
@@ -90,6 +101,7 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	if err != nil {
 		if errors.Is(err, t.ErrInvalidResource) {
 			log.Printf("Indexing invalid '%v', err: %v", r, err)
+			span.RecordError(ctx, err)
 			return c.indexInvalid(ctx, r, err)
 		}
 

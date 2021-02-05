@@ -6,8 +6,14 @@ import (
 	"errors"
 	"log"
 
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
+
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/protocol"
+
+	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -18,6 +24,8 @@ type Crawler struct {
 	queues    *Queues
 	protocol  protocol.Protocol
 	extractor extractor.Extractor
+
+	*instr.Instrumentation
 }
 
 func isSupportedType(rType t.ResourceType) bool {
@@ -31,6 +39,11 @@ func isSupportedType(rType t.ResourceType) bool {
 
 // Crawl updates existing or crawls new resources, extracting metadata where applicable.
 func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
+	ctx, span := c.Tracer.Start(ctx, "crawler.Crawl",
+		trace.WithAttributes(label.String("cid", r.ID)),
+	)
+	defer span.End()
+
 	var err error
 
 	if r.Protocol == t.InvalidProtocol {
@@ -46,11 +59,13 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 
 	exists, err := c.updateMaybeExisting(ctx, r)
 	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
 	if exists {
 		log.Printf("Not updating existing resource %v", r)
+		span.AddEvent(ctx, "Not updating existing resource")
 		return nil
 	}
 
@@ -58,36 +73,53 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 		if errors.Is(err, t.ErrInvalidResource) {
 			// Resource is invalid, index as such, throwing away ErrInvalidResource in favor of the result of indexing operation.
 			log.Printf("Indexing invalid resource %v", r)
+			span.AddEvent(ctx, "Indexing invalid resource")
 
 			err = c.indexInvalid(ctx, r, err)
 		}
 
 		// Errors from ensureType imply that no type could be found, hence we can't index.
+		if err != nil {
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		}
 		return err
 	}
 
 	log.Printf("Indexing new item %v", r)
-	return c.index(ctx, r)
+	err = c.index(ctx, r)
+	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+	}
+	return err
 }
 
 // New instantiates a Crawler.
-func New(config *Config, indexes *Indexes, queues *Queues, protocol protocol.Protocol, extractor extractor.Extractor) *Crawler {
+func New(config *Config, indexes *Indexes, queues *Queues, protocol protocol.Protocol, extractor extractor.Extractor, i *instr.Instrumentation) *Crawler {
 	return &Crawler{
 		config,
 		indexes,
 		queues,
 		protocol,
 		extractor,
+		i,
 	}
 }
 
 func (c *Crawler) ensureType(ctx context.Context, r *t.AnnotatedResource) error {
+	ctx, span := c.Tracer.Start(ctx, "crawler.ensureType")
+	defer span.End()
+
+	var err error
+
 	if r.Type == t.UndefinedType {
 		ctx, cancel := context.WithTimeout(ctx, c.config.StatTimeout)
 		defer cancel()
 
-		return c.protocol.Stat(ctx, r)
+		err = c.protocol.Stat(ctx, r)
+		if err != nil {
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		}
 	}
 
-	return nil
+	return err
 }

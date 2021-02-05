@@ -7,6 +7,9 @@ import (
 	"log"
 	"math/rand"
 
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
@@ -20,6 +23,9 @@ var (
 )
 
 func (c *Crawler) crawlDir(ctx context.Context, r *t.AnnotatedResource, properties *indexTypes.Directory) error {
+	ctx, span := c.Tracer.Start(ctx, "crawler.crawlDir")
+	defer span.End()
+
 	entries := make(chan *t.AnnotatedResource, c.config.DirEntryBufferSize)
 
 	wg, ctx := errgroup.WithContext(ctx)
@@ -61,6 +67,9 @@ func addLink(e *t.AnnotatedResource, properties *indexTypes.Directory) {
 }
 
 func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.AnnotatedResource, properties *indexTypes.Directory) error {
+	ctx, span := c.Tracer.Start(ctx, "crawler.processDirEntries")
+	defer span.End()
+
 	var (
 		dirCnt  uint = 0
 		isLarge bool = false
@@ -87,7 +96,8 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 
 			// Only add to properties up to limit (preventing oversized directory entries) - but queue entries nonetheless.
 			if dirCnt == c.config.MaxDirSize {
-				log.Printf("Directory %v is large: %d", entry.Parent, dirCnt)
+				span.AddEvent(ctx, "large-directory")
+				log.Printf("Directory %v is large, crawling entries but not directory itself.", entry.Parent)
 				isLarge = true
 			}
 
@@ -118,6 +128,10 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 		// Unknown error situation: fail hard
 		// Prefer less over incomplete or inconsistent data.
 		log.Printf("Unexpected error processing directory entries: %v", err)
+	}
+
+	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 	}
 
 	return err

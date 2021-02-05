@@ -5,32 +5,28 @@ import (
 	"encoding/json"
 	"github.com/olivere/elastic/v7"
 
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+
 	"github.com/ipfs-search/ipfs-search/components/index"
+	"github.com/ipfs-search/ipfs-search/instr"
 )
 
 // Index wraps an Elasticsearch index to store documents
 type Index struct {
 	es  *elastic.Client
 	cfg *Config
+
+	*instr.Instrumentation
 }
 
 // New returns a new index.
-func New(es *elastic.Client, cfg *Config) index.Index {
+func New(es *elastic.Client, cfg *Config, i *instr.Instrumentation) index.Index {
 	return &Index{
-		es:  es,
-		cfg: cfg,
+		es:              es,
+		cfg:             cfg,
+		Instrumentation: i,
 	}
-}
-
-// NewMulti takes a mapping of named configurations and returns a mapping of indexes
-func NewMulti(es *elastic.Client, configs ...*Config) []index.Index {
-	indexes := make([]index.Index, len(configs))
-
-	for n, c := range configs {
-		indexes[n] = New(es, c)
-	}
-
-	return indexes
 }
 
 // String returns the name of the index, for convenient logging.
@@ -40,6 +36,9 @@ func (i *Index) String() string {
 
 // Index a document's properties, identified by id
 func (i *Index) Index(ctx context.Context, id string, properties interface{}) error {
+	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Index")
+	defer span.End()
+
 	_, err := i.es.Index().
 		Index(i.cfg.Name).
 		Id(id).
@@ -57,6 +56,9 @@ func (i *Index) Index(ctx context.Context, id string, properties interface{}) er
 
 // Update a document's properties, given id
 func (i *Index) Update(ctx context.Context, id string, properties interface{}) error {
+	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Update")
+	defer span.End()
+
 	_, err := i.es.Update().
 		Index(i.cfg.Name).
 		Id(id).
@@ -64,11 +66,10 @@ func (i *Index) Update(ctx context.Context, id string, properties interface{}) e
 		Do(ctx)
 
 	if err != nil {
-		// Handle error
-		return err
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 	}
 
-	return nil
+	return err
 }
 
 // Get retreives `fields` from document with `id` from the index, returning:
@@ -76,6 +77,9 @@ func (i *Index) Update(ctx context.Context, id string, properties interface{}) e
 // - (false, nil) when not found
 // - (false, error) otherwise
 func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
+	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Get")
+	defer span.End()
+
 	fsc := elastic.NewFetchSourceContext(true)
 	fsc.Include(fields...)
 
@@ -93,13 +97,20 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 		// Decode resulting field json into `dst`
 		err = json.Unmarshal(result.Source, dst)
 
+		if err != nil {
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		}
+
 		return true, err
 	case elastic.IsNotFound(err):
 		// 404
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Ok))
+
 		return false, nil
 
 	default:
 		// Unknown error, propagate
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return false, err
 	}
 }

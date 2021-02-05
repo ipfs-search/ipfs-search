@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io"
 
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+
 	unixfs "github.com/ipfs/go-unixfs"
 	unixfs_pb "github.com/ipfs/go-unixfs/pb"
 
@@ -122,6 +125,9 @@ func decodeLink(dec *json.Decoder) (*lsLink, error) {
 
 // Ls returns a channel with AnnotatedResource's with Type and Size populated.
 func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.AnnotatedResource) error {
+	ctx, span := i.Tracer.Start(ctx, "protocol.ipfs.Ls")
+	defer span.End()
+
 	path := absolutePath(r)
 
 	resp, err := i.shell.Request("ls", path).
@@ -141,6 +147,8 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.Ann
 			// Wrap original error with ErrInvalidResource.
 			return fmt.Errorf("%w: %v", t.ErrInvalidResource, resp.Error)
 		}
+
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
@@ -161,6 +169,9 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.Ann
 				err = nil
 			}
 
+			if err != nil {
+				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			}
 			return err
 		}
 

@@ -10,6 +10,10 @@ import (
 	"time"
 
 	"github.com/olivere/elastic/v7"
+	samqp "github.com/streadway/amqp"
+
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs-search/ipfs-search/components/crawler"
 	"github.com/ipfs-search/ipfs-search/components/extractor/tika"
@@ -21,15 +25,12 @@ import (
 	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
 	"github.com/ipfs-search/ipfs-search/utils"
-
-	samqp "github.com/streadway/amqp"
 )
 
 // Pool represents a pool of workers.
 type Pool struct {
 	config       *config.Config
 	httpClient   *http.Client
-	instr        *instr.Instrumentation
 	dialer       *utils.RetryingDialer
 	consumeChans struct {
 		Files       <-chan samqp.Delivery
@@ -37,6 +38,8 @@ type Pool struct {
 		Hashes      <-chan samqp.Delivery
 	}
 	crawler *crawler.Crawler
+
+	*instr.Instrumentation
 }
 
 func (w *Pool) makeCrawler(ctx context.Context) error {
@@ -56,10 +59,10 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 		return err
 	}
 
-	protocol := ipfs.New(w.config.IPFSConfig(), w.httpClient, w.instr)
-	extractor := tika.New(w.config.TikaConfig(), w.httpClient, protocol, w.instr)
+	protocol := ipfs.New(w.config.IPFSConfig(), w.httpClient, w.Instrumentation)
+	extractor := tika.New(w.config.TikaConfig(), w.httpClient, protocol, w.Instrumentation)
 
-	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractor)
+	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractor, w.Instrumentation)
 
 	return nil
 }
@@ -82,14 +85,17 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 		Files: elasticsearch.New(
 			esClient,
 			&elasticsearch.Config{Name: w.config.Indexes.Files.Name},
+			w.Instrumentation,
 		),
 		Directories: elasticsearch.New(
 			esClient,
 			&elasticsearch.Config{Name: w.config.Indexes.Directories.Name},
+			w.Instrumentation,
 		),
 		Invalids: elasticsearch.New(
 			esClient,
 			&elasticsearch.Config{Name: w.config.Indexes.Invalids.Name},
+			w.Instrumentation,
 		),
 	}, nil
 }
@@ -100,7 +106,7 @@ func (w *Pool) getQueues(ctx context.Context) (*crawler.Queues, error) {
 	}
 
 	log.Println("Connecting to AMQP.")
-	amqpConnection, err := amqp.NewConnection(ctx, w.config.AMQPConfig(), amqpConfig, w.instr)
+	amqpConnection, err := amqp.NewConnection(ctx, w.config.AMQPConfig(), amqpConfig, w.Instrumentation)
 	if err != nil {
 		return nil, err
 	}
@@ -129,24 +135,40 @@ func (w *Pool) getQueues(ctx context.Context) (*crawler.Queues, error) {
 }
 
 func (w *Pool) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
+	// TODO: Get SpanContext from Delivery.
+	// ctx = trace.ContextWithRemoteSpanContext(ctx, p.SpanContext)
+	ctx, span := w.Tracer.Start(ctx, "crawler.worker.crawlDelivery", trace.WithNewRoot())
+	defer span.End()
+
 	r := &t.AnnotatedResource{
 		Resource: &t.Resource{},
 	}
 
 	if err := json.Unmarshal(d.Body, r); err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
 	if !r.IsValid() {
-		return fmt.Errorf("Invalid resource: %v", r)
+		err := fmt.Errorf("Invalid resource: %v", r)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
 	}
 
-	log.Printf("Crawling: %v\n", r)
+	log.Printf("Crawling: %v", r)
+	err := w.crawler.Crawl(ctx, r)
 
-	return w.crawler.Crawl(ctx, r)
+	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+	}
+
+	return err
 }
 
 func (w *Pool) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery) {
+	ctx, span := w.Tracer.Start(ctx, "crawler.worker.startWorker")
+	defer span.End()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -160,25 +182,24 @@ func (w *Pool) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery
 				// By default, retry.
 				shouldRetry := true
 
+				span.RecordError(ctx, err)
+
 				if err := d.Reject(shouldRetry); err != nil {
-					log.Printf("Reject error %s\n", d.Body)
-					// span.RecordError(ctx, err)
+					span.RecordError(ctx, err)
 				}
-				log.Printf("Error '%s' in delivery '%s'", err, d.Body)
-				// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 			} else {
 				if err := d.Ack(false); err != nil {
-					log.Printf("Ack error %s\n", d.Body)
-
-					// span.RecordError(ctx, err)
+					span.RecordError(ctx, err)
 				}
-				log.Printf("Done crawling: %s\n", d.Body)
 			}
 		}
 	}
 }
 
 func (w *Pool) startPool(ctx context.Context, deliveries <-chan samqp.Delivery, workers int) {
+	ctx, span := w.Tracer.Start(ctx, "crawler.worker.startPool")
+	defer span.End()
+
 	for i := 0; i < workers; i++ {
 		log.Println("Starting worker.")
 		go w.startWorker(ctx, deliveries)
@@ -187,6 +208,9 @@ func (w *Pool) startPool(ctx context.Context, deliveries <-chan samqp.Delivery, 
 
 // Start launches the workerpool.
 func (w *Pool) Start(ctx context.Context) {
+	ctx, span := w.Tracer.Start(ctx, "crawler.worker.Start")
+	defer span.End()
+
 	log.Println("Starting workers.")
 	// TODO: Clean this up, generating the queue when initializing a worker, perhaps even give workers an 'identity'
 	// for better debugging.
@@ -243,8 +267,8 @@ func (w *Pool) init(ctx context.Context) error {
 // NewPool initializes and returns a new worker pool.
 func NewPool(ctx context.Context, c *config.Config, i *instr.Instrumentation) (*Pool, error) {
 	w := &Pool{
-		config: c,
-		instr:  i,
+		config:          c,
+		Instrumentation: i,
 	}
 
 	err := w.init(ctx)
