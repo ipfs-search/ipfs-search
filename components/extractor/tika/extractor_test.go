@@ -27,10 +27,8 @@ type TikaTestSuite struct {
     ctx context.Context
     e   extractor.Extractor
 
-    cfg *Config
-    // httpClient *http.Client
+    cfg      *Config
     protocol *protocol.Mock
-    // instr      *instr.Instrumentation
 
     mockAPIHandler *httpmock.MockHandler
     mockAPIServer  *httpmock.Server
