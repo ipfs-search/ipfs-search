@@ -1,22 +1,27 @@
 package config
 
-import (
-    "github.com/ipfs-search/ipfs-search/index/elasticsearch"
-)
+// Index represents the configuration for a single Index.
+type Index struct {
+    Name string
+}
 
 // Indexes represents the various indexes we're using
-type Indexes map[string]*elasticsearch.Config
+type Indexes struct {
+    Files       Index `yaml:"files"`
+    Directories Index `yaml:"directories"`
+    Invalids    Index `yaml:"invalids"`
+}
 
 // IndexesDefaults returns the default indexes.
 func IndexesDefaults() Indexes {
     return Indexes{
-        "files": &elasticsearch.Config{
+        Files: Index{
             Name: "ipfs_files",
         },
-        "directories": &elasticsearch.Config{
+        Directories: Index{
             Name: "ipfs_directories",
         },
-        "invalids": &elasticsearch.Config{
+        Invalids: Index{
             Name: "ipfs_invalids",
         },
     }

@@ -1,3 +1,0 @@
-package extractor
-
-// TODO

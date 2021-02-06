@@ -2,15 +2,21 @@ package commands
 
 import (
 	"context"
+	"net"
+	"time"
+
+	samqp "github.com/streadway/amqp"
+
+	"github.com/ipfs-search/ipfs-search/components/queue/amqp"
 	"github.com/ipfs-search/ipfs-search/config"
-	"github.com/ipfs-search/ipfs-search/crawler"
 	"github.com/ipfs-search/ipfs-search/instr"
-	"github.com/ipfs-search/ipfs-search/queue/amqp"
+	t "github.com/ipfs-search/ipfs-search/types"
+	"github.com/ipfs-search/ipfs-search/utils"
 )
 
 // AddHash queues a single IPFS hash for indexing
 func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
-	instFlusher, err := instr.Install("ipfs-search-add")
+	instFlusher, err := instr.Install(cfg.InstrConfig(), "ipfs-crawler add")
 	if err != nil {
 		return err
 	}
@@ -18,9 +24,23 @@ func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
 
 	i := instr.New()
 
+	dialer := &utils.RetryingDialer{
+		Dialer: net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: false,
+		},
+		Context: ctx,
+	}
+
+	amqpConfig := &samqp.Config{
+		Dial: dialer.Dial,
+	}
+
 	f := amqp.PublisherFactory{
-		AMQPURL:         cfg.AMQP.AMQPURL,
+		Config:          cfg.AMQPConfig(),
 		Queue:           "hashes",
+		AMQPConfig:      amqpConfig,
 		Instrumentation: i,
 	}
 
@@ -29,8 +49,16 @@ func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
 		return err
 	}
 
+	resource := &t.Resource{
+		Protocol: t.IPFSProtocol,
+		ID:       hash,
+	}
+
+	provider := t.Provider{
+		Resource: resource,
+		Date:     time.Now(),
+	}
+
 	// Add with highest priority, as this is supposed to be available
-	return queue.Publish(ctx, &crawler.Args{
-		Hash: hash,
-	}, 9)
+	return queue.Publish(ctx, provider, 9)
 }

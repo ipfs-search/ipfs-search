@@ -82,11 +82,11 @@
         "properties": {
             "first-seen": {
                 "type": "date",
-                "format": "date_time_no_millis"
+                "format": "strict_date_time"
             },
             "last-seen": {
                 "type": "date",
-                "format": "date_time_no_millis"
+                "format": "strict_date_time"
             },
             "content": {
                 "type": "text",
