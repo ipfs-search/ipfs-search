@@ -1,3 +1,28 @@
+/*
+Package config provides central and canonical representation, reading, parsing
+and validation of configuration for components.
+
+Configuration consists of 2 representations:
+
+1. The component-specific configuration Config-structs and DefaultConfig()
+default generators, which have no dependencies on nor awareness of other
+components or their configuration.
+
+2. Central and canonical configuration (this package), importing and wrapping
+the various component configuration, wiring it into a single Config struct.
+
+For example, the crawler package contains a Config struct as well as a
+DefaultConfig() function. The config package contains a Crawler struct, wrapping
+the Config from the crawler package, and CrawlerDefaults() function wrapping the
+DefaultConfig() function from the crawler package. The wrapped Crawler struct
+provides tags for reading configuration values from a YAML configuration file
+and/or OS environment variables.
+
+The Crawler-struct is then contained within the Config-struct, which performs
+reading, parsing and validation of configuration files as well as OS environment
+variables. In order to acquire the crawler-specific configuration from the Config-struct,
+the CrawlerConfig() method must be called.
+*/
 package config
 
 import (
@@ -6,36 +31,26 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
-	"time"
 )
 
-type IPFS struct {
-	IpfsAPI     string        `yaml:"api_url" env:"IPFS_API_URL"`
-	IpfsTimeout time.Duration `yaml:"timeout"`
-}
-
-type ElasticSearch struct {
-	ElasticSearchURL string `yaml:"url" env:"ELASTICSEARCH_URL"`
-}
-
-type AMQP struct {
-	AMQPURL string `yaml:"url" env:"AMQP_URL"`
-}
-
-// Config contains the configuration for commands.
+// Config contains the configuration for all components.
 type Config struct {
 	IPFS          `yaml:"ipfs"`
 	ElasticSearch `yaml:"elasticsearch"`
 	AMQP          `yaml:"amqp"`
-	Crawler       `yaml:"crawler"`
-	Sniffer       `yaml:"sniffer"`
-	Indexes       `yaml:"indexes"`
-	Extractor     `yaml:"extractor"`
+	Tika          `yaml:"tika"`
+
+	Instr   `yaml:"instrumentation"`
+	Crawler `yaml:"crawler"`
+	Sniffer `yaml:"sniffer"`
+	Indexes `yaml:"indexes"`
+	Queues  `yaml:"queues"`
+	Workers `yaml:"workers"`
 }
 
 // String renders config as YAML
-// TODO: Consider TextMarshaler
 func (c *Config) String() string {
 	bs, err := yaml.Marshal(c)
 	if err != nil {
@@ -45,7 +60,6 @@ func (c *Config) String() string {
 }
 
 // ReadFromFile reads configuration options from specified YAML file
-// TODO: Consider TextUnmarshaler
 func (c *Config) ReadFromFile(filename string) error {
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -81,9 +95,14 @@ func (c *Config) Check() error {
 	return nil
 }
 
+// Marshall returns the config serialized to bytes[]
+func (c *Config) Marshall() ([]byte, error) {
+	return yaml.Marshal(c)
+}
+
 // Write writes configuration to file as YAML.
 func (c *Config) Write(configFile string) error {
-	bytes, err := yaml.Marshal(c)
+	bytes, err := c.Marshall()
 	if err != nil {
 		return err
 	}
@@ -94,6 +113,18 @@ func (c *Config) Write(configFile string) error {
 	}
 
 	return nil
+}
+
+// Dump writes configuration to standard output.
+func (c *Config) Dump() error {
+	bytes, err := c.Marshall()
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Stdout.Write(bytes)
+
+	return err
 }
 
 // Get configuration from defaults, optional configuration file, or environment.

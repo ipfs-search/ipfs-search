@@ -1,0 +1,279 @@
+package worker
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"time"
+
+	"github.com/olivere/elastic/v7"
+	samqp "github.com/streadway/amqp"
+
+	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/codes"
+
+	"github.com/ipfs-search/ipfs-search/components/crawler"
+	"github.com/ipfs-search/ipfs-search/components/extractor/tika"
+	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch"
+	"github.com/ipfs-search/ipfs-search/components/protocol/ipfs"
+	"github.com/ipfs-search/ipfs-search/components/queue/amqp"
+
+	"github.com/ipfs-search/ipfs-search/config"
+	"github.com/ipfs-search/ipfs-search/instr"
+	t "github.com/ipfs-search/ipfs-search/types"
+	"github.com/ipfs-search/ipfs-search/utils"
+)
+
+// Pool represents a pool of workers.
+type Pool struct {
+	config       *config.Config
+	httpClient   *http.Client
+	dialer       *utils.RetryingDialer
+	consumeChans struct {
+		Files       <-chan samqp.Delivery
+		Directories <-chan samqp.Delivery
+		Hashes      <-chan samqp.Delivery
+	}
+	crawler *crawler.Crawler
+
+	*instr.Instrumentation
+}
+
+func (w *Pool) makeCrawler(ctx context.Context) error {
+	var (
+		queues  *crawler.Queues
+		indexes *crawler.Indexes
+		err     error
+	)
+
+	log.Println("Getting publish queues.")
+	if queues, err = w.getQueues(ctx); err != nil {
+		return err
+	}
+
+	log.Println("Getting indexes.")
+	if indexes, err = w.getIndexes(ctx); err != nil {
+		return err
+	}
+
+	protocol := ipfs.New(w.config.IPFSConfig(), w.httpClient, w.Instrumentation)
+	extractor := tika.New(w.config.TikaConfig(), w.httpClient, protocol, w.Instrumentation)
+
+	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractor, w.Instrumentation)
+
+	return nil
+}
+
+func (w *Pool) getElasticClient() (*elastic.Client, error) {
+	return elastic.NewClient(
+		elastic.SetSniff(false),
+		elastic.SetURL(w.config.ElasticSearch.URL),
+		elastic.SetHttpClient(w.httpClient),
+	)
+}
+
+func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
+	esClient, err := w.getElasticClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return &crawler.Indexes{
+		Files: elasticsearch.New(
+			esClient,
+			&elasticsearch.Config{Name: w.config.Indexes.Files.Name},
+			w.Instrumentation,
+		),
+		Directories: elasticsearch.New(
+			esClient,
+			&elasticsearch.Config{Name: w.config.Indexes.Directories.Name},
+			w.Instrumentation,
+		),
+		Invalids: elasticsearch.New(
+			esClient,
+			&elasticsearch.Config{Name: w.config.Indexes.Invalids.Name},
+			w.Instrumentation,
+		),
+	}, nil
+}
+
+func (w *Pool) getQueues(ctx context.Context) (*crawler.Queues, error) {
+	amqpConfig := &samqp.Config{
+		Dial: w.dialer.Dial,
+	}
+
+	log.Println("Connecting to AMQP.")
+	amqpConnection, err := amqp.NewConnection(ctx, w.config.AMQPConfig(), amqpConfig, w.Instrumentation)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Creating AMQP channels.")
+	fq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Files.Name, w.config.Workers.FileWorkers)
+	if err != nil {
+		return nil, err
+	}
+
+	dq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Directories.Name, w.config.Workers.DirectoryWorkers)
+	if err != nil {
+		return nil, err
+	}
+
+	hq, err := amqpConnection.NewChannelQueue(ctx, w.config.Queues.Hashes.Name, w.config.Workers.HashWorkers)
+	if err != nil {
+		return nil, err
+	}
+
+	return &crawler.Queues{
+		Files:       fq,
+		Directories: dq,
+		Hashes:      hq,
+	}, nil
+}
+
+func (w *Pool) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
+	// TODO: Get SpanContext from Delivery.
+	// ctx = trace.ContextWithRemoteSpanContext(ctx, p.SpanContext)
+	ctx, span := w.Tracer.Start(ctx, "crawler.worker.crawlDelivery", trace.WithNewRoot())
+	defer span.End()
+
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{},
+	}
+
+	if err := json.Unmarshal(d.Body, r); err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
+	}
+
+	if !r.IsValid() {
+		err := fmt.Errorf("Invalid resource: %v", r)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
+	}
+
+	log.Printf("Crawling '%s'", r)
+	err := w.crawler.Crawl(ctx, r)
+	log.Printf("Done crawling '%s', result: %v", r, err)
+
+	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+	}
+
+	return err
+}
+
+func (w *Pool) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery) {
+	ctx, span := w.Tracer.Start(ctx, "crawler.worker.startWorker")
+	defer span.End()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case d, ok := <-deliveries:
+			if !ok {
+				// This is a fatal error; it should never happen - crash the program!
+				panic("unexpected channel close")
+			}
+			if err := w.crawlDelivery(ctx, d); err != nil {
+				// By default, retry.
+				shouldRetry := true
+
+				span.RecordError(ctx, err)
+
+				if err := d.Reject(shouldRetry); err != nil {
+					span.RecordError(ctx, err)
+				}
+			} else {
+				if err := d.Ack(false); err != nil {
+					span.RecordError(ctx, err)
+				}
+			}
+		}
+	}
+}
+
+func (w *Pool) startPool(ctx context.Context, deliveries <-chan samqp.Delivery, workers int) {
+	ctx, span := w.Tracer.Start(ctx, "crawler.worker.startPool")
+	defer span.End()
+
+	for i := 0; i < workers; i++ {
+		go w.startWorker(ctx, deliveries)
+	}
+}
+
+// Start launches the workerpool.
+func (w *Pool) Start(ctx context.Context) {
+	ctx, span := w.Tracer.Start(ctx, "crawler.worker.Start")
+	defer span.End()
+
+	log.Printf("Starting %d workers for files", w.config.Workers.FileWorkers)
+	w.startPool(ctx, w.consumeChans.Files, w.config.Workers.FileWorkers)
+
+	log.Printf("Starting %d workers for hashes", w.config.Workers.HashWorkers)
+	w.startPool(ctx, w.consumeChans.Hashes, w.config.Workers.HashWorkers)
+
+	log.Printf("Starting %d workers for directories", w.config.Workers.DirectoryWorkers)
+	w.startPool(ctx, w.consumeChans.Directories, w.config.Workers.DirectoryWorkers)
+}
+
+func (w *Pool) makeConsumeChans(ctx context.Context) error {
+	var (
+		queues *crawler.Queues
+		err    error
+	)
+
+	if queues, err = w.getQueues(ctx); err != nil {
+		return err
+	}
+
+	if w.consumeChans.Files, err = queues.Files.Consume(ctx); err != nil {
+		return err
+	}
+
+	if w.consumeChans.Directories, err = queues.Directories.Consume(ctx); err != nil {
+		return err
+	}
+
+	if w.consumeChans.Hashes, err = queues.Hashes.Consume(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (w *Pool) init(ctx context.Context) error {
+	w.dialer = &utils.RetryingDialer{
+		Dialer: net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: false,
+		},
+		Context: ctx,
+	}
+	w.httpClient = utils.GetHTTPClient(w.dialer.DialContext)
+
+	log.Println("Initializing crawler.")
+	if err := w.makeCrawler(ctx); err != nil {
+		return err
+	}
+
+	log.Println("Initializing consuming channels.")
+	return w.makeConsumeChans(ctx)
+}
+
+// NewPool initializes and returns a new worker pool.
+func NewPool(ctx context.Context, c *config.Config, i *instr.Instrumentation) (*Pool, error) {
+	w := &Pool{
+		config:          c,
+		Instrumentation: i,
+	}
+
+	err := w.init(ctx)
+
+	return w, err
+}

@@ -1,7 +1,4 @@
-/*
-
-Search engine for IPFS using Elasticsearch, RabbitMQ and Tika.
-*/
+// Search engine for IPFS using Elasticsearch, RabbitMQ and Tika.
 package main
 
 import (
@@ -54,6 +51,11 @@ func main() {
 					Name:   "check",
 					Usage:  "check configuration",
 					Action: checkConfig,
+				},
+				{
+					Name:   "dump",
+					Usage:  "dump current configuration to stdout",
+					Action: dumpConfig,
 				},
 			},
 		},
@@ -108,6 +110,15 @@ func generateConfig(c *cli.Context) error {
 
 	fmt.Printf("Writing default configuration to: %s\n", configFile)
 	return cfg.Write(configFile)
+}
+
+func dumpConfig(c *cli.Context) error {
+	cfg, err := getConfig(c)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	return cfg.Dump()
 }
 
 func add(c *cli.Context) error {
