@@ -3,3 +3,19 @@ checks:
   return-statements:
     config:
       threshold: 5
+plugins:
+  fixme:
+    enabled: true
+  gofmt:
+    enabled: true
+  golint:
+    enabled: true
+  govet:
+    enabled: true
+  git-legal:
+    enabled: true
+    config:
+      allow_affero_copyleft: true
+      allow_strong_copyleft: true
+  editorconfig:
+    enabled: true
