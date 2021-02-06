@@ -2,9 +2,9 @@
 [![Build Status](https://travis-ci.org/ipfs-search/ipfs-search.svg?branch=master)](https://travis-ci.org/ipfs-search/ipfs-search)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/maintainability)](https://codeclimate.com/github/ipfs-search/ipfs-search/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/test_coverage)](https://codeclimate.com/github/ipfs-search/ipfs-search/test_coverage)
-[![GoDoc](https://godoc.org/github.com/ipfs-search/ipfs-search?status.svg)](https://godoc.org/github.com/ipfs-search/ipfs-search)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ipfs-search/ipfs-search.svg)](https://pkg.go.dev/github.com/ipfs-search/ipfs-search)
 [![Backers on Open Collective](https://opencollective.com/ipfs-search/backers/badge.svg)](#backers)
- [![Sponsors on Open Collective](https://opencollective.com/ipfs-search/sponsors/badge.svg)](#sponsors)
+[![Sponsors on Open Collective](https://opencollective.com/ipfs-search/sponsors/badge.svg)](#sponsors)
 
 Search engine for the [Interplanetary Filesystem](https://ipfs.io). Sniffs the DHT gossip and indexes file and directory hashes.
 
@@ -36,9 +36,9 @@ If you are able to help out with either of them, mail us at info@ipfs-search.com
 Please read the Contributing.md file before contributing.
 
 ## Roadmap
-For discussing and suggesting features, look at the [project planning](https://github.com/ipfs-search/ipfs-search/projects).
+For discussing and suggesting features, look at the [issues](https://github.com/ipfs-search/ipfs-search/issues).
 
-## Requirements
+## Dependencies
 
 * Go 1.13
 * Elasticsearch 7.x
