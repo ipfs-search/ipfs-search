@@ -14,6 +14,8 @@ import (
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 	"github.com/ipfs-search/ipfs-search/components/protocol"
 	"github.com/ipfs-search/ipfs-search/components/queue"
+
+	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -25,6 +27,7 @@ type CrawlerTestSuite struct {
 	indexes *Indexes
 	queues  *Queues
 	c       *Crawler
+	instr   *instr.Instrumentation
 
 	protocol  *protocol.Mock
 	extractor *extractor.Mock
@@ -60,9 +63,11 @@ func (s *CrawlerTestSuite) SetupTest() {
 	s.protocol = &protocol.Mock{}
 	s.extractor = &extractor.Mock{}
 
+	s.instr = instr.New()
+
 	s.cfg = DefaultConfig()
 
-	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor)
+	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor, s.instr)
 }
 
 func (s *CrawlerTestSuite) assertExpectations() {
@@ -681,7 +686,7 @@ func (s *CrawlerTestSuite) TestCrawlLargeDirectory() {
 	// Override MaxDirSize
 	s.cfg.MaxDirSize = 3
 
-	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor)
+	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor, s.instr)
 
 	// Prepare resource
 	r := &t.AnnotatedResource{
@@ -758,7 +763,7 @@ func (s *CrawlerTestSuite) TestCrawlDirEntryTimeout() {
 	// Override dir entry timeout
 	s.cfg.DirEntryTimeout = 5 * time.Millisecond
 
-	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor)
+	s.c = New(s.cfg, s.indexes, s.queues, s.protocol, s.extractor, s.instr)
 
 	entryDelay := 2 * s.cfg.DirEntryTimeout
 
