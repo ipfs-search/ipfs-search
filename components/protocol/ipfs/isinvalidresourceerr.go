@@ -2,17 +2,20 @@ package ipfs
 
 import (
 	ipfs "github.com/ipfs/go-ipfs-api"
-	// "log"
+	"log"
 )
 
 // isInvalidResourceErr determines whether an error returned by protocol methods represents invalid content.
 func isInvalidResourceErr(err error) bool {
+	// *ipfs.ERror
 	ipfsErr, ok := err.(*ipfs.Error)
 
 	if !ok {
-		// log.Printf("Couldnt get *ipfs.Error: %T", err)
+		log.Printf("Unexpected protocol error: %T:%v", err, err)
 		return false
 	}
+
+	log.Printf("*ipfs.Error: %v", ipfsErr.Message)
 
 	switch ipfsErr.Message {
 	case "proto: required field \"Type\" not set", // Example: QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8
@@ -22,6 +25,11 @@ func isInvalidResourceErr(err error) bool {
 		"not unixfs node (proto or raw)": // Example: z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE
 		return true
 	}
+
+	// *shell.Error
+	// files/stat: proto: can't skip unknown wire type 6
+	// files/stat: proto: can't skip unknown wire type 6
+	// files/stat: proto: can't skip unknown wire type 6
 
 	return false
 }
