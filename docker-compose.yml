@@ -19,7 +19,7 @@ services:
       - 5001:5001
       - 8080:8080
   ipfs-tika:
-    build: https://github.com/ipfs-search/ipfs-tika.git
+    image: ipfssearch/ipfs-tika:latest
     ports:
       - 8081:8081
     depends_on:
@@ -55,7 +55,7 @@ services:
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
   ipfs-sniffer:
-    build: https://github.com/ipfs-search/ipfs-sniffer.git
+    image: ipfssearch/ipfs-sniffer:latest
     depends_on:
       - rabbitmq
     environment:
