@@ -89,7 +89,7 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 				return errEndOfLs
 			}
 
-			if dirCnt%1024 == 0 {
+			if dirCnt > 0 && dirCnt%1024 == 0 {
 				log.Printf("Processed %d directory entries in %v.", dirCnt, entry.Parent)
 				log.Printf("Latest entry: %v", entry)
 			}
