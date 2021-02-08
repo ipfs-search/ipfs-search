@@ -180,8 +180,8 @@ func (w *Pool) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery
 				panic("unexpected channel close")
 			}
 			if err := w.crawlDelivery(ctx, d); err != nil {
-				// By default, retry.
-				shouldRetry := true
+				// By default, do not retry.
+				shouldRetry := false
 
 				span.RecordError(ctx, err)
 
