@@ -1,4 +1,4 @@
-# [ipfs-search](http://ipfs-search.com)
+# [ipfs-search.com](http://ipfs-search.com)
 [![Build Status](https://travis-ci.org/ipfs-search/ipfs-search.svg?branch=master)](https://travis-ci.org/ipfs-search/ipfs-search)
 [![Docker Build Status](https://img.shields.io/docker/build/ipfssearch/ipfs-search)](https://hub.docker.com/repository/docker/ipfssearch/ipfs-search)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/maintainability)](https://codeclimate.com/github/ipfs-search/ipfs-search/maintainability)
