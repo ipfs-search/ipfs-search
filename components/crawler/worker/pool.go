@@ -166,7 +166,7 @@ func (w *Pool) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
 	return err
 }
 
-func (w *Pool) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery) {
+func (w *Pool) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery, name string) {
 	ctx, span := w.Tracer.Start(ctx, "crawler.worker.startWorker")
 	defer span.End()
 
@@ -197,12 +197,13 @@ func (w *Pool) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery
 	}
 }
 
-func (w *Pool) startPool(ctx context.Context, deliveries <-chan samqp.Delivery, workers int) {
+func (w *Pool) startPool(ctx context.Context, deliveries <-chan samqp.Delivery, workers int, poolName string) {
 	ctx, span := w.Tracer.Start(ctx, "crawler.worker.startPool")
 	defer span.End()
 
 	for i := 0; i < workers; i++ {
-		go w.startWorker(ctx, deliveries)
+		name := fmt.Sprintf("%s-%d", poolName, i)
+		go w.startWorker(ctx, deliveries, name)
 	}
 }
 
@@ -212,13 +213,13 @@ func (w *Pool) Start(ctx context.Context) {
 	defer span.End()
 
 	log.Printf("Starting %d workers for files", w.config.Workers.FileWorkers)
-	w.startPool(ctx, w.consumeChans.Files, w.config.Workers.FileWorkers)
+	w.startPool(ctx, w.consumeChans.Files, w.config.Workers.FileWorkers, "files")
 
 	log.Printf("Starting %d workers for hashes", w.config.Workers.HashWorkers)
-	w.startPool(ctx, w.consumeChans.Hashes, w.config.Workers.HashWorkers)
+	w.startPool(ctx, w.consumeChans.Hashes, w.config.Workers.HashWorkers, "hashes")
 
 	log.Printf("Starting %d workers for directories", w.config.Workers.DirectoryWorkers)
-	w.startPool(ctx, w.consumeChans.Directories, w.config.Workers.DirectoryWorkers)
+	w.startPool(ctx, w.consumeChans.Directories, w.config.Workers.DirectoryWorkers, "directories")
 }
 
 func (w *Pool) makeConsumeChans(ctx context.Context) error {
