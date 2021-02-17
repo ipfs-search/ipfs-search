@@ -61,8 +61,10 @@ services:
     image: ipfssearch/ipfs-sniffer:latest
     depends_on:
       - rabbitmq
+      - jaeger
     environment:
       - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
+      - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces
     deploy:
       restart_policy:
         condition: on-failure
