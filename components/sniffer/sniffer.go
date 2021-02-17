@@ -2,6 +2,8 @@
 Package sniffer contains sniffer components which can be wired into a libp2p dht node by proxying the datastore.
 
 The canonical implementation thereof can be found in: https://github.com/ipfs-search/ipfs-sniffer
+
+If all you want is to sniff CID's, you probably want to use a `factory` to facilitate the setup of the sniffer.
 */
 package sniffer
 
