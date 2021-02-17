@@ -19,6 +19,10 @@ import (
 func makeDocument(r *t.AnnotatedResource) indexTypes.Document {
 	now := time.Now().UTC()
 
+	// Strip milliseconds to cater to legacy ES index format.
+	// This can be safely removed after the next reindex with _nomillis removed from time format.
+	now = now.Truncate(time.Second)
+
 	var references []indexTypes.Reference
 	if r.Reference.Parent != nil {
 		references = []indexTypes.Reference{
