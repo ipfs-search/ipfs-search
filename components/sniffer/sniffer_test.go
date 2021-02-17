@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ipfs-search/ipfs-search/components/queue"
+	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -43,7 +44,7 @@ func (s *SnifferTestSuite) TearDownTest() {
 // TestNew does a burn test for New()
 func (s *SnifferTestSuite) TestNew() {
 	cfg := DefaultConfig()
-	sniffy, e := New(cfg, s.ds, s.f)
+	sniffy, e := New(cfg, s.ds, s.f, instr.New())
 
 	s.NotEmpty(sniffy)
 	s.NoError(e)
@@ -52,7 +53,7 @@ func (s *SnifferTestSuite) TestNew() {
 // TestSniffCancel tests whether running Sniff() with a cancelled context returns with a context error.
 func (s *SnifferTestSuite) TestSniffCancel() {
 	cfg := DefaultConfig()
-	sniffy, e := New(cfg, s.ds, s.f)
+	sniffy, e := New(cfg, s.ds, s.f, instr.New())
 	s.NoError(e)
 
 	// Cancel context
@@ -119,7 +120,7 @@ func (s *SnifferTestSuite) TestHandleToPublish() {
 
 	// Create sniffer
 	cfg := DefaultConfig()
-	sniffy, e := New(cfg, s.ds, s.f)
+	sniffy, e := New(cfg, s.ds, s.f, instr.New())
 	s.NoError(e)
 
 	// Get wrapped Datastore
