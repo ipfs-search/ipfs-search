@@ -2,6 +2,8 @@
 Package sniffer contains sniffer components which can be wired into a libp2p dht node by proxying the datastore.
 
 The canonical implementation thereof can be found in: https://github.com/ipfs-search/ipfs-sniffer
+
+If all you want is to sniff CID's, you probably want to use a `factory` to facilitate the setup of the sniffer.
 */
 package sniffer
 
@@ -38,7 +40,7 @@ type Sniffer struct {
 }
 
 // New creates a new Sniffer based on a datastore, or returns an error.
-func New(cfg *Config, ds datastore.Batching, pub queue.PublisherFactory) (*Sniffer, error) {
+func New(cfg *Config, ds datastore.Batching, pub queue.PublisherFactory, i *instr.Instrumentation) (*Sniffer, error) {
 	bus := eventbus.NewBus()
 
 	es, err := eventsource.New(bus, ds)
@@ -50,7 +52,7 @@ func New(cfg *Config, ds datastore.Batching, pub queue.PublisherFactory) (*Sniff
 		cfg:             cfg,
 		es:              es,
 		pub:             pub,
-		Instrumentation: instr.New(),
+		Instrumentation: i,
 	}
 
 	return &s, nil
