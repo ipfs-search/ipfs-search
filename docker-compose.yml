@@ -16,7 +16,7 @@ services:
     environment:
       - discovery.type=single-node
   ipfs:
-    image: ipfs/go-ipfs:v0.7.0
+    image: ipfs/go-ipfs:v0.8.0
     ports:
       - 4001:4001
       - 5001:5001
