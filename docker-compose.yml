@@ -15,6 +15,20 @@ services:
       - 9300:9300
     environment:
       - discovery.type=single-node
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:7.8.1
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5601:5601
+    deploy:
+      restart_policy:
+        condition: on-failure
   ipfs:
     image: ipfs/go-ipfs:v0.8.0
     ports:
@@ -46,6 +60,7 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
       - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - OTEL_TRACE_SAMPLER_ARG=1.0
     deploy:
       restart_policy:
         condition: on-failure
@@ -73,6 +88,7 @@ services:
     environment:
       - SPAN_STORAGE_TYPE=elasticsearch
       - ES_SERVER_URLS=http://elasticsearch:9200
+      - ES_TAGS_AS_FIELDS_ALL=true
     depends_on:
       - elasticsearch
     ports:
