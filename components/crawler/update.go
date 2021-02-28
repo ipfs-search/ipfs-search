@@ -37,6 +37,11 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 	refs, refsUpdated := appendReference(i.References, &i.AnnotatedResource.Reference)
 
 	now := time.Now()
+
+	// Strip milliseconds to cater to legacy ES index format.
+	// This can be safely removed after the next reindex with _nomillis removed from time format.
+	now = now.Truncate(time.Second)
+
 	isRecent := now.Sub(i.LastSeen) > c.config.MinUpdateAge
 
 	if refsUpdated || isRecent {
