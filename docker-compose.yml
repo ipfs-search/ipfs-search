@@ -20,6 +20,9 @@ services:
       memlock:
         soft: -1
         hard: -1
+    deploy:
+      restart_policy:
+        condition: on-failure
   kibana:
     image: docker.elastic.co/kibana/kibana-oss:7.8.1
     depends_on:
@@ -35,6 +38,9 @@ services:
       - 4001:4001
       - 5001:5001
       - 8080:8080
+    deploy:
+      restart_policy:
+        condition: on-failure
   ipfs-tika:
     image: ipfssearch/ipfs-tika:latest
     ports:
@@ -72,6 +78,9 @@ services:
       - elasticsearch
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+    deploy:
+      restart_policy:
+        condition: on-failure
   ipfs-sniffer:
     image: ipfssearch/ipfs-sniffer:latest
     depends_on:
