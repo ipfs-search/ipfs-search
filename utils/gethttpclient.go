@@ -16,7 +16,7 @@ func GetHTTPClient(dialcontext func(ctx context.Context, network, address string
 		DialContext:         dialcontext,
 		ForceAttemptHTTP2:   false,
 		MaxIdleConns:        100, // Defaut
-		MaxIdleConnsPerHost: 2,   // Default
+		MaxIdleConnsPerHost: 10,  // 10 connections to IPFS/Tika/ES (each).
 		IdleConnTimeout:     90 * time.Second,
 	})
 
