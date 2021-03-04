@@ -10,13 +10,13 @@ import (
 )
 
 // GetHTTPClient initializes a HTTP client with OpenTelemetry transport for tracing.
-func GetHTTPClient(dialcontext func(ctx context.Context, network, address string) (net.Conn, error)) *http.Client {
+func GetHTTPClient(dialcontext func(ctx context.Context, network, address string) (net.Conn, error), maxConns int) *http.Client {
 	transport := otelhttp.NewTransport(&http.Transport{
 		Proxy:               nil,
 		DialContext:         dialcontext,
 		ForceAttemptHTTP2:   false,
-		MaxIdleConns:        100, // Defaut
-		MaxIdleConnsPerHost: 10,  // 10 connections to IPFS/Tika/ES (each).
+		MaxIdleConns:        maxConns,
+		MaxIdleConnsPerHost: maxConns,
 		IdleConnTimeout:     90 * time.Second,
 	})
 
