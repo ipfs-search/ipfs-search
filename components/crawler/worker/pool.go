@@ -62,7 +62,7 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 	protocol := ipfs.New(w.config.IPFSConfig(), ipfsClient, w.Instrumentation)
 
 	// Limited Tika connections (as resources are generally known to be available by now)
-	tikaClient := utils.GetHTTPClient(w.dialer.DialContext, 10)
+	tikaClient := utils.GetHTTPClient(w.dialer.DialContext, 50)
 	extractor := tika.New(w.config.TikaConfig(), tikaClient, protocol, w.Instrumentation)
 
 	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractor, w.Instrumentation)
