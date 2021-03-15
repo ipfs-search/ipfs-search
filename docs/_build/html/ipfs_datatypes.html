@@ -1,0 +1,892 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>IPFS data types &mdash; ipfs-search 3000 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ipfs-search
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">ipfs-search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">ipfs-search documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="snapshots.html">ipfs-search snapshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">ipfs-search documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ipfs-search</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>IPFS data types</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/ipfs_datatypes.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ipfs-data-types">
+<h1>IPFS data types<a class="headerlink" href="#ipfs-data-types" title="Permalink to this headline">¶</a></h1>
+<p>Over the course of time, IPFS has seen a progression in data types. This document services as a reference to aid in the understanding of and interaction with the various ways in which data can be stored.</p>
+<div class="section" id="cli-examples-and-http-api">
+<h2>CLI examples and HTTP API<a class="headerlink" href="#cli-examples-and-http-api" title="Permalink to this headline">¶</a></h2>
+<p>Note: the examples in this document represent the output of go-ipfs version 0.23. It is important to note that, at least in theory, all the CLI commands have corresponding HTTP API calls.</p>
+<p>Reference: https://docs.ipfs.io/reference/api/http/</p>
+</div>
+<div class="section" id="cid">
+<h2>CID<a class="headerlink" href="#cid" title="Permalink to this headline">¶</a></h2>
+<p>Content identifiers CID in IPFS currently exist in two different versions: CIDv0 and CIDv1. Version 1 is self-descriptive in that the base, codec (format), CID version and hash are contained within the identifier. In version 0 these predefined in the format.</p>
+<p>As of the time of writing, CIDv0 is still the default for files and directories being added to IPFS. With the release of go-ipfs 0.5 this should be updated to CIDv1.</p>
+<p>Reference: https://github.com/multiformats/cid</p>
+<div class="section" id="cidv0">
+<h3>CIDv0<a class="headerlink" href="#cidv0" title="Permalink to this headline">¶</a></h3>
+<p>Example file: <code class="docutils literal notranslate"><span class="pre">QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv</span></code></p>
+<p>Base: <code class="docutils literal notranslate"><span class="pre">base58btc</span></code> (implicit)
+Codec: <code class="docutils literal notranslate"><span class="pre">dag-pb</span></code> (implicit)
+CID: <code class="docutils literal notranslate"><span class="pre">0</span></code> (implicit)
+Hash: <code class="docutils literal notranslate"><span class="pre">sha2-256</span></code></p>
+<p>Format: <code class="docutils literal notranslate"><span class="pre">cidv0</span> <span class="pre">::=</span> <span class="pre">&lt;multihash-content-address&gt;</span></code></p>
+</div>
+<div class="section" id="cidv1">
+<h3>CIDv1<a class="headerlink" href="#cidv1" title="Permalink to this headline">¶</a></h3>
+<p>Example file: <code class="docutils literal notranslate"><span class="pre">bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4</span></code></p>
+<p>Base: <code class="docutils literal notranslate"><span class="pre">base32</span></code> (default)
+Codec: <code class="docutils literal notranslate"><span class="pre">raw</span></code> (default)
+CID: <code class="docutils literal notranslate"><span class="pre">1</span></code>
+Hash: <code class="docutils literal notranslate"><span class="pre">sha2-256</span></code></p>
+<p>Format: <code class="docutils literal notranslate"><span class="pre">&lt;cidv1&gt;</span> <span class="pre">::=</span> <span class="pre">&lt;multibase-prefix&gt;&lt;cid-version&gt;&lt;multicodec-content-type&gt;&lt;multihash-content-address&gt;</span></code></p>
+<p>Any CIDv0 can be converted to CIDv1.</p>
+</div>
+</div>
+<div class="section" id="ipld">
+<h2>IPLD<a class="headerlink" href="#ipld" title="Permalink to this headline">¶</a></h2>
+<p>The superset of data addressable with CID, extends beyond IPFS to cover compatible content-addressable hash-linked datastructures in a unified information space. It is designed to be extensible, so that any compatible hash-linked structure may be addressed within the same Merkle forest.</p>
+<p>Currently, this includes specifications to address and interact with the data formats of the following protocols:</p>
+<ul class="simple">
+<li><p>IPFS</p></li>
+<li><p>Bitcoin</p></li>
+<li><p>Ethereum</p></li>
+<li><p>GIT</p></li>
+</ul>
+<p>Reference: https://ipld.io/</p>
+</div>
+<div class="section" id="id1">
+<h2>IPFS data types<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="objects">
+<h3>Objects<a class="headerlink" href="#objects" title="Permalink to this headline">¶</a></h3>
+<p>In IPFS, all CIDs refer to objects with the following properties:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cid</span></code>: the identifier (CIDv0 or CIDv1, as described above).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code>: the cumulative size of the object, including the size of the objects linked to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">links</span></code>: a list of links to other objects in CID format, except for <code class="docutils literal notranslate"><span class="pre">raw</span></code> objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: encoded data according to the IPLD multicodec content type in the CID.</p></li>
+</ul>
+<p>Objects may be explored with the IPLD explorer: https://explore.ipld.io/</p>
+</div>
+<div class="section" id="data-types">
+<h3>Data types<a class="headerlink" href="#data-types" title="Permalink to this headline">¶</a></h3>
+<p>Within IPLD, the following data formats are currently usage within IPFS:</p>
+<ol class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dag-pb</span></code>: Protobuf wrapper around UnixFS protobuf format for files, raw data, HAMT, and directories.
+The <code class="docutils literal notranslate"><span class="pre">Data</span></code> field of the <a class="reference external" href="https://github.com/ipld/specs/blob/master/block-layer/codecs/dag-pb.md">dag-pb protobuf</a> holds protobuf-encoded UnixFS data.
+See below for a dissection of a few exemplary blocks to make this more clear.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dag-cbor</span></code>: JSON-like generic datastructures for objects with links to other objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">raw</span></code>: Unencoded binary data.</p></li>
+</ol>
+<p>The full list of IPLD formats (including various address format specifiers and other stuff) is defined here:
+https://github.com/multiformats/multicodec/blob/master/table.csv</p>
+<div class="section" id="dag-protobuf-dag-pb">
+<h4>DAG protobuf (<code class="docutils literal notranslate"><span class="pre">dag-pb</span></code>)<a class="headerlink" href="#dag-protobuf-dag-pb" title="Permalink to this headline">¶</a></h4>
+<p>This is a protobuf wrapper which seems to be only used for UnixFSv1-encoded data with links.
+A draft specification can be found at:
+https://github.com/ipld/specs/blob/master/block-layer/codecs/dag-pb.md</p>
+<p>Inside the <code class="docutils literal notranslate"><span class="pre">Data</span></code> field is the legacy IPFS UnixFS format, encoding files and directories according to the following Protobuf format:</p>
+<p>https://github.com/ipfs/go-unixfs/blob/master/pb/unixfs.proto</p>
+<p>Directories may be self-contained as <code class="docutils literal notranslate"><span class="pre">Directory</span></code> or may be sharded in Protobuf <a class="reference external" href="https://en.wikipedia.org/wiki/Hash_array_mapped_trie">HAMT</a> format as <code class="docutils literal notranslate"><span class="pre">HAMTShard</span></code>. Files may be stored as <code class="docutils literal notranslate"><span class="pre">File</span></code> (binary data encoded in self-descriptive UnixFS protobuf) or as <code class="docutils literal notranslate"><span class="pre">Raw</span></code> (unencoded binary data).</p>
+<p>With regards to HAMT, it is important to note that a generic (content-agnostic) HAMT is being developed on top of <code class="docutils literal notranslate"><span class="pre">dag-cbor</span></code>, to be use with UnixFS v2 (see below) and other formats.</p>
+<p>The current implementation reference implementation lives in <code class="docutils literal notranslate"><span class="pre">go-unixfs</span></code>.</p>
+<p>Source code: https://github.com/ipfs/go-unixfs
+Godoc: https://godoc.org/github.com/ipfs/go-unixfs</p>
+</div>
+<div class="section" id="dag-cbor-dag-cbor">
+<h4>DAG CBOR (<code class="docutils literal notranslate"><span class="pre">dag-cbor</span></code>)<a class="headerlink" href="#dag-cbor-dag-cbor" title="Permalink to this headline">¶</a></h4>
+<p>This is a  <a class="reference external" href="https://cbor.io/">CBOR</a>-based (extendable, binary JSON-compatible format) encoding for linked data. It’s essentially JSON, encoded as a binary, with the addition of a tagged format for links (encoded as CID) to other objects.</p>
+<p>Hence, CBOR may be converted to JSON, in which case the format tag for links will be lost.</p>
+</div>
+<div class="section" id="unixfs-v2">
+<h4>UnixFS v2<a class="headerlink" href="#unixfs-v2" title="Permalink to this headline">¶</a></h4>
+<p>It is important to know that a new version of the specification for UnixFS, the encoding for files and directories, is in active development. It will feature an IPLD-compliant format for encoding files, likely as an extendible subformat of DAG-CBOR.</p>
+<p>Reference: https://docs.ipfs.io/guides/concepts/unixfs/</p>
+</div>
+</div>
+<div class="section" id="files-and-directories">
+<h3>Files and directories<a class="headerlink" href="#files-and-directories" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="files">
+<h4>Files<a class="headerlink" href="#files" title="Permalink to this headline">¶</a></h4>
+<p>Files added to IPFS may be encoded in several different ways:</p>
+<ol class="simple">
+<li><p>Raw binary data</p></li>
+<li><p>Chunked UnixFS protobuf</p></li>
+<li><p>Trickle-DAG UnixFS protobuf</p></li>
+<li><p>Self-contained UnixFS protobuf files</p></li>
+</ol>
+<p>It is important to note that, for any objects which may be represented as files, the <code class="docutils literal notranslate"><span class="pre">Size</span></code> field in the <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">files</span> <span class="pre">stat</span></code> output is the only way to acquire the size of the original file.</p>
+<p>Moreover, the <code class="docutils literal notranslate"><span class="pre">Type</span></code> field in the <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">files</span> <span class="pre">stat</span></code> output can be used to exclude directories but cannot guarantee that the object stored is in fact a file, as it may well be that the object contains raw binary data which might not be considered a file.</p>
+<p>Moreover, there is no reliable way to discriminate chunks of files although the <code class="docutils literal notranslate"><span class="pre">Size</span></code> proves to be a strong indicator.</p>
+<div class="section" id="raw-binary-data">
+<h5>1. Raw binary data<a class="headerlink" href="#raw-binary-data" title="Permalink to this headline">¶</a></h5>
+<p>Files are added as raw binary data to the object, without any encoding. The multiformat is <code class="docutils literal notranslate"><span class="pre">raw</span></code>. When files are added to a UnixFS HAMT directory, they are typically added as <code class="docutils literal notranslate"><span class="pre">raw</span></code>.</p>
+<p>Examples:</p>
+<div class="highlight-$ ipfs add --cid-version 1 README.md notranslate"><div class="highlight"><pre><span></span>added bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4 README.md
+</pre></div>
+</div>
+<p>Note that currently, it seems that CIDv1 seems to imply that files are added as <code class="docutils literal notranslate"><span class="pre">raw</span></code>. In this case, <code class="docutils literal notranslate"><span class="pre">--raw-leaves</span></code> has the same result.</p>
+<div class="highlight-$ ipfs --encoding=json files stat /ipfs/bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4 | jq notranslate"><div class="highlight"><pre><span></span>{
+  &quot;Hash&quot;: &quot;bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4&quot;,
+  &quot;Size&quot;: 6060,
+  &quot;CumulativeSize&quot;: 6060,
+  &quot;Blocks&quot;: 0,
+  &quot;Type&quot;: &quot;file&quot;
+}
+</pre></div>
+</div>
+<div class="highlight-$ ipfs --encoding=json object stat /ipfs/bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4 | jq notranslate"><div class="highlight"><pre><span></span>{
+  &quot;Hash&quot;: &quot;bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4&quot;,
+  &quot;NumLinks&quot;: 0,
+  &quot;BlockSize&quot;: 0,
+  &quot;LinksSize&quot;: 0,
+  &quot;DataSize&quot;: 6060,
+  &quot;CumulativeSize&quot;: 6060
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="chunked-unixfs-protobuf">
+<h5>2. Chunked UnixFS protobuf<a class="headerlink" href="#chunked-unixfs-protobuf" title="Permalink to this headline">¶</a></h5>
+<p>When added files are more than a certain size, they are automatically chunked. The default chunker creates equal chunks of 262144 bytes.</p>
+<p>A chunked file will have the following fields set:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;file&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: <code class="docutils literal notranslate"><span class="pre">undefined</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blockSizes</span></code>: <code class="docutils literal notranslate"><span class="pre">[262144,</span> <span class="pre">262144,</span> <span class="pre">...,</span> <span class="pre">&lt;LastChunkSize&gt;]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">links</span></code>: <code class="docutils literal notranslate"><span class="pre">[[0,</span> <span class="pre">&lt;Chunk1CID&gt;],</span> <span class="pre">[1,</span> <span class="pre">&lt;Chunk2CID&gt;],</span> <span class="pre">...]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code>: The cumulative size of the object, including the metadata for encoding the chunks.</p></li>
+</ul>
+<p>The chunks themselves are encoded as regular files, hence there is no reliable way to discriminate between chunked and regular files. It is only possible to identify the ‘header’ of chunked files although a <code class="docutils literal notranslate"><span class="pre">Size</span></code> of exactly <code class="docutils literal notranslate"><span class="pre">262144</span></code> is a strong indicator that we are in fact dealing with a chunk and not a full file - although this includes files which naturally happen to have this size.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs add 19022011252.jpg
+added QmcsE5YiF8NVkdf5SwL4o2N5WDLkrUfhWwL91gv3MDosvx 19022011252.jpg
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs --encoding=json files stat /ipfs/QmcsE5YiF8NVkdf5SwL4o2N5WDLkrUfhWwL91gv3MDosvx | jq
+{
+  &quot;Hash&quot;: &quot;QmcsE5YiF8NVkdf5SwL4o2N5WDLkrUfhWwL91gv3MDosvx&quot;,
+  &quot;Size&quot;: 1720471,
+  &quot;CumulativeSize&quot;: 1720913,
+  &quot;Blocks&quot;: 7,
+  &quot;Type&quot;: &quot;file&quot;
+}
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs --encoding=json object stat /ipfs/QmcsE5YiF8NVkdf5SwL4o2N5WDLkrUfhWwL91gv3MDosvx | jq
+{
+  &quot;Hash&quot;: &quot;QmcsE5YiF8NVkdf5SwL4o2N5WDLkrUfhWwL91gv3MDosvx&quot;,
+  &quot;NumLinks&quot;: 7,
+  &quot;BlockSize&quot;: 344,
+  &quot;LinksSize&quot;: 310,
+  &quot;DataSize&quot;: 34,
+  &quot;CumulativeSize&quot;: 1720913
+}
+</pre></div>
+</div>
+<p>Example for the first chunk:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ipfs</span> <span class="o">--</span><span class="n">encoding</span><span class="o">=</span><span class="n">json</span> <span class="n">files</span> <span class="n">stat</span> <span class="o">/</span><span class="n">ipfs</span><span class="o">/</span><span class="n">QmNd4BFWZ5tU5C3AVtL3RTg5r2hVLBKtGtDynK4cM36G3y</span> <span class="o">|</span> <span class="n">jq</span>
+<span class="p">{</span>
+  <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;QmNd4BFWZ5tU5C3AVtL3RTg5r2hVLBKtGtDynK4cM36G3y&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Size&quot;</span><span class="p">:</span> <span class="mi">262144</span><span class="p">,</span>
+  <span class="s2">&quot;CumulativeSize&quot;</span><span class="p">:</span> <span class="mi">262158</span><span class="p">,</span>
+  <span class="s2">&quot;Blocks&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="s2">&quot;file&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>(Note the <code class="docutils literal notranslate"><span class="pre">Size</span></code> of <code class="docutils literal notranslate"><span class="pre">262144</span></code> bytes.)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ipfs</span> <span class="o">--</span><span class="n">encoding</span><span class="o">=</span><span class="n">json</span> <span class="nb">object</span> <span class="n">stat</span> <span class="o">/</span><span class="n">ipfs</span><span class="o">/</span><span class="n">QmNd4BFWZ5tU5C3AVtL3RTg5r2hVLBKtGtDynK4cM36G3y</span> <span class="o">|</span> <span class="n">jq</span>
+<span class="p">{</span>
+  <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;QmNd4BFWZ5tU5C3AVtL3RTg5r2hVLBKtGtDynK4cM36G3y&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;NumLinks&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s2">&quot;BlockSize&quot;</span><span class="p">:</span> <span class="mi">262158</span><span class="p">,</span>
+  <span class="s2">&quot;LinksSize&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s2">&quot;DataSize&quot;</span><span class="p">:</span> <span class="mi">262154</span><span class="p">,</span>
+  <span class="s2">&quot;CumulativeSize&quot;</span><span class="p">:</span> <span class="mi">262158</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="trickle-dag-unixfs-protobuf">
+<h5>3. Trickle-DAG UnixFS protobuf<a class="headerlink" href="#trickle-dag-unixfs-protobuf" title="Permalink to this headline">¶</a></h5>
+<p>Trickle-DAG is another way of chunking files in IPFS. It is unclear at this time how to discriminate between the normal (balanced) DAG and the trickle-DAG formats, or as to how or whether they need a different way to access.</p>
+<blockquote>
+<div><p>Trickle-dag is optimized for reading data in sequence, while the merkle-dag improves random access time. It might make sense to use trickle-dag for long videos, but in my experience it’s not a massive difference.</p>
+</div></blockquote>
+<p>Reference: https://discuss.ipfs.io/t/what-is-the-difference-between-trickle-dag-and-merkle-dag/265/3</p>
+<p>Examples (same file as in chunked UnixFS above):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs add -t 19022011252.jpg
+added QmWPzAVU681LaAt2GrveH4JEMTdXKJr7LjeZRpwN6C7zVj 19022011252.jpg
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs --encoding=json files stat /ipfs/QmWPzAVU681LaAt2GrveH4JEMTdXKJr7LjeZRpwN6C7zVj | jq
+{
+  &quot;Hash&quot;: &quot;QmWPzAVU681LaAt2GrveH4JEMTdXKJr7LjeZRpwN6C7zVj&quot;,
+  &quot;Size&quot;: 1720471,
+  &quot;CumulativeSize&quot;: 1720913,
+  &quot;Blocks&quot;: 7,
+  &quot;Type&quot;: &quot;file&quot;
+}
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs --encoding=json object stat /ipfs/QmWPzAVU681LaAt2GrveH4JEMTdXKJr7LjeZRpwN6C7zVj | jq
+{
+  &quot;Hash&quot;: &quot;QmWPzAVU681LaAt2GrveH4JEMTdXKJr7LjeZRpwN6C7zVj&quot;,
+  &quot;NumLinks&quot;: 7,
+  &quot;BlockSize&quot;: 344,
+  &quot;LinksSize&quot;: 310,
+  &quot;DataSize&quot;: 34,
+  &quot;CumulativeSize&quot;: 1720913
+}
+</pre></div>
+</div>
+<p>Example for the first chunk:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs --encoding=json files stat /ipfs/QmQ8VoFUWDKJGCBvRx6enp5CSijCWVCFDqjZ9gaCJAwr3P | jq
+{
+  &quot;Hash&quot;: &quot;QmQ8VoFUWDKJGCBvRx6enp5CSijCWVCFDqjZ9gaCJAwr3P&quot;,
+  &quot;Size&quot;: 262144,
+  &quot;CumulativeSize&quot;: 262158,
+  &quot;Blocks&quot;: 0,
+  &quot;Type&quot;: &quot;file&quot;
+}
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs --encoding=json object stat /ipfs/QmQ8VoFUWDKJGCBvRx6enp5CSijCWVCFDqjZ9gaCJAwr3P | jq
+{
+  &quot;Hash&quot;: &quot;QmQ8VoFUWDKJGCBvRx6enp5CSijCWVCFDqjZ9gaCJAwr3P&quot;,
+  &quot;NumLinks&quot;: 0,
+  &quot;BlockSize&quot;: 262158,
+  &quot;LinksSize&quot;: 4,
+  &quot;DataSize&quot;: 262154,
+  &quot;CumulativeSize&quot;: 262158
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="self-contained-unixfs-protobuf-files">
+<h5>4. Self-contained UnixFS protobuf files<a class="headerlink" href="#self-contained-unixfs-protobuf-files" title="Permalink to this headline">¶</a></h5>
+<p>Like <code class="docutils literal notranslate"><span class="pre">raw</span></code> data, these are self-contained files, where the actual file data sits inside a protobuf container describing it as a file.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs add README.md
+added QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv README.md
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs --encoding=json files stat /ipfs/QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv | jq
+{
+  &quot;Hash&quot;: &quot;QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv&quot;,
+  &quot;Size&quot;: 6060,
+  &quot;CumulativeSize&quot;: 6071,
+  &quot;Blocks&quot;: 0,
+  &quot;Type&quot;: &quot;file&quot;
+}
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs --encoding=json object stat /ipfs/QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv | jq
+{
+  &quot;Hash&quot;: &quot;QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv&quot;,
+  &quot;NumLinks&quot;: 0,
+  &quot;BlockSize&quot;: 6071,
+  &quot;LinksSize&quot;: 3,
+  &quot;DataSize&quot;: 6068,
+  &quot;CumulativeSize&quot;: 6071
+}
+</pre></div>
+</div>
+<p>We can examine the <code class="docutils literal notranslate"><span class="pre">dag-pb(UnixFSv1(data))</span></code> wrapping through decoding the raw block data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs block get QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB | xxd
+  00000000: 0acb 0808 0212 c308 4865 6c6c 6f20 616e  ........Hello an
+  ...
+  00000440: 7269 7479 2d6e 6f74 6573 0a18 c308       rity-notes....
+</pre></div>
+</div>
+<p>We know from the CID that this is <code class="docutils literal notranslate"><span class="pre">protobuf</span></code>, so we can use <a class="reference external" href="https://github.com/ipld/specs/blob/master/block-layer/codecs/dag-pb.md">the dag-pb spec</a> to decode it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0acb08</span></code> is the interesting part: <code class="docutils literal notranslate"><span class="pre">0a</span></code> is <code class="docutils literal notranslate"><span class="pre">1010</span></code>, which tells us this is field number <code class="docutils literal notranslate"><span class="pre">1</span></code>, type <code class="docutils literal notranslate"><span class="pre">010</span></code>, which is an embedded message or bunch of bytes (the latter in our case).
+<code class="docutils literal notranslate"><span class="pre">cb08</span></code> is the length as <code class="docutils literal notranslate"><span class="pre">varint</span></code>, so that’s <code class="docutils literal notranslate"><span class="pre">1100</span> <span class="pre">1011</span> <span class="pre">0000</span> <span class="pre">1000</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">1011</span> <span class="pre">000</span> <span class="pre">1000</span></code> -&gt; reverse to <code class="docutils literal notranslate"><span class="pre">000</span> <span class="pre">1000</span> <span class="pre">100</span> <span class="pre">1011</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">1099</span></code> in decimal.
+The referenced spec tells us that field <code class="docutils literal notranslate"><span class="pre">1</span></code> is the <code class="docutils literal notranslate"><span class="pre">Data</span></code> field.</p></li>
+</ul>
+<p>Due to historical reasons, the <code class="docutils literal notranslate"><span class="pre">Link</span></code> field is encoded before the <code class="docutils literal notranslate"><span class="pre">Data</span></code> field, but we have no links as this is a self-contained file.
+We can parse the bytes following this as UnixFS protobuf.
+We can also use <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">object</span> <span class="pre">data</span></code> to output just that, the <code class="docutils literal notranslate"><span class="pre">Data</span></code> field of an Object.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs object data QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB | xxd
+  00000000: 0802 12c3 0848 656c 6c6f 2061 6e64 2057  .....Hello and W
+  ...
+  00000440: 792d 6e6f 7465 730a 18c3 08              y-notes....
+</pre></div>
+</div>
+<p>Using the UnixFSv1 protobuf schema from above, this decodes as follows:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0802</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">08</span></code> is <code class="docutils literal notranslate"><span class="pre">1000</span></code>, which tells us this is field number <code class="docutils literal notranslate"><span class="pre">1</span></code>, type <code class="docutils literal notranslate"><span class="pre">000</span></code>, which is a <code class="docutils literal notranslate"><span class="pre">varint</span></code> in this case.
+<code class="docutils literal notranslate"><span class="pre">02</span></code> is the value in <code class="docutils literal notranslate"><span class="pre">varint</span></code> encoding, which is just <code class="docutils literal notranslate"><span class="pre">2</span></code> in decimal.
+This is the <code class="docutils literal notranslate"><span class="pre">Type</span></code> field in the <a class="reference external" href="https://github.com/ipfs/go-unixfs/blob/master/pb/unixfs.proto">unixfs protobuf spec</a>.
+The type is <code class="docutils literal notranslate"><span class="pre">file</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">12c308</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">12</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">0010</span></code>, which tells us this is field number <code class="docutils literal notranslate"><span class="pre">2</span></code>, type <code class="docutils literal notranslate"><span class="pre">010</span></code>, which is a <code class="docutils literal notranslate"><span class="pre">bytes</span></code> in this case.
+<code class="docutils literal notranslate"><span class="pre">c308</span></code> is the length, as <code class="docutils literal notranslate"><span class="pre">varint</span></code>: <code class="docutils literal notranslate"><span class="pre">1100</span> <span class="pre">0011</span> <span class="pre">0000</span> <span class="pre">1000</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">0011</span> <span class="pre">000</span> <span class="pre">1000</span></code> -&gt; reverse to <code class="docutils literal notranslate"><span class="pre">000</span> <span class="pre">1000</span> <span class="pre">100</span> <span class="pre">0011</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">1091</span></code> in decimal.</p></li>
+<li><p>some data (which is actually <code class="docutils literal notranslate"><span class="pre">1091</span></code> bytes long, nice!)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">18c3</span> <span class="pre">08</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">18</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">1000</span></code>, which tells us this is field number <code class="docutils literal notranslate"><span class="pre">3</span></code>, type <code class="docutils literal notranslate"><span class="pre">000</span></code>, which is a <code class="docutils literal notranslate"><span class="pre">varint</span></code> in this case.
+<code class="docutils literal notranslate"><span class="pre">c308</span></code> is, again <code class="docutils literal notranslate"><span class="pre">1091</span></code> in decimal, which is good, because this is a file and that’s what you’d expect.
+This is the <code class="docutils literal notranslate"><span class="pre">filesize</span></code> field.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="directories">
+<h4>Directories<a class="headerlink" href="#directories" title="Permalink to this headline">¶</a></h4>
+<p>Directories added to IPFS may be encoded in several different ways:</p>
+<ol class="simple">
+<li><p>UnixFS protobuf directory</p></li>
+<li><p>UnixFS protobuf directory with raw leaves</p></li>
+<li><p>UnixFS protobuf HAMT directory</p></li>
+</ol>
+<div class="section" id="ls-commands-and-output">
+<h5><code class="docutils literal notranslate"><span class="pre">ls</span></code> commands and output<a class="headerlink" href="#ls-commands-and-output" title="Permalink to this headline">¶</a></h5>
+<p>One relevant note here is that IPFS has a confusing plethora of <code class="docutils literal notranslate"><span class="pre">ls</span></code> commands and, while they are aware of the problem, resolving it (e.g. through deprecation) does not currently seem a prioerity.</p>
+<p>Here’s an overview, with the official description from the command’s help text:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">ls</span></code>: List directory contents for Unix filesystem objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">files</span> <span class="pre">ls</span></code>: List directories in the local mutable namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">file</span> <span class="pre">ls</span></code>: List directory contents for Unix filesystem objects.</p></li>
+</ul>
+<p>As <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">file</span></code> is currently not even listed anymore in <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">--help</span></code>, it does seem that <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">ls</span></code> is what we should go forward with. However, it is important to note that <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">file</span> <span class="pre">ls</span></code> and <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">ls</span></code> are <em>not</em> the same and that both the arguments as well as the output differ.</p>
+<p>In these examples, we will be talking to the HTTP API equivalent to <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">ls</span></code> in the CLI as the latter currently seems to be unable to return JSON output.</p>
+<p>Reference: https://github.com/ipfs/go-ipfs/issues/7050</p>
+</div>
+<div class="section" id="directory-sizes">
+<h5>Directory sizes<a class="headerlink" href="#directory-sizes" title="Permalink to this headline">¶</a></h5>
+<p>It seems that the only reliable way to determine the size of a directory is the <code class="docutils literal notranslate"><span class="pre">CumulativeSize</span></code> output of the <code class="docutils literal notranslate"><span class="pre">files</span> <span class="pre">stat</span></code> and <code class="docutils literal notranslate"><span class="pre">object</span> <span class="pre">stat</span></code> command, which represents the size of the directory and all its contents, including metadata (e.g. links to HAMT shards).</p>
+</div>
+<div class="section" id="unixfs-protobuf-directory">
+<h5>1. UnixFS protobuf directory<a class="headerlink" href="#unixfs-protobuf-directory" title="Permalink to this headline">¶</a></h5>
+<p>This is the default, where files get added wrapped in protobuf containers.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs add -w README.md
+added QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv README.md
+added QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF
+</pre></div>
+</div>
+<div class="highlight-$ ipfs --encoding=json files stat /ipfs/QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF | jq notranslate"><div class="highlight"><pre><span></span>{
+  &quot;Hash&quot;: &quot;QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF&quot;,
+  &quot;Size&quot;: 0,
+  &quot;CumulativeSize&quot;: 6127,
+  &quot;Blocks&quot;: 1,
+  &quot;Type&quot;: &quot;directory&quot;
+}
+</pre></div>
+</div>
+<div class="highlight-$ ipfs --encoding=json object stat /ipfs/QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF | jq notranslate"><div class="highlight"><pre><span></span>{
+  &quot;Hash&quot;: &quot;QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF&quot;,
+  &quot;NumLinks&quot;: 1,
+  &quot;BlockSize&quot;: 56,
+  &quot;LinksSize&quot;: 54,
+  &quot;DataSize&quot;: 2,
+  &quot;CumulativeSize&quot;: 6127
+}
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="s2">&quot;http://localhost:5001/api/v0/ls?arg=/ipfs/QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF&quot;</span> <span class="o">|</span> <span class="n">jq</span>
+<span class="p">{</span>
+  <span class="s2">&quot;Objects&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;/ipfs/QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Links&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;README.md&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Size&quot;</span><span class="p">:</span> <span class="mi">6060</span><span class="p">,</span>
+          <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+          <span class="s2">&quot;Target&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">}</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Faster, streaming unordered results, without resolving file types and sizes, so that child objects do not need to be requested:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ curl -s &quot;http://localhost:5001/api/v0/ls?arg=/ipfs/QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF&amp;size=false&amp;resolve-type=false&amp;stream=true&quot; | jq
+{
+  &quot;Objects&quot;: [
+    {
+      &quot;Hash&quot;: &quot;/ipfs/QmQy8FTQCdJGtNHg92pc4B6F4cjnuSdrFx9gdRmkrE1rVF&quot;,
+      &quot;Links&quot;: [
+        {
+          &quot;Name&quot;: &quot;README.md&quot;,
+          &quot;Hash&quot;: &quot;QmWyDJmrr6cRwEpTF2VGhWDi4uytrDHT8S5BptVdkbhjpv&quot;,
+          &quot;Size&quot;: 0,
+          &quot;Type&quot;: 0,
+          &quot;Target&quot;: &quot;&quot;
+        }
+      ]
+    }
+  ]
+}
+</pre></div>
+</div>
+<p>We can again decode the protobuf encoding to understand what’s going on behind the scenes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs block get QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv | xxd
+  00000000: 122e 0a22 1220 a52c 3602 030c b912 edfe  ...&quot;. .,6.......
+  00000010: 4de9 7002 fdad f9d4 5666 c3be 122a 2efb  M.p.....Vf...*..
+  00000020: 5db9 3c1d 5fa6 1205 6162 6f75 7418 980d  ].&lt;._...about...
+  00000030: 1230 0a22 1220 929a 303c 39da 8a0b 67c0  .0.&quot;. ..0&lt;9...g.
+  ...
+  00000150: 6375 7269 7479 2d6e 6f74 6573 1895 090a  curity-notes....
+  00000160: 0208 01                                  ...
+</pre></div>
+</div>
+<p>The block data decodes like this:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">122e</span></code> - <code class="docutils literal notranslate"><span class="pre">12</span></code> is <code class="docutils literal notranslate"><span class="pre">0001</span> <span class="pre">0010</span></code>, so field <code class="docutils literal notranslate"><span class="pre">2</span></code>, type embedded message.
+<code class="docutils literal notranslate"><span class="pre">2e</span></code> is the size: <code class="docutils literal notranslate"><span class="pre">0010</span> <span class="pre">1110</span></code>, which is <code class="docutils literal notranslate"><span class="pre">46</span></code> in decimal.
+Fields:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">0a22</span></code> - <code class="docutils literal notranslate"><span class="pre">0a</span></code> is <code class="docutils literal notranslate"><span class="pre">0000</span> <span class="pre">1010</span></code>, field <code class="docutils literal notranslate"><span class="pre">1</span></code>, type <code class="docutils literal notranslate"><span class="pre">bytes</span></code>, this is the <code class="docutils literal notranslate"><span class="pre">Hash</span></code> field.
+<code class="docutils literal notranslate"><span class="pre">22</span></code>, varint, <code class="docutils literal notranslate"><span class="pre">34</span></code> bytes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1220</span> <span class="pre">a52c</span> <span class="pre">3602</span> <span class="pre">030c</span> <span class="pre">b912</span> <span class="pre">edfe</span> <span class="pre">4de9</span> <span class="pre">7002</span> <span class="pre">fdad</span> <span class="pre">f9d4</span> <span class="pre">5666</span> <span class="pre">c3be</span> <span class="pre">122a</span> <span class="pre">2efb</span> <span class="pre">5db9</span> <span class="pre">3c1d</span> <span class="pre">5fa6</span></code> binary hash.
+This is 34 bytes because it’s a multihash, including one byte for the hash type (<code class="docutils literal notranslate"><span class="pre">sha2-256</span></code>) and the length (32 bytes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1205</span></code> - <code class="docutils literal notranslate"><span class="pre">12</span></code> is <code class="docutils literal notranslate"><span class="pre">0001</span> <span class="pre">0010</span></code>, field <code class="docutils literal notranslate"><span class="pre">2</span></code>, type <code class="docutils literal notranslate"><span class="pre">string</span></code>, this is the <code class="docutils literal notranslate"><span class="pre">Name</span></code> field.
+<code class="docutils literal notranslate"><span class="pre">05</span></code>, varint, <code class="docutils literal notranslate"><span class="pre">5</span></code> bytes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">6162</span> <span class="pre">6f75</span> <span class="pre">74</span></code> binary name, <code class="docutils literal notranslate"><span class="pre">about</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">18</span> <span class="pre">980d</span></code> - <code class="docutils literal notranslate"><span class="pre">18</span></code> is <code class="docutils literal notranslate"><span class="pre">0001</span> <span class="pre">1000</span></code>, field <code class="docutils literal notranslate"><span class="pre">3</span></code>, type <code class="docutils literal notranslate"><span class="pre">varint</span></code>.
+<code class="docutils literal notranslate"><span class="pre">980d</span></code> is <code class="docutils literal notranslate"><span class="pre">1001</span> <span class="pre">1000</span> <span class="pre">0000</span> <span class="pre">1101</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">001</span> <span class="pre">1000</span> <span class="pre">000</span> <span class="pre">1101</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">000</span> <span class="pre">1101</span> <span class="pre">001</span> <span class="pre">1000</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">1688</span></code> in decimal.
+That’s also what <code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">object</span> <span class="pre">links</span></code> reports. Good.</p></li>
+</ul>
+</li>
+<li><p>More links.
+They each start with <code class="docutils literal notranslate"><span class="pre">12</span></code>, indicating field <code class="docutils literal notranslate"><span class="pre">2</span></code>, embedded message.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0a02</span></code> at the end is the <code class="docutils literal notranslate"><span class="pre">Data</span></code> field, which is two bytes long.
+The actual data can be read out with <code class="docutils literal notranslate"><span class="pre">object</span> <span class="pre">data</span></code> again.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs object data QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv | xxd
+  00000000: 0801                                     ..
+</pre></div>
+</div>
+<p>It reads “I am a directory”.</p>
+<p>The interesting thing to note here is that the UnixFS protobuf marks this block as a directory, but does not actually contain links to the files contained in the directory.
+Those links are stored in the surrounding <code class="docutils literal notranslate"><span class="pre">dag-pb</span></code> Object.</p>
+</div>
+<div class="section" id="unixfs-protobuf-with-raw-leaves">
+<h5>2. UnixFS protobuf with raw leaves<a class="headerlink" href="#unixfs-protobuf-with-raw-leaves" title="Permalink to this headline">¶</a></h5>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ipfs add -w --raw-leaves README.md
+added bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4 README.md
+added QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm
+</pre></div>
+</div>
+<div class="highlight-$ ipfs --encoding=json files stat /ipfs/QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm | jq notranslate"><div class="highlight"><pre><span></span>{
+  &quot;Hash&quot;: &quot;QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm&quot;,
+  &quot;Size&quot;: 0,
+  &quot;CumulativeSize&quot;: 6118,
+  &quot;Blocks&quot;: 1,
+  &quot;Type&quot;: &quot;directory&quot;
+}
+</pre></div>
+</div>
+<div class="highlight-$ ipfs --encoding=json object stat /ipfs/QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm | jq notranslate"><div class="highlight"><pre><span></span>{
+  &quot;Hash&quot;: &quot;QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm&quot;,
+  &quot;NumLinks&quot;: 1,
+  &quot;BlockSize&quot;: 58,
+  &quot;LinksSize&quot;: 56,
+  &quot;DataSize&quot;: 2,
+  &quot;CumulativeSize&quot;: 6118
+}
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">s</span> <span class="s2">&quot;http://localhost:5001/api/v0/ls?arg=/ipfs/QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm&quot;</span> <span class="o">|</span> <span class="n">jq</span>
+<span class="p">{</span>
+  <span class="s2">&quot;Objects&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;/ipfs/QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Links&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;README.md&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Size&quot;</span><span class="p">:</span> <span class="mi">6060</span><span class="p">,</span>
+          <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+          <span class="s2">&quot;Target&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">}</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Faster, streaming unordered results, without resolving file types and sizes, so that child objects do not need to be requested:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ curl -s &quot;http://localhost:5001/api/v0/ls?arg=/ipfs/QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm&amp;size=false&amp;resolve-type=false&amp;stream=true&quot; | jq
+{
+  &quot;Objects&quot;: [
+    {
+      &quot;Hash&quot;: &quot;/ipfs/QmZzwcXprWah5w7qFPQ42UdGmokC4buH9ApNTJxmXhjZBm&quot;,
+      &quot;Links&quot;: [
+        {
+          &quot;Name&quot;: &quot;README.md&quot;,
+          &quot;Hash&quot;: &quot;bafkreihqmkkhyq35uwiis5ed5mtudmv5abzdzzgop2urwp44uxutczahv4&quot;,
+          &quot;Size&quot;: 6060,
+          &quot;Type&quot;: 2,
+          &quot;Target&quot;: &quot;&quot;
+        }
+      ]
+    }
+  ]
+}
+</pre></div>
+</div>
+<p>Note that our request not to resolve the types and sizes for protobuf objects with raw leaves seem to be ignored.</p>
+<p>From a protobuf perspective, raw-leaves directories behave identically to “normal” protobuf directories.
+The only difference is that the CIDs referenced in the <code class="docutils literal notranslate"><span class="pre">Links</span></code> field of the <code class="docutils literal notranslate"><span class="pre">dag-pb</span></code> shell are <code class="docutils literal notranslate"><span class="pre">raw</span></code>.</p>
+</div>
+<div class="section" id="unixfs-protobuf-hamt-directory">
+<h5>3. UnixFS protobuf HAMT directory<a class="headerlink" href="#unixfs-protobuf-hamt-directory" title="Permalink to this headline">¶</a></h5>
+<p>Protobuf HAMT directories are a special kind of directories which are accessed as a <a class="reference external" href="https://en.wikipedia.org/wiki/Hash_array_mapped_trie">HAMT</a>. This allows for fast indexing of very large directories, as protobuf directories require scanning all the blocks (chunks) to find a particular link.</p>
+<p>The current HAMT implementation seems to have been done with the specific use case of distributing an uncensorable mirror of Wikipedia over IPFS. For the examples here, we will be using the hash <code class="docutils literal notranslate"><span class="pre">QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco</span></code> which is an IPFS-distributed snapshot of Wikipedia.</p>
+<p>Note that there currently seems no reliable way to discriminate between HAMT and normal directories, even though the protobuf type is indeed different (HAMTShard instead of Directory).</p>
+<p>References:</p>
+<ul class="simple">
+<li><p>https://blog.ipfs.io/24-uncensorable-wikipedia/</p></li>
+</ul>
+<p>Examples:</p>
+<div class="highlight-$ ipfs --encoding=json files stat /ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco | jq notranslate"><div class="highlight"><pre><span></span>{
+  &quot;Hash&quot;: &quot;QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;,
+  &quot;Size&quot;: 0,
+  &quot;CumulativeSize&quot;: 658038834798,
+  &quot;Blocks&quot;: 5,
+  &quot;Type&quot;: &quot;directory&quot;
+}
+</pre></div>
+</div>
+<div class="highlight-$ ipfs --encoding=json object stat /ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco | jq notranslate"><div class="highlight"><pre><span></span>{
+  &quot;Hash&quot;: &quot;QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;,
+  &quot;NumLinks&quot;: 5,
+  &quot;BlockSize&quot;: 283,
+  &quot;LinksSize&quot;: 253,
+  &quot;DataSize&quot;: 30,
+  &quot;CumulativeSize&quot;: 658038834798
+}
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">s</span> <span class="s2">&quot;http://localhost:5001/api/v0/ls?arg=/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;</span> <span class="o">|</span> <span class="n">jq</span>
+<span class="p">{</span>
+  <span class="s2">&quot;Objects&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Links&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;QmPQVLHXAcDLvdf6ni24YWgGwitVTwtpiFaKkMfzZKquUB&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Size&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s2">&quot;Target&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+          <span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;QmNYBYYjwtCYXdA2KC68rX8RqXBu9ajBM6Gi8CBrXjvk1j&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Size&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s2">&quot;Target&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+          <span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;QmaeP3RagknCH4gozhE6VfCzTZRU7U2tgEEfs8QMoexEeG&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Size&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s2">&quot;Target&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+          <span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;index.html&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;QmdgiZFqdzUGa7vAFycnA5Xv2mbcdHSsPQHsMyhpuzm9xb&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Size&quot;</span><span class="p">:</span> <span class="mi">154</span><span class="p">,</span>
+          <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+          <span class="s2">&quot;Target&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+          <span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;wiki&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Hash&quot;</span><span class="p">:</span> <span class="s2">&quot;QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Size&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s2">&quot;Target&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">}</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Faster, streaming unordered results, without resolving file types and sizes, so that child objects do not need to be requested:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ curl -s &quot;http://localhost:5001/api/v0/ls?arg=/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&amp;size=false&amp;resolve-type=false&amp;stream=true&quot; | jq
+{
+  &quot;Objects&quot;: [
+    {
+      &quot;Hash&quot;: &quot;/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;,
+      &quot;Links&quot;: [
+        {
+          &quot;Name&quot;: &quot;-&quot;,
+          &quot;Hash&quot;: &quot;QmPQVLHXAcDLvdf6ni24YWgGwitVTwtpiFaKkMfzZKquUB&quot;,
+          &quot;Size&quot;: 0,
+          &quot;Type&quot;: 0,
+          &quot;Target&quot;: &quot;&quot;
+        }
+      ]
+    }
+  ]
+}
+{
+  &quot;Objects&quot;: [
+    {
+      &quot;Hash&quot;: &quot;/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;,
+      &quot;Links&quot;: [
+        {
+          &quot;Name&quot;: &quot;I&quot;,
+          &quot;Hash&quot;: &quot;QmNYBYYjwtCYXdA2KC68rX8RqXBu9ajBM6Gi8CBrXjvk1j&quot;,
+          &quot;Size&quot;: 0,
+          &quot;Type&quot;: 0,
+          &quot;Target&quot;: &quot;&quot;
+        }
+      ]
+    }
+  ]
+}
+{
+  &quot;Objects&quot;: [
+    {
+      &quot;Hash&quot;: &quot;/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;,
+      &quot;Links&quot;: [
+        {
+          &quot;Name&quot;: &quot;wiki&quot;,
+          &quot;Hash&quot;: &quot;QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp&quot;,
+          &quot;Size&quot;: 0,
+          &quot;Type&quot;: 0,
+          &quot;Target&quot;: &quot;&quot;
+        }
+      ]
+    }
+  ]
+}
+{
+  &quot;Objects&quot;: [
+    {
+      &quot;Hash&quot;: &quot;/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;,
+      &quot;Links&quot;: [
+        {
+          &quot;Name&quot;: &quot;M&quot;,
+          &quot;Hash&quot;: &quot;QmaeP3RagknCH4gozhE6VfCzTZRU7U2tgEEfs8QMoexEeG&quot;,
+          &quot;Size&quot;: 0,
+          &quot;Type&quot;: 0,
+          &quot;Target&quot;: &quot;&quot;
+        }
+      ]
+    }
+  ]
+}
+{
+  &quot;Objects&quot;: [
+    {
+      &quot;Hash&quot;: &quot;/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco&quot;,
+      &quot;Links&quot;: [
+        {
+          &quot;Name&quot;: &quot;index.html&quot;,
+          &quot;Hash&quot;: &quot;QmdgiZFqdzUGa7vAFycnA5Xv2mbcdHSsPQHsMyhpuzm9xb&quot;,
+          &quot;Size&quot;: 0,
+          &quot;Type&quot;: 0,
+          &quot;Target&quot;: &quot;&quot;
+        }
+      ]
+    }
+  ]
+}
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Mathijs de Bruin.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

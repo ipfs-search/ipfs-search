@@ -16,6 +16,7 @@ require (
 	github.com/multiformats/go-base32 v0.0.3
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olivere/elastic/v7 v7.0.15
+	github.com/readthedocs/godocjson v0.0.0-20190930142607-9bacaf9b948b // indirect
 	github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.6.1

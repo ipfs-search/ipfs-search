@@ -1,0 +1,259 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ipfs-search snapshots &mdash; ipfs-search 3000 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="ipfs-search documentation" href="README.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ipfs-search
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">ipfs-search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">ipfs-search documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ipfs-search snapshots</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#cluster">Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#manual-pinning">Manual pinning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#restoring">Restoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#snapshot-data-license">Snapshot data license</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">ipfs-search documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ipfs-search</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>ipfs-search snapshots</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/snapshots.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ipfs-search-snapshots">
+<h1>ipfs-search snapshots<a class="headerlink" href="#ipfs-search-snapshots" title="Permalink to this headline">¶</a></h1>
+<p>ipfs-search makes daily <a class="reference external" href="https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html">elasticsearch snapshots</a> of the indexed data.</p>
+<p>We are currently experimenting with automated publishing of these daily snapshots over IPFS. This should allow anyone to inspect our index and/or to fork or mirror our service.
+As of the time of writing (April 5, 2020) the full index is about 425 GB.</p>
+<div class="section" id="cluster">
+<h2>Cluster<a class="headerlink" href="#cluster" title="Permalink to this headline">¶</a></h2>
+<p>We are running an <a class="reference external" href="https://cluster.ipfs.io/">ipfs-cluster</a>, automating the process of pinning the latest updates. The easiest way to do this, is throuhg <a class="reference external" href="https://cluster.ipfs.io/documentation/collaborative/joining/">ipfs-cluster-follow</a>:</p>
+<ol class="simple">
+<li><p><a class="reference external" href="https://docs.ipfs.io/introduction/usage/">Run a local IPFS Node</a>.</p></li>
+<li><p><a class="reference external" href="https://dist.ipfs.io/#ipfs-cluster-follow">Download</a> for your platform and extract the archive.</p></li>
+<li><p>Run: <code class="docutils literal notranslate"><span class="pre">ipfs-cluster-follow</span> <span class="pre">ipfs-search</span> <span class="pre">run</span> <span class="pre">--init</span> <span class="pre">cluster.ipfs-search.com</span></code></p></li>
+</ol>
+<p>Now <code class="docutils literal notranslate"><span class="pre">ipfs-cluster-follow</span></code> should download the cluster configuration, connect to other nodes and start pinning the latest snapshot, automatically updating every night.</p>
+</div>
+<div class="section" id="manual-pinning">
+<h2>Manual pinning<a class="headerlink" href="#manual-pinning" title="Permalink to this headline">¶</a></h2>
+<p>The daily snapshots, for now, are published to: https://gateway.ipfs.io/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi</p>
+<p>To pin the snapshots:
+<code class="docutils literal notranslate"><span class="pre">ipfs</span> <span class="pre">pin</span> <span class="pre">add</span> <span class="pre">/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi</span></code></p>
+<p>To automatically resume the pinning when interrupted you can use the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="p">[</span> <span class="mi">1</span> <span class="p">];</span> <span class="n">do</span> <span class="n">ipfs</span> <span class="n">pin</span> <span class="n">add</span> <span class="o">--</span><span class="n">progress</span> <span class="o">/</span><span class="n">ipns</span><span class="o">/</span><span class="mi">12</span><span class="n">D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi</span><span class="p">;</span> <span class="n">sleep</span> <span class="mi">60</span><span class="p">;</span> <span class="n">done</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="restoring">
+<h2>Restoring<a class="headerlink" href="#restoring" title="Permalink to this headline">¶</a></h2>
+<p>It should be possible to load the snapshots directly through a (local) IPFS gateway into Elasticsearch, although this has not yet been tested and it is most certainly advisable to pin the dataset as per the instructions above.</p>
+<p>In order to load the snapshots, first make sure you’re running a compatible (or equal) version of Elasticsearch and that there is enough disk space available (twice the current size of the index, so ~ 1TB as of the time of writing).</p>
+<p>The steps are as follows:</p>
+<ol class="simple">
+<li><p><a class="reference external" href="https://docs.ipfs.io/introduction/usage/">Run an IPFS Node</a></p></li>
+<li><p>Pin the index snapshot (as per instructions above)</p></li>
+<li><p><a class="reference external" href="https://www.elastic.co/guide/en/elasticsearch/reference/5.6/install-elasticsearch.html">Run Elasticsearch 5.x</a></p></li>
+<li><p>Register the local IPFS gateway as a <a class="reference external" href="https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_read_only_url_repository">readonly Elasticsearch snapshot repository</a> through the URL <code class="docutils literal notranslate"><span class="pre">http://localhost:8080/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi/backup/</span></code> (assuming your local IPFS gateway is running on <code class="docutils literal notranslate"><span class="pre">localhost:8080</span></code>)</p></li>
+<li><p>List available snapshots with <code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">-X</span> <span class="pre">GET</span> <span class="pre">&quot;localhost:9200/_snapshot/&lt;repo_name&gt;/_all?pretty&quot;</span> </code>, testing your prior configuration</p></li>
+<li><p><a class="reference external" href="https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_restore">Restore the snapshot</a> of your choice: <code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">-X</span> <span class="pre">POST</span> <span class="pre">&quot;localhost:9200/_snapshot/&lt;repo_name&gt;/&lt;snapshot_id&gt;/_restore?pretty&quot;</span> </code></p></li>
+<li><p>Wait… now…</p></li>
+<li><p>Query away! You now run an exact copy of the ipfs-search.com index!</p></li>
+</ol>
+</div>
+<div class="section" id="snapshot-data-license">
+<h2>Snapshot data license<a class="headerlink" href="#snapshot-data-license" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://github.com/idleberg/Creative-Commons-Markdown/blob/master/4.0/by-sa.markdown">CC-BY-SA 4.0</a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="README.html" class="btn btn-neutral float-left" title="ipfs-search documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Mathijs de Bruin.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -6,9 +6,18 @@
 Welcome to ipfs-search-lmt's documentation!
 ===========================================
 
+A documentation repository for ipfs-search
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   modules
+   README
+   snapshots
+   ../1README  
+   ipfs_datatypes
 
 
 

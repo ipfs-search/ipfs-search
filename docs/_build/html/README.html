@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ipfs-search documentation &mdash; ipfs-search 3000 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ipfs-search snapshots" href="snapshots.html" />
+    <link rel="prev" title="ipfs-search" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ipfs-search
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">ipfs-search</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ipfs-search documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#architecture">Architecture</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sniffer">Sniffer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#queue-rabbitmq">Queue: RabbitMQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#crawler-ipfs-search">Crawler: ipfs-search</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hashes-directories-or-files">Hashes (directories or files)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#files-only-files">Files (only files)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#updating-items">Updating items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#metadata-extractor-ipfs-tika">Metadata extractor: ipfs-tika</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#search-backend-elasticsearch">Search backend: Elasticsearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api">API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#frontend">Frontend</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snapshots.html">ipfs-search snapshots</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ipfs-search documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#architecture">Architecture</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sniffer">Sniffer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#queue-rabbitmq">Queue: RabbitMQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#crawler-ipfs-search">Crawler: ipfs-search</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hashes-directories-or-files">Hashes (directories or files)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#files-only-files">Files (only files)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#updating-items">Updating items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#metadata-extractor-ipfs-tika">Metadata extractor: ipfs-tika</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#search-backend-elasticsearch">Search backend: Elasticsearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api">API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#frontend">Frontend</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ipfs-search</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>ipfs-search documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/README.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ipfs-search-documentation">
+<h1>ipfs-search documentation<a class="headerlink" href="#ipfs-search-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
+<p>ipfs-search consists of the following components:</p>
+<ul class="simple">
+<li><p>Sniffer</p></li>
+<li><p>Queue</p></li>
+<li><p>Crawler</p></li>
+<li><p>Metadata extractor</p></li>
+<li><p>Search backend</p></li>
+<li><p>API</p></li>
+<li><p>Frontend</p></li>
+</ul>
+<div class="section" id="sniffer">
+<h3>Sniffer<a class="headerlink" href="#sniffer" title="Permalink to this headline">¶</a></h3>
+<p>The sniffer listens to gossip between our IPFS node and others and adds hashes for which a provider is offered to the <code class="docutils literal notranslate"><span class="pre">hashes</span></code> queue, filtering for (currently) unparseable data and items recently updated.</p>
+</div>
+<div class="section" id="queue-rabbitmq">
+<h3>Queue: RabbitMQ<a class="headerlink" href="#queue-rabbitmq" title="Permalink to this headline">¶</a></h3>
+<p>RabbitMQ holds a <code class="docutils literal notranslate"><span class="pre">files</span></code> and a <code class="docutils literal notranslate"><span class="pre">hashes</span></code> queue with items to be crawled, in a soon-to-be well-defined JSON-format.</p>
+</div>
+<div class="section" id="crawler-ipfs-search">
+<h3>Crawler: ipfs-search<a class="headerlink" href="#crawler-ipfs-search" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="hashes-directories-or-files">
+<h4>Hashes (directories or files)<a class="headerlink" href="#hashes-directories-or-files" title="Permalink to this headline">¶</a></h4>
+<p>The crawler takes items of the <code class="docutils literal notranslate"><span class="pre">hashes</span></code> queue and attempts to list the items using the IPFS RPC API. This will tell it whether the item is a file, a directory or some other type.</p>
+<p>In case it’s a directory, the directory listing will be added and the referred items will be added to the <code class="docutils literal notranslate"><span class="pre">hashes</span></code> queue in case they are directories and to the <code class="docutils literal notranslate"><span class="pre">files</span></code> queue in case they are files.</p>
+<p>In the case the crawled item is a file, it will be added to the <code class="docutils literal notranslate"><span class="pre">files</span></code> queue and no further action is taken.</p>
+</div>
+<div class="section" id="files-only-files">
+<h4>Files (only files)<a class="headerlink" href="#files-only-files" title="Permalink to this headline">¶</a></h4>
+<p>Jobs taken from the <code class="docutils literal notranslate"><span class="pre">files</span></code> queue are guaranteed to be files, metadata extraction and content type detection will be attempted by IPFS TIKA.</p>
+</div>
+<div class="section" id="updating-items">
+<h4>Updating items<a class="headerlink" href="#updating-items" title="Permalink to this headline">¶</a></h4>
+<p>All indexed items will be initially given a <code class="docutils literal notranslate"><span class="pre">first-seen</span></code> field and, when seen again, will have their <code class="docutils literal notranslate"><span class="pre">last-seen</span></code> field set or updated.</p>
+</div>
+<div class="section" id="references">
+<h4>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h4>
+<p>When an item is referred to from a directory, i.e. when it’s found to be a directory item in the hashes queue, it’s referenced name and parent directory will be added to the list of references for that given item. This will happen both for new as well as existing items.</p>
+</div>
+</div>
+<div class="section" id="metadata-extractor-ipfs-tika">
+<h3>Metadata extractor: ipfs-tika<a class="headerlink" href="#metadata-extractor-ipfs-tika" title="Permalink to this headline">¶</a></h3>
+<p>IPFS-TIKA uses the local IPFS gateway to fetch a (named) IPFS resource and streams the resulting data into an Apache TIKA metadata extractor.</p>
+<p>It currently extracts body text up to a certain limit, links and any available metadata. In the future we hope to detect the language as well.</p>
+</div>
+<div class="section" id="search-backend-elasticsearch">
+<h3>Search backend: Elasticsearch<a class="headerlink" href="#search-backend-elasticsearch" title="Permalink to this headline">¶</a></h3>
+<p>Any crawled items will be stored in Elasticsearch, which has a custom mapping defined to prevent the many returned metadata fields from all being indexed (for obvious efficiency reasons).</p>
+<p>It has been found that it is necessary to regularly update the index to circumvent occasional problems with indexing, performance, queries or other factors.</p>
+</div>
+<div class="section" id="api">
+<h3>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h3>
+<p>The API provides a layer on top of the search backend, providing filtered output and a limited query functionality, as well as reformatting the resulting items.</p>
+<p>In the near future we hope to provide an endpoint for adding new items to the crawl queue as well.</p>
+</div>
+<div class="section" id="frontend">
+<h3>Frontend<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h3>
+<p>The frontend is nothing more than a static front to the search API.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="snapshots.html" class="btn btn-neutral float-right" title="ipfs-search snapshots" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="modules.html" class="btn btn-neutral float-left" title="ipfs-search" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Mathijs de Bruin.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

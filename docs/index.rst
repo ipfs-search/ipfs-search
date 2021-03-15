@@ -13,6 +13,12 @@ A documentation repository for ipfs-search
    :maxdepth: 2
    :caption: Contents:
 
+   modules
+   README
+   snapshots
+   ../README  
+   ipfs_datatypes
+
 
 
 Indices and tables
