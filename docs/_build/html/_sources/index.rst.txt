@@ -6,7 +6,9 @@
 Welcome to ipfs-search documentation!
 ===========================================
 
-A documentation repository for ipfs-search
+This is a draft documentation page ipfs-search.com
+
+**OBS: Work in progress** 
 
 
 .. toctree::
