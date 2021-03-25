@@ -15,13 +15,12 @@ This is a draft documentation page ipfs-search.com
    :maxdepth: 2
    :caption: Contents:
 
-   READMEsymlink
+   README <READMEsymlink>
    architecture
    snapshots
+   indices/README
    ipfs_datatypes
    CONTRIBUTINGsymlink
-
-
 
 Indices and tables
 ==================

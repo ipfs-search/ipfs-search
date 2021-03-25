@@ -1,4 +1,4 @@
-# How to reindex
+# Reindexing
 
 1. Stop crawler.
 ```
