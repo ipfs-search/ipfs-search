@@ -8,15 +8,15 @@ Welcome to ipfs-search documentation!
 
 This is a draft documentation page ipfs-search.com
 
-**OBS: Work in progress** 
+**OBS: Work in progress**
 
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   READMEsymlink 
-   README
+   READMEsymlink
+   architecture
    snapshots
    ipfs_datatypes
    CONTRIBUTINGsymlink

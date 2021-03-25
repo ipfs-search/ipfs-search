@@ -1,4 +1,4 @@
-# [ipfs-search.com](http://ipfs-search.com)
+# [ipfs-search.com](https://ipfs-search.com)
 [![Build Status](https://travis-ci.org/ipfs-search/ipfs-search.svg?branch=master)](https://travis-ci.org/ipfs-search/ipfs-search)
 [![Docker Build Status](https://img.shields.io/docker/build/ipfssearch/ipfs-search)](https://hub.docker.com/repository/docker/ipfssearch/ipfs-search)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/maintainability)](https://codeclimate.com/github/ipfs-search/ipfs-search/maintainability)
@@ -9,12 +9,12 @@
 
 Search engine for the [Interplanetary Filesystem](https://ipfs.io). Sniffs the DHT gossip and indexes file and directory hashes.
 
-Metadata and contents are extracted using [ipfs-tika](https://github.com/dokterbob/ipfs-tika), searching is done using ElasticSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
+Metadata and contents are extracted using [ipfs-tika](https://github.com/ipfs-search/ipfs-tika), searching is done using ElasticSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
 
 The ipfs-search command consists of two components: the crawler and the sniffer. The sniffer extracts hashes from the gossip between nodes. The crawler extracts data from the hashes and indexes them.
 
 ## Docs
-A preliminary start at providing a minimal amount of documentation can be found in the [docs](docs/) folder.
+A preliminary start at providing a minimal amount of documentation can be found on [Read the Docs](https://ipfs-search.readthedocs.io/en/latest/).
 
 ## Contact
 Please find us on our Freenode/[Riot/Matrix](https://riot.im/app/#/room/#ipfssearch:matrix.org) channel #ipfssearch.
@@ -22,7 +22,7 @@ Please find us on our Freenode/[Riot/Matrix](https://riot.im/app/#/room/#ipfssea
 ## Snapshots
 ipfs-search provides the daily snapshot for all of the indexed data using
 [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
-To learn more about downloading and restoring snapshots, read [docs](docs/snapshots.md)
+To learn more about downloading and restoring snapshots please refer to the [relevant section](https://ipfs-search.readthedocs.io/en/latest/snapshots.html) in our documentation.
 
 ## Related repo's
 * [frontend](https://github.com/ipfs-search/ipfs-search-frontend)

@@ -7,7 +7,7 @@ As of the time of writing (April 5, 2020) the full index is about 425 GB.
 ## Cluster
 We are running an [ipfs-cluster](https://cluster.ipfs.io/), automating the process of pinning the latest updates. The easiest way to do this, is throuhg [ipfs-cluster-follow](https://cluster.ipfs.io/documentation/collaborative/joining/):
 
-1. [Run a local IPFS Node](https://docs.ipfs.io/introduction/usage/).
+1. [Run a local IPFS Node](https://docs.ipfs.io/how-to/command-line-quick-start/).
 2. [Download](https://dist.ipfs.io/#ipfs-cluster-follow) for your platform and extract the archive.
 3. Run: `ipfs-cluster-follow ipfs-search run --init cluster.ipfs-search.com`
 
