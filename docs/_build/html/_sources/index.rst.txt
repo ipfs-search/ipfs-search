@@ -13,10 +13,9 @@ A documentation repository for ipfs-search
    :maxdepth: 2
    :caption: Contents:
 
-   modules
    README
    snapshots
-   ../1README  
+   READMEsymlink 
    ipfs_datatypes
 
 
