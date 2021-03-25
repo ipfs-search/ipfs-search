@@ -1,4 +1,4 @@
-# IPFS-Search Contribution Guidelines
+# Contribution Guidelines
 
 ## Fork this repository
 
@@ -74,7 +74,7 @@ If you go to your repository on GitHub, you'll see a  `Compare & pull request` b
 Make sure to:
 - [ ] add a thorough description,
 - [ ] write "resolves #issueNumber"
-- [ ] add a "needs review" label 
+- [ ] add a "needs review" label
 - [ ] notify the team on the matrix channel: #ipfs-search:chat.weho.st
 
 Now submit the pull request.

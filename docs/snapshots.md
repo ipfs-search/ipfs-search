@@ -1,4 +1,4 @@
-# ipfs-search snapshots
+# Snapshots
 ipfs-search makes daily [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html) of the indexed data.
 
 We are currently experimenting with automated publishing of these daily snapshots over IPFS. This should allow anyone to inspect our index and/or to fork or mirror our service.
