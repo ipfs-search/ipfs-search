@@ -13,10 +13,11 @@ A documentation repository for ipfs-search
    :maxdepth: 2
    :caption: Contents:
 
+   READMEsymlink 
    README
    snapshots
-   READMEsymlink 
    ipfs_datatypes
+   CONTRIBUTINGsymlink
 
 
 

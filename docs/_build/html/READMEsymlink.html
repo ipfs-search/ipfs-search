@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ipfs-search.com &mdash; ipfs-search 3000 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ipfs-search documentation" href="README.html" />
+    <link rel="prev" title="Welcome to ipfs-search-lmt’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ipfs-search
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ipfs-search.com</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#docs">Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contact">Contact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#snapshots">Snapshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#related-repo-s">Related repo’s</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contributors-wanted">Contributors wanted</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roadmap">Roadmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running">Running</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#docker">Docker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ansible-deployment">Ansible deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#contributors">Contributors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#backers">Backers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sponsors">Sponsors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">ipfs-search documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="snapshots.html">ipfs-search snapshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ipfs_datatypes.html">IPFS data types</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ipfs-search</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>ipfs-search.com</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/READMEsymlink.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ipfs-search-com">
+<h1><a class="reference external" href="http://ipfs-search.com">ipfs-search.com</a><a class="headerlink" href="#ipfs-search-com" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://travis-ci.org/ipfs-search/ipfs-search"><img alt="Build Status" src="https://travis-ci.org/ipfs-search/ipfs-search.svg?branch=master" /></a>
+<a class="reference external" href="https://hub.docker.com/repository/docker/ipfssearch/ipfs-search"><img alt="Docker Build Status" src="https://img.shields.io/docker/build/ipfssearch/ipfs-search" /></a>
+<a class="reference external" href="https://codeclimate.com/github/ipfs-search/ipfs-search/maintainability"><img alt="Maintainability" src="https://api.codeclimate.com/v1/badges/1c25261992991d72137c/maintainability" /></a>
+<a class="reference external" href="https://codeclimate.com/github/ipfs-search/ipfs-search/test_coverage"><img alt="Test Coverage" src="https://api.codeclimate.com/v1/badges/1c25261992991d72137c/test_coverage" /></a>
+<a class="reference external" href="https://pkg.go.dev/github.com/ipfs-search/ipfs-search"><img alt="Go Reference" src="https://pkg.go.dev/badge/github.com/ipfs-search/ipfs-search.svg" /></a>
+<a class="reference external" href="#backers"><img alt="Backers on Open Collective" src="https://opencollective.com/ipfs-search/backers/badge.svg" /></a>
+<a class="reference external" href="#sponsors"><img alt="Sponsors on Open Collective" src="https://opencollective.com/ipfs-search/sponsors/badge.svg" /></a></p>
+<p>Search engine for the <a class="reference external" href="https://ipfs.io">Interplanetary Filesystem</a>. Sniffs the DHT gossip and indexes file and directory hashes.</p>
+<p>Metadata and contents are extracted using <a class="reference external" href="https://github.com/dokterbob/ipfs-tika">ipfs-tika</a>, searching is done using ElasticSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.</p>
+<p>The ipfs-search command consists of two components: the crawler and the sniffer. The sniffer extracts hashes from the gossip between nodes. The crawler extracts data from the hashes and indexes them.</p>
+<div class="section" id="docs">
+<h2>Docs<a class="headerlink" href="#docs" title="Permalink to this headline">¶</a></h2>
+<p>A preliminary start at providing a minimal amount of documentation can be found in the <a class="reference external" href="docs/">docs</a> folder.</p>
+</div>
+<div class="section" id="contact">
+<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
+<p>Please find us on our Freenode/<a class="reference external" href="https://riot.im/app/#/room/#ipfssearch:matrix.org">Riot/Matrix</a> channel #ipfssearch.</p>
+</div>
+<div class="section" id="snapshots">
+<h2>Snapshots<a class="headerlink" href="#snapshots" title="Permalink to this headline">¶</a></h2>
+<p>ipfs-search provides the daily snapshot for all of the indexed data using
+<a class="reference external" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html">elasticsearch snapshots</a>.
+To learn more about downloading and restoring snapshots, read <a class="reference external" href="docs/snapshots">docs</a></p>
+</div>
+<div class="section" id="related-repo-s">
+<h2>Related repo’s<a class="headerlink" href="#related-repo-s" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/ipfs-search/ipfs-search-frontend">frontend</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ipfs-search/ipfs-metadata-api">metadata API</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ipfs-search/ipfs-search-api">search API</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ipfs-search/ipfs-search-deployment">deployment</a></p></li>
+</ul>
+</div>
+<div class="section" id="contributors-wanted">
+<h2>Contributors wanted<a class="headerlink" href="#contributors-wanted" title="Permalink to this headline">¶</a></h2>
+<p>Building a search engine like this takes a considerable amount of resources (money <em>and</em> TLC).
+If you are able to help out with either of them, mail us at info&#64;ipfs-search.com or find us at #ipfssearch on Freenode (or #ipfs-search:chat.weho.st on Matrix).</p>
+<p>Please read the Contributing.md file before contributing.</p>
+</div>
+<div class="section" id="roadmap">
+<h2>Roadmap<a class="headerlink" href="#roadmap" title="Permalink to this headline">¶</a></h2>
+<p>For discussing and suggesting features, look at the <a class="reference external" href="https://github.com/ipfs-search/ipfs-search/issues">issues</a>.</p>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Go 1.13</p></li>
+<li><p>Elasticsearch 7.x</p></li>
+<li><p>RabbitMQ / AMQP server</p></li>
+<li><p>NodeJS 9.x</p></li>
+<li><p>IPFS 0.7</p></li>
+</ul>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Configuration can be done using a YAML configuration file, or by specifying the following environment variables:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">IPFS_TIKA_URL</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IPFS_API_URL</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ELASTICSEARCH_URL</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AMQP_URL</span></code></p></li>
+</ul>
+<p>A default configuration can be generated with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ipfs-search -c config.yml config generate
+</pre></div>
+</div>
+<p>(substitute <code class="docutils literal notranslate"><span class="pre">config.yml</span></code> with the configuration file you’d like to use.)</p>
+<p>To use a configuration file, it is necessary to specify the <code class="docutils literal notranslate"><span class="pre">-c</span></code> option, as in:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ipfs-search -c config.yml crawl
+</pre></div>
+</div>
+<p>The configuration can be (rudimentarily) checked with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ipfs-search -c config.yml config check
+</pre></div>
+</div>
+</div>
+<div class="section" id="building">
+<h2>Building<a class="headerlink" href="#building" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ go get ./...
+$ make
+</pre></div>
+</div>
+</div>
+<div class="section" id="running">
+<h2>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="docker">
+<h3>Docker<a class="headerlink" href="#docker" title="Permalink to this headline">¶</a></h3>
+<p>The most convenient way to run the crawler is through Docker. Simply run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker-compose up
+</pre></div>
+</div>
+<p>This will start the crawler, the sniffer and all its dependencies. Hashes can also be queued for crawling manually by running <code class="docutils literal notranslate"><span class="pre">ipfs-search</span> <span class="pre">a</span> <span class="pre">&lt;hash&gt;</span></code> from within the running container. For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker-compose <span class="nb">exec</span> ipfs-crawler ipfs-search add QmS4ustL54uo8FzR9455qaxZwuMiUhyvMcX9Ba8nUH4uVv
+</pre></div>
+</div>
+</div>
+<div class="section" id="ansible-deployment">
+<h3>Ansible deployment<a class="headerlink" href="#ansible-deployment" title="Permalink to this headline">¶</a></h3>
+<p>Automated deployment can be done on any (virtual) Ubuntu 16.04 machine. The full production stack is automated and can be found in it’s own <a class="reference external" href="https://github.com/ipfs-search/ipfs-search-deployment">repository</a>.</p>
+</div>
+</div>
+<div class="section" id="contributors">
+<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<p>This project exists thanks to all the people who contribute.
+<a href="https://github.com/ipfs-search/ipfs-search/graphs/contributors"><img src="https://opencollective.com/ipfs-search/contributors.svg?width=890&button=false" /></a></p>
+</div>
+<div class="section" id="backers">
+<h2>Backers<a class="headerlink" href="#backers" title="Permalink to this headline">¶</a></h2>
+<p>Thank you to all our backers! 🙏 [<a class="reference external" href="https://opencollective.com/ipfs-search#backer">Become a backer</a>]</p>
+<p><a href="https://opencollective.com/ipfs-search#backers" target="_blank"><img src="https://opencollective.com/ipfs-search/backers.svg?width=890"></a></p>
+</div>
+<div class="section" id="sponsors">
+<h2>Sponsors<a class="headerlink" href="#sponsors" title="Permalink to this headline">¶</a></h2>
+<p><a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/logo/banner.png"></a> <a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/image/logos/NGI0_tag.png"></a><br>
+ipfs-search is supported by NLNet through the EU’s Next Generation Internet (NGI0) programme.</p>
+<p>Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [<a class="reference external" href="https://opencollective.com/ipfs-search#sponsor">Become a sponsor</a>]</p>
+<p><a href="https://opencollective.com/ipfs-search/sponsor/0/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/1/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/2/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/3/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/4/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/5/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/6/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/7/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/8/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/ipfs-search/sponsor/9/website" target="_blank"><img src="https://opencollective.com/ipfs-search/sponsor/9/avatar.svg"></a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="README.html" class="btn btn-neutral float-right" title="ipfs-search documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to ipfs-search-lmt’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Mathijs de Bruin.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
