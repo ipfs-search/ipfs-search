@@ -8,7 +8,7 @@ import (
 // IPFS specifies the configuration for the IPFS protocol.
 type IPFS struct {
 	APIURL      string            `yaml:"api_url" env:"IPFS_API_URL"`
-	GatewayURL  string            `yaml:"gateway_url"`
+	GatewayURL  string            `yaml:"gateway_url" env:"IPFS_GATEWAY_URL"`
 	PartialSize datasize.ByteSize `yaml:"partial_size"`
 }
 

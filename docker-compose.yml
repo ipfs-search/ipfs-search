@@ -41,14 +41,12 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-  ipfs-tika:
-    image: ipfssearch/ipfs-tika:latest
+  tika-extractor:
+    image: ipfssearch/tika-extractor:latest
     ports:
       - 8081:8081
     depends_on:
       - ipfs
-    environment:
-      - IPFS_GATEWAY=http://ipfs:8080/
     deploy:
       restart_policy:
         condition: on-failure
@@ -58,11 +56,12 @@ services:
       - rabbitmq
       - elasticsearch
       - ipfs
-      - ipfs-tika
+      - tika-extractor
       - jaeger
     environment:
-      - IPFS_TIKA_URL=http://ipfs-tika:8081
+      - TIKA_EXTRACTOR=http://tika-extractor:8081
       - IPFS_API_URL=http://ipfs:5001
+      - IPFS_GATEWAY_URL=http://ipfs:8080
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
       - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces

@@ -10,9 +10,9 @@ import (
 
 // Tika is configuration pertaining to the sniffer
 type Tika struct {
-	TikaServerURL  string            `yaml:"url" env:"IPFS_TIKA_URL"`
-	RequestTimeout time.Duration     `yaml:"timeout"`
-	MaxFileSize    datasize.ByteSize `yaml:"max_file_size"`
+	TikaExtractorURL string            `yaml:"url" env:"TIKA_EXTRACTOR"`
+	RequestTimeout   time.Duration     `yaml:"timeout"`
+	MaxFileSize      datasize.ByteSize `yaml:"max_file_size"`
 }
 
 // TikaConfig returns component-specific configuration from the canonical central configuration.

@@ -38,13 +38,8 @@ func (e *Extractor) get(ctx context.Context, url string) (resp *http.Response, e
 }
 
 func (e *Extractor) getExtractURL(r *t.AnnotatedResource) string {
-	// TODO: This should be TIKAURL?url=GATEWAYURL (or something similar)
 	gwURL := e.protocol.GatewayURL(r)
-	u, err := url.Parse(gwURL)
-	if err != nil {
-		panic(fmt.Sprintf("unexpected parsing error generating URL: %v", err))
-	}
-	return e.config.TikaServerURL + u.EscapedPath()
+	return fmt.Sprintf("%s/extract?url=%s", e.config.TikaExtractorURL, url.QueryEscape(gwURL))
 }
 
 // Extract metadata from a (potentially) referenced resource, updating

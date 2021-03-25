@@ -45,7 +45,7 @@ func (s *TikaTestSuite) SetupTest() {
     }
 
     s.cfg = DefaultConfig()
-    s.cfg.TikaServerURL = s.mockAPIServer.URL()
+    s.cfg.TikaExtractorURL = s.mockAPIServer.URL()
 
     s.protocol = &protocol.Mock{}
 
@@ -91,8 +91,8 @@ func (s TikaTestSuite) TestExtract() {
         },
     }
 
-    tikaURL := fmt.Sprintf("/ipfs/%s", testCID)
-    gwURL := "http://localhost:8080" + tikaURL
+    gwURL := "http://localhost:8080/ipfs/" + testCID
+    extractorURL := "/extract?url=http%3A%2F%2Flocalhost%3A8080%2Fipfs%2F" + testCID
 
     s.protocol.
         On("GatewayURL", r).
@@ -100,7 +100,7 @@ func (s TikaTestSuite) TestExtract() {
         Once()
 
     s.mockAPIHandler.
-        On("Handle", "GET", tikaURL, mock.Anything).
+        On("Handle", "GET", extractorURL, mock.Anything).
         Return(httpmock.Response{
             Body: testJSON,
         }).
@@ -145,7 +145,7 @@ func (s TikaTestSuite) TestExtractMaxFileSize() {
     s.mockAPIHandler.AssertExpectations(s.T())
 }
 
-func (s TikaTestSuite) TestExtractRequestError() {
+func (s TikaTestSuite) TestExtractUpstreamError() {
     r := &t.AnnotatedResource{
         Resource: &t.Resource{
             Protocol: t.IPFSProtocol,
@@ -156,13 +156,16 @@ func (s TikaTestSuite) TestExtractRequestError() {
         },
     }
 
-    tikaURL := fmt.Sprintf("/ipfs/%s", testCID)
-    gwURL := "http://localhost:8080" + tikaURL
+    gwURL := "http://localhost:8080/ipfs/%s" + testCID
+    // extractorURL := fmt.Sprintf("/extract?url=%s", url.QueryEscape(gwURL))
 
     s.protocol.
         On("GatewayURL", r).
         Return(gwURL).
         Once()
+
+    // Closing server early, generates a request error.
+    s.mockAPIServer.Close()
 
     f := &indexTypes.File{
         Document: indexTypes.Document{
@@ -171,7 +174,6 @@ func (s TikaTestSuite) TestExtractRequestError() {
     }
 
     err := s.e.Extract(s.ctx, r, &f)
-
     s.Error(err, extractor.ErrRequest)
 }
 
@@ -182,6 +184,7 @@ func (s TikaTestSuite) TestURLEscape() {
 
     tikaURL := "/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp/" + url.PathEscape("Killing_Yourself_to_Live:_85%_of_a_True_Story.html")
     gwURL := "http://localhost:8080" + tikaURL
+    extractorURL := fmt.Sprintf("/extract?url=%s", url.QueryEscape(gwURL))
 
     r := &t.AnnotatedResource{
         Resource: &t.Resource{
@@ -196,7 +199,7 @@ func (s TikaTestSuite) TestURLEscape() {
         Once()
 
     s.mockAPIHandler.
-        On("Handle", "GET", tikaURL, mock.Anything).
+        On("Handle", "GET", extractorURL, mock.Anything).
         Return(httpmock.Response{
             Body: []byte("{}"),
         }).
@@ -219,8 +222,8 @@ func (s TikaTestSuite) TestTika500() {
         },
     }
 
-    tikaURL := fmt.Sprintf("/ipfs/%s", testCID)
-    gwURL := "http://localhost:8080" + tikaURL
+    gwURL := "http://localhost:8080/ipfs/%s" + testCID
+    extractorURL := fmt.Sprintf("/extract?url=%s", url.QueryEscape(gwURL))
 
     s.protocol.
         On("GatewayURL", r).
@@ -228,7 +231,7 @@ func (s TikaTestSuite) TestTika500() {
         Once()
 
     s.mockAPIHandler.
-        On("Handle", "GET", tikaURL, mock.Anything).
+        On("Handle", "GET", extractorURL, mock.Anything).
         Return(httpmock.Response{
             Status: 500,
             Body:   []byte("{}"),
@@ -256,8 +259,8 @@ func (s TikaTestSuite) TestExtractInvalidJSON() {
         },
     }
 
-    tikaURL := fmt.Sprintf("/ipfs/%s", testCID)
-    gwURL := "http://localhost:8080" + tikaURL
+    gwURL := "http://localhost:8080/ipfs/%s" + testCID
+    extractorURL := fmt.Sprintf("/extract?url=%s", url.QueryEscape(gwURL))
 
     s.protocol.
         On("GatewayURL", r).
@@ -265,7 +268,7 @@ func (s TikaTestSuite) TestExtractInvalidJSON() {
         Once()
 
     s.mockAPIHandler.
-        On("Handle", "GET", tikaURL, mock.Anything).
+        On("Handle", "GET", extractorURL, mock.Anything).
         Return(httpmock.Response{
             Body: testJSON,
         }).
