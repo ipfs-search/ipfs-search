@@ -1,1 +1,1 @@
-/home/lars/ipfs-search/README.md
+../README.md
