@@ -70,7 +70,7 @@ services:
       restart_policy:
         condition: on-failure
   ipfs-search-api:
-    build: https://github.com/ipfs-search/ipfs-search-api.git#:server
+    image: ipfssearch/ipfs-search-api:latest
     ports:
       - 9615:9615
     depends_on:
