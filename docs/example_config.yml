@@ -1,60 +1,46 @@
-# TODO: Update me.
-
 ipfs:
-  api_url: localhost:5001  # IPFS API endpoint, also IPFS_API_URL in env
-  timeout: 6m  # Timeout for IPFS gateway HTTPS requests
+  api_url: http://localhost:5001                      # IPFS API endpoint, also IPFS_API_URL in env
+  gateway_url: http://localhost:8080                  # IPFS gateway, also IPFS_GATEWAY_URL in env
+  partial_size: 256KB                                 # Size of items considered to be partial (when unreferenced)
 elasticsearch:
-  url: http://localhost:9200  # Also ELASTICSEARCH_URL in env
+  url: http://localhost:9200                          # Also ELASTICSEARCH_URL in env
 amqp:
-  url: amqp://guest:guest@localhost:5672/  # Also AMQP_URL in env
+  url: amqp://guest:guest@localhost:5672/             # Also AMQP_URL in env.
+  max_reconnect: 100                                  # Maximum number of reconnect attempts
+  reconnect_time: 2s                                  # Time to wait between reconnects
+tika:
+  url: http://localhost:8081                          # tika-extractor endpoint URL, also TIKA_EXTRACTOR in environment.
+  timeout: 5m                                         # Timeout for requests to tika-extractor.
+  max_file_size: 4GB                                  # Don't attempt to extract metadata for resources larger than this.
+instrumentation:
+  sampling_ratio: 0.01                                # Ratio of requests to sample for tracing. OTEL_TRACE_SAMPLER_ARG in env.
+  jaeger_endpoint: http://localhost:14268/api/traces  # HTTP jaeger.thrift endpoint for tracing. OTEL_EXPORTER_JAEGER_ENDPOINT in env.
 crawler:
-  retry_wait: 2s  # wait time between retries of failed requests
-  hash_wait: 100ms  # Time between launching workers
-  file_wait: 100ms
-  partial_size: 256KB  # Size for partial items - this is the default chunker block size
-  hash_workers: 140
-  file_workers: 120
-  metadata_max_size: 50MB  # Don't attempt to get metadata for files over this size
+  direntry_buffer_size: 8192                          # Buffer this many directory entries between listing and queue'ing
+  min_update_age: 1h                                  # Minimum time between updating `last-seen` on objects.
+  stat_timeout: 1m                                    # Request timeout for Stat() calls.
+  direntry_timeout: 1m                                # Request timeout for Ls() calls.
+  max_dirsize: 32768                                  # Don't index directories larger than this (contained items will be queue'd nonetheless).
 sniffer:
-  lastseen_expiration: 1h
-  lastseen_prunelen: 32768
-  logger_timeout: 1m
-  buffer_size: 512
+  lastseen_expiration: 1h                             # Expire items in lastseen/dedup buffer after this time.
+  lastseen_prunelen: 32768                            # Expire lastseen buffer when size exceeds this.
+  logger_timeout: 1m                                  # Throw timeout error when no log messages arrive
+  buffer_size: 512                                    # Size of the channels buffering between yielder, filter and adder
 indexes:
-  directories:
-    name: ipfs_directories
   files:
-    name: ipfs_files
+    name: ipfs_files                                  # Name of ES index to use.
+  directories:
+    name: ipfs_directories                # Also FILE_WORKERS in env.
   invalids:
     name: ipfs_invalids
-extractor:
-  url: http://localhost:8081  # ipfs-tika endpoint URL, also TIKA_URL in env
-  timeout: 5m  # ipfs-tika request timeout
-# Future features; automatic index upgrading and indexes per mime type
-index:
-  types:
-    - audio:
-      - audio/*
-      - application/ogg
-    - video:
-      - video/*
-      - application/mp4
-    - document:
-      - text/html
-      - text/plain
-      - application/pdf
-      - application/postscript
-      - application/rtf
-      - application/epub+zip
-      - application/x-mobipocket-ebook
-      - "*excel"
-      - "*word"
-      - "*powerpoint"
-      - "*document*"
-    - image:
-      - image/*
-  analyzed_fields:
-    - title
-    - description
-    - artist
-    - author
+queues:
+  files:
+    name: files                                       # Name of RabbitMQ queue to use.
+  directories:
+    name: directories
+  hashes:
+    name: hashes
+workers:
+  hash_workers: 70                                    # Amount of workers for various resources. Also HASH_WORKERS in env.
+  file_workers: 120                   # Also FILE_WORKERS in env.
+  directory_workers: 70                 # Also DIRECTORY in env.

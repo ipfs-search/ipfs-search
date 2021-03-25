@@ -1,31 +1,46 @@
 ipfs:
-  api_url: localhost:5001
-  timeout: 6m0s
+  api_url: http://localhost:5001
+  gateway_url: http://localhost:8080
+  partial_size: 256KB
 elasticsearch:
   url: http://localhost:9200
 amqp:
   url: amqp://guest:guest@localhost:5672/
+  max_reconnect: 100
+  reconnect_time: 2s
+tika:
+  url: http://localhost:8081
+  timeout: 5m0s
+  max_file_size: 4GB
+instrumentation:
+  sampling_ratio: 0.01
+  jaeger_endpoint: http://localhost:14268/api/traces
 crawler:
-  retry_wait: 2s
-  hash_wait: 100ms
-  file_wait: 100ms
-  partial_size: 256KB
-  hash_workers: 140
-  file_workers: 120
-  metadata_max_size: 50MB
+  direntry_buffer_size: 8192
+  min_update_age: 1h0m0s
+  stat_timeout: 1m0s
+  direntry_timeout: 1m0s
+  max_dirsize: 32768
 sniffer:
   lastseen_expiration: 1h0m0s
   lastseen_prunelen: 32768
   logger_timeout: 1m0s
   buffer_size: 512
 indexes:
-  directories:
-    name: ipfs_directories
   files:
     name: ipfs_files
+  directories:
+    name: ipfs_directories
   invalids:
     name: ipfs_invalids
-extractor:
-  url: http://localhost:8081
-  timeout: 5m0s
-  retry_wait: 2s
+queues:
+  files:
+    name: files
+  directories:
+    name: directories
+  hashes:
+    name: hashes
+workers:
+  hash_workers: 70
+  file_workers: 120
+  directory_workers: 70

@@ -47,29 +47,6 @@ For discussing and suggesting features, look at the [issues](https://github.com/
 * NodeJS 9.x
 * IPFS 0.7
 
-## Configuration
-Configuration can be done using a YAML configuration file, or by specifying the following environment variables:
-* `IPFS_TIKA_URL`
-* `IPFS_API_URL`
-* `ELASTICSEARCH_URL`
-* `AMQP_URL`
-
-A default configuration can be generated with:
-```bash
-ipfs-search -c config.yml config generate
-```
-(substitute `config.yml` with the configuration file you'd like to use.)
-
-To use a configuration file, it is necessary to specify the `-c` option, as in:
-```bash
-ipfs-search -c config.yml crawl
-```
-
-The configuration can be (rudimentarily) checked with:
-```bash
-ipfs-search -c config.yml config check
-```
-
 ## Building
 ```bash
 $ go get ./...
