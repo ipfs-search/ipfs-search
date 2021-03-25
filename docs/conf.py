@@ -22,7 +22,7 @@ copyright = '2021, Mathijs de Bruin'
 author = 'Mathijs de Bruin'
 
 # The full version, including alpha/beta/rc tags
-release = '3000'
+# release = '3000'
 
 
 # -- General configuration ---------------------------------------------------
