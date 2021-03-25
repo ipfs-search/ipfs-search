@@ -28,7 +28,4 @@ _testmain.go
 .vagrant
 
 build
-
-backup
-node_modules
-design
+docs/_build
