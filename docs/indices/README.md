@@ -1,5 +1,16 @@
-# Reindexing
+# Indices
 
+## Elasticsearch index mapping and settings
+To be used in the [Create index API](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html):
+```
+$ curl -d <index.json> -X PUT http://localhost:9200/<index-name>
+```
+
+* [Files](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/files.json)
+* [Directories](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/directories.json)
+* [Invalids](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/invalids.json)
+
+## Reindexing
 1. Stop crawler.
 ```
 $ systemctl stop ipfs-crawler
