@@ -17,7 +17,6 @@ This is a draft documentation page ipfs-search.com
 
    README <READMEsymlink>
    configuration
-   examples
    architecture
    snapshots
    indices/README
