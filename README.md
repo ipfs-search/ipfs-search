@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/ipfs-search/ipfs-search.svg?branch=master)](https://travis-ci.org/ipfs-search/ipfs-search)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/maintainability)](https://codeclimate.com/github/ipfs-search/ipfs-search/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/test_coverage)](https://codeclimate.com/github/ipfs-search/ipfs-search/test_coverage)
+[![Documentation Status](https://readthedocs.org/projects/ipfs-search/badge/?version=latest)](https://ipfs-search.readthedocs.io/en/latest/?badge=latest)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ipfs-search/ipfs-search.svg)](https://pkg.go.dev/github.com/ipfs-search/ipfs-search)
 [![Backers on Open Collective](https://opencollective.com/ipfs-search/backers/badge.svg)](#backers)
 [![Sponsors on Open Collective](https://opencollective.com/ipfs-search/sponsors/badge.svg)](#sponsors)
