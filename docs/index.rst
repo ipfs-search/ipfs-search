@@ -6,10 +6,7 @@
 Welcome to ipfs-search documentation!
 ===========================================
 
-This is a draft documentation page ipfs-search.com
-
-**OBS: Work in progress**
-
+This is the main documentation for ipfs-search.com
 
 .. toctree::
    :maxdepth: 2
