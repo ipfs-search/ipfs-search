@@ -8,10 +8,12 @@ Welcome to ipfs-search documentation!
 
 This is the main documentation for ipfs-search.com
 
-.. image:: images/ipfs-search-arch-inv.png
+.. figure:: images/ipfs-search-arch-inv.png
    :alt: ipfs-search current architecture
-
-Current ipfs-search architecture
+   :align: center
+   
+   
+   Current ipfs-search architecture
 
 .. toctree::
    :maxdepth: 2
