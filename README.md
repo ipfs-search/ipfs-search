@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/ipfs-search/ipfs-search.svg?branch=master)](https://travis-ci.org/ipfs-search/ipfs-search)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/maintainability)](https://codeclimate.com/github/ipfs-search/ipfs-search/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/test_coverage)](https://codeclimate.com/github/ipfs-search/ipfs-search/test_coverage)
+[![Documentation Status](https://readthedocs.org/projects/ipfs-search/badge/?version=latest)](https://ipfs-search.readthedocs.io/en/latest/?badge=latest)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ipfs-search/ipfs-search.svg)](https://pkg.go.dev/github.com/ipfs-search/ipfs-search)
 [![Backers on Open Collective](https://opencollective.com/ipfs-search/backers/badge.svg)](#backers)
 [![Sponsors on Open Collective](https://opencollective.com/ipfs-search/sponsors/badge.svg)](#sponsors)
@@ -13,7 +14,7 @@ Metadata and contents are extracted using [ipfs-tika](https://github.com/ipfs-se
 The ipfs-search command consists of two components: the crawler and the sniffer. The sniffer extracts hashes from the gossip between nodes. The crawler extracts data from the hashes and indexes them.
 
 ## Docs
-Documentation is hosted on [Read the Docs](https://ipfs-search.readthedocs.io/en/latest/), based on files contained in the [docs](https://github.com/ipfs-search/ipfs-search/tree/master/docs) folder.
+Documentation is hosted on [Read the Docs](https://ipfs-search.readthedocs.io/en/latest/), based on files contained in the [docs](https://github.com/ipfs-search/ipfs-search/tree/master/docs) folder. In addition, there's extensive [Go docs](https://pkg.go.dev/github.com/ipfs-search/ipfs-search) for the internal API as well as [SwaggerHub OpenAPI documentation](https://app.swaggerhub.com/apis-docs/ipfs-search/ipfs-search/) for the REST API.
 
 ## Contact
 Please find us on our Freenode/[Riot/Matrix](https://riot.im/app/#/room/#ipfssearch:matrix.org) channel #ipfssearch.
@@ -25,7 +26,6 @@ To learn more about downloading and restoring snapshots please refer to the [rel
 
 ## Related repo's
 * [frontend](https://github.com/ipfs-search/ipfs-search-frontend)
-* [metadata API](https://github.com/ipfs-search/ipfs-metadata-api)
 * [search API](https://github.com/ipfs-search/ipfs-search-api)
 * [deployment](https://github.com/ipfs-search/ipfs-search-deployment)
 

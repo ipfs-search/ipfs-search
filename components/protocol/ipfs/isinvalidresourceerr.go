@@ -31,7 +31,8 @@ func isInvalidResourceErr(err error) bool {
 		"unrecognized object type: 144",  // Example: z43AaGEvwdfzjrCZ3Sq7DKxdDHrwoaPQDtqF4jfdkNEVTiqGVFW
 		"not unixfs node (proto or raw)", // Example: z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE
 		"failed to decode Protocol Buffers: incorrectly formatted merkledag node: unmarshal failed. proto: illegal wireType 6", // Example: Qmab9sm49cYmgYfVM812qnAx34VkHRpoAJBLttC41YK3fg
-		"proto: can't skip unknown wire type 6": // Example: QmTPFCJ6oSgevyifNhoK7pL7cznezgquputYn4VVVkYxYo
+		"proto: can't skip unknown wire type 6", // Example: QmTPFCJ6oSgevyifNhoK7pL7cznezgquputYn4VVVkYxYo
+		"failed to decode Protocol Buffers: incorrectly formatted merkledag node: unmarshal failed. unexpected EOF": // Example: QmahhA8bbJ2JkdkP8PuCY9FUUbckEsDE44Zwt9yviW8R7G
 		return true
 	}
 

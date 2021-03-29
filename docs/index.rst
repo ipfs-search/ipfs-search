@@ -6,13 +6,7 @@
 Welcome to ipfs-search documentation!
 ===========================================
 
-This is a draft documentation page ipfs-search.com
-
-**OBS: Work in progress**
-
-.. image:: ~/docs/images/ipfs-search-arch-inv.png
-   :alt: Current ipfs-search architecture
-   :align: left
+This is the main documentation for ipfs-search.com
 
 .. toctree::
    :maxdepth: 2
@@ -20,7 +14,6 @@ This is a draft documentation page ipfs-search.com
 
    README <READMEsymlink>
    configuration
-   examples
    architecture
    snapshots
    indices/README
