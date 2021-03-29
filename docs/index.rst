@@ -11,9 +11,9 @@ This is the main documentation for ipfs-search.com
 .. figure:: images/ipfs-search-arch-inv.png
    :alt: ipfs-search current architecture
    :align: center
+   :width: 800
    
-   
-   Current ipfs-search architecture
+   Current ipfs-search architecture. Credit: `Nina <https://niverel.tymyrddin.space/doku.php?id=en/start>`_. 
 
 .. toctree::
    :maxdepth: 2
@@ -27,9 +27,4 @@ This is the main documentation for ipfs-search.com
    ipfs_datatypes
    CONTRIBUTINGsymlink
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
