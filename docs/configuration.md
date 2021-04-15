@@ -11,6 +11,9 @@ Configuration can be done using a YAML configuration file, or by specifying the 
 * `HASH_WORKERS`
 * `FILE_WORKERS`
 * `DIRECTORY_WORKERS`
+* `SNIFFER_LASTSEEN_EXPIRATION`
+* `SNIFFER_LASTSEEN_PRUNELEN`
+* `SNIFFER_BUFFER_SIZE`
 
 A default configuration can be generated with:
 ```bash
@@ -55,10 +58,10 @@ crawler:
   direntry_timeout: 1m                                # Request timeout for Ls() calls.
   max_dirsize: 32768                                  # Don't index directories larger than this (contained items will be queue'd nonetheless).
 sniffer:
-  lastseen_expiration: 1h                             # Expire items in lastseen/dedup buffer after this time.
-  lastseen_prunelen: 32768                            # Expire lastseen buffer when size exceeds this.
+  lastseen_expiration: 1h                             # Expire items in lastseen/dedup buffer after this time. SNIFFER_LASTSEEN_EXPIRATION in env.
+  lastseen_prunelen: 32768                            # Expire lastseen buffer when size exceeds this. SNIFFER_LASTSEEN_PRUNELEN in env.
   logger_timeout: 1m                                  # Throw timeout error when no log messages arrive
-  buffer_size: 512                                    # Size of the channels buffering between yielder, filter and adder
+  buffer_size: 512                                    # Size of the channels buffering between yielder, filter and adder. SNIFFER_BUFFER_SIZE in env.
 indexes:
   files:
     name: ipfs_files                                  # Name of ES index to use.

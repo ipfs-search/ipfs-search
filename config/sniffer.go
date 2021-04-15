@@ -7,10 +7,10 @@ import (
 
 // Sniffer is configuration pertaining to the sniffer
 type Sniffer struct {
-	LastSeenExpiration time.Duration `yaml:"lastseen_expiration"`
-	LastSeenPruneLen   int           `yaml:"lastseen_prunelen"`
+	LastSeenExpiration time.Duration `yaml:"lastseen_expiration" env:"SNIFFER_LASTSEEN_EXPIRATION"`
+	LastSeenPruneLen   int           `yaml:"lastseen_prunelen" env:"SNIFFER_LASTSEEN_PRUNELEN"`
 	LoggerTimeout      time.Duration `yaml:"logger_timeout"`
-	BufferSize         uint          `yaml:"buffer_size"`
+	BufferSize         uint          `yaml:"buffer_size" env:"SNIFFER_BUFFER_SIZE"`
 }
 
 // SnifferConfig returns component-specific configuration from the canonical central configuration.
