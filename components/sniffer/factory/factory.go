@@ -58,9 +58,8 @@ func getQueue(ctx context.Context, cfg *amqp.Config, i *instr.Instrumentation) a
 	}
 }
 
-func getSniffer(ds datastore.Batching, q amqp.PublisherFactory, i *instr.Instrumentation) (*sniffer.Sniffer, error) {
-	c := sniffer.DefaultConfig()
-	return sniffer.New(c, ds, q, i)
+func getSniffer(cfg *sniffer.Config, ds datastore.Batching, q amqp.PublisherFactory, i *instr.Instrumentation) (*sniffer.Sniffer, error) {
+	return sniffer.New(cfg, ds, q, i)
 }
 
 // Start initialises a sniffer and all its dependencies and launches it in a goroutine, returning a wrapped context
@@ -81,7 +80,7 @@ func Start(ctx context.Context, ds datastore.Batching) (context.Context, datasto
 
 	q := getQueue(ctx, cfg.AMQPConfig(), i)
 
-	s, err := getSniffer(ds, q, i)
+	s, err := getSniffer(cfg.SnifferConfig(), ds, q, i)
 	if err != nil {
 		cancel()
 		return nil, nil, err
