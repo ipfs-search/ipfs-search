@@ -73,6 +73,11 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 	return nil
 }
 
+// deletePartial deletes partial items.
+func (c *Crawler) deletePartial(ctx context.Context, i *existingItem) error {
+	return c.indexes.Partials.Delete(ctx, i.AnnotatedResource.ID)
+}
+
 // updateMaybeExisting updates an item when it exists and returnes true when item exists.
 func (c *Crawler) updateMaybeExisting(ctx context.Context, r *t.AnnotatedResource) (bool, error) {
 	ctx, span := c.Tracer.Start(ctx, "crawler.updateMaybeExisting")
@@ -92,6 +97,19 @@ func (c *Crawler) updateMaybeExisting(ctx context.Context, r *t.AnnotatedResourc
 		if existing.Index == c.indexes.Invalids {
 			// Already indexed as invalid; we're done
 			return true, nil
+		}
+
+		if existing.Index == c.indexes.Partials {
+			// Partial; if referenced: index, otherwise: skip
+			if r.Reference.Parent == nil {
+				// Skip unreferenced partial
+				return true, nil
+			} else {
+				// Delete as partial and index
+				if err = c.deletePartial(ctx, existing); err != nil {
+					return true, err
+				}
+			}
 		}
 
 		// Update item and we're done.
