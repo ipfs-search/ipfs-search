@@ -35,6 +35,7 @@ type CrawlerTestSuite struct {
 	fileIdx    *index.Mock
 	dirIdx     *index.Mock
 	invalidIdx *index.Mock
+	partialIdx *index.Mock
 
 	dirQ  *queue.Mock
 	fileQ *queue.Mock
@@ -45,12 +46,13 @@ func (s *CrawlerTestSuite) SetupTest() {
 	s.ctx = context.Background()
 
 	// Creat a crawler with mocked dependencies
-	s.fileIdx, s.dirIdx, s.invalidIdx = &index.Mock{}, &index.Mock{}, &index.Mock{}
+	s.fileIdx, s.dirIdx, s.invalidIdx, s.partialIdx = &index.Mock{}, &index.Mock{}, &index.Mock{}, &index.Mock{}
 
 	s.indexes = &Indexes{
 		Files:       s.fileIdx,
 		Directories: s.dirIdx,
 		Invalids:    s.invalidIdx,
+		Partials:    s.partialIdx,
 	}
 
 	s.fileQ, s.dirQ, s.hashQ = &queue.Mock{}, &queue.Mock{}, &queue.Mock{}
@@ -95,6 +97,11 @@ func (s *CrawlerTestSuite) assertNotExists(rID string) {
 		Once()
 
 	s.invalidIdx.
+		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Once()
+
+	s.partialIdx.
 		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Once()
@@ -253,7 +260,7 @@ func (s *CrawlerTestSuite) TestCrawlInvalid() {
 	s.assertExpectations()
 }
 
-func (s *CrawlerTestSuite) TestCrawlPartialType() {
+func (s *CrawlerTestSuite) TestCrawlUnreferencedPartialType() {
 	// Prepare resource
 	r := &t.AnnotatedResource{
 		Resource: &t.Resource{
@@ -278,7 +285,78 @@ func (s *CrawlerTestSuite) TestCrawlPartialType() {
 
 	s.assertNotExists(r.Resource.ID)
 
-	// Note how nothing is indexed here!
+	// Index as partial
+	s.partialIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Partial) bool {
+			return true
+		})).
+		Return(nil).
+		Once()
+
+	// Crawl
+	err := s.c.Crawl(s.ctx, r)
+
+	// Unreferenced partial should be skipped.
+	s.NoError(err)
+	s.assertExpectations()
+}
+
+// TestCrawlReferencedPartialType crawls a cached partial, now with a reference.
+func (s *CrawlerTestSuite) TestCrawlReferencedPartialType() {
+	// Prepare resource
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
+		},
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmafrLBfzRLV4XSH1XcaMMeaXEUhDJjmtDfsYU95TrWG87",
+			},
+			Name: "referencedPartial.pdf",
+		},
+		Stat: t.Stat{
+			Type: t.FileType,
+		},
+	}
+
+	s.extractor.
+		On("Extract", mock.Anything, r, mock.Anything).
+		Return(nil).
+		Once()
+
+	s.fileIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.File) bool {
+			return true
+		})).
+		Return(nil).
+		Once()
+
+	s.fileIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.dirIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.invalidIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.partialIdx.
+		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(true, nil).
+		Once()
+
+	s.partialIdx.
+		On("Delete", mock.Anything, r.Resource.ID).
+		Return(nil).
+		Once()
 
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)

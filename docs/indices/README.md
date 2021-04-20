@@ -9,6 +9,7 @@ $ curl -d <index.json> -X PUT http://localhost:9200/<index-name>
 * [Files](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/files.json)
 * [Directories](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/directories.json)
 * [Invalids](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/invalids.json)
+* [Partials](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/partials.json)
 
 ## Example entries
 

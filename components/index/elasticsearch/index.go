@@ -45,13 +45,7 @@ func (i *Index) Index(ctx context.Context, id string, properties interface{}) er
 		BodyJson(properties).
 		Do(ctx)
 
-	if err != nil {
-		// Handle error
-		return err
-	}
-
-	return nil
-
+	return err
 }
 
 // Update a document's properties, given id
@@ -113,6 +107,19 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return false, err
 	}
+}
+
+// Delete item from index
+func (i *Index) Delete(ctx context.Context, id string) error {
+	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Delete")
+	defer span.End()
+
+	_, err := i.es.Delete().
+		Index(i.cfg.Name).
+		Id(id).
+		Do(ctx)
+
+	return err
 }
 
 // Compile-time assurance that implementation satisfies interface.
