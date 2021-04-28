@@ -27,5 +27,10 @@ This is the main documentation for ipfs-search.com
    ipfs_datatypes
    CONTRIBUTINGsymlink
    Distributed_search_for_the_IPFS
+   Distributed_technology   
+   Assistive_technologies
+   Current_implementations
+   Internet-facing_demo
+   Distributed_search
 
 
