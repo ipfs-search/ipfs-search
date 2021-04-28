@@ -26,5 +26,6 @@ This is the main documentation for ipfs-search.com
    indices/README
    ipfs_datatypes
    CONTRIBUTINGsymlink
+   Distributed_search_for_the_IPFS
 
 
