@@ -23,7 +23,7 @@ ipfsearch.xyz searches decentrally but requires a pre-compiled database.
 **dweb.page**
 dweb.page uses IOTA, a permissionless distributed ledger allowing every single user to run their own search engine.
 
-### [Source](https://niverel.tymyrddin.space/en/play/bazaar/engines/distributed)
+[Source](https://niverel.tymyrddin.space/en/play/bazaar/engines/distributed)
 
 
 
@@ -73,7 +73,7 @@ Learning paths of technology evolutions which we travelled for getting transform
 * Settings functionality anticipates tuning.
 * In the future, one can add to the search engine functionality with extensions.
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/start)
+[Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/start)
 
 # Distributed technology
 
@@ -97,7 +97,7 @@ Cryptocurrencies
 ### Resources 
 [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/blockchain)
+[Source](https://niverel.tymyrddin.space/en/play/stones/dweb/blockchain)
 
 ## Hashgraph
 
@@ -126,7 +126,7 @@ All use cases where trust is immutable and incorruptible, for example:
 -   [Swirlds](https://www.swirlds.com/ "https://www.swirlds.com/")    
 -   [Hedera Hashgraph](https://www.hedera.com/ "https://www.hedera.com/")
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/hashgraph)
+[Source](https://niverel.tymyrddin.space/en/play/stones/dweb/hashgraph)
 
 
 ## DAG
@@ -152,7 +152,7 @@ A DAG is a type of distributed ledger technology that relies on consensus algori
 -   [OByte](https://obyte.org/ "https://obyte.org/")    
 -   [IoTA Use Cases](https://files.iota.org/comms/IOTA_Use_Cases.pdf "https://files.iota.org/comms/IOTA_Use_Cases.pdf")
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/dag)
+[Source](https://niverel.tymyrddin.space/en/play/stones/dweb/dag)
 
 
 
@@ -194,7 +194,7 @@ Systems where not all parties need to participate:
 -   [Holochains for Distributed Data Integrity](http://ceptr.org/projects/holochain "http://ceptr.org/projects/holochain")   
 -   [Holochain](https://holochain.org/ "https://holochain.org/")
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/holochain)
+[Source](https://niverel.tymyrddin.space/en/play/stones/dweb/holochain)
 
 # Assistive technologies
 
@@ -243,7 +243,7 @@ Zero-knowledge proofs are probabilistic “proofs” (useful for “good enough�
 -   [A Survey of Noninteractive Zero-KnowledgeProof System and Its Applications](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4032740/pdf/TSWJ2014-560484.pdf "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4032740/pdf/TSWJ2014-560484.pdf"), Huixin Wu and Feng Wang, May 2014    
 -   [A Mind-Bending Cryptographic Trick Promises to Take Blockchains Mainstream](https://www.technologyreview.com/s/609448/a-mind-bending-cryptographic-trick-promises-to-take-blockchains-mainstream/ "https://www.technologyreview.com/s/609448/a-mind-bending-cryptographic-trick-promises-to-take-blockchains-mainstream/"), Mike Orcutt, November 2017
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/assistive/zkp
+[Source](https://niverel.tymyrddin.space/en/play/stones/assistive/zkp
 )
 
 
@@ -258,7 +258,7 @@ A smart contract is a computer protocol intended to digitally facilitate, verify
 
 -   [Research Directions in Blockchain Data Management and Analytics](https://openproceedings.org/2018/conf/edbt/paper-227.pdf "https://openproceedings.org/2018/conf/edbt/paper-227.pdf"), Hoang Tam Vo, Ashish Kundu, Mukesh Mohania, 2018
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/assistive/contracts)
+[Source](https://niverel.tymyrddin.space/en/play/stones/assistive/contracts)
 
 
 
@@ -270,7 +270,7 @@ Voting models for consensus have certain security properties (they can be asynch
 ### Resources
 [I Want Your Vote! (Oh Wait I Already Know It)](https://medium.com/hashgraph/i-want-your-vote-oh-wait-i-already-know-it-e1faa50b31ad "https://medium.com/hashgraph/i-want-your-vote-oh-wait-i-already-know-it-e1faa50b31ad"), Paul Madsen, 2017
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/assistive/voting)
+[Source](https://niverel.tymyrddin.space/en/play/stones/assistive/voting)
 
 
 
@@ -286,7 +286,7 @@ Gossip about gossip, based on the gossip communication protocol, enables nodes t
 [gossip-python](https://github.com/thomai/gossip-python "https://github.com/thomai/gossip-python") (TCP)    
 [Smudge](https://github.com/clockworksoul/smudge "https://github.com/clockworksoul/smudge") (UDP, Go)
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/assistive/gossip)
+[Source](https://niverel.tymyrddin.space/en/play/stones/assistive/gossip)
 
 
 
@@ -436,7 +436,7 @@ IPFS uses a self-certifying mutable name system called IPNS. IPNS was inspired b
 
 [IPFS - Content Addressed, Versioned, P2P File System (DRAFT 3)](https://ipfs.io/ipfs/QmR7GSQM93Cx5eAg6a6yRzNde1FQv7uL6X1o4k7zrJa3LX/ipfs.draft3.pdf "https://ipfs.io/ipfs/QmR7GSQM93Cx5eAg6a6yRzNde1FQv7uL6X1o4k7zrJa3LX/ipfs.draft3.pdf"), Juan Benet
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/current/ipfs)
+[Source](https://niverel.tymyrddin.space/en/play/stones/current/ipfs)
 
 
 ## BTFS
@@ -456,7 +456,7 @@ BTFS is a fork of [IPFS](https://niverel.tymyrddin.space/en/play/stones/current/
 -   [Filecoin](https://filecoin.io/ "https://filecoin.io/")    
 -   [Filecoin: A Decentralized Storage Network](https://filecoin.io/filecoin.pdf "https://filecoin.io/filecoin.pdf"), Protocol Labs, 2017
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/current/filecoin)
+[Source](https://niverel.tymyrddin.space/en/play/stones/current/filecoin)
 
 
 ## The usual peer crawling
@@ -529,7 +529,7 @@ Whenever a node receives a hash for processing from another node, the **_Preproc
 
 [Efficient Crawling Through URL Ordering](http://ilpubs.stanford.edu:8090/347/1/1998-51.pdf "http://ilpubs.stanford.edu:8090/347/1/1998-51.pdf"), Junghoo Cho, Hector Garcia-Molina, Lawrence Page, 1998
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/current/peer-crawling)
+[Source](https://niverel.tymyrddin.space/en/play/stones/current/peer-crawling)
 
 
 # Internet-facing demo
@@ -574,7 +574,7 @@ The ballon d'essai can consist of:
 -   An indexer package with which content providers can index what they provide and add such an index to the distributed index, starting with indexing documents
 -   A thin, separate client with which people can query the distributed index and receive results ranked relevant to the query
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/start)
+[Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/start)
 
 
 ## Overlay networks
@@ -589,7 +589,7 @@ An IPFS node can be fingerprinted through the content it stores. An overlay netw
 
 And getting any of this wrong could put _some_ people in danger.
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/overlay)
+[Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/overlay)
 
 
 ## Parsing
@@ -641,7 +641,7 @@ def walkthrough ()
 -   [Tika Supported Document Formats](https://tika.apache.org/1.4/formats.html "https://tika.apache.org/1.4/formats.html")    
 -   [IPFS API Bindings for Python](https://pypi.org/project/ipfs-api/ "https://pypi.org/project/ipfs-api/")
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/extraction)
+[Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/extraction)
 
 ## Distributing the index on an IPFS Cluster
 
@@ -664,7 +664,7 @@ IPFS is still in alpha development. That means there are a lot of (undiscovered)
 -   [IPFS Cluster Architecture overview](https://cluster.ipfs.io/documentation/deployment/architecture/ "https://cluster.ipfs.io/documentation/deployment/architecture/")
 
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/ipfs-cluster)
+[Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/ipfs-cluster)
 
 ## Querying the index
 
@@ -734,7 +734,7 @@ def phrase_query(string, invertedIndex):
 
 
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/querying)
+[Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/querying)
 
 ## Yggdrasil
 
@@ -749,7 +749,7 @@ Looking at it for its clustering and bootstrapping implementation.
 -   [Yggdrasil Version 0.3.6](https://yggdrasil-network.github.io/2019/08/03/release-v0-3-6.html "https://yggdrasil-network.github.io/2019/08/03/release-v0-3-6.html"), august 2019, first version with API    
 -   [Yggdrasil](https://github.com/yggdrasil-network/yggdrasil-go "https://github.com/yggdrasil-network/yggdrasil-go"), Github
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/yggdrasil)
+[Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/yggdrasil)
 
 ## Testing
 
@@ -776,7 +776,7 @@ Looking at it for its clustering and bootstrapping implementation.
 -   [Grid'5000](https://www.fed4fire.eu/testbeds/grid5000/ "https://www.fed4fire.eu/testbeds/grid5000/")
 
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/testing)
+[Source](https://niverel.tymyrddin.space/en/play/stones/upsidedown/testing)
 
 
 
