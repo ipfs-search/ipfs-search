@@ -1,8 +1,8 @@
-# Distributed technology
+## Distributed technology
 
 Technologies that can be considered 'distributed'.
 
-## Blockchain 
+### Blockchain 
 
 Stuart Haber and W. Scott Stornetta already envisioned a cryptographically secured chain of blocks whereby no one could tamper with timestamps of documents in 1991. In 1992, they upgraded their system to use Merkle trees, increasing efficiency and enabling the collection of more documents on a single block. Satoshi Nakamoto, a person or a group of people, developed the first application of the digital ledger technology in 2008, BitCoin.
 
@@ -14,15 +14,15 @@ Stuart Haber and W. Scott Stornetta already envisioned a cryptographically secur
     * A transaction has to validate numerous transactions before being valid.
     * As blocks in blockchain multiply, it becomes increasingly difficult in terms of computations to achieve new blocks and mining becomes more power-intensive (expensive).
 
-#### Use cases
+##### Use cases
 Cryptocurrencies
 
-### Resources 
+#### Resources 
 [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/blockchain)
+#### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/blockchain)
 
-## Hashgraph
+### Hashgraph
 
 The hashgraph algorithm was invented by Leemon Baird for achieving consensus quickly, fairly, efficiently, and securely.
 
@@ -33,7 +33,7 @@ The hashgraph algorithm was invented by Leemon Baird for achieving consensus qui
 -   Developers do not need a license but need the platform coin instead. API calls cost a micro-payment to the company.
     
 
-#### Use cases
+##### Use cases
 
 
 All use cases where trust is immutable and incorruptible, for example:
@@ -45,14 +45,14 @@ All use cases where trust is immutable and incorruptible, for example:
 -   Credential verification
     
 
-### Resources
+#### Resources
 -   [Swirlds](https://www.swirlds.com/ "https://www.swirlds.com/")    
 -   [Hedera Hashgraph](https://www.hedera.com/ "https://www.hedera.com/")
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/hashgraph)
+#### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/hashgraph)
 
 
-## DAG
+### DAG
 
 A DAG is a type of distributed ledger technology that relies on consensus algorithms. To prevail, transactions require majority support within the network. As a result, there is more cooperation and teamwork and nodes have equal rights. Such networks stick to the original goal of Distributed Ledger Technology, to democratise the internet economy.
 
@@ -64,23 +64,23 @@ A DAG is a type of distributed ledger technology that relies on consensus algori
 -   Transactions in DAGs adds throughput as many more validations happen.
     
 
-#### Use cases
+##### Use cases
 -   Cryptocurrencies    
 -   Economic infrastructure for data sharing on the Internet of Things    
 -   Remote Patient Monitoring    
 -   Decentralised Peer-to-Peer energy trading
     
 
-### Resources
+#### Resources
 -   [OByte](https://obyte.org/ "https://obyte.org/")    
 -   [IoTA Use Cases](https://files.iota.org/comms/IOTA_Use_Cases.pdf "https://files.iota.org/comms/IOTA_Use_Cases.pdf")
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/dag)
+#### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/dag)
 
 
 
 
-## Holochain
+### Holochain
 
 
 Holochain combines Blockchain, BitTorrent and Github ideas for creating a technology that distributes among nodes to avoid any instance of centralised control of the flow of data. A truly revolutionary technology. Blockchain seeks to decentralise transactions such that people can interact directly without the need for a middle party. Holochain distributes the interactions.
@@ -97,7 +97,7 @@ Holochain combines Blockchain, BitTorrent and Github ideas for creating a techno
     -   A technology inspired by nature
         
 
-#### Use cases
+##### Use cases
 
 
 Systems where not all parties need to participate:
@@ -108,7 +108,7 @@ Systems where not all parties need to participate:
 -   Shared document updates
     
 
-### Resources
+#### Resources
 
 
 -   [r/holochain: Distributed Computing and Applications](https://www.reddit.com/r/holochain/ "https://www.reddit.com/r/holochain/")    
@@ -117,4 +117,4 @@ Systems where not all parties need to participate:
 -   [Holochains for Distributed Data Integrity](http://ceptr.org/projects/holochain "http://ceptr.org/projects/holochain")   
 -   [Holochain](https://holochain.org/ "https://holochain.org/")
 
-### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/holochain)
+#### [Source](https://niverel.tymyrddin.space/en/play/stones/dweb/holochain)
