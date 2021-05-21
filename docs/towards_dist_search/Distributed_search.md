@@ -1,4 +1,4 @@
-# Distributed search
+# Making ipfs-search distributed
 
 How distributed search could be realized for the IPFS:
 

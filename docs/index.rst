@@ -5,8 +5,19 @@
 
 Welcome to ipfs-search documentation!
 ===========================================
+.. image:: images/ipfs_search_og_image.png
 
-This is the main documentation for ipfs-search.com
+This is the main documentation repository for ipfs-search.com
+
+Search engine for the `Interplanetary Filesystem <https://ipfs.io>`_. Sniffs the DHT gossip and indexes file and directory hashes.
+
+Metadata and contents are extracted using `ipfs-tika <https://github.com/ipfs-search/ipfs-tika>`_, searching is done using ElasticSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
+
+The ipfs-search command consists of two components: the crawler and the sniffer. The sniffer extracts hashes from the gossip between nodes. The crawler extracts data from the hashes and indexes them.
+
+**Docs:** Documentation is hosted on here on `Read the Docs <https://ipfs-search.readthedocs.io/en/latest/>`_, based on files contained in the GitHub `docs <https://github.com/ipfs-search/ipfs-search/tree/master/docs>`_ folder. In addition, there's extensive `Go docs <https://pkg.go.dev/github.com/ipfs-search/ipfs-search>`_ for the internal API as well as `SwaggerHub OpenAPI documentation <https://app.swaggerhub.com/apis-docs/ipfs-search/ipfs-search/>`_ for the REST API.
+
+**Contact:** Please find us on our Freenode/`Riot/Matrix <https://riot.im/app/#/room/#ipfs-search:chat.weho.st>`_ channel `#ipfs-search:chat.weho.st <https://matrix.to/#/#ipfs-search:chat.weho.st>`_.
 
 .. figure:: images/ipfs-search-arch-inv.png
    :alt: ipfs-search current architecture
@@ -19,18 +30,9 @@ This is the main documentation for ipfs-search.com
    :maxdepth: 2
    :caption: Contents:
 
-   README <READMEsymlink>
-   configuration
-   architecture
-   snapshots
-   indices/README
-   ipfs_datatypes
-   CONTRIBUTINGsymlink
-   Distributed_search_for_the_IPFS
-   Distributed_technology   
-   Assistive_technologies
-   Current_implementations
-   Internet-facing_demo
-   Distributed_search
+   project_docs
+   Guides
+   data_and_application_architecture
+   distributed_search
 
 

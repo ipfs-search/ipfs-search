@@ -1,4 +1,4 @@
-# Distributed search for the IPFS
+# Distributed search
 
 Our ambition is to make ipfs-search into a truly distributed search engine. We are grateful To [Nina](https://niverel.tymyrddin.space/doku.php?id=en/start) for the work she put in to researching distributed search on behalf of ipfs-search. The following is adapted from the results, first published on Nina's homepage.
 
@@ -32,29 +32,29 @@ dweb.page uses IOTA, a permissionless distributed ledger allowing every single u
 
 Learning paths of technology evolutions which we travelled for getting transforming ideas for dweb search.
 
-#### Distributed technology
+**Distributed technology**
 * Blockchain
 * Hashgraph
 * DAG
 * Holochain
 
-#### Assistive technologies
+**Assistive technologies**
 * Zero knowledge proofs
 * Smart contracts
 * Voting
 * Gossip about gossip
 
-#### Current implementations
+**Current implementations**
 * IPFS
 * BTFS
 * FileCoin
 * The usual peer crawling
 
-#### Internet-facing demo
+**Internet-facing demo**
 * Current IPFS Search architecture
 * Good enough indexing
 
-#### Technologies for distributed search
+**Technologies for distributed search**
 * IPFS
 * Overlay networks
 * Parsing
@@ -63,7 +63,7 @@ Learning paths of technology evolutions which we travelled for getting transform
 * Yggdrasil
 * Testing
 
-#### Moonshot for realizing distributed search
+**Moonshot for realizing distributed search**
 
 
 * Provider nodes that wish to participate, parse and index only the files they have added to a dweb (DHT hashes) and that have world file permissions.
