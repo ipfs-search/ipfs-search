@@ -1,0 +1,17 @@
+# Internet-facing demo
+
+
+Mapping the theoretical limitations of decentralised/distributed search and how they might be ‘overcome’ with ‘good enough’ practical implementations/‘approximations’.
+
+
+## Good enough indexing
+
+
+If index construction needs to be done for different platforms with different hardware specs (full distribution of search engine), while still being scalable, using [single pass in-memory sorting (SPIMI)](https://niverel.tymyrddin.space/en/play/algos/index#single-pass-in-memory-sorting-spimi "en:play:algos:index") looks like a 'good enough' candidate. SPIMI uses terms instead of term-id's, writes each block's dictionary to disk and then starts a new dictionary for the next block. Otherwise, we can use [blocked sort based indexing (BSBI)](https://niverel.tymyrddin.space/en/play/stones/demo/indexing#blocked-sort-based-indexing-bsbi "en:play:stones:demo:indexing ↵"). Blocked sort-based indexing has awesome scaling properties, but needs a data structure for mapping terms to term-id. For very large collections, it may not fit into memory.
+    
+We can use known [distributed indexing algorithms](https://niverel.tymyrddin.space/en/play/algos/dindex "en:play:algos:dindex"). Problem is that MapReduce tasks must be written as acyclic dataflow programs, in essence a stateless mapper followed by a stateless reducer, that is executed by a batch job scheduler. This paradigm makes repeated querying of datasets difficult and imposes limitations on machine learning applications (like we may wish to use for PageRank and TrustRank), where iterative algorithms that revisit a single working set multiple times are the norm. The MapReduce model seems coupled to the Hadoop infrastructure. The [Bulk Synchronous Parallel (BSP)](http://www.bsp-worldwide.org/ "http://www.bsp-worldwide.org/") computing model for parallel programming may be a viable alternative. [Apache Hama](https://hama.apache.org/ "https://hama.apache.org/") implements BSP.
+    
+Pages and objects come in over time and need to be inserted, other pages and objects have been deleted and this means that all of the indexes have to be modified too: For documents, this means postings updates for terms already in the dictionary, new terms need to be added to the dictionary, and all associated indexes such as N-gram indexes will have to be updated for each added or deleted document. This can be made easy by making an auxiliary index and [logarithmic merge](https://niverel.tymyrddin.space/en/play/algos/dynindex#logarithmic-merge "en:play:algos:dynindex") of the main and auxiliary index.
+    
+
+[The Graph](https://medium.com/graphprotocol "https://medium.com/graphprotocol") is a protocol for building decentralized applications using GraphQL. In essence, [the graph](https://thegraph.com/ "https://thegraph.com/") is a decentralized index that works across blockchains (it can index data in multiple blockchains like Ethereum and BTC, but also on IPFS and Filecoin). It monitors the blockchains for new data and updates the index every time this happens. Once the index is updated, it tries to reach a consensus among the nodes that maintain it. Once consensus is reached, it ensures that the users of the index will have the latest data available. Not all challenges are solved yet. Who decides what when? Changes and how to adopt these changes? Topologies? Scalability? Update performance? How to ensure everyone has or has access to the same new “fresh” index? Time to contact that group …
