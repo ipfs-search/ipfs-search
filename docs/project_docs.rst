@@ -5,6 +5,6 @@ Project information
    :maxdepth: 2
    :caption: Contents:
    
-   Project README <READMEsymlink>
+   README <READMEsymlink>
    CONTRIBUTINGsymlink
    

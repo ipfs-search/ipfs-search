@@ -31,7 +31,8 @@ The ipfs-search command consists of two components: the crawler and the sniffer.
    :caption: Contents:
 
    project_docs
-   Guides
+   guides
+   api
    data_and_application_architecture
    distributed_search
 
