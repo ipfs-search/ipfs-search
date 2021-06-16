@@ -85,9 +85,12 @@ Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com
 
 ## Sponsors
 
-<a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/logo/banner.png"></a> <a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/image/logos/NGI0_tag.png"></a> <a href="https://redpencil.io/projects/"><img width="270pt" src="https://raw.githubusercontent.com/redpencilio/frontend-redpencil.io/327318b84ffb396d8af6776f19b9f36212596082/public/assets/vector/rpio-logo.svg"> </a> 
+<a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/logo/banner.png"></a> <a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/image/logos/NGI0_tag.png"></a> 
 <br>
 ipfs-search is supported by NLNet through the EU's Next Generation Internet (NGI0) programme.
+
+<a href="https://redpencil.io/projects/"><img width="270pt" src="https://raw.githubusercontent.com/redpencilio/frontend-redpencil.io/327318b84ffb396d8af6776f19b9f36212596082/public/assets/vector/rpio-logo.svg"> </a><br>
+RedPencil is supporting the hosting of ipfs-search.com.
 
 Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/ipfs-search#sponsor)]
 
