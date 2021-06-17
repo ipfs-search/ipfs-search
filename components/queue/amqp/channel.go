@@ -32,9 +32,6 @@ func (c *Channel) Queue(ctx context.Context, name string) (*Queue, error) {
 		false,     // delete when unused
 		false,     // exclusive
 		false,     // no-wait
-		amqp.Table{
-			"x-queue-mode": "lazy", // Allow RabbitMQ to write queue to disk as fast as possible
-		},
 	)
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
