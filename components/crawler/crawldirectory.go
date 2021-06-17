@@ -143,7 +143,13 @@ func (c *Crawler) queueDirEntry(ctx context.Context, r *t.AnnotatedResource) err
 	// within a directory, items are likely to have similar availability.
 	// We want consumers to get a varied mixture of availability, for
 	// consistent overall indexing load.
-	priority := uint8(1 + rand.Intn(7))
+
+	// Min priority 1, max priority 9
+	// Priority 1; reserved for requeue from DLQ
+	// Priority 9; reserved for fresh resources
+	// Desired range [2, 8]; offset 2 max rand 8-2=6
+	// rand.Intn(n) < n
+	priority := uint8(2 + rand.Intn(7))
 
 	switch r.Type {
 	case t.UndefinedType:
