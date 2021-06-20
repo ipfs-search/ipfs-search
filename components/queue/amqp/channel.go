@@ -32,7 +32,7 @@ func (c *Channel) Queue(ctx context.Context, name string) (*Queue, error) {
 		false, // no-wait
 		amqp.Table{
 			"x-max-priority": 9, // Enable all 9 priorities
-			"x-message-ttl":  c.MessageTTL / time.Millisecond,
+			"x-message-ttl":  c.MessageTTL.Milliseconds(),
 			"x-queue-mode":   "lazy", // Allow RabbitMQ to write queue to disk as fast as possible
 		},
 	)
