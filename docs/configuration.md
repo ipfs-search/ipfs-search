@@ -5,6 +5,7 @@ Configuration can be done using a YAML configuration file, or by specifying the 
 * `IPFS_GATEWAY_URL`
 * `ELASTICSEARCH_URL`
 * `AMQP_URL`
+* `AMQP_MESSAGE_TTL`
 * `TIKA_EXTRACTOR`
 * `OTEL_TRACE_SAMPLER_ARG`
 * `OTEL_EXPORTER_JAEGER_ENDPOINT`
@@ -44,6 +45,8 @@ amqp:
   url: amqp://guest:guest@localhost:5672/             # Also AMQP_URL in env.
   max_reconnect: 100                                  # Maximum number of reconnect attempts
   reconnect_time: 2s                                  # Time to wait between reconnects
+  message_ttl: 4h                                     # The expiration time for messages in the queue.
+                                                      # Note: changing this requires deleting and re-creating the queue.
 tika:
   url: http://localhost:8081                          # tika-extractor endpoint URL, also TIKA_EXTRACTOR in environment.
   timeout: 5m                                         # Timeout for requests to tika-extractor.

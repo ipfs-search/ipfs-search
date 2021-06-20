@@ -9,6 +9,7 @@ type Config struct {
 	URL           string
 	MaxReconnect  int
 	ReconnectTime time.Duration
+	MessageTTL    time.Duration
 }
 
 // DefaultConfig generates a default configuration for an AMQP queue.
@@ -17,5 +18,6 @@ func DefaultConfig() *Config {
 		URL:           "amqp://guest:guest@localhost:5672/",
 		MaxReconnect:  100,
 		ReconnectTime: 2 * time.Second,
+		MessageTTL:    4 * time.Hour,
 	}
 }

@@ -92,7 +92,7 @@ func NewConnection(ctx context.Context, cfg *Config, amqpConfig *amqp.Config, i 
 }
 
 // Channel creates an AMQP channel
-func (c *Connection) Channel(ctx context.Context, prefetchCount int) (*Channel, error) {
+func (c *Connection) channel(ctx context.Context, prefetchCount int) (*Channel, error) {
 	ctx, span := c.Tracer.Start(ctx, "queue.amqp.Channel")
 	defer span.End()
 
@@ -117,6 +117,7 @@ func (c *Connection) Channel(ctx context.Context, prefetchCount int) (*Channel, 
 	return &Channel{
 		ch:              ch,
 		Instrumentation: c.Instrumentation,
+		MessageTTL:      c.config.MessageTTL,
 	}, nil
 }
 
@@ -125,7 +126,7 @@ func (c *Connection) NewChannelQueue(ctx context.Context, name string, prefetchC
 	ctx, span := c.Tracer.Start(ctx, "queue.amqp.NewChannelQueue", trace.WithAttributes(label.String("queue", name)))
 	defer span.End()
 
-	ch, err := c.Channel(ctx, prefetchCount)
+	ch, err := c.channel(ctx, prefetchCount)
 	if err != nil {
 		return nil, err
 	}

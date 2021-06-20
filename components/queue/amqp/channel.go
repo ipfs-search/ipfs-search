@@ -2,6 +2,7 @@ package amqp
 
 import (
 	"context"
+	"time"
 
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel/api/trace"
@@ -15,6 +16,7 @@ import (
 type Channel struct {
 	ch *amqp.Channel
 	*instr.Instrumentation
+	MessageTTL time.Duration
 }
 
 // Queue creates a named queue on a given chennel
@@ -29,9 +31,9 @@ func (c *Channel) Queue(ctx context.Context, name string) (*Queue, error) {
 		false, // exclusive
 		false, // no-wait
 		amqp.Table{
-			"x-max-priority": 9,                       // Enable all 9 priorities
-			"x-message-ttl":  1000 * 60 * 60 * 24 * 7, // Expire messages after 1 week
-			"x-queue-mode":   "lazy",                  // Allow RabbitMQ to write queue to disk as fast as possible
+			"x-max-priority": 9, // Enable all 9 priorities
+			"x-message-ttl":  c.MessageTTL / time.Millisecond,
+			"x-queue-mode":   "lazy", // Allow RabbitMQ to write queue to disk as fast as possible
 		},
 	)
 	if err != nil {
