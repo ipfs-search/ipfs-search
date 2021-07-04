@@ -66,9 +66,9 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 			LastSeen:   now,
 			References: refs,
 		})
-	} else {
-		span.AddEvent(ctx, "Not updating")
 	}
+
+	span.AddEvent(ctx, "Not updating")
 
 	return nil
 }
@@ -94,21 +94,20 @@ func (c *Crawler) updateMaybeExisting(ctx context.Context, r *t.AnnotatedResourc
 			span.AddEvent(ctx, "existing", label.Any("index", existing.Index))
 		}
 
-		if existing.Index == c.indexes.Invalids {
+		switch existing.Index {
+		case c.indexes.Invalids:
 			// Already indexed as invalid; we're done
 			return true, nil
-		}
-
-		if existing.Index == c.indexes.Partials {
+		case c.indexes.Partials:
 			// Partial; if referenced: index, otherwise: skip
 			if r.Reference.Parent == nil {
 				// Skip unreferenced partial
 				return true, nil
-			} else {
-				// Delete as partial and index
-				if err = c.deletePartial(ctx, existing); err != nil {
-					return true, err
-				}
+			}
+
+			// Delete as partial and index as new item.
+			if err = c.deletePartial(ctx, existing); err != nil {
+				return true, err
 			}
 		}
 
