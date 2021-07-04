@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"go.opentelemetry.io/otel/label"
@@ -99,6 +100,8 @@ func (c *Crawler) updateMaybeExisting(ctx context.Context, r *t.AnnotatedResourc
 
 			if r.Reference.Parent == nil {
 				// Skip unreferenced partial
+				log.Printf("Quick-skipping unreferenced partial %s", r)
+
 				return true, nil
 			}
 
