@@ -35,6 +35,7 @@ type CrawlerTestSuite struct {
 	fileIdx    *index.Mock
 	dirIdx     *index.Mock
 	invalidIdx *index.Mock
+	partialIdx *index.Mock
 
 	dirQ  *queue.Mock
 	fileQ *queue.Mock
@@ -45,12 +46,13 @@ func (s *CrawlerTestSuite) SetupTest() {
 	s.ctx = context.Background()
 
 	// Creat a crawler with mocked dependencies
-	s.fileIdx, s.dirIdx, s.invalidIdx = &index.Mock{}, &index.Mock{}, &index.Mock{}
+	s.fileIdx, s.dirIdx, s.invalidIdx, s.partialIdx = &index.Mock{}, &index.Mock{}, &index.Mock{}, &index.Mock{}
 
 	s.indexes = &Indexes{
 		Files:       s.fileIdx,
 		Directories: s.dirIdx,
 		Invalids:    s.invalidIdx,
+		Partials:    s.partialIdx,
 	}
 
 	s.fileQ, s.dirQ, s.hashQ = &queue.Mock{}, &queue.Mock{}, &queue.Mock{}
