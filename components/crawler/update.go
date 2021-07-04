@@ -95,16 +95,20 @@ func (c *Crawler) updateMaybeExisting(ctx context.Context, r *t.AnnotatedResourc
 			// Already indexed as invalid; we're done
 			return true, nil
 		case c.indexes.Partials:
-			// Partial; if referenced: index, otherwise: skip
+			// Found in partials index; previously recognized as an unreferenced partial
+
 			if r.Reference.Parent == nil {
 				// Skip unreferenced partial
 				return true, nil
 			}
 
-			// Delete as partial and index as new item.
+			// Referenced partial; delete as partial
 			if err = c.deletePartial(ctx, existing); err != nil {
 				return true, err
 			}
+
+			// Index item as new
+			return false, err
 		}
 
 		// Update item and we're done.
