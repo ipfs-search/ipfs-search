@@ -76,7 +76,42 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 
 // deletePartial deletes partial items.
 func (c *Crawler) deletePartial(ctx context.Context, i *existingItem) error {
-	return c.indexes.Partials.Delete(ctx, i.AnnotatedResource.ID)
+	return c.indexes.Partials.Delete(ctx, i.ID)
+}
+
+// processPartial processes partials found in index; previously recognized as an unreferenced partial
+func (c *Crawler) processPartial(ctx context.Context, i *existingItem) (bool, error) {
+	if i.Reference.Parent == nil {
+		log.Printf("Quick-skipping unreferenced partial %v", i)
+
+		// Skip unreferenced partial
+		return true, nil
+	}
+
+	// Referenced partial; delete as partial
+	if err := c.deletePartial(ctx, i); err != nil {
+		return true, err
+	}
+
+	// Index item as new
+	return false, nil
+}
+
+func (c *Crawler) processExisting(ctx context.Context, i *existingItem) (bool, error) {
+	switch i.Index {
+	case c.indexes.Invalids:
+		// Already indexed as invalid; we're done
+		return true, nil
+	case c.indexes.Partials:
+		return c.processPartial(ctx, i)
+	}
+
+	// Update item and we're done.
+	if err := c.updateExisting(ctx, i); err != nil {
+		return true, err
+	}
+
+	return true, nil
 }
 
 // updateMaybeExisting updates an item when it exists and returnes true when item exists.
@@ -95,35 +130,7 @@ func (c *Crawler) updateMaybeExisting(ctx context.Context, r *t.AnnotatedResourc
 			span.AddEvent(ctx, "existing", label.Any("index", existing.Index))
 		}
 
-		switch existing.Index {
-		case c.indexes.Invalids:
-			// Already indexed as invalid; we're done
-			return true, nil
-		case c.indexes.Partials:
-			// Found in partials index; previously recognized as an unreferenced partial
-
-			if r.Reference.Parent == nil {
-				// Skip unreferenced partial
-				log.Printf("Quick-skipping unreferenced partial %s", r)
-
-				return true, nil
-			}
-
-			// Referenced partial; delete as partial
-			if err = c.deletePartial(ctx, existing); err != nil {
-				return true, err
-			}
-
-			// Index item as new
-			return false, err
-		}
-
-		// Update item and we're done.
-		if err = c.updateExisting(ctx, existing); err != nil {
-			return true, err
-		}
-
-		return true, nil
+		return c.processExisting(ctx, existing)
 	}
 
 	return false, nil
