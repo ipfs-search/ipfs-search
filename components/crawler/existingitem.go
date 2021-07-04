@@ -15,7 +15,7 @@ type existingItem struct {
 }
 
 func (c *Crawler) getExistingItem(ctx context.Context, r *t.AnnotatedResource) (*existingItem, error) {
-	indexes := []index.Index{c.indexes.Files, c.indexes.Directories, c.indexes.Invalids}
+	indexes := []index.Index{c.indexes.Files, c.indexes.Directories, c.indexes.Invalids, c.indexes.Partials}
 
 	update := new(index_types.Update)
 

@@ -91,9 +91,9 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 		err = t.ErrUnsupportedType
 
 	case t.PartialType:
-		// Not indexing partials (for now), we're done.
-		span.AddEvent(ctx, "partial")
-		return nil
+		// Index partial (no properties)
+		index = c.indexes.Partials
+		properties = &indexTypes.Partial{}
 
 	case t.UndefinedType:
 		panic("undefined type after Stat call")

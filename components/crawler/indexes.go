@@ -9,4 +9,5 @@ type Indexes struct {
 	Files       index.Index
 	Directories index.Index
 	Invalids    index.Index
+	Partials    index.Index
 }

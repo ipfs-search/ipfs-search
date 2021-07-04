@@ -102,6 +102,11 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 			&elasticsearch.Config{Name: w.config.Indexes.Invalids.Name},
 			w.Instrumentation,
 		),
+		Partials: elasticsearch.New(
+			esClient,
+			&elasticsearch.Config{Name: w.config.Indexes.Partials.Name},
+			w.Instrumentation,
+		),
 	}, nil
 }
 
