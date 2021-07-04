@@ -1,0 +1,8 @@
+{
+    "settings": {
+        "index": {
+            "refresh_interval": "-1",
+            "number_of_shards": "6"
+        }
+    }
+}
