@@ -93,7 +93,7 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	case t.PartialType:
 		// Index partial (no properties)
 		index = c.indexes.Partials
-		properties = &struct{}{}
+		properties = &indexTypes.Partial{}
 
 	case t.UndefinedType:
 		panic("undefined type after Stat call")

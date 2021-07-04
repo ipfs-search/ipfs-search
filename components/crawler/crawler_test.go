@@ -100,6 +100,11 @@ func (s *CrawlerTestSuite) assertNotExists(rID string) {
 		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Once()
+
+	s.partialIdx.
+		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Once()
 }
 
 func (s *CrawlerTestSuite) TestCrawlInvalidProtocol() {
@@ -255,7 +260,7 @@ func (s *CrawlerTestSuite) TestCrawlInvalid() {
 	s.assertExpectations()
 }
 
-func (s *CrawlerTestSuite) TestCrawlPartialType() {
+func (s *CrawlerTestSuite) TestCrawlUnreferencedPartialType() {
 	// Prepare resource
 	r := &t.AnnotatedResource{
 		Resource: &t.Resource{
@@ -280,7 +285,13 @@ func (s *CrawlerTestSuite) TestCrawlPartialType() {
 
 	s.assertNotExists(r.Resource.ID)
 
-	// Note how nothing is indexed here!
+	// Index as partial
+	s.partialIdx.
+		On("Index", mock.Anything, r.Resource.ID, mock.MatchedBy(func(f *indexTypes.Partial) bool {
+			return true
+		})).
+		Return(nil).
+		Once()
 
 	// Crawl
 	err := s.c.Crawl(s.ctx, r)
