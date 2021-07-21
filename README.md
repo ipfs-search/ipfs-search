@@ -1,5 +1,5 @@
 # [ipfs-search.com](https://ipfs-search.com)
-[![Build Status](https://travis-ci.org/ipfs-search/ipfs-search.svg?branch=master)](https://travis-ci.org/ipfs-search/ipfs-search)
+[![Build Status](https://www.travis-ci.com/ipfs-search/ipfs-search.svg?branch=master)](https://www.travis-ci.com/github/ipfs-search/ipfs-search/)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/maintainability)](https://codeclimate.com/github/ipfs-search/ipfs-search/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1c25261992991d72137c/test_coverage)](https://codeclimate.com/github/ipfs-search/ipfs-search/test_coverage)
 [![Documentation Status](https://readthedocs.org/projects/ipfs-search/badge/?version=latest)](https://ipfs-search.readthedocs.io/en/latest/?badge=latest)
