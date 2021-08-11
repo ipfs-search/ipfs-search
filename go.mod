@@ -30,4 +30,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200603094226-e3079894b1e8 // indirect
 )
 
-go 1.13
+go 1.16

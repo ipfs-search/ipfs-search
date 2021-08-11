@@ -40,7 +40,7 @@ For discussing and suggesting features, look at the [issues](https://github.com/
 
 ## Dependencies
 
-* Go 1.13
+* Go 1.16
 * Elasticsearch 7.x
 * RabbitMQ / AMQP server
 * NodeJS 9.x
