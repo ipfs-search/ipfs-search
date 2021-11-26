@@ -9,7 +9,7 @@ import (
 
 // LastSeenFilter filters out recently seen Providers.
 type LastSeenFilter struct {
-	resources  map[t.Resource]time.Time
+	resources  map[string]time.Time
 	Expiration time.Duration
 	PruneLen   int
 }
@@ -17,7 +17,7 @@ type LastSeenFilter struct {
 // NewLastSeenFilter initialises a new LastSeenFilter and returns a pointer to it.
 func NewLastSeenFilter(expiration time.Duration, pruneLen int) *LastSeenFilter {
 	// Allocate memory for pruneLen+1
-	r := make(map[t.Resource]time.Time, pruneLen+1)
+	r := make(map[string]time.Time, pruneLen+1)
 
 	return &LastSeenFilter{
 		Expiration: expiration,
@@ -48,12 +48,12 @@ func (f *LastSeenFilter) prune() {
 func (f *LastSeenFilter) Filter(p t.Provider) (bool, error) {
 	f.prune()
 
-	lastSeen, present := f.resources[*(p.Resource)]
+	lastSeen, present := f.resources[p.Resource.String()]
 
 	if !present {
 		// Not present, add it!
 		log.Printf("Adding LastSeen: %v, len: %d", p, len(f.resources))
-		f.resources[*(p.Resource)] = p.Date
+		f.resources[p.Resource.String()] = p.Date
 
 		// Index it!
 		return true, nil
@@ -62,7 +62,7 @@ func (f *LastSeenFilter) Filter(p t.Provider) (bool, error) {
 	if p.Date.Sub(lastSeen) > f.Expiration {
 		// Last seen longer than expiration ago, update last seen.
 		log.Printf("Updating LastSeen: %v, len: %d", p, len(f.resources))
-		f.resources[*(p.Resource)] = p.Date
+		f.resources[p.Resource.String()] = p.Date
 
 		// Index it!
 		return true, nil
