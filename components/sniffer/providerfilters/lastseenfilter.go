@@ -7,9 +7,12 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
+const logEvery = 1000
+
 // LastSeenFilter filters out recently seen Providers.
 type LastSeenFilter struct {
 	resources  map[string]time.Time
+	icount     uint // Iteration counter.
 	Expiration time.Duration
 	PruneLen   int
 }
@@ -43,16 +46,24 @@ func (f *LastSeenFilter) prune() {
 	}
 }
 
+func (f *LastSeenFilter) shouldLog() bool {
+	return f.icount%logEvery == 0
+}
+
 // Filter takes a Provider and returns true when it is to be included, false
 // when not and an error when unexpected condition occur.
 func (f *LastSeenFilter) Filter(p t.Provider) (bool, error) {
+	f.icount++
+
 	f.prune()
 
 	lastSeen, present := f.resources[p.Resource.String()]
 
 	if !present {
 		// Not present, add it!
-		log.Printf("Adding LastSeen: %v, len: %d", p, len(f.resources))
+		if f.shouldLog() {
+			log.Printf("Adding LastSeen: %v, len: %d", p, len(f.resources))
+		}
 		f.resources[p.Resource.String()] = p.Date
 
 		// Index it!
@@ -61,7 +72,10 @@ func (f *LastSeenFilter) Filter(p t.Provider) (bool, error) {
 
 	if p.Date.Sub(lastSeen) > f.Expiration {
 		// Last seen longer than expiration ago, update last seen.
-		log.Printf("Updating LastSeen: %v, len: %d", p, len(f.resources))
+		if f.shouldLog() {
+			log.Printf("Updating LastSeen: %v, len: %d", p, len(f.resources))
+		}
+
 		f.resources[p.Resource.String()] = p.Date
 
 		// Index it!
@@ -69,6 +83,8 @@ func (f *LastSeenFilter) Filter(p t.Provider) (bool, error) {
 	}
 
 	// Too recent, don't index
-	log.Printf("Filtering recent %v, LastSeen %s", p, lastSeen)
+	if f.shouldLog() {
+		log.Printf("Filtering recent %v, LastSeen %s", p, lastSeen)
+	}
 	return false, nil
 }
