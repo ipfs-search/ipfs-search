@@ -3,7 +3,11 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
-	"github.com/olivere/elastic/v7"
+	"fmt"
+
+	opensearch "github.com/opensearch-project/opensearch-go"
+	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
+	opensearchutil "github.com/opensearch-project/opensearch-go/opensearchutil"
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
@@ -14,14 +18,14 @@ import (
 
 // Index wraps an Elasticsearch index to store documents
 type Index struct {
-	es  *elastic.Client
+	es  *opensearch.Client
 	cfg *Config
 
 	*instr.Instrumentation
 }
 
 // New returns a new index.
-func New(es *elastic.Client, cfg *Config, i *instr.Instrumentation) index.Index {
+func New(es *opensearch.Client, cfg *Config, i *instr.Instrumentation) index.Index {
 	return &Index{
 		es:              es,
 		cfg:             cfg,
@@ -39,11 +43,18 @@ func (i *Index) Index(ctx context.Context, id string, properties interface{}) er
 	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Index")
 	defer span.End()
 
-	_, err := i.es.Index().
-		Index(i.cfg.Name).
-		Id(id).
-		BodyJson(properties).
-		Do(ctx)
+	req := opensearchapi.IndexRequest{
+		Index:      i.cfg.Name,
+		Body:       opensearchutil.NewJSONReader(properties),
+		DocumentID: id,
+	}
+
+	res, err := req.Do(ctx, i.es)
+	defer res.Body.Close()
+
+	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+	}
 
 	return err
 }
@@ -53,11 +64,14 @@ func (i *Index) Update(ctx context.Context, id string, properties interface{}) e
 	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Update")
 	defer span.End()
 
-	_, err := i.es.Update().
-		Index(i.cfg.Name).
-		Id(id).
-		Doc(properties).
-		Do(ctx)
+	req := opensearchapi.UpdateRequest{
+		Index:      i.cfg.Name,
+		Body:       opensearchutil.NewJSONReader(properties),
+		DocumentID: id,
+	}
+
+	res, err := req.Do(ctx, i.es)
+	defer res.Body.Close()
 
 	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
@@ -74,39 +88,55 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Get")
 	defer span.End()
 
-	fsc := elastic.NewFetchSourceContext(true)
-	fsc.Include(fields...)
+	req := opensearchapi.GetRequest{
+		Index:          i.cfg.Name,
+		DocumentID:     id,
+		SourceIncludes: fields,
+		Realtime:       &[]bool{true}[0],
+		Preference:     "_local",
+	}
 
-	result, err := i.es.
-		Get().
-		Index(i.cfg.Name).
-		FetchSourceContext(fsc).
-		Id(id).
-		Do(ctx)
+	res, err := req.Do(ctx, i.es)
 
-	switch {
-	case err == nil:
-		// Found
-
-		// Decode resulting field json into `dst`
-		err = json.Unmarshal(result.Source, dst)
-
-		if err != nil {
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		}
-
-		return true, err
-	case elastic.IsNotFound(err):
-		// 404
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Ok))
-
-		return false, nil
-
-	default:
-		// Unknown error, propagate
+	// Handle connection errors
+	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return false, err
 	}
+
+	defer res.Body.Close()
+
+	// Decode body
+	response := struct {
+		Found  bool            `json:"found"`
+		Source json.RawMessage `json:"_source"`
+	}{}
+
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&response)
+	if err != nil {
+		err = fmt.Errorf("error decoding body: %w", err)
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return false, err
+	}
+
+	if response.Found {
+		// Decode source
+		err = json.Unmarshal(response.Source, dst)
+		if err != nil {
+			err = fmt.Errorf("error decoding source: %w", err)
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			return false, err
+		}
+	}
+
+	if res.StatusCode != 404 {
+		// 404's do not signify an error, other status codes do.
+		err = fmt.Errorf("unexpected status from backend: %s", res.Status())
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+	}
+
+	return false, err
 }
 
 // Delete item from index
@@ -114,10 +144,17 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Delete")
 	defer span.End()
 
-	_, err := i.es.Delete().
-		Index(i.cfg.Name).
-		Id(id).
-		Do(ctx)
+	req := opensearchapi.DeleteRequest{
+		Index:      i.cfg.Name,
+		DocumentID: id,
+	}
+
+	res, err := req.Do(ctx, i.es)
+	defer res.Body.Close()
+
+	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+	}
 
 	return err
 }

@@ -8,7 +8,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/olivere/elastic/v7"
+	opensearch "github.com/opensearch-project/opensearch-go"
 	samqp "github.com/streadway/amqp"
 
 	"go.opentelemetry.io/otel/api/trace"
@@ -70,14 +70,15 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 	return nil
 }
 
-func (w *Pool) getElasticClient() (*elastic.Client, error) {
-	httpClient := utils.GetHTTPClient(w.dialer.DialContext, 5)
+func (w *Pool) getElasticClient() (*opensearch.Client, error) {
+	// TODO: Re-enable
+	// httpClient := utils.GetHTTPClient(w.dialer.DialContext, 5)
 
-	return elastic.NewClient(
-		elastic.SetSniff(false),
-		elastic.SetURL(w.config.ElasticSearch.URL),
-		elastic.SetHttpClient(httpClient),
-	)
+	return opensearch.NewClient(opensearch.Config{
+		Addresses: []string{w.config.ElasticSearch.URL},
+		//Transport, ref elastic.SetHttpClient(httpClient),
+	})
+
 }
 
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
