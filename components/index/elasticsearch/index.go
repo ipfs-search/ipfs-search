@@ -191,6 +191,8 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 			return false, err
 		}
+
+		return true, nil
 	}
 
 	if res.StatusCode != 404 {
