@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	opensearch "github.com/opensearch-project/opensearch-go"
 	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
@@ -20,17 +21,28 @@ import (
 type Index struct {
 	es  *opensearch.Client
 	cfg *Config
+	bi  opensearchutil.BulkIndexer
 
 	*instr.Instrumentation
 }
 
 // New returns a new index.
 func New(es *opensearch.Client, cfg *Config, i *instr.Instrumentation) index.Index {
-	return &Index{
+	index := &Index{
 		es:              es,
 		cfg:             cfg,
 		Instrumentation: i,
 	}
+
+	biCfg := index.getBulkIndexerCfg()
+	bi, err := opensearchutil.NewBulkIndexer(biCfg)
+
+	if err != nil {
+		log.Fatalf("error getting bulk indexer: %v", err)
+	}
+	index.bi = bi
+
+	return index
 }
 
 // String returns the name of the index, for convenient logging.
@@ -38,25 +50,76 @@ func (i *Index) String() string {
 	return i.cfg.Name
 }
 
+type debugLogger struct{}
+
+func (d debugLogger) Printf(s string, args ...interface{}) {
+	log.Printf(s, args...)
+}
+
+func (i *Index) getBulkIndexerCfg() opensearchutil.BulkIndexerConfig {
+	dl := debugLogger{}
+
+	return opensearchutil.BulkIndexerConfig{
+		Client:      i.es,
+		DebugLogger: dl,
+		OnError: func(ctx context.Context, err error) {
+			span := trace.SpanFromContext(ctx)
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			log.Printf("error in ES bulk indexer: %v", err)
+		},
+		OnFlushStart: func(ctx context.Context) context.Context {
+			newCtx, _ := i.Tracer.Start(ctx, "index.elasticsearch.BulkIndexerFlush")
+
+			return newCtx
+		},
+		OnFlushEnd: func(ctx context.Context) {
+			span := trace.SpanFromContext(ctx)
+			// log.Printf("ES stats: %+v", )
+			span.End()
+		},
+		Index: i.cfg.Name,
+	}
+}
+
 // Index a document's properties, identified by id
 func (i *Index) Index(ctx context.Context, id string, properties interface{}) error {
 	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Index")
 	defer span.End()
 
-	req := opensearchapi.IndexRequest{
-		Index:      i.cfg.Name,
+	item := opensearchutil.BulkIndexerItem{
+		Action:     "create",
 		Body:       opensearchutil.NewJSONReader(properties),
 		DocumentID: id,
+
+		// OnSuccess is the optional callback for each successful operation
+		OnSuccess: func(
+			ctx context.Context,
+			item opensearchutil.BulkIndexerItem,
+			res opensearchutil.BulkIndexerResponseItem,
+		) {
+			fmt.Printf("[%d] %s test/%s", res.Status, res.Result, item.DocumentID)
+		},
+
+		// OnFailure is the optional callback for each failed operation
+		OnFailure: func(
+			ctx context.Context,
+			item opensearchutil.BulkIndexerItem,
+			res opensearchutil.BulkIndexerResponseItem, err error,
+		) {
+			if err != nil {
+				log.Printf("ERROR: %s", err)
+			} else {
+				log.Printf("ERROR: %s: %s", res.Error.Type, res.Error.Reason)
+			}
+		},
 	}
 
-	res, err := req.Do(ctx, i.es)
-	defer res.Body.Close()
-
-	if err != nil {
+	if err := i.bi.Add(ctx, item); err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
 	}
 
-	return err
+	return nil
 }
 
 // Update a document's properties, given id
@@ -157,6 +220,12 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 	}
 
 	return err
+}
+
+// Close indexer.
+func (i *Index) Close(ctx context.Context) error {
+	// Close waits until all added items are flushed and closes the indexer.
+	return i.bi.Close(ctx)
 }
 
 // Compile-time assurance that implementation satisfies interface.
