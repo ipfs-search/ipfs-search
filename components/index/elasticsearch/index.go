@@ -53,20 +53,21 @@ func (i *Index) String() string {
 
 type debugLogger struct{}
 
-func (d debugLogger) Printf(s string, args ...interface{}) {
-	log.Printf(s, args...)
-}
+// func (d debugLogger) Printf(s string, args ...interface{}) {
+// 	log.Printf(s, args...)
+// }
 
 func (i *Index) getBulkIndexerCfg() opensearchutil.BulkIndexerConfig {
-	dl := debugLogger{}
-
 	return opensearchutil.BulkIndexerConfig{
-		Client:      i.es,
-		DebugLogger: dl,
+		Client: i.es,
+		// DebugLogger: debugLogger{},
 		OnError: func(ctx context.Context, err error) {
-			span := trace.SpanFromContext(ctx)
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			log.Printf("error in ES bulk indexer: %v", err)
+			if err != nil {
+				// Weirdly this gets called with nil error some times.
+				span := trace.SpanFromContext(ctx)
+				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+				log.Printf("Error flushing index buffer: %v", err)
+			}
 		},
 		OnFlushStart: func(ctx context.Context) context.Context {
 			newCtx, _ := i.Tracer.Start(ctx, "index.elasticsearch.BulkIndexerFlush")
@@ -75,6 +76,8 @@ func (i *Index) getBulkIndexerCfg() opensearchutil.BulkIndexerConfig {
 		},
 		OnFlushEnd: func(ctx context.Context) {
 			span := trace.SpanFromContext(ctx)
+			log.Println("Flushed index buffer")
+
 			// log.Printf("ES stats: %+v", )
 			span.End()
 		},
@@ -98,6 +101,8 @@ func (i *Index) getBulkIndexerCfg() opensearchutil.BulkIndexerConfig {
 // 	if err != nil {
 // 		log.Printf("ERROR: %s", err)
 // 	} else {
+// 		// TODO: Catch 429 TOO MANY REQUESTS
+// 		// Random exponential backoff sleep (blocks worker)
 // 		log.Printf("ERROR: %s: %s", res.Error.Type, res.Error.Reason)
 // 	}
 // }
