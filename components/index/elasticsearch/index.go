@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 
 	opensearch "github.com/opensearch-project/opensearch-go"
@@ -81,40 +82,54 @@ func (i *Index) getBulkIndexerCfg() opensearchutil.BulkIndexerConfig {
 	}
 }
 
+// func successCb(
+// 	ctx context.Context,
+// 	item opensearchutil.BulkIndexerItem,
+// 	res opensearchutil.BulkIndexerResponseItem,
+// ) {
+// 	fmt.Printf("[%d] %s test/%s", res.Status, res.Result, item.DocumentID)
+// }
+
+// func failureCb(
+// 	ctx context.Context,
+// 	item opensearchutil.BulkIndexerItem,
+// 	res opensearchutil.BulkIndexerResponseItem, err error,
+// ) {
+// 	if err != nil {
+// 		log.Printf("ERROR: %s", err)
+// 	} else {
+// 		log.Printf("ERROR: %s: %s", res.Error.Type, res.Error.Reason)
+// 	}
+// }
+
+func (i *Index) bulkAction(
+	ctx context.Context,
+	action string,
+	id string,
+	properties interface{},
+) error {
+	var body io.Reader
+	if properties != nil {
+		body = opensearchutil.NewJSONReader(properties)
+	}
+
+	item := opensearchutil.BulkIndexerItem{
+		Action:     action,
+		Body:       body,
+		DocumentID: id,
+		// OnSuccess:  successCb,
+		// OnFailure:  failureCb,
+	}
+
+	return i.bi.Add(ctx, item)
+}
+
 // Index a document's properties, identified by id
 func (i *Index) Index(ctx context.Context, id string, properties interface{}) error {
 	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Index")
 	defer span.End()
 
-	item := opensearchutil.BulkIndexerItem{
-		Action:     "create",
-		Body:       opensearchutil.NewJSONReader(properties),
-		DocumentID: id,
-
-		// OnSuccess is the optional callback for each successful operation
-		OnSuccess: func(
-			ctx context.Context,
-			item opensearchutil.BulkIndexerItem,
-			res opensearchutil.BulkIndexerResponseItem,
-		) {
-			fmt.Printf("[%d] %s test/%s", res.Status, res.Result, item.DocumentID)
-		},
-
-		// OnFailure is the optional callback for each failed operation
-		OnFailure: func(
-			ctx context.Context,
-			item opensearchutil.BulkIndexerItem,
-			res opensearchutil.BulkIndexerResponseItem, err error,
-		) {
-			if err != nil {
-				log.Printf("ERROR: %s", err)
-			} else {
-				log.Printf("ERROR: %s: %s", res.Error.Type, res.Error.Reason)
-			}
-		},
-	}
-
-	if err := i.bi.Add(ctx, item); err != nil {
+	if err := i.bulkAction(ctx, "create", id, properties); err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
@@ -127,20 +142,25 @@ func (i *Index) Update(ctx context.Context, id string, properties interface{}) e
 	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Update")
 	defer span.End()
 
-	req := opensearchapi.UpdateRequest{
-		Index:      i.cfg.Name,
-		Body:       opensearchutil.NewJSONReader(properties),
-		DocumentID: id,
-	}
-
-	res, err := req.Do(ctx, i.es)
-	defer res.Body.Close()
-
-	if err != nil {
+	if err := i.bulkAction(ctx, "update", id, properties); err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
 	}
 
-	return err
+	return nil
+}
+
+// Delete item from index
+func (i *Index) Delete(ctx context.Context, id string) error {
+	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Delete")
+	defer span.End()
+
+	if err := i.bulkAction(ctx, "delete", id, nil); err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
+	}
+
+	return nil
 }
 
 // Get retreives `fields` from document with `id` from the index, returning:
@@ -202,26 +222,6 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	}
 
 	return false, err
-}
-
-// Delete item from index
-func (i *Index) Delete(ctx context.Context, id string) error {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Delete")
-	defer span.End()
-
-	req := opensearchapi.DeleteRequest{
-		Index:      i.cfg.Name,
-		DocumentID: id,
-	}
-
-	res, err := req.Do(ctx, i.es)
-	defer res.Body.Close()
-
-	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-	}
-
-	return err
 }
 
 // Close indexer.
