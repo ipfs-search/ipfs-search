@@ -75,19 +75,22 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 
 	// Ref: https://pkg.go.dev/github.com/opensearch-project/opensearch-go@v1.0.0#Config
 	clientConfig := opensearch.Config{
-		Addresses: []string{cfg.URL},
-		Transport: cfg.Transport,
-		Logger: &opensearchtransport.TextLogger{
-			Output:             log.Default().Writer(),
-			EnableRequestBody:  cfg.Debug,
-			EnableResponseBody: cfg.Debug,
-		},
+		Addresses:    []string{cfg.URL},
+		Transport:    cfg.Transport,
 		DisableRetry: cfg.Debug,
 		// Retry/backoff management
 		// https://www.elastic.co/guide/en/elasticsearch/reference/master/tune-for-indexing-speed.html#multiple-workers-threads
 		RetryOnStatus:        []int{429, 502, 503, 504},
 		EnableRetryOnTimeout: true,
 		RetryBackoff:         func(i int) time.Duration { return b.ForAttempt(float64(i)) },
+	}
+
+	if cfg.Debug {
+		clientConfig.Logger = &opensearchtransport.TextLogger{
+			Output:             log.Default().Writer(),
+			EnableRequestBody:  cfg.Debug,
+			EnableResponseBody: cfg.Debug,
+		}
 	}
 
 	return opensearch.NewClient(clientConfig)
