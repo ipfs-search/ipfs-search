@@ -2,7 +2,7 @@ package config
 
 // Queue holds the configuration for a single Queue.
 type Queue struct {
-	Name string `yaml:"name` // Name of the Queue.
+	Name string `yaml:"name"` // Name of the Queue.
 }
 
 // Queues represents the various queues we're using
