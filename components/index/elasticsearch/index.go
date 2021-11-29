@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 
 	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
 	opensearchutil "github.com/opensearch-project/opensearch-go/opensearchutil"
@@ -61,6 +62,17 @@ func (i *Index) index(
 		Action:     action,
 		Body:       body,
 		DocumentID: id,
+		OnFailure: func(
+			ctx context.Context,
+			item opensearchutil.BulkIndexerItem,
+			res opensearchutil.BulkIndexerResponseItem, err error,
+		) {
+			if err != nil {
+				log.Printf("Error flushing: %s\nitem: %+v", err, item)
+			} else {
+				log.Printf("Error flushing: %s: %s\nitem: %+v", res.Error.Type, res.Error.Reason, item)
+			}
+		},
 	}
 
 	return i.c.bulkIndexer.Add(ctx, item)
