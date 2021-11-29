@@ -73,22 +73,27 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 	return nil
 }
 
-func (w *Pool) getSearchClient(ctx context.Context) (*elasticsearch.Client, error) {
+func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
 	clientConfig := &elasticsearch.ClientConfig{
 		URL:       w.config.ElasticSearch.URL,
 		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 10),
+		Debug:     false,
 	}
-
-	// TODO: Run .Close() on client when context is closed.
 
 	return elasticsearch.NewClient(clientConfig, w.Instrumentation)
 }
 
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
-	esClient, err := w.getSearchClient(ctx)
+	esClient, err := w.getSearchClient()
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		// Close client when context is closed
+		<-ctx.Done()
+		esClient.Close(ctx)
+	}()
 
 	return &crawler.Indexes{
 		Files: elasticsearch.New(

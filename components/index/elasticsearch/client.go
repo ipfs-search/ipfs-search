@@ -28,6 +28,7 @@ type Client struct {
 type ClientConfig struct {
 	URL       string
 	Transport http.RoundTripper
+	Debug     bool
 }
 
 // NewClient returns a configured search index, or an error.
@@ -57,6 +58,11 @@ func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
 	}, nil
 }
 
+// Close client connection and flush bulk indexer.
+func (c *Client) Close(ctx context.Context) error {
+	return c.bulkIndexer.Close(ctx)
+}
+
 func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.Client, error) {
 
 	// TODO: Re-enable
@@ -73,9 +79,10 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 		Transport: cfg.Transport,
 		Logger: &opensearchtransport.TextLogger{
 			Output:             log.Default().Writer(),
-			EnableRequestBody:  false,
-			EnableResponseBody: false,
+			EnableRequestBody:  cfg.Debug,
+			EnableResponseBody: cfg.Debug,
 		},
+		DisableRetry: cfg.Debug,
 		// Retry/backoff management
 		// https://www.elastic.co/guide/en/elasticsearch/reference/master/tune-for-indexing-speed.html#multiple-workers-threads
 		RetryOnStatus:        []int{429, 502, 503, 504},
@@ -87,8 +94,9 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 }
 
 func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (opensearchutil.BulkIndexer, error) {
-	indexerConfig := opensearchutil.BulkIndexerConfig{
-		Client: client,
+	iCfg := opensearchutil.BulkIndexerConfig{
+		Client:     client,
+		NumWorkers: 1, // Start conservatively with 1 worker.
 		OnFlushStart: func(ctx context.Context) context.Context {
 			newCtx, _ := i.Tracer.Start(ctx, "index.elasticsearch.BulkIndexerFlush")
 			return newCtx
@@ -107,5 +115,10 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 		},
 	}
 
-	return opensearchutil.NewBulkIndexer(indexerConfig)
+	if cfg.Debug {
+		iCfg.FlushBytes = 1
+		iCfg.FlushInterval = 0
+	}
+
+	return opensearchutil.NewBulkIndexer(iCfg)
 }

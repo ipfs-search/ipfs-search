@@ -129,25 +129,27 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 		return false, err
 	}
 
+	// We should have a valid body.
 	defer res.Body.Close()
 
-	// Decode body
-	response := struct {
-		Found  bool            `json:"found"`
-		Source json.RawMessage `json:"_source"`
-	}{}
+	switch res.StatusCode {
+	case 200:
+		// Found
+		response := struct {
+			Found  bool            `json:"found"`
+			Source json.RawMessage `json:"_source"`
+		}{}
 
-	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(&response)
-	if err != nil {
-		err = fmt.Errorf("error decoding body: %w", err)
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return false, err
-	}
+		decoder := json.NewDecoder(res.Body)
+		err = decoder.Decode(&response)
+		if err != nil {
+			err = fmt.Errorf("error decoding body: %w", err)
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			return false, err
+		}
 
-	if response.Found {
-		// Decode source
-		err = json.Unmarshal(response.Source, dst)
+		// Decode source into destination
+		err = json.Unmarshal(response.Source, &dst)
 		if err != nil {
 			err = fmt.Errorf("error decoding source: %w", err)
 			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
@@ -155,21 +157,14 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 		}
 
 		return true, nil
-	}
-
-	if res.StatusCode != 404 {
-		// 404's do not signify an error, other status codes do.
+	case 404:
+		// Not found
+		return false, nil
+	default:
 		err = fmt.Errorf("unexpected status from backend: %s", res.Status())
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return false, err
 	}
-
-	return false, err
-}
-
-// Close indexer.
-func (i *Index) Close(ctx context.Context) error {
-	// Close waits until all added items are flushed and closes the bulk indexer.
-	return i.c.bulkIndexer.Close(ctx)
 }
 
 // Compile-time assurance that implementation satisfies interface.
