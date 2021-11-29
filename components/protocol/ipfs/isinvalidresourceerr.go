@@ -16,6 +16,7 @@ var invalidErrorPrefixes = [...]string{
 	"not unixfs node",                      // Example: z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE
 	"proto: can't skip unknown wire type",
 	"failed to decode Protocol Buffers",
+	"protobuf: (PBNode) invalid wireType",
 }
 
 // isInvalidResourceErr determines whether an error returned by protocol methods represents invalid content.
