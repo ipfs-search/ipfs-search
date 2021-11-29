@@ -9,9 +9,9 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-// GetHTTPClient initializes a HTTP client with OpenTelemetry transport for tracing.
-func GetHTTPClient(dialcontext func(ctx context.Context, network, address string) (net.Conn, error), maxConns int) *http.Client {
-	transport := otelhttp.NewTransport(&http.Transport{
+// GetHTTPTransport initializes a HTTP transport with OpenTelemetry transport for tracing.
+func GetHTTPTransport(dialcontext func(ctx context.Context, network, address string) (net.Conn, error), maxConns int) http.RoundTripper {
+	return otelhttp.NewTransport(&http.Transport{
 		Proxy:               nil,
 		DialContext:         dialcontext,
 		ForceAttemptHTTP2:   false,
@@ -19,8 +19,4 @@ func GetHTTPClient(dialcontext func(ctx context.Context, network, address string
 		MaxIdleConnsPerHost: maxConns,
 		IdleConnTimeout:     90 * time.Second,
 	})
-
-	return &http.Client{
-		Transport: transport,
-	}
 }

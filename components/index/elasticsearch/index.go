@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 
-	opensearch "github.com/opensearch-project/opensearch-go"
 	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
 	opensearchutil "github.com/opensearch-project/opensearch-go/opensearchutil"
 
@@ -15,33 +13,28 @@ import (
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
-	"github.com/ipfs-search/ipfs-search/instr"
 )
 
 // Index wraps an Elasticsearch index to store documents
 type Index struct {
-	es  *opensearch.Client
 	cfg *Config
-	bi  opensearchutil.BulkIndexer
-
-	*instr.Instrumentation
+	c   *Client
 }
 
 // New returns a new index.
-func New(es *opensearch.Client, cfg *Config, i *instr.Instrumentation) index.Index {
+func New(client *Client, cfg *Config) index.Index {
+	if client == nil {
+		panic("Index.New Client cannot be nil.")
+	}
+
+	if cfg == nil {
+		panic("Index.New Config cannot be nil.")
+	}
+
 	index := &Index{
-		es:              es,
-		cfg:             cfg,
-		Instrumentation: i,
+		c:   client,
+		cfg: cfg,
 	}
-
-	biCfg := index.getBulkIndexerCfg()
-	bi, err := opensearchutil.NewBulkIndexer(biCfg)
-
-	if err != nil {
-		log.Fatalf("error getting bulk indexer: %v", err)
-	}
-	index.bi = bi
 
 	return index
 }
@@ -51,63 +44,8 @@ func (i *Index) String() string {
 	return i.cfg.Name
 }
 
-type debugLogger struct{}
-
-// func (d debugLogger) Printf(s string, args ...interface{}) {
-// 	log.Printf(s, args...)
-// }
-
-func (i *Index) getBulkIndexerCfg() opensearchutil.BulkIndexerConfig {
-	return opensearchutil.BulkIndexerConfig{
-		Client: i.es,
-		// DebugLogger: debugLogger{},
-		OnError: func(ctx context.Context, err error) {
-			if err != nil {
-				// Weirdly this gets called with nil error some times.
-				span := trace.SpanFromContext(ctx)
-				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-				log.Printf("Error flushing index buffer: %v", err)
-			}
-		},
-		OnFlushStart: func(ctx context.Context) context.Context {
-			newCtx, _ := i.Tracer.Start(ctx, "index.elasticsearch.BulkIndexerFlush")
-
-			return newCtx
-		},
-		OnFlushEnd: func(ctx context.Context) {
-			span := trace.SpanFromContext(ctx)
-			log.Println("Flushed index buffer")
-
-			// log.Printf("ES stats: %+v", )
-			span.End()
-		},
-		Index: i.cfg.Name,
-	}
-}
-
-// func successCb(
-// 	ctx context.Context,
-// 	item opensearchutil.BulkIndexerItem,
-// 	res opensearchutil.BulkIndexerResponseItem,
-// ) {
-// 	fmt.Printf("[%d] %s test/%s", res.Status, res.Result, item.DocumentID)
-// }
-
-// func failureCb(
-// 	ctx context.Context,
-// 	item opensearchutil.BulkIndexerItem,
-// 	res opensearchutil.BulkIndexerResponseItem, err error,
-// ) {
-// 	if err != nil {
-// 		log.Printf("ERROR: %s", err)
-// 	} else {
-// 		// TODO: Catch 429 TOO MANY REQUESTS
-// 		// Random exponential backoff sleep (blocks worker)
-// 		log.Printf("ERROR: %s: %s", res.Error.Type, res.Error.Reason)
-// 	}
-// }
-
-func (i *Index) bulkAction(
+// index wraps BulkIndexer.Add().
+func (i *Index) index(
 	ctx context.Context,
 	action string,
 	id string,
@@ -119,22 +57,21 @@ func (i *Index) bulkAction(
 	}
 
 	item := opensearchutil.BulkIndexerItem{
+		Index:      i.cfg.Name,
 		Action:     action,
 		Body:       body,
 		DocumentID: id,
-		// OnSuccess:  successCb,
-		// OnFailure:  failureCb,
 	}
 
-	return i.bi.Add(ctx, item)
+	return i.c.bulkIndexer.Add(ctx, item)
 }
 
 // Index a document's properties, identified by id
 func (i *Index) Index(ctx context.Context, id string, properties interface{}) error {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Index")
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Index")
 	defer span.End()
 
-	if err := i.bulkAction(ctx, "create", id, properties); err != nil {
+	if err := i.index(ctx, "create", id, properties); err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
@@ -144,10 +81,10 @@ func (i *Index) Index(ctx context.Context, id string, properties interface{}) er
 
 // Update a document's properties, given id
 func (i *Index) Update(ctx context.Context, id string, properties interface{}) error {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Update")
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Update")
 	defer span.End()
 
-	if err := i.bulkAction(ctx, "update", id, properties); err != nil {
+	if err := i.index(ctx, "update", id, properties); err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
@@ -157,10 +94,10 @@ func (i *Index) Update(ctx context.Context, id string, properties interface{}) e
 
 // Delete item from index
 func (i *Index) Delete(ctx context.Context, id string) error {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Delete")
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Delete")
 	defer span.End()
 
-	if err := i.bulkAction(ctx, "delete", id, nil); err != nil {
+	if err := i.index(ctx, "delete", id, nil); err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
@@ -173,7 +110,7 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 // - (false, nil) when not found
 // - (false, error) otherwise
 func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Get")
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Get")
 	defer span.End()
 
 	req := opensearchapi.GetRequest{
@@ -184,7 +121,7 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 		Preference:     "_local",
 	}
 
-	res, err := req.Do(ctx, i.es)
+	res, err := req.Do(ctx, i.c.searchClient)
 
 	// Handle connection errors
 	if err != nil {
@@ -231,8 +168,8 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 // Close indexer.
 func (i *Index) Close(ctx context.Context) error {
-	// Close waits until all added items are flushed and closes the indexer.
-	return i.bi.Close(ctx)
+	// Close waits until all added items are flushed and closes the bulk indexer.
+	return i.c.bulkIndexer.Close(ctx)
 }
 
 // Compile-time assurance that implementation satisfies interface.
