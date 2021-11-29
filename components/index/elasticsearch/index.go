@@ -53,8 +53,16 @@ func (i *Index) index(
 	properties interface{},
 ) error {
 	var body io.Reader
+
 	if properties != nil {
-		body = opensearchutil.NewJSONReader(properties)
+		if action == "update" {
+			// For updates, the updated fields need to be wrapped in a `doc` field
+			body = opensearchutil.NewJSONReader(struct {
+				Doc interface{} `json:"doc"`
+			}{properties})
+		} else {
+			body = opensearchutil.NewJSONReader(properties)
+		}
 	}
 
 	item := opensearchutil.BulkIndexerItem{

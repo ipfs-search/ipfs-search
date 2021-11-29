@@ -153,7 +153,7 @@ func (s *IndexTestSuite) TestUpdate() {
 
 	// Note whitespace here! This is NDJSON
 	request := []byte(`{"update":{"_id":"objId","_index":"test"}}
-{"field1":"hoi","field2":4}
+{"doc":{"field1":"hoi","field2":4}}
 
 `)
 	response := []byte(`{
