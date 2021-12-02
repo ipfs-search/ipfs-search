@@ -3,30 +3,41 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
-	"github.com/olivere/elastic/v7"
+	"fmt"
+	"io"
+	"log"
+
+	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
+	opensearchutil "github.com/opensearch-project/opensearch-go/opensearchutil"
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
-	"github.com/ipfs-search/ipfs-search/instr"
 )
 
 // Index wraps an Elasticsearch index to store documents
 type Index struct {
-	es  *elastic.Client
 	cfg *Config
-
-	*instr.Instrumentation
+	c   *Client
 }
 
 // New returns a new index.
-func New(es *elastic.Client, cfg *Config, i *instr.Instrumentation) index.Index {
-	return &Index{
-		es:              es,
-		cfg:             cfg,
-		Instrumentation: i,
+func New(client *Client, cfg *Config) index.Index {
+	if client == nil {
+		panic("Index.New Client cannot be nil.")
 	}
+
+	if cfg == nil {
+		panic("Index.New Config cannot be nil.")
+	}
+
+	index := &Index{
+		c:   client,
+		cfg: cfg,
+	}
+
+	return index
 }
 
 // String returns the name of the index, for convenient logging.
@@ -34,36 +45,84 @@ func (i *Index) String() string {
 	return i.cfg.Name
 }
 
+// index wraps BulkIndexer.Add().
+func (i *Index) index(
+	ctx context.Context,
+	action string,
+	id string,
+	properties interface{},
+) error {
+	var body io.Reader
+
+	if properties != nil {
+		if action == "update" {
+			// For updates, the updated fields need to be wrapped in a `doc` field
+			body = opensearchutil.NewJSONReader(struct {
+				Doc interface{} `json:"doc"`
+			}{properties})
+		} else {
+			body = opensearchutil.NewJSONReader(properties)
+		}
+	}
+
+	item := opensearchutil.BulkIndexerItem{
+		Index:      i.cfg.Name,
+		Action:     action,
+		Body:       body,
+		DocumentID: id,
+		OnFailure: func(
+			ctx context.Context,
+			item opensearchutil.BulkIndexerItem,
+			res opensearchutil.BulkIndexerResponseItem, err error,
+		) {
+			if err != nil {
+				log.Printf("Error flushing: %s\nitem: %+v", err, item)
+			} else {
+				log.Printf("Error flushing: %s: %s\nitem: %+v", res.Error.Type, res.Error.Reason, item)
+			}
+		},
+	}
+
+	return i.c.bulkIndexer.Add(ctx, item)
+}
+
 // Index a document's properties, identified by id
 func (i *Index) Index(ctx context.Context, id string, properties interface{}) error {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Index")
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Index")
 	defer span.End()
 
-	_, err := i.es.Index().
-		Index(i.cfg.Name).
-		Id(id).
-		BodyJson(properties).
-		Do(ctx)
+	if err := i.index(ctx, "create", id, properties); err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
+	}
 
-	return err
+	return nil
 }
 
 // Update a document's properties, given id
 func (i *Index) Update(ctx context.Context, id string, properties interface{}) error {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Update")
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Update")
 	defer span.End()
 
-	_, err := i.es.Update().
-		Index(i.cfg.Name).
-		Id(id).
-		Doc(properties).
-		Do(ctx)
-
-	if err != nil {
+	if err := i.index(ctx, "update", id, properties); err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
 	}
 
-	return err
+	return nil
+}
+
+// Delete item from index
+func (i *Index) Delete(ctx context.Context, id string) error {
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Delete")
+	defer span.End()
+
+	if err := i.index(ctx, "delete", id, nil); err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return err
+	}
+
+	return nil
 }
 
 // Get retreives `fields` from document with `id` from the index, returning:
@@ -71,55 +130,61 @@ func (i *Index) Update(ctx context.Context, id string, properties interface{}) e
 // - (false, nil) when not found
 // - (false, error) otherwise
 func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Get")
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Get")
 	defer span.End()
 
-	fsc := elastic.NewFetchSourceContext(true)
-	fsc.Include(fields...)
+	req := opensearchapi.GetRequest{
+		Index:          i.cfg.Name,
+		DocumentID:     id,
+		SourceIncludes: fields,
+		Realtime:       &[]bool{true}[0],
+		Preference:     "_local",
+	}
 
-	result, err := i.es.
-		Get().
-		Index(i.cfg.Name).
-		FetchSourceContext(fsc).
-		Id(id).
-		Do(ctx)
+	res, err := req.Do(ctx, i.c.searchClient)
 
-	switch {
-	case err == nil:
-		// Found
-
-		// Decode resulting field json into `dst`
-		err = json.Unmarshal(result.Source, dst)
-
-		if err != nil {
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		}
-
-		return true, err
-	case elastic.IsNotFound(err):
-		// 404
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Ok))
-
-		return false, nil
-
-	default:
-		// Unknown error, propagate
+	// Handle connection errors
+	if err != nil {
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return false, err
 	}
-}
 
-// Delete item from index
-func (i *Index) Delete(ctx context.Context, id string) error {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Delete")
-	defer span.End()
+	// We should have a valid body.
+	defer res.Body.Close()
 
-	_, err := i.es.Delete().
-		Index(i.cfg.Name).
-		Id(id).
-		Do(ctx)
+	switch res.StatusCode {
+	case 200:
+		// Found
+		response := struct {
+			Found  bool            `json:"found"`
+			Source json.RawMessage `json:"_source"`
+		}{}
 
-	return err
+		decoder := json.NewDecoder(res.Body)
+		err = decoder.Decode(&response)
+		if err != nil {
+			err = fmt.Errorf("error decoding body: %w", err)
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			return false, err
+		}
+
+		// Decode source into destination
+		err = json.Unmarshal(response.Source, &dst)
+		if err != nil {
+			err = fmt.Errorf("error decoding source: %w", err)
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			return false, err
+		}
+
+		return true, nil
+	case 404:
+		// Not found
+		return false, nil
+	default:
+		err = fmt.Errorf("unexpected status from backend: %s", res.Status())
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		return false, err
+	}
 }
 
 // Compile-time assurance that implementation satisfies interface.

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
-	"github.com/olivere/elastic/v7"
 	samqp "github.com/streadway/amqp"
 
 	"go.opentelemetry.io/otel/api/trace"
@@ -58,11 +58,14 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 	}
 
 	// Many stat/ls connections
-	ipfsClient := utils.GetHTTPClient(w.dialer.DialContext, 1000)
+	// TODO: Make this configurable
+	ipfsTransport := utils.GetHTTPTransport(w.dialer.DialContext, 1000)
+	ipfsClient := &http.Client{Transport: ipfsTransport}
 	protocol := ipfs.New(w.config.IPFSConfig(), ipfsClient, w.Instrumentation)
 
 	// Limited Tika connections (as resources are generally known to be available by now)
-	tikaClient := utils.GetHTTPClient(w.dialer.DialContext, 100)
+	tikaTransport := utils.GetHTTPTransport(w.dialer.DialContext, 100)
+	tikaClient := &http.Client{Transport: tikaTransport}
 	extractor := tika.New(w.config.TikaConfig(), tikaClient, protocol, w.Instrumentation)
 
 	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractor, w.Instrumentation)
@@ -70,42 +73,44 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 	return nil
 }
 
-func (w *Pool) getElasticClient() (*elastic.Client, error) {
-	httpClient := utils.GetHTTPClient(w.dialer.DialContext, 5)
+func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
+	clientConfig := &elasticsearch.ClientConfig{
+		URL:       w.config.ElasticSearch.URL,
+		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 10),
+		Debug:     false,
+	}
 
-	return elastic.NewClient(
-		elastic.SetSniff(false),
-		elastic.SetURL(w.config.ElasticSearch.URL),
-		elastic.SetHttpClient(httpClient),
-	)
+	return elasticsearch.NewClient(clientConfig, w.Instrumentation)
 }
 
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
-	esClient, err := w.getElasticClient()
+	esClient, err := w.getSearchClient()
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		// Close client when context is closed
+		<-ctx.Done()
+		esClient.Close(ctx)
+	}()
 
 	return &crawler.Indexes{
 		Files: elasticsearch.New(
 			esClient,
 			&elasticsearch.Config{Name: w.config.Indexes.Files.Name},
-			w.Instrumentation,
 		),
 		Directories: elasticsearch.New(
 			esClient,
 			&elasticsearch.Config{Name: w.config.Indexes.Directories.Name},
-			w.Instrumentation,
 		),
 		Invalids: elasticsearch.New(
 			esClient,
 			&elasticsearch.Config{Name: w.config.Indexes.Invalids.Name},
-			w.Instrumentation,
 		),
 		Partials: elasticsearch.New(
 			esClient,
 			&elasticsearch.Config{Name: w.config.Indexes.Partials.Name},
-			w.Instrumentation,
 		),
 	}, nil
 }
