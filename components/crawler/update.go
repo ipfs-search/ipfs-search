@@ -72,7 +72,8 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 		if isRecent {
 			span.AddEvent(ctx, "Updating",
 				label.String("reason", "is-recent"),
-				label.Stringer("last-seen", i.LastSeen),
+				// TODO: This causes a panic when LastSeen is nil.
+				// label.Stringer("last-seen", i.LastSeen),
 			)
 
 			return i.Index.Update(ctx, i.AnnotatedResource.ID, &index_types.Update{
