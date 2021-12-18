@@ -53,6 +53,7 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 		}
 
 	case t.SnifferSource, t.UnknownSource:
+		// TODO: Remove UnknownSource after sniffer is updated and queue is flushed.
 		// Item sniffed, conditionally update last-seen.
 		now := time.Now()
 		isRecent := now.Sub(*i.LastSeen) > c.config.MinUpdateAge
