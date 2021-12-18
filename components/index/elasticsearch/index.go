@@ -65,11 +65,14 @@ func (i *Index) index(
 		}
 	}
 
+	retries := 3
+
 	item := opensearchutil.BulkIndexerItem{
-		Index:      i.cfg.Name,
-		Action:     action,
-		Body:       body,
-		DocumentID: id,
+		Index:           i.cfg.Name,
+		Action:          action,
+		Body:            body,
+		DocumentID:      id,
+		RetryOnConflict: &retries,
 		OnFailure: func(
 			ctx context.Context,
 			item opensearchutil.BulkIndexerItem,
