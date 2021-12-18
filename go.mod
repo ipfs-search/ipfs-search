@@ -7,7 +7,7 @@ require (
 	github.com/dankinder/httpmock v1.0.1
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-datastore v0.4.5
-	github.com/ipfs/go-ipfs-api v0.0.3
+	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/ipfs/go-unixfs v0.2.4
 	github.com/jpillora/backoff v1.0.0
 	github.com/kr/text v0.2.0 // indirect
