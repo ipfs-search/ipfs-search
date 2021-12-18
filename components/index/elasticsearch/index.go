@@ -76,9 +76,9 @@ func (i *Index) index(
 			res opensearchutil.BulkIndexerResponseItem, err error,
 		) {
 			if err != nil {
-				log.Printf("Error flushing: %s\nitem: %+v", err, item)
+				log.Printf("Error flushing: %s\nitem: %v", err, item)
 			} else {
-				log.Printf("Error flushing: %s: %s\nitem: %+v", res.Error.Type, res.Error.Reason, item)
+				log.Printf("Error flushing: %s: %s\nitem: %v", res.Error.Type, res.Error.Reason, item)
 			}
 		},
 	}
