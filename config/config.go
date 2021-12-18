@@ -28,7 +28,7 @@ package config
 import (
 	"fmt"
 	env "github.com/Netflix/go-env"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
 	"os"
