@@ -17,6 +17,9 @@ var invalidErrorPrefixes = [...]string{
 	"proto: can't skip unknown wire type",
 	"failed to decode Protocol Buffers",
 	"protobuf: (PBNode) invalid wireType",
+	"protobuf: (PBNode) invalid fieldNumber",
+	"proto: invalid field number",
+	"proto: variable length integer overflow",
 }
 
 // isInvalidResourceErr determines whether an error returned by protocol methods represents invalid content.
