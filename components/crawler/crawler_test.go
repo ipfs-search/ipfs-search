@@ -933,7 +933,8 @@ func (s *CrawlerTestSuite) TestCrawlUpdateLastSeen() {
 		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
-			u.LastSeen = time.Now().Add(-2 * time.Hour)
+			lastSeen := time.Now().Add(-2 * time.Hour)
+			u.LastSeen = &lastSeen
 		}).
 		Return(true, nil).
 		Once()
@@ -951,7 +952,7 @@ func (s *CrawlerTestSuite) TestCrawlUpdateLastSeen() {
 	s.fileIdx.
 		On("Update", mock.Anything, r.Resource.ID, mock.MatchedBy(func(u *indexTypes.Update) bool {
 			return s.Empty(u.References) &&
-				s.WithinDuration(u.LastSeen, time.Now(), time.Second)
+				s.WithinDuration(*u.LastSeen, time.Now(), time.Second)
 		})).
 		Return(nil).
 		Once()
@@ -1004,6 +1005,7 @@ func (s *CrawlerTestSuite) TestCrawlAddReference() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: &t.Resource{
 				Protocol: t.IPFSProtocol,
@@ -1018,7 +1020,8 @@ func (s *CrawlerTestSuite) TestCrawlAddReference() {
 		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
-			u.LastSeen = time.Now()
+			lastSeen := time.Now()
+			u.LastSeen = &lastSeen
 			u.References = indexTypes.References{
 				indexTypes.Reference{
 					ParentHash: "Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi",
@@ -1050,8 +1053,7 @@ func (s *CrawlerTestSuite) TestCrawlAddReference() {
 					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
 					Name:       "NewReference.pdf",
 				},
-			}) &&
-				s.WithinDuration(u.LastSeen, time.Now(), time.Second)
+			}) && u.LastSeen == nil
 		})).
 		Return(nil).
 		Once()
@@ -1071,6 +1073,7 @@ func (s *CrawlerTestSuite) TestCrawlUpdateGetError() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: &t.Resource{
 				Protocol: t.IPFSProtocol,
@@ -1112,6 +1115,7 @@ func (s *CrawlerTestSuite) TestCrawlUpdateUpdateError() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: &t.Resource{
 				Protocol: t.IPFSProtocol,
@@ -1126,7 +1130,8 @@ func (s *CrawlerTestSuite) TestCrawlUpdateUpdateError() {
 		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
-			u.LastSeen = time.Now()
+			lastSeen := time.Now()
+			u.LastSeen = &lastSeen
 			u.References = indexTypes.References{
 				indexTypes.Reference{
 					ParentHash: "Qmc8mmzycvXnzgwBHokZQd97iWAmtdFMqX4FZUAQ5AQdQi",
@@ -1160,8 +1165,7 @@ func (s *CrawlerTestSuite) TestCrawlUpdateUpdateError() {
 					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
 					Name:       "NewReference.pdf",
 				},
-			}) &&
-				s.WithinDuration(u.LastSeen, time.Now(), time.Second)
+			}) && u.LastSeen == nil
 		})).
 		Return(testErr).
 		Once()
@@ -1181,6 +1185,7 @@ func (s *CrawlerTestSuite) TestCrawlSameReference() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: &t.Resource{
 				Protocol: t.IPFSProtocol,
@@ -1195,7 +1200,8 @@ func (s *CrawlerTestSuite) TestCrawlSameReference() {
 		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
-			u.LastSeen = time.Now()
+			lastSeen := time.Now()
+			u.LastSeen = &lastSeen
 			u.References = indexTypes.References{
 				indexTypes.Reference{
 					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
@@ -1231,6 +1237,7 @@ func (s *CrawlerTestSuite) TestCrawlSameReferenceDifferentName() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmSKboVigcD3AY4kLsob117KJcMHvMUu6vNFqk1PQzYUpp",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: &t.Resource{
 				Protocol: t.IPFSProtocol,
@@ -1245,7 +1252,8 @@ func (s *CrawlerTestSuite) TestCrawlSameReferenceDifferentName() {
 		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
-			u.LastSeen = time.Now()
+			lastSeen := time.Now()
+			u.LastSeen = &lastSeen
 			u.References = indexTypes.References{
 				indexTypes.Reference{
 					ParentHash: "QmYAqhbqNDpU7X9VW6FV5imtngQ3oBRY35zuDXduuZnyA8",
@@ -1278,7 +1286,7 @@ func (s *CrawlerTestSuite) TestCrawlSameReferenceDifferentName() {
 					Name:       "NewReference.pdf",
 				},
 			}) &&
-				s.WithinDuration(u.LastSeen, time.Now(), time.Second)
+				u.LastSeen == nil
 		})).
 		Return(nil).
 		Once()

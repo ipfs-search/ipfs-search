@@ -54,11 +54,13 @@ func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
 		ID:       hash,
 	}
 
-	provider := t.Provider{
+	r := t.AnnotatedResource{
 		Resource: resource,
-		Date:     time.Now(),
+		Source:   t.ManualSource,
 	}
 
+	// TODO: Use provider here
+
 	// Add with highest priority, as this is supposed to be available
-	return queue.Publish(ctx, provider, 9)
+	return queue.Publish(ctx, &r, 9)
 }
