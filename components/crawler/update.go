@@ -69,6 +69,9 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 			})
 		}
 
+	case t.ManualSource, t.UserSource:
+		// Do not update based on manual or user input.
+
 	default:
 		// Panic for unexpected Source values, instead of hard failing.
 		panic(fmt.Sprintf("Unexpected source %s for item %+v", i.Source, i))

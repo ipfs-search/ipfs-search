@@ -49,6 +49,8 @@ func (q *Queuer) iterate(ctx context.Context) error {
 			), trace.WithSpanKind(trace.SpanKindProducer))
 			defer span.End()
 
+			// TODO: Queue provider here, not AnnotatedResource.
+
 			r := t.AnnotatedResource{
 				Resource: p.Resource,
 				Source:   t.SnifferSource,

@@ -10,6 +10,10 @@ const (
 	SnifferSource
 	// DirectorySource represents items sourced from a directory.
 	DirectorySource
+	// ManualSource represents items sourced through (trusted) manual input.
+	ManualSource
+	// UserSource represents items sourced from (untrusted) users.
+	UserSource
 )
 
 func (t SourceType) String() string {
@@ -20,6 +24,10 @@ func (t SourceType) String() string {
 		return "sniffer"
 	case DirectorySource:
 		return "directory"
+	case ManualSource:
+		return "manual"
+	case UserSource:
+		return "user"
 	default:
 		panic("Invalid value for SourceType.")
 	}
