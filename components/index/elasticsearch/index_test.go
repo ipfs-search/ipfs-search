@@ -208,6 +208,66 @@ func (s *IndexTestSuite) TestUpdate() {
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
 
+func (s *IndexTestSuite) TestUpdateOmitEmpty() {
+	idx := New(s.mockClient, &Config{Name: "test"})
+
+	// Note whitespace here! This is NDJSON
+	request := []byte(`{"update":{"_id":"objId","_index":"test"}}
+{"doc":{}}
+
+`)
+	response := []byte(`{
+	   "took": 30,
+	   "errors": false,
+	   "items": [
+	      {
+	         "update": {
+	            "_index": "test",
+	            "_type": "_doc",
+	            "_id": "objId",
+	            "_version": 1,
+	            "result": "updated",
+	            "_shards": {
+	               "total": 2,
+	               "successful": 1,
+	               "failed": 0
+	            },
+	            "status": 200,
+	            "_seq_no" : 1,
+	            "_primary_term" : 2
+	         }
+	      }
+	   ]
+	}`)
+
+	type testType struct {
+		Field1 *string `json:"field1,omitempty"`
+		Field2 []int   `json:"field2,omitempty"`
+	}
+
+	dst := testType{
+		Field1: nil,
+		Field2: []int{},
+	}
+
+	testURL := "/_bulk"
+	s.mockAPIHandler.
+		On("Handle", "POST", testURL, request).
+		Return(httpmock.Response{
+			Body: response,
+		}).
+		Once()
+
+	err := idx.Update(s.ctx, "objId", &dst)
+	s.NoError(err)
+
+	// Ensure flushing
+	err = s.mockClient.Close(s.ctx)
+	s.NoError(err)
+
+	s.mockAPIHandler.AssertExpectations(s.T())
+}
+
 func (s *IndexTestSuite) TestDelete() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
