@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -35,38 +36,41 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 	ctx, span := c.Tracer.Start(ctx, "crawler.updateExisting")
 	defer span.End()
 
-	refs, refsUpdated := appendReference(i.References, &i.AnnotatedResource.Reference)
+	switch i.Source {
+	case t.DirectorySource:
+		// Item referenced from a directory, consider updating references (but not last-seen).
+		refs, refsUpdated := appendReference(i.References, &i.AnnotatedResource.Reference)
 
-	now := time.Now()
-
-	// Strip milliseconds to cater to legacy ES index format.
-	// This can be safely removed after the next reindex with _nomillis removed from time format.
-	now = now.Truncate(time.Second)
-
-	isRecent := now.Sub(i.LastSeen) > c.config.MinUpdateAge
-
-	if refsUpdated || isRecent {
-		if span.IsRecording() {
-			var reason string
-
-			if refsUpdated {
-				reason = "reference-added"
-			}
-
-			if isRecent {
-				reason = "is-recent"
-			}
+		if refsUpdated {
 			span.AddEvent(ctx, "Updating",
-				label.String("reason", reason),
+				label.String("reason", "reference-added"),
 				label.Any("new-reference", i.AnnotatedResource.Reference),
-				label.Stringer("last-seen", i.LastSeen),
 			)
+
+			return i.Index.Update(ctx, i.AnnotatedResource.ID, &index_types.Update{
+				References: refs,
+			})
 		}
 
-		return i.Index.Update(ctx, i.AnnotatedResource.ID, &index_types.Update{
-			LastSeen:   now,
-			References: refs,
-		})
+	case t.SnifferSource, t.UnknownSource:
+		// Item sniffed, conditionally update last-seen.
+		now := time.Now()
+		isRecent := now.Sub(*i.LastSeen) > c.config.MinUpdateAge
+
+		if isRecent {
+			span.AddEvent(ctx, "Updating",
+				label.String("reason", "is-recent"),
+				label.Stringer("last-seen", i.LastSeen),
+			)
+
+			return i.Index.Update(ctx, i.AnnotatedResource.ID, &index_types.Update{
+				LastSeen: &now,
+			})
+		}
+
+	default:
+		// Panic for unexpected Source values, instead of hard failing.
+		panic(fmt.Sprintf("Unexpected source %s for item %+v", i.Source, i))
 	}
 
 	span.AddEvent(ctx, "Not updating")
