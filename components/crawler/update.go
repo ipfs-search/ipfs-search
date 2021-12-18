@@ -61,10 +61,13 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 		// This can be safely removed after the next reindex with _nomillis removed from time format.
 		now = now.Truncate(time.Second)
 
+		var isRecent bool
 		if i.LastSeen == nil {
-			panic(fmt.Sprintf("nil LastSeen on %+v", i))
+			// No LastSeen set, override isRecent
+			isRecent = true
+		} else {
+			isRecent = now.Sub(*i.LastSeen) > c.config.MinUpdateAge
 		}
-		isRecent := now.Sub(*i.LastSeen) > c.config.MinUpdateAge
 
 		if isRecent {
 			span.AddEvent(ctx, "Updating",
