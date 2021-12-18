@@ -28,6 +28,7 @@ func (s *QueuerTestSuite) SetupTest() {
 	s.p = t.MockProvider()
 	s.r = &t.AnnotatedResource{
 		Resource: s.p.Resource,
+		Source:   t.SnifferSource,
 	}
 }
 

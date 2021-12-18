@@ -51,6 +51,7 @@ func (q *Queuer) iterate(ctx context.Context) error {
 
 			r := t.AnnotatedResource{
 				Resource: p.Resource,
+				Source:   t.SnifferSource,
 			}
 
 			// Add with highest priority (9), as this is supposed to be available

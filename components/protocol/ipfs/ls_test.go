@@ -104,6 +104,7 @@ func (s *LsTestSuite) TestLsHAMTDirectory() {
 			Protocol: t.IPFSProtocol,
 			ID:       "bafkreidnsi74hf7n2dtidxnqjdyr6lxidnsikdgwxktd7m3duwkuwl2u5u",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: r.Resource,
 			Name:   "Back_of_the_moon.html",
@@ -122,6 +123,7 @@ func (s *LsTestSuite) TestLsHAMTDirectory() {
 			Protocol: t.IPFSProtocol,
 			ID:       "bafkreice7raasrty3makrm3gyg7sjqimdhhx6pdezh2noh3jlzwmvdcooy",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: r.Resource,
 			Name:   "Munchh..html",
@@ -138,6 +140,7 @@ func (s *LsTestSuite) TestLsHAMTDirectory() {
 			Protocol: t.IPFSProtocol,
 			ID:       "bafkreice7raasrty3makrm3gyg7sjqimdhhx6pdezh2noh3jlzwmvdcooy",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: r.Resource,
 			Name:   "directory",
@@ -154,6 +157,7 @@ func (s *LsTestSuite) TestLsHAMTDirectory() {
 			Protocol: t.IPFSProtocol,
 			ID:       "bafkreice7raasrty3makrm3gyg7sjqimdhhx6pdezh2noh3jlzwmvdcooy",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: r.Resource,
 			Name:   "unsupported",
@@ -198,6 +202,7 @@ func (s *LsTestSuite) TestNormalDirectory() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmZTR5bcpQD7cFgTorqxZDYaew1Wqgfbd2ud9QqGPAkK2V",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: r.Resource,
 			Name:   "about",
@@ -216,6 +221,7 @@ func (s *LsTestSuite) TestNormalDirectory() {
 			Protocol: t.IPFSProtocol,
 			ID:       "QmYCvbfNbCwFR45HiNP45rwJgvatpiW38D961L5qAhUM5Y",
 		},
+		Source: t.DirectorySource,
 		Reference: t.Reference{
 			Parent: r.Resource,
 			Name:   "contact",

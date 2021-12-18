@@ -180,6 +180,7 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.Ann
 				Protocol: t.IPFSProtocol,
 				ID:       link.Hash,
 			},
+			Source: t.DirectorySource,
 			Reference: t.Reference{
 				Parent: r.Resource,
 				Name:   link.Name,
