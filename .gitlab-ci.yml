@@ -1,0 +1,8 @@
+include:
+  - template: Auto-DevOps.gitlab-ci.yml # https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Auto-DevOps.gitlab-ci.yml
+
+variables:
+  DAST_DISABLED: "true"
+  AUTO_DEVOPS_BUILD_CACHE: "registry"
+  AUTO_BUILD_IMAGE_VERSION: "v1.6.0"
+  AUTO_DEVOPS_BUILD_CACHE_REF: "$CI_REGISTRY_IMAGE/cache:latest"
