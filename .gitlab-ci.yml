@@ -6,3 +6,19 @@ variables:
   AUTO_DEVOPS_BUILD_CACHE: "registry"
   AUTO_BUILD_IMAGE_VERSION: "v1.6.0"
   AUTO_DEVOPS_BUILD_CACHE_REF: "$CI_REGISTRY_IMAGE/cache:latest"
+  CC_TEST_REPORTER_ID: "8682688bc269d0f558949836dc3a7da18cd504940d6a4034c4539203dbe3fa22"
+
+test:
+  stage: test
+  image: golang:1.16-alpine
+  before_script:
+    # Install CodeClimate test reporter
+    - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+    - chmod +x ./cc-test-reporter
+    - ./cc-test-reporter before-build
+
+  script:
+    - go test -v -race -coverprofile c.out ./...
+
+  after_script:
+    - ./cc-test-reporter after-build
