@@ -30,4 +30,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200603094226-e3079894b1e8 // indirect
 )
 
+// +heroku goVersion go1.16
 go 1.16
