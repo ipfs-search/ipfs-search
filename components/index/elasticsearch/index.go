@@ -2,18 +2,17 @@ package elasticsearch
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 
-	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
 	opensearchutil "github.com/opensearch-project/opensearch-go/opensearchutil"
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
+	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
 )
 
 // Index wraps an Elasticsearch index to store documents
@@ -52,6 +51,9 @@ func (i *Index) index(
 	id string,
 	properties interface{},
 ) error {
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.index")
+	defer span.End()
+
 	var body io.Reader
 
 	if properties != nil {
@@ -78,13 +80,18 @@ func (i *Index) index(
 			item opensearchutil.BulkIndexerItem,
 			res opensearchutil.BulkIndexerResponseItem, err error,
 		) {
-			if err != nil {
-				log.Printf("Error flushing: %s\nitem: %v", err, item)
-			} else {
-				log.Printf("Error flushing: %s: %s\nitem: %v", res.Error.Type, res.Error.Reason, item)
+			if err == nil {
+				err = fmt.Errorf("Error flushing: %s: %s (%s)", res.Error.Type, res.Error.Reason, id)
 			}
+
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			log.Printf("Error flushing: %s (%s)", err, id)
+
 		},
 	}
+
+	ctx, span = i.c.Tracer.Start(ctx, "index.elasticsearch.bulkIndexer.Add")
+	defer span.End()
 
 	return i.c.bulkIndexer.Add(ctx, item)
 }
@@ -136,58 +143,24 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Get")
 	defer span.End()
 
-	req := opensearchapi.GetRequest{
-		Index:          i.cfg.Name,
-		DocumentID:     id,
-		SourceIncludes: fields,
-		Realtime:       &[]bool{true}[0],
-		Preference:     "_local",
+	req := bulkgetter.GetRequest{
+		Index:      i.cfg.Name,
+		DocumentID: id,
+		Fields:     fields,
 	}
 
-	res, err := req.Do(ctx, i.c.searchClient)
+	resp := <-i.c.bulkGetter.Get(ctx, &req, dst)
 
-	// Handle connection errors
-	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return false, err
-	}
+	// Turn on for increased verbosity.
+	// if resp.Found {
+	// 	log.Printf("Found %s in %s", id, i)
+	// } else {
+	// 	if resp.Error != nil {
+	// 		log.Printf("Error getting %s in %s", id, i)
+	// 	}
+	// }
 
-	// We should have a valid body.
-	defer res.Body.Close()
-
-	switch res.StatusCode {
-	case 200:
-		// Found
-		response := struct {
-			Found  bool            `json:"found"`
-			Source json.RawMessage `json:"_source"`
-		}{}
-
-		decoder := json.NewDecoder(res.Body)
-		err = decoder.Decode(&response)
-		if err != nil {
-			err = fmt.Errorf("error decoding body: %w", err)
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			return false, err
-		}
-
-		// Decode source into destination
-		err = json.Unmarshal(response.Source, &dst)
-		if err != nil {
-			err = fmt.Errorf("error decoding source: %w", err)
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			return false, err
-		}
-
-		return true, nil
-	case 404:
-		// Not found
-		return false, nil
-	default:
-		err = fmt.Errorf("unexpected status from backend: %s", res.Status())
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return false, err
-	}
+	return resp.Found, resp.Error
 }
 
 // Compile-time assurance that implementation satisfies interface.

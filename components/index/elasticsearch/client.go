@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 
+	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
 	"github.com/ipfs-search/ipfs-search/instr"
 )
 
@@ -20,6 +21,7 @@ import (
 type Client struct {
 	searchClient *opensearch.Client
 	bulkIndexer  opensearchutil.BulkIndexer
+	bulkGetter   bulkgetter.AsyncGetter
 
 	*instr.Instrumentation
 }
@@ -29,10 +31,23 @@ type ClientConfig struct {
 	URL       string
 	Transport http.RoundTripper
 	Debug     bool
+
+	BulkIndexerWorkers    int
+	BulkIndexerFlushBytes int
+
+	BulkGetterBatchSize    int
+	BulkGetterBatchTimeout time.Duration
 }
 
 // NewClient returns a configured search index, or an error.
 func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
+	var (
+		c   *opensearch.Client
+		bi  opensearchutil.BulkIndexer
+		bg  bulkgetter.AsyncGetter
+		err error
+	)
+
 	if cfg == nil {
 		panic("NewClient ClientConfig cannot be nil.")
 	}
@@ -41,26 +56,33 @@ func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
 		panic("NewCLient Instrumentation cannot be nil.")
 	}
 
-	c, err := getSearchClient(cfg, i)
-	if err != nil {
+	if c, err = getSearchClient(cfg, i); err != nil {
 		return nil, err
 	}
 
-	bi, err := getBulkIndexer(c, cfg, i)
-	if err != nil {
+	if bi, err = getBulkIndexer(c, cfg, i); err != nil {
+		return nil, err
+	}
+
+	if bg, err = getBulkGetter(c, cfg, i); err != nil {
 		return nil, err
 	}
 
 	return &Client{
 		searchClient:    c,
 		bulkIndexer:     bi,
+		bulkGetter:      bg,
 		Instrumentation: i,
 	}, nil
 }
 
-// Close client connection and flush bulk indexer.
-func (c *Client) Close(ctx context.Context) error {
-	return c.bulkIndexer.Close(ctx)
+// Work starts (and closes) a client worker.
+func (c *Client) Work(ctx context.Context) error {
+	// Flush indexing buffers on context close.
+	// Use background context because current context is already closed.
+	defer c.bulkIndexer.Close(context.Background())
+
+	return c.bulkGetter.Work(ctx)
 }
 
 func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.Client, error) {
@@ -99,7 +121,8 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (opensearchutil.BulkIndexer, error) {
 	iCfg := opensearchutil.BulkIndexerConfig{
 		Client:     client,
-		NumWorkers: 1, // Start conservatively with 1 worker.
+		NumWorkers: cfg.BulkIndexerWorkers,
+		FlushBytes: cfg.BulkIndexerFlushBytes,
 		OnFlushStart: func(ctx context.Context) context.Context {
 			newCtx, _ := i.Tracer.Start(ctx, "index.elasticsearch.BulkIndexerFlush")
 			return newCtx
@@ -107,7 +130,7 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 		OnError: func(ctx context.Context, err error) {
 			span := trace.SpanFromContext(ctx)
 			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			log.Printf("Error flushing index buffer: %v", err)
+			log.Printf("Error flushing index buffer: %s", err)
 		},
 		OnFlushEnd: func(ctx context.Context) {
 			span := trace.SpanFromContext(ctx)
@@ -124,4 +147,14 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 	}
 
 	return opensearchutil.NewBulkIndexer(iCfg)
+}
+
+func getBulkGetter(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (bulkgetter.AsyncGetter, error) {
+	bgCfg := bulkgetter.Config{
+		Client:       client,
+		BatchSize:    cfg.BulkGetterBatchSize,
+		BatchTimeout: cfg.BulkGetterBatchTimeout,
+	}
+
+	return bulkgetter.New(bgCfg), nil
 }

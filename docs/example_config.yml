@@ -4,6 +4,10 @@ ipfs:
   partial_size: 256KB                                 # Size of items considered to be partial (when unreferenced)
 elasticsearch:
   url: http://localhost:9200                          # Also ELASTICSEARCH_URL in env
+  bulk_indexer_workers: 16                            # Workers to use for bulk writes.
+  bulk_flush_bytes: 5MB                               # Bytesize treshold for bulk writes.
+  bulk_getter_batch_size: 48                          # Item treshold for execution of bulk gets.
+  bulk_getter_batch_timeout: 150ms                    # Time treshold for bulk gets.
 amqp:
   url: amqp://guest:guest@localhost:5672/             # Also AMQP_URL in env.
   max_reconnect: 100                                  # Maximum number of reconnect attempts
@@ -30,7 +34,7 @@ indexes:
   files:
     name: ipfs_files                                  # Name of ES index to use.
   directories:
-    name: ipfs_directories                # Also FILE_WORKERS in env.
+    name: ipfs_directories
   invalids:
     name: ipfs_invalids
 queues:
@@ -42,5 +46,5 @@ queues:
     name: hashes
 workers:
   hash_workers: 70                                    # Amount of workers for various resources. Also HASH_WORKERS in env.
-  file_workers: 120                   # Also FILE_WORKERS in env.
-  directory_workers: 70                 # Also DIRECTORY in env.
+  file_workers: 120                                   # Also FILE_WORKERS in env.
+  directory_workers: 70                               # Also DIRECTORY in env.

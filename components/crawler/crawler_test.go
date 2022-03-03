@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/index"
@@ -87,22 +88,22 @@ func (s *CrawlerTestSuite) assertExpectations() {
 
 func (s *CrawlerTestSuite) assertNotExists(rID string) {
 	s.fileIdx.
-		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, rID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Once()
 
 	s.dirIdx.
-		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, rID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Once()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, rID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Once()
 
 	s.partialIdx.
-		On("Get", mock.Anything, rID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, rID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Once()
 }
@@ -334,22 +335,22 @@ func (s *CrawlerTestSuite) TestCrawlReferencedPartialType() {
 		Once()
 
 	s.fileIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.dirIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.partialIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(true, nil).
 		Once()
 
@@ -754,6 +755,11 @@ func (s *CrawlerTestSuite) TestCrawlDirectoryUnexpectedType() {
 		Return(nil).
 		Once()
 
+	s.assertNotExists(r.Resource.ID)
+
+	//// THIS PANIC IS NOT PROPERLY CAUGHT FIXME!!!
+	// The issue is the panic is in a different goroutine and does not propagate to the parent.
+
 	// Unexpected types yield a panic; undefined behaviour
 	s.Panics(func() { _ = s.c.Crawl(s.ctx, r) })
 }
@@ -930,7 +936,7 @@ func (s *CrawlerTestSuite) TestCrawlUpdateLastSeen() {
 
 	// File is found, last seen 1 hour
 	s.fileIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
 			lastSeen := time.Now().Add(-2 * time.Hour)
@@ -940,12 +946,17 @@ func (s *CrawlerTestSuite) TestCrawlUpdateLastSeen() {
 		Once()
 
 	s.dirIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.partialIdx.
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
@@ -976,17 +987,22 @@ func (s *CrawlerTestSuite) TestCrawlNotUpdateInvalid() {
 
 	// File is found, last seen 1 hour
 	s.fileIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Once()
 
 	s.dirIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.partialIdx.
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(true, nil).
 		Maybe()
 
@@ -1017,7 +1033,7 @@ func (s *CrawlerTestSuite) TestCrawlAddReference() {
 
 	// File is found, very recently, but a new reference is found.
 	s.fileIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
 			lastSeen := time.Now()
@@ -1033,12 +1049,17 @@ func (s *CrawlerTestSuite) TestCrawlAddReference() {
 		Once()
 
 	s.dirIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.partialIdx.
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
@@ -1086,17 +1107,22 @@ func (s *CrawlerTestSuite) TestCrawlUpdateGetError() {
 	testErr := errors.New("test")
 
 	s.fileIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, testErr).
 		Maybe()
 
 	s.dirIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.partialIdx.
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
@@ -1127,7 +1153,7 @@ func (s *CrawlerTestSuite) TestCrawlUpdateUpdateError() {
 
 	// File is found, very recently, but a new reference is found.
 	s.fileIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
 			lastSeen := time.Now()
@@ -1145,12 +1171,17 @@ func (s *CrawlerTestSuite) TestCrawlUpdateUpdateError() {
 	testErr := errors.New("test")
 
 	s.dirIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.partialIdx.
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
@@ -1197,7 +1228,7 @@ func (s *CrawlerTestSuite) TestCrawlSameReference() {
 
 	// File is found, very recently, but a new reference is found.
 	s.fileIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
 			lastSeen := time.Now()
@@ -1213,12 +1244,17 @@ func (s *CrawlerTestSuite) TestCrawlSameReference() {
 		Once()
 
 	s.dirIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.partialIdx.
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
@@ -1249,7 +1285,7 @@ func (s *CrawlerTestSuite) TestCrawlSameReferenceDifferentName() {
 
 	// File is found, very recently, but a new reference is found.
 	s.fileIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Run(func(args mock.Arguments) {
 			u := args.Get(2).(*indexTypes.Update)
 			lastSeen := time.Now()
@@ -1265,12 +1301,17 @@ func (s *CrawlerTestSuite) TestCrawlSameReferenceDifferentName() {
 		Once()
 
 	s.dirIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
+		Return(false, nil).
+		Maybe()
+
+	s.partialIdx.
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 
 	s.invalidIdx.
-		On("Get", mock.Anything, r.Resource.ID, &indexTypes.Update{}, []string{"references", "last-seen"}).
+		On("Get", mock.Anything, r.Resource.ID, mock.Anything, []string{"references", "last-seen"}).
 		Return(false, nil).
 		Maybe()
 

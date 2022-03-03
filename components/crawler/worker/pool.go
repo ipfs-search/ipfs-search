@@ -76,11 +76,31 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
 	clientConfig := &elasticsearch.ClientConfig{
 		URL:       w.config.ElasticSearch.URL,
-		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 10),
+		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 100),
 		Debug:     false,
+
+		BulkIndexerWorkers:     w.config.ElasticSearch.BulkIndexerWorkers,
+		BulkIndexerFlushBytes:  int(w.config.ElasticSearch.BulkIndexerFlushBytes),
+		BulkGetterBatchSize:    w.config.ElasticSearch.BulkGetterBatchSize,
+		BulkGetterBatchTimeout: w.config.ElasticSearch.BulkGetterBatchTimeout,
 	}
 
 	return elasticsearch.NewClient(clientConfig, w.Instrumentation)
+}
+
+func startSearchWorker(ctx context.Context, esClient *elasticsearch.Client) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			if err := esClient.Work(ctx); err != nil {
+				log.Printf("Error in ES client worker, restarting worker: %s", err)
+				// Prevent overly tight restart loop
+				time.Sleep(time.Second)
+			}
+		}
+	}
 }
 
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
@@ -89,11 +109,8 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 		return nil, err
 	}
 
-	go func() {
-		// Close client when context is closed
-		<-ctx.Done()
-		esClient.Close(ctx)
-	}()
+	// Start ES workers
+	go startSearchWorker(ctx, esClient)
 
 	return &crawler.Indexes{
 		Files: elasticsearch.New(

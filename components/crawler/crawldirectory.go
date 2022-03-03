@@ -3,9 +3,10 @@ package crawler
 import (
 	"context"
 	"errors"
-	"golang.org/x/sync/errgroup"
 	"log"
 	"math/rand"
+
+	"golang.org/x/sync/errgroup"
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
@@ -30,12 +31,31 @@ func (c *Crawler) crawlDir(ctx context.Context, r *t.AnnotatedResource, properti
 
 	wg, ctx := errgroup.WithContext(ctx)
 
+	var panicVar interface{}
+
+	defer func() {
+		// Propagate panic
+		if panicVar != nil {
+			panic(panicVar)
+		}
+	}()
+
 	wg.Go(func() error {
+		defer func() {
+			if r := recover(); r != nil {
+				panicVar = r
+			}
+		}()
 		return c.processDirEntries(ctx, entries, properties)
 	})
 
 	wg.Go(func() error {
 		defer close(entries)
+		defer func() {
+			if r := recover(); r != nil {
+				panicVar = r
+			}
+		}()
 		return c.protocol.Ls(ctx, r, entries)
 	})
 

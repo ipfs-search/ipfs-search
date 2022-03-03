@@ -7,21 +7,26 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/dankinder/httpmock"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
 )
 
 type IndexTestSuite struct {
 	suite.Suite
-	ctx            context.Context
-	instr          *instr.Instrumentation
-	mockAPIHandler *httpmock.MockHandler
-	mockAPIServer  *httpmock.Server
-	mockClient     *Client
-	responseHeader http.Header
+	ctx             context.Context
+	ctxCancel       func()
+	instr           *instr.Instrumentation
+	mockAPIHandler  *httpmock.MockHandler
+	mockAPIServer   *httpmock.Server
+	mockClient      *Client
+	mockAsyncGetter *bulkgetter.Mock
+	responseHeader  http.Header
 }
 
 func (s *IndexTestSuite) expectHelloWorld() {
@@ -52,21 +57,29 @@ func (s *IndexTestSuite) expectHelloWorld() {
 }
 
 func (s *IndexTestSuite) SetupTest() {
-	s.ctx = context.Background()
 	s.instr = instr.New()
+	s.ctx, s.ctxCancel = context.WithCancel(context.Background())
 
 	s.mockAPIHandler = &httpmock.MockHandler{}
 	s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
 	s.responseHeader = http.Header{
 		"Content-Type": []string{"application/json"},
 	}
+
+	s.mockAsyncGetter = &bulkgetter.Mock{}
+
 	config := &ClientConfig{
 		URL:   s.mockAPIServer.URL(),
 		Debug: true,
 	}
 	s.mockClient, _ = NewClient(config, s.instr)
+	s.mockClient.bulkGetter = s.mockAsyncGetter
 
 	s.expectHelloWorld()
+
+	// Start worker
+	s.mockAsyncGetter.On("Work", mock.Anything).Return(nil).Maybe()
+	go s.mockClient.Work(s.ctx)
 }
 
 func (s *IndexTestSuite) TestNewClient() {
@@ -142,8 +155,8 @@ func (s *IndexTestSuite) TestIndex() {
 	s.NoError(err)
 
 	// Ensure flushing
-	err = s.mockClient.Close(s.ctx)
-	s.NoError(err)
+	s.ctxCancel()
+	time.Sleep(100 * time.Millisecond)
 
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
@@ -202,8 +215,8 @@ func (s *IndexTestSuite) TestUpdate() {
 	s.NoError(err)
 
 	// Ensure flushing
-	err = s.mockClient.Close(s.ctx)
-	s.NoError(err)
+	s.ctxCancel()
+	time.Sleep(100 * time.Millisecond)
 
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
@@ -262,8 +275,8 @@ func (s *IndexTestSuite) TestUpdateOmitEmpty() {
 	s.NoError(err)
 
 	// Ensure flushing
-	err = s.mockClient.Close(s.ctx)
-	s.NoError(err)
+	s.ctxCancel()
+	time.Sleep(100 * time.Millisecond)
 
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
@@ -310,8 +323,8 @@ func (s *IndexTestSuite) TestDelete() {
 	s.NoError(err)
 
 	// Ensure flushing
-	err = s.mockClient.Close(s.ctx)
-	s.NoError(err)
+	s.ctxCancel()
+	time.Sleep(100 * time.Millisecond)
 
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
@@ -319,28 +332,6 @@ func (s *IndexTestSuite) TestDelete() {
 func (s *IndexTestSuite) TestGetFound() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
-	testFound := []byte(`{
-		"_index": "test",
-		"_type": "_doc",
-		"_id": "objId",
-		"_version": 1,
-		"_seq_no": 0,
-		"_primary_term": 1,
-		"found": true,
-		"_source": {
-   		"field1": "value",
-   		"field2": 5
-		}
-	}`)
-
-	testURL := "/test/_doc/objId?_source_includes=field1%2Cfield2&preference=_local&realtime=true"
-	s.mockAPIHandler.
-		On("Handle", "GET", testURL, mock.Anything).
-		Return(httpmock.Response{
-			Body: testFound,
-		}).
-		Once()
-
 	type testType struct {
 		Field1 string `json:"field1"`
 		Field2 int    `json:"field2"`
@@ -348,36 +339,23 @@ func (s *IndexTestSuite) TestGetFound() {
 
 	dst := testType{}
 
+	s.mockAsyncGetter.On(
+		"Get",
+		mock.Anything,
+		&bulkgetter.GetRequest{Index: "test", DocumentID: "objId", Fields: []string{"field1", "field2"}},
+		&dst,
+	).Return(bulkgetter.GetResponse{true, nil})
+
 	result, err := idx.Get(s.ctx, "objId", &dst, "field1", "field2")
 	s.NoError(err)
 	s.True(result)
-	s.Equal(dst, testType{
-		Field1: "value",
-		Field2: 5,
-	})
 
-	s.mockAPIHandler.AssertExpectations(s.T())
+	s.mockAsyncGetter.AssertExpectations(s.T())
 }
 
 func (s *IndexTestSuite) TestGetNotFound() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
-	testNotFound := []byte(`{
-		"_index": "ipfs_files",
-		"_type": "_doc",
-		"_id": "objId",
-		"found": false
-	}`)
-
-	testURL := "/test/_doc/objId?_source_includes=field1%2Cfield2&preference=_local&realtime=true"
-	s.mockAPIHandler.
-		On("Handle", "GET", testURL, mock.Anything).
-		Return(httpmock.Response{
-			Body:   testNotFound,
-			Status: 404,
-		}).
-		Once()
-
 	type testType struct {
 		Field1 string `json:"field1"`
 		Field2 int    `json:"field2"`
@@ -385,16 +363,18 @@ func (s *IndexTestSuite) TestGetNotFound() {
 
 	dst := testType{}
 
+	s.mockAsyncGetter.On(
+		"Get",
+		mock.Anything,
+		&bulkgetter.GetRequest{Index: "test", DocumentID: "objId", Fields: []string{"field1", "field2"}},
+		&dst,
+	).Return(bulkgetter.GetResponse{false, nil})
+
 	result, err := idx.Get(s.ctx, "objId", &dst, "field1", "field2")
 	s.NoError(err)
 	s.False(result)
-	s.Equal(dst, testType{})
 
-	s.mockAPIHandler.AssertExpectations(s.T())
-}
-
-func (s *IndexTestSuite) TestClose() {
-
+	s.mockAsyncGetter.AssertExpectations(s.T())
 }
 
 func TestIndexTestSuite(t *testing.T) {
