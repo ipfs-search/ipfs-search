@@ -4,10 +4,12 @@ ipfs:
   partial_size: 256KB
 elasticsearch:
   url: http://localhost:9200
+  index_buffer_size: 5MB
 amqp:
   url: amqp://guest:guest@localhost:5672/
   max_reconnect: 100
   reconnect_time: 2s
+  message_ttl: 4h
 tika:
   url: http://localhost:8081
   timeout: 5m0s
@@ -17,14 +19,14 @@ instrumentation:
   jaeger_endpoint: http://localhost:14268/api/traces
 crawler:
   direntry_buffer_size: 8192
-  min_update_age: 1h0m0s
-  stat_timeout: 1m0s
-  direntry_timeout: 1m0s
+  min_update_age: 1h
+  stat_timeout: 1m
+  direntry_timeout: 1m
   max_dirsize: 32768
 sniffer:
-  lastseen_expiration: 1h0m0s
+  lastseen_expiration: 1h
   lastseen_prunelen: 32768
-  logger_timeout: 1m0s
+  logger_timeout: 1m
   buffer_size: 512
 indexes:
   files:
@@ -33,6 +35,8 @@ indexes:
     name: ipfs_directories
   invalids:
     name: ipfs_invalids
+  partials:
+    name: ipfs_partials
 queues:
   files:
     name: files

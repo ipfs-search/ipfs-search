@@ -4,6 +4,7 @@ ipfs:
   partial_size: 256KB                                 # Size of items considered to be partial (when unreferenced)
 elasticsearch:
   url: http://localhost:9200                          # Also ELASTICSEARCH_URL in env
+  index_buffer_size: 5MB                              # Size of buffer for bulk indexing. Recommended 5-15MB.
 amqp:
   url: amqp://guest:guest@localhost:5672/             # Also AMQP_URL in env.
   max_reconnect: 100                                  # Maximum number of reconnect attempts
