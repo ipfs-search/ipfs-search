@@ -28,6 +28,8 @@ To learn more about downloading and restoring snapshots please refer to the [rel
 * [frontend](https://github.com/ipfs-search/ipfs-search-frontend)
 * [search API](https://github.com/ipfs-search/ipfs-search-api)
 * [deployment](https://github.com/ipfs-search/ipfs-search-deployment)
+* [nsfw-server](https://github.com/ipfs-search/nsfw-server)
+* [ipfs-tika](https://github.com/ipfs-search/ipfs-tika)
 
 ## Contributors wanted
 Building a search engine like this takes a considerable amount of resources (money _and_ TLC).
@@ -38,13 +40,18 @@ Please read the Contributing.md file before contributing.
 ## Roadmap
 For discussing and suggesting features, look at the [issues](https://github.com/ipfs-search/ipfs-search/issues).
 
-## Dependencies
+## External dependencies
 
 * Go 1.16
 * Elasticsearch 7.x
 * RabbitMQ / AMQP server
 * NodeJS 9.x
 * IPFS 0.7
+
+## Internal dependencies
+
+* [nsfw-server](https://github.com/ipfs-search/nsfw-server)
+* [ipfs-tika](https://github.com/ipfs-search/ipfs-tika)
 
 ## Building
 ```bash

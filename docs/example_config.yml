@@ -16,6 +16,10 @@ tika:
   url: http://localhost:8081                          # tika-extractor endpoint URL, also TIKA_EXTRACTOR in environment.
   timeout: 5m                                         # Timeout for requests to tika-extractor.
   max_file_size: 4GB                                  # Don't attempt to extract metadata for resources larger than this.
+nsfw:
+    url: http://localhost:3000                        # URL of nsfw-server.
+    timeout: 5m                                       # Timeout for metadata requests for the server.
+    max_file_size: 1GB                                # Don't attempt to get metadata for files over this size.
 instrumentation:
   sampling_ratio: 0.01                                # Ratio of requests to sample for tracing. OTEL_TRACE_SAMPLER_ARG in env.
   jaeger_endpoint: http://localhost:14268/api/traces  # HTTP jaeger.thrift endpoint for tracing. OTEL_EXPORTER_JAEGER_ENDPOINT in env.

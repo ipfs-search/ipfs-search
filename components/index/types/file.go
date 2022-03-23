@@ -19,4 +19,5 @@ type File struct {
 	Language        Language `json:"language"`
 	Metadata        Metadata `json:"metadata"`
 	URLs            []string `json:"urls"`
+	NSFW            *NSFW    `json:"nfsw,omitempty"`
 }

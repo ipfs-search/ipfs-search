@@ -83,7 +83,7 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 		return err
 	}
 
-	log.Printf("Got metadata metadata for '%v'", r)
+	log.Printf("Got tika metadata metadata for '%v'", r)
 
 	return nil
 }
