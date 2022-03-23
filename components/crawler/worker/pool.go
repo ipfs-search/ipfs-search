@@ -75,9 +75,10 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 
 func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
 	clientConfig := &elasticsearch.ClientConfig{
-		URL:       w.config.ElasticSearch.URL,
-		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 10),
-		Debug:     false,
+		URL:             w.config.ElasticSearch.URL,
+		Transport:       utils.GetHTTPTransport(w.dialer.DialContext, 10),
+		Debug:           false,
+		IndexBufferSize: int(w.config.ElasticSearch.IndexBufferSize),
 	}
 
 	return elasticsearch.NewClient(clientConfig, w.Instrumentation)

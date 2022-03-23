@@ -26,9 +26,10 @@ type Client struct {
 
 // ClientConfig configures search index.
 type ClientConfig struct {
-	URL       string
-	Transport http.RoundTripper
-	Debug     bool
+	URL             string
+	Transport       http.RoundTripper
+	Debug           bool
+	IndexBufferSize int
 }
 
 // NewClient returns a configured search index, or an error.
@@ -100,6 +101,7 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 	iCfg := opensearchutil.BulkIndexerConfig{
 		Client:     client,
 		NumWorkers: 1, // Start conservatively with 1 worker.
+		FlushBytes: cfg.IndexBufferSize,
 		OnFlushStart: func(ctx context.Context) context.Context {
 			newCtx, _ := i.Tracer.Start(ctx, "index.elasticsearch.BulkIndexerFlush")
 			return newCtx
