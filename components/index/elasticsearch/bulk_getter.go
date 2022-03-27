@@ -83,10 +83,10 @@ func getFieldsKey(fields []string) string {
 
 type batch map[string]map[string]map[string]reqresp
 
-func populateBatch(ctx context.Context, queue <-chan reqresp, batchSize int) (batch, error) {
+func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (batch, error) {
 	var b batch
 
-	for i := 0; i < batchSize; i++ {
+	for i := 0; i < bg.config.BatchSize; i++ {
 		log.Println(i)
 
 		select {
@@ -101,15 +101,7 @@ func populateBatch(ctx context.Context, queue <-chan reqresp, batchSize int) (ba
 	return b, nil
 }
 
-// Work starts a worker to process bulk gets.
-func (bg *BatchingGetter) Work(ctx context.Context) error {
-	b, err := populateBatch(ctx, bg.queue, bg.config.BatchSize)
-
-	if err != nil {
-		return err
-	}
-
-	// Populate requests
+func (bg *BatchingGetter) performBatch(ctx context.Context, b batch) error {
 	for fields, indexes := range b {
 		for index, CIDMap := range indexes {
 			// Populate cids and get original fields value
@@ -130,13 +122,13 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 			// Perform search request
 			req := getSearchRequest(index, reqFields, cids)
 			res, err := req.Do(ctx, bg.config.Client)
+
 			if err != nil {
 				// Propagate error responses
 				for _, rr := range b[fields][index] {
 					rr.resp <- GetResponse{false, err}
 				}
-				continue
-				// return err
+				return err
 			}
 			defer res.Body.Close()
 
@@ -163,8 +155,7 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 					for _, rr := range b[fields][index] {
 						rr.resp <- GetResponse{false, err}
 					}
-					continue
-					// return err
+					return err
 				}
 
 				for _, hit := range response.Hits.Hits {
@@ -177,6 +168,7 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 						err = fmt.Errorf("error decoding source: %w", err)
 						// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 						rr.resp <- GetResponse{false, err}
+						return err
 					} else {
 						rr.resp <- GetResponse{true, nil}
 					}
@@ -200,8 +192,18 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 
 		}
 	}
-
 	return nil
+}
+
+// Work starts a worker to process bulk gets.
+func (bg *BatchingGetter) Work(ctx context.Context) error {
+	b, err := bg.populateBatch(ctx, bg.queue)
+
+	if err != nil {
+		return err
+	}
+
+	return bg.performBatch(ctx, b)
 }
 
 func getSearchRequest(index string, fields []string, cids []string) *opensearchapi.SearchRequest {
