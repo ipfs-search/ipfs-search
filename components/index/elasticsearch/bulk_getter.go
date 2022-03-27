@@ -11,8 +11,6 @@ import (
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
 )
 
-// func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
-
 // GetRequest represents an item to GET.
 type GetRequest struct {
 	Index      string
@@ -35,6 +33,51 @@ type AsyncGetter interface {
 type BatchingGetterConfig struct {
 	Client    *opensearch.Client
 	BatchSize int
+}
+
+// BatchingGetter allows batching/bulk gets.
+type BatchingGetter struct {
+	config BatchingGetterConfig
+	queue  chan reqresp
+}
+
+// NewBatchingGetter returns a new BatchingGetter, setting sensible defaults for the configuration.
+func NewBatchingGetter(cfg BatchingGetterConfig) BatchingGetter {
+	if cfg.Client == nil {
+		cfg.Client, _ = opensearch.NewDefaultClient()
+	}
+
+	if cfg.BatchSize == 0 {
+		cfg.BatchSize = 100
+	}
+
+	bg := BatchingGetter{
+		config: cfg,
+		queue:  make(chan reqresp, cfg.BatchSize),
+	}
+
+	return bg
+}
+
+// Get queues a single Get() for a batching get.
+func (bg *BatchingGetter) Get(ctx context.Context, req *GetRequest, dst interface{}) <-chan GetResponse {
+	resp := make(chan GetResponse, 1)
+
+	bg.queue <- reqresp{req, resp, dst}
+
+	return resp
+}
+
+// Work starts a worker to process bulk gets.
+// Note: the worker will terminate on any errors.
+func (bg *BatchingGetter) Work(ctx context.Context) error {
+	b, err := bg.populateBatch(ctx, bg.queue)
+
+	if err != nil {
+		return err
+	}
+
+	return bg.performBatch(ctx, b)
 }
 
 type reqresp struct {
@@ -181,39 +224,6 @@ func (r bulkRequest) performBulkRequest(ctx context.Context, client *opensearch.
 
 type batch map[string]map[string]bulkRequest
 
-// BatchingGetter allows batching/bulk gets.
-type BatchingGetter struct {
-	config BatchingGetterConfig
-	queue  chan reqresp
-}
-
-// NewBatchingGetter returns a new BatchingGetter, setting sensible defaults for the configuration.
-func NewBatchingGetter(cfg BatchingGetterConfig) BatchingGetter {
-	if cfg.Client == nil {
-		cfg.Client, _ = opensearch.NewDefaultClient()
-	}
-
-	if cfg.BatchSize == 0 {
-		cfg.BatchSize = 100
-	}
-
-	bg := BatchingGetter{
-		config: cfg,
-		queue:  make(chan reqresp, cfg.BatchSize),
-	}
-
-	return bg
-}
-
-// Get queues a single Get() for a batching get.
-func (bg *BatchingGetter) Get(ctx context.Context, req *GetRequest, dst interface{}) <-chan GetResponse {
-	resp := make(chan GetResponse, 1)
-
-	bg.queue <- reqresp{req, resp, dst}
-
-	return resp
-}
-
 func getFieldsKey(fields []string) string {
 	return strings.Join(fields, "")
 }
@@ -248,16 +258,4 @@ func (bg *BatchingGetter) performBatch(ctx context.Context, b batch) error {
 	}
 
 	return nil
-}
-
-// Work starts a worker to process bulk gets.
-// Note: the worker will terminate on any errors.
-func (bg *BatchingGetter) Work(ctx context.Context) error {
-	b, err := bg.populateBatch(ctx, bg.queue)
-
-	if err != nil {
-		return err
-	}
-
-	return bg.performBatch(ctx, b)
 }
