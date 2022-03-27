@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"strings"
 
@@ -101,97 +100,87 @@ func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqres
 	return b, nil
 }
 
-func (bg *BatchingGetter) performBatch(ctx context.Context, b batch) error {
-	for fields, indexes := range b {
-		for index, CIDMap := range indexes {
-			// Populate cids and get original fields value
-			var reqFields []string
+func (bg *BatchingGetter) performRequest(ctx context.Context, reqMap map[string]reqresp) error {
+	// Perform search request
+	req := getSearchRequest(reqMap)
+	res, err := req.Do(ctx, bg.config.Client)
 
-			cids := make([]string, len(CIDMap))
-			i := 0
-			for cid, rr := range CIDMap {
-				cids[i] = cid
+	if err != nil {
+		// Propagate error responses
+		for _, rr := range reqMap {
+			rr.resp <- GetResponse{false, err}
+		}
+		return err
+	}
+	defer res.Body.Close()
 
-				if i == 0 {
-					reqFields = rr.req.Fields
-				}
+	switch res.StatusCode {
+	case 200:
+		// Found
 
-				i++
+		type hit struct {
+			Index      string          `json:"_index"`
+			DocumentID string          `json:"_id`
+			Source     json.RawMessage `json:"_source"`
+		}
+
+		response := struct {
+			Hits struct {
+				Hits []hit `json:"hits"`
+			} `json:"hits"`
+		}{}
+
+		if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+			err = fmt.Errorf("error decoding body: %w", err)
+			// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			// Propagate error responses
+			for _, rr := range reqMap {
+				rr.resp <- GetResponse{false, err}
 			}
+			return err
+		}
 
-			// Perform search request
-			req := getSearchRequest(index, reqFields, cids)
-			res, err := req.Do(ctx, bg.config.Client)
+		for _, hit := range response.Hits.Hits {
+			// Write destination data and response for hits
+			rr := reqMap[hit.DocumentID]
 
+			// Decode source into destination
+			err = json.Unmarshal(hit.Source, rr.dst)
 			if err != nil {
-				// Propagate error responses
-				for _, rr := range b[fields][index] {
-					rr.resp <- GetResponse{false, err}
-				}
+				err = fmt.Errorf("error decoding source: %w", err)
+				// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+				rr.resp <- GetResponse{false, err}
 				return err
 			}
-			defer res.Body.Close()
+			rr.resp <- GetResponse{true, nil}
 
-			switch res.StatusCode {
-			case 200:
-				// Found
+			// Remove from map to separate found from not found
+			delete(reqMap, hit.DocumentID)
+		}
 
-				type hit struct {
-					Index      string          `json:"_index"`
-					DocumentID string          `json:"_id`
-					Source     json.RawMessage `json:"_source"`
-				}
+	case 404:
+		// None found, effectively mark all documents as not found.
 
-				response := struct {
-					Hits struct {
-						Hits []hit `json:"hits"`
-					} `json:"hits"`
-				}{}
+	default:
+		// return err
+		panic("unexpected status from search")
+	}
 
-				if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-					err = fmt.Errorf("error decoding body: %w", err)
-					// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-					// Propagate error responses
-					for _, rr := range b[fields][index] {
-						rr.resp <- GetResponse{false, err}
-					}
-					return err
-				}
+	// Mark remaining documents as not found
+	for _, rr := range reqMap {
+		rr.resp <- GetResponse{false, nil}
+	}
 
-				for _, hit := range response.Hits.Hits {
-					// Write destination data and response for hits
-					rr := b[fields][index][hit.DocumentID]
+	return nil
+}
 
-					// Decode source into destination
-					err = json.Unmarshal(hit.Source, rr.dst)
-					if err != nil {
-						err = fmt.Errorf("error decoding source: %w", err)
-						// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-						rr.resp <- GetResponse{false, err}
-						return err
-					} else {
-						rr.resp <- GetResponse{true, nil}
-					}
-
-					// Remove from map to separate found from not found
-					delete(b[fields][index], hit.DocumentID)
-				}
-
-			case 404:
-				// None found, effectively mark all documents as not found.
-
-			default:
-				// return err
-				panic("unexpected status from search")
-			}
-
-			// Mark remaining documents as not found
-			for _, rr := range b[fields][index] {
-				rr.resp <- GetResponse{false, nil}
-			}
-
+func (bg *BatchingGetter) performBatch(ctx context.Context, b batch) error {
+	for _, indexes := range b {
+		for _, requestMap := range indexes {
+			bg.performRequest(ctx, requestMap)
 		}
 	}
+
 	return nil
 }
 
@@ -206,19 +195,40 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 	return bg.performBatch(ctx, b)
 }
 
-func getSearchRequest(index string, fields []string, cids []string) *opensearchapi.SearchRequest {
+func getSearchRequest(reqMap map[string]reqresp) *opensearchapi.SearchRequest {
+	// Populate cids and get original fields value
+	var (
+		fields, index []string
+		i             int
+	)
+
+	ids := make([]string, len(reqMap))
+
+	for id, rr := range reqMap {
+		ids[i] = id
+
+		if i == 0 {
+			fields = rr.req.Fields
+			index = []string{rr.req.Index}
+		}
+
+		i++
+	}
+
+	body := getReqBody(ids)
+
 	req := opensearchapi.SearchRequest{
-		Index:          []string{index},
+		Index:          index,
 		SourceIncludes: fields,
-		Body:           getSearchRequestBody(cids),
+		Body:           strings.NewReader(body),
 		// Preference:     "_local",
 	}
 
 	return &req
 }
 
-func getSearchRequestBody(ids []string) io.Reader {
-	q := `
+func getReqBody(ids []string) string {
+	return `
 	{
 		"query": {
 			"id": {
@@ -227,8 +237,4 @@ func getSearchRequestBody(ids []string) io.Reader {
 		}
 	}
 	`
-
-	r := strings.NewReader(q)
-
-	return r
 }
