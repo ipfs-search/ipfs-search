@@ -81,25 +81,36 @@ func getFieldsKey(fields []string) string {
 	return strings.Join(fields, "")
 }
 
-// Work starts a worker to process bulk gets.
-func (bg *BatchingGetter) Work(ctx context.Context) error {
-	var batch map[string]map[string]map[string]reqresp
+type batch map[string]map[string]map[string]reqresp
 
-	// Populate batch
-	for i := 0; i < bg.config.BatchSize; i++ {
+func populateBatch(ctx context.Context, queue <-chan reqresp, batchSize int) (batch, error) {
+	var b batch
+
+	for i := 0; i < batchSize; i++ {
 		log.Println(i)
 
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
-		case rr := <-bg.queue:
+			return nil, ctx.Err()
+		case rr := <-queue:
 			// Add batch.Add(fields, index, documentid)
-			batch[getFieldsKey(rr.req.Fields)][rr.req.Index][rr.req.DocumentID] = rr
+			b[getFieldsKey(rr.req.Fields)][rr.req.Index][rr.req.DocumentID] = rr
 		}
 	}
 
+	return b, nil
+}
+
+// Work starts a worker to process bulk gets.
+func (bg *BatchingGetter) Work(ctx context.Context) error {
+	b, err := populateBatch(ctx, bg.queue, bg.config.BatchSize)
+
+	if err != nil {
+		return err
+	}
+
 	// Populate requests
-	for fields, indexes := range batch {
+	for fields, indexes := range b {
 		for index, CIDMap := range indexes {
 			// Populate cids and get original fields value
 			var reqFields []string
@@ -121,7 +132,7 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 			res, err := req.Do(ctx, bg.config.Client)
 			if err != nil {
 				// Propagate error responses
-				for _, rr := range batch[fields][index] {
+				for _, rr := range b[fields][index] {
 					rr.resp <- GetResponse{false, err}
 				}
 				continue
@@ -149,7 +160,7 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 					err = fmt.Errorf("error decoding body: %w", err)
 					// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 					// Propagate error responses
-					for _, rr := range batch[fields][index] {
+					for _, rr := range b[fields][index] {
 						rr.resp <- GetResponse{false, err}
 					}
 					continue
@@ -158,7 +169,7 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 
 				for _, hit := range response.Hits.Hits {
 					// Write destination data and response for hits
-					rr := batch[fields][index][hit.DocumentID]
+					rr := b[fields][index][hit.DocumentID]
 
 					// Decode source into destination
 					err = json.Unmarshal(hit.Source, rr.dst)
@@ -171,7 +182,7 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 					}
 
 					// Remove from map to separate found from not found
-					delete(batch[fields][index], hit.DocumentID)
+					delete(b[fields][index], hit.DocumentID)
 				}
 
 			case 404:
@@ -183,7 +194,7 @@ func (bg *BatchingGetter) Work(ctx context.Context) error {
 			}
 
 			// Mark remaining documents as not found
-			for _, rr := range batch[fields][index] {
+			for _, rr := range b[fields][index] {
 				rr.resp <- GetResponse{false, nil}
 			}
 
