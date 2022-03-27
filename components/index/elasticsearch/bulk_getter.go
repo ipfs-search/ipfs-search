@@ -48,7 +48,16 @@ type bulkRequest map[string]reqresp
 func (r bulkRequest) bulkResponse(found bool, err error) {
 	for _, rr := range r {
 		rr.resp <- GetResponse{found, err}
+		close(rr.resp)
+		// Note that this does not do delete() as it should become irrelevant/unnecessary here.
 	}
+}
+
+func (r bulkRequest) sendResponse(id string, found bool, err error) {
+	rr := r[id]
+	rr.resp <- GetResponse{found, err}
+	close(rr.resp)
+	delete(r, id) // Is delete the best way to do this, or setting to nil?
 }
 
 func (r bulkRequest) getSearchRequest() *opensearchapi.SearchRequest {
@@ -95,55 +104,60 @@ func getReqBody(ids []string) string {
 	`
 }
 
+type hit struct {
+	Index      string          `json:"_index"`
+	DocumentID string          `json:"_id`
+	Source     json.RawMessage `json:"_source"`
+}
+
+func decodeResponse(res *opensearchapi.Response) ([]hit, error) {
+	response := struct {
+		Hits struct {
+			Hits []hit `json:"hits"`
+		} `json:"hits"`
+	}{}
+
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return nil, err
+	}
+
+	return response.Hits.Hits, nil
+}
+
 func (r bulkRequest) processResponse(res *opensearchapi.Response) error {
 	switch res.StatusCode {
 	case 200:
 		// Found
 
-		type hit struct {
-			Index      string          `json:"_index"`
-			DocumentID string          `json:"_id`
-			Source     json.RawMessage `json:"_source"`
-		}
-
-		response := struct {
-			Hits struct {
-				Hits []hit `json:"hits"`
-			} `json:"hits"`
-		}{}
-
-		if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-			err = fmt.Errorf("error decoding body: %w", err)
-			// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		hits, err := decodeResponse(res)
+		if err != nil {
 			r.bulkResponse(false, err)
-			return err
+			return fmt.Errorf("error decoding body: %w", err)
 		}
 
-		for _, hit := range response.Hits.Hits {
-			// Write destination data and response for hits
-			rr := r[hit.DocumentID]
+		for _, h := range hits {
+			id := h.DocumentID
 
-			// Decode source into destination
-			err := json.Unmarshal(hit.Source, rr.dst)
-			if err != nil {
+			if err := json.Unmarshal(h.Source, r[id].dst); err != nil {
 				err = fmt.Errorf("error decoding source: %w", err)
-				// span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-				r.bulkResponse(false, err)
+				r.sendResponse(id, false, err)
+
 				return err
 			}
-			rr.resp <- GetResponse{true, nil}
 
-			// Remove from map to separate found from not found
-			delete(r, hit.DocumentID)
+			// Note: this removes items from bulkRequest, so that a bulk 404 works.
+			r.sendResponse(id, true, nil)
 		}
 
 	case 404:
-		// None found, effectively mark all documents as not found.
+		// None found, pass so below w can mark all remaining documents as not found.
 
 	default:
 		// return err
 		panic("unexpected status from search")
 	}
+
+	r.bulkResponse(false, nil)
 
 	return nil
 }
@@ -161,8 +175,6 @@ func (r bulkRequest) performBulkRequest(ctx context.Context, client *opensearch.
 	if err = r.processResponse(res); err != nil {
 		return err
 	}
-
-	r.bulkResponse(false, nil)
 
 	return nil
 }
