@@ -49,7 +49,7 @@ func (bg *BatchingGetter) StartWorker(ctx context.Context) error {
 		return err
 	}
 
-	return bg.performBatch(ctx, b)
+	return b.execute(ctx, bg.config.Client)
 }
 
 func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (batch, error) {
@@ -69,20 +69,6 @@ func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqres
 	}
 
 	return b, nil
-}
-
-func (bg *BatchingGetter) performBatch(ctx context.Context, b batch) error {
-	for _, indexes := range b {
-		for _, r := range indexes {
-			err := r.performBulkRequest(ctx, bg.config.Client)
-			if err != nil {
-				// Note: this will terminate batch on errors in any requests.
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 // Compile-time assurance that implementation satisfies interface.
