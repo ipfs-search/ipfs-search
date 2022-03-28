@@ -14,7 +14,7 @@ func getKey(rr reqresp) string {
 }
 
 func (b batch) add(rr reqresp) {
-	b[getKey(rr)][rr.req.DocumentID] = rr
+	b[getKey(rr)].add(rr)
 }
 
 func (b batch) execute(ctx context.Context, client *opensearch.Client) error {

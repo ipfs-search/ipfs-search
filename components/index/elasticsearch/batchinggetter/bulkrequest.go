@@ -20,6 +20,10 @@ func (r bulkRequest) bulkResponse(found bool, err error) {
 	}
 }
 
+func (r bulkRequest) add(rr reqresp) {
+	r[rr.req.DocumentID] = rr
+}
+
 func (r bulkRequest) sendResponse(id string, found bool, err error) {
 	rr := r[id]
 	rr.resp <- GetResponse{found, err}
