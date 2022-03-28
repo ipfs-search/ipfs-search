@@ -3,7 +3,6 @@ package batchinggetter
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/opensearch-project/opensearch-go"
@@ -53,18 +52,6 @@ func (bg *BatchingGetter) StartWorker(ctx context.Context) error {
 	return bg.performBatch(ctx, b)
 }
 
-type reqresp struct {
-	req  *GetRequest
-	resp chan GetResponse
-	dst  interface{}
-}
-
-type batch map[string]map[string]bulkRequest
-
-func getFieldsKey(fields []string) string {
-	return strings.Join(fields, "")
-}
-
 func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (batch, error) {
 	var b batch
 
@@ -77,8 +64,7 @@ func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqres
 		case <-time.After(bg.config.BatchTimeout):
 			return b, nil
 		case rr := <-queue:
-			// Add batch.Add(fields, index, documentid)
-			b[getFieldsKey(rr.req.Fields)][rr.req.Index][rr.req.DocumentID] = rr
+			b.add(rr)
 		}
 	}
 
