@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/opensearch-project/opensearch-go"
 )
@@ -73,6 +74,8 @@ func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqres
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
+		case <-time.After(bg.config.BatchTimeout):
+			return b, nil
 		case rr := <-queue:
 			// Add batch.Add(fields, index, documentid)
 			b[getFieldsKey(rr.req.Fields)][rr.req.Index][rr.req.DocumentID] = rr
