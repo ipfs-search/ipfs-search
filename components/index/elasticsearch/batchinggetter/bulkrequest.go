@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/opensearch-project/opensearch-go"
@@ -12,7 +13,13 @@ import (
 
 type bulkRequest map[string]reqresp
 
+func newBulkRequest() bulkRequest {
+	return make(bulkRequest)
+}
+
 func (r bulkRequest) bulkResponse(found bool, err error) {
+	log.Printf("Sending bulk response")
+
 	for _, rr := range r {
 		rr.resp <- GetResponse{found, err}
 		close(rr.resp)
@@ -25,6 +32,8 @@ func (r bulkRequest) add(rr reqresp) {
 }
 
 func (r bulkRequest) sendResponse(id string, found bool, err error) {
+	log.Printf("Sending response for %s", id)
+
 	rr := r[id]
 	rr.resp <- GetResponse{found, err}
 	close(rr.resp)
@@ -77,7 +86,7 @@ func getReqBody(ids []string) string {
 
 type hit struct {
 	Index      string          `json:"_index"`
-	DocumentID string          `json:"_id`
+	DocumentID string          `json:"_id"`
 	Source     json.RawMessage `json:"_source"`
 }
 

@@ -43,6 +43,16 @@ func (bg *BatchingGetter) Get(ctx context.Context, req *GetRequest, dst interfac
 
 // StartWorker starts a single worker processing batched Get() requests. It will terminate on errors.
 func (bg *BatchingGetter) StartWorker(ctx context.Context) error {
+	var err error
+
+	for err != nil {
+		err = bg.processBatch(ctx)
+	}
+
+	return err
+}
+
+func (bg *BatchingGetter) processBatch(ctx context.Context) error {
 	b, err := bg.populateBatch(ctx, bg.queue)
 
 	if err != nil {
@@ -53,7 +63,7 @@ func (bg *BatchingGetter) StartWorker(ctx context.Context) error {
 }
 
 func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (batch, error) {
-	var b batch
+	b := newBatch()
 
 	for i := 0; i < bg.config.BatchSize; i++ {
 		log.Println(i)

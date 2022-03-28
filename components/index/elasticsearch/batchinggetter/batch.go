@@ -13,7 +13,15 @@ func getKey(rr reqresp) string {
 	return strings.Join(rr.req.Fields, "") + rr.req.Index
 }
 
+func newBatch() batch {
+	return make(batch)
+}
+
 func (b batch) add(rr reqresp) {
+	if b[getKey(rr)] == nil {
+		b[getKey(rr)] = newBulkRequest()
+	}
+
 	b[getKey(rr)].add(rr)
 }
 
