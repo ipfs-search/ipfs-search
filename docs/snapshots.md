@@ -1,46 +1,64 @@
 # Snapshots
-ipfs-search makes daily [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html) of the indexed data.
+ipfs-search makes daily [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/7.12/snapshot-restore.html) of the indexed data.
 
-We are currently experimenting with automated publishing of these daily snapshots over IPFS. This should allow anyone to inspect our index and/or to fork or mirror our service.
-As of the time of writing (April 5, 2020) the full index is about 425 GB.
+We are working towards sharing our index snapshots over IPFS through [Filebase](filebase.com). Until that time, our index snapshots are publicly available over S3/HTTPS and can be loaded directly into an Elasticsearch or OpenSearch cluster with sufficient disk space.
 
-## Cluster
-We are running an [ipfs-cluster](https://cluster.ipfs.io/), automating the process of pinning the latest updates. The easiest way to do this, is throuhg [ipfs-cluster-follow](https://cluster.ipfs.io/documentation/collaborative/joining/):
-
-1. [Run a local IPFS Node](https://docs.ipfs.io/how-to/command-line-quick-start/).
-2. [Download](https://dist.ipfs.io/#ipfs-cluster-follow) for your platform and extract the archive.
-3. Run: `ipfs-cluster-follow ipfs-search run --init cluster.ipfs-search.com`
-
-Now `ipfs-cluster-follow` should download the cluster configuration, connect to other nodes and start pinning the latest snapshot, automatically updating every night.
-
-## Manual pinning
-The daily snapshots, for now, are published to: https://gateway.ipfs.io/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi
-
-To pin the snapshots:
-`ipfs pin add /ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi`
-
-To automatically resume the pinning when interrupted you can use the following command:
-```
-while [ 1 ]; do ipfs pin add --progress /ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi; sleep 60; done
-```
+As of the time of writing (April 4, 2022) the full index is about 20 TB.
 
 ## Restoring
-It should be possible to load the snapshots directly through a (local) IPFS gateway into Elasticsearch, although this has not yet been tested and it is most certainly advisable to pin the dataset as per the instructions above.
+Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-read-only-repository.html) into a Elasticsearch 7 (or later) or OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v8.s3.filebase.com/
 
-In order to load the snapshots, first make sure you're running a compatible (or equal) version of Elasticsearch and that there is enough disk space available (twice the current size of the index, so ~ 1TB as of the time of writing).
+### Steps
+1. Ensure that an Elasticsearch 7+/OpenSearch cluster with sufficient disk space is available at `localhost:9200`.
+2. Add our repository URL to the `repositories.url.allowed_urls` setting in `elasticsearch.yml`:
+   ```
+   allowed_urls: ["https://ipfs-search-snapshots-v8.s3.filebase.com/*"]
+   ```
+3. Restart your cluster for the config changes to take affect.
+4. Configure our snapshot repo as a read-only URL repository:
+   ```
+   curl -X PUT "localhost:9200/_snapshot/ipfs_search?pretty" -H 'Content-Type: application/json' -d'
+   {
+     "type": "url",
+     "settings": {
+       "url": "https://ipfs-search-snapshots-v8.s3.filebase.com/"
+     }
+   }
+   '
+   ```
+5. List available snapshots:
+   ```
+   curl -X GET "localhost:9200/_snapshot/ipfs_search/_all?pretty"
+   ```
 
-The steps are as follows:
+   Reference: https://www.elastic.co/guide/en/elasticsearch/reference/7.12/get-snapshot-repo-api.html
 
-1. [Run an IPFS Node](https://docs.ipfs.io/introduction/usage/)
-2. Pin the index snapshot (as per instructions above)
-3. [Run Elasticsearch 5.x](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/install-elasticsearch.html)
-4. Register the local IPFS gateway as a [readonly Elasticsearch snapshot repository](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_read_only_url_repository) through the URL `http://localhost:8080/ipns/12D3KooWKDDboo2aQzFxpHB7BXUUXudMr81ccC4d28eQPAfrgWQi/backup/` (assuming your local IPFS gateway is running on `localhost:8080`)
-5. List available snapshots with `curl -X GET "localhost:9200/_snapshot/<repo_name>/_all?pretty"
-`, testing your prior configuration
-6. [Restore the snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html#_restore) of your choice: `curl -X POST "localhost:9200/_snapshot/<repo_name>/<snapshot_id>/_restore?pretty"
-`
-7. Wait... now...
-8. Query away! You now run an exact copy of the ipfs-search.com index!
+6. Pick a *succesful* snapshot (substitute `<snapshot_id>` from the available snapshots above) from the list and start restoring it:
+   ```
+   curl -X POST "localhost:9200/_snapshot/ipfs_search/<snapshot_id>/_restore?pretty"
+   ```
+   **WARNING**: This initiates a large transfer and will take a considerable amount of time! Make sure you have a fast & reliable connection!
 
-## Snapshot data license
-[CC-BY-SA 4.0](https://github.com/idleberg/Creative-Commons-Markdown/blob/master/4.0/by-sa.markdown)
+   Reference: https://www.elastic.co/guide/en/elasticsearch/reference/7.12/snapshots-restore-snapshot.html
+
+7. Track progress of running snapshot restore task:
+   ```
+   curl "localhost:9200/_recovery/"
+   ```
+
+Once recovered, you should have *all* of our data available. As long as you don't make updates, future restores should be incremental and, hence, a lot faster.
+
+## License
+The ipfs-search.com index snapshots are available under the Open Database License, which can be found on: http://opendatacommons.org/licenses/odbl/1.0/.
+
+In short, you are free:
+
+* To share: To copy, distribute and use the database.
+* To create: To produce works from the database.
+* To adapt: To modify, transform and build upon the database.
+
+As long as you:
+
+* Attribute: You must attribute any public use of the database, or works produced from the database, in the manner specified in the ODbL. For any use or redistribution of the database, or works produced from it, you must make clear to others the license of the database and keep intact any notices on the original database.
+* Share-Alike: If you publicly use any adapted version of this database, or works produced from an adapted database, you must also offer that adapted database under the ODbL.
+* Keep open: If you redistribute the database, or an adapted version of it, then you may use technological measures that restrict the work (such as DRM) as long as you also redistribute a version without such measures.
