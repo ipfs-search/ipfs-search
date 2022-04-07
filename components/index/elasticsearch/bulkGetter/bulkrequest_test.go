@@ -2,7 +2,7 @@ package bulkgetter
 
 import (
 	"context"
-	"io"
+	"encoding/json"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -20,7 +20,7 @@ type BulkRequestTestSuite struct {
 	rChan1 chan GetResponse
 	dst1   struct {
 		Field1 string `json:"a1"`
-		Field2 string `json:"a2"`
+		Field2 int    `json:"a2"`
 	}
 	reqresp1 reqresp
 
@@ -39,7 +39,7 @@ func (s *BulkRequestTestSuite) SetupTest() {
 		DocumentID: "5",
 	}
 	s.rChan1 = make(chan GetResponse, 1)
-	s.reqresp1 = reqresp{s.req1, s.rChan1, s.dst1}
+	s.reqresp1 = reqresp{s.req1, s.rChan1, &s.dst1}
 
 	s.req2 = &GetRequest{
 		Index:      "test",
@@ -47,7 +47,7 @@ func (s *BulkRequestTestSuite) SetupTest() {
 		DocumentID: "7",
 	}
 	s.rChan2 = make(chan GetResponse, 1)
-	s.reqresp2 = reqresp{s.req2, s.rChan2, s.dst2}
+	s.reqresp2 = reqresp{s.req2, s.rChan2, &s.dst2}
 }
 
 func (s *BulkRequestTestSuite) TestGetSearchRequest() {
@@ -56,21 +56,23 @@ func (s *BulkRequestTestSuite) TestGetSearchRequest() {
 	br.add(s.reqresp2)
 
 	sr := br.getSearchRequest()
-	s.Equal(sr.Index, "test1")
-	s.Equal(sr.SourceIncludes, []string{"a1", "a2"})
+	s.Equal([]string{"test"}, sr.Index)
+	s.Equal([]string{"a1", "a2"}, sr.SourceIncludes)
 
-	body := new(strings.Builder)
-	io.Copy(body, sr.Body)
-
-	s.JSONEq(`
-	{
-	  "query": {
-	    "ids" : {
-	      "values" : ["5", "7"]
-	    }
-	  }
+	var res struct {
+		Query struct {
+			Ids struct {
+				Values []string
+			}
+		}
 	}
-	`, body.String())
+
+	err := json.NewDecoder(sr.Body).Decode(&res)
+	s.NoError(err)
+
+	values := res.Query.Ids.Values
+	s.Contains(values, "5")
+	s.Contains(values, "7")
 }
 
 func (s *BulkRequestTestSuite) TestProcessResponseFound() {
