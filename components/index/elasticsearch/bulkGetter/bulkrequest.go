@@ -1,4 +1,4 @@
-package batchinggetter
+package bulkgetter
 
 import (
 	"context"

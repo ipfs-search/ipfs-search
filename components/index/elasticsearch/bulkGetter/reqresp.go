@@ -1,4 +1,4 @@
-package batchinggetter
+package bulkgetter
 
 type reqresp struct {
 	req  *GetRequest
