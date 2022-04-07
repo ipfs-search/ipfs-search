@@ -130,7 +130,7 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 		OnError: func(ctx context.Context, err error) {
 			span := trace.SpanFromContext(ctx)
 			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			log.Printf("Error flushing index buffer: %v", err)
+			log.Printf("Error flushing index buffer: %s", err)
 		},
 		OnFlushEnd: func(ctx context.Context) {
 			span := trace.SpanFromContext(ctx)
