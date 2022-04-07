@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type BatchingGetterTestSuite struct {
+type BulkGetterSuite struct {
 	suite.Suite
 	ctx context.Context
 	cfg Config
-	bg  *BatchingGetter
+	bg  *BulkGetter
 
 	// Mock search
 	mockAPIHandler *httpmock.MockHandler
@@ -24,7 +24,7 @@ type BatchingGetterTestSuite struct {
 	responseHeader http.Header
 }
 
-func (s *BatchingGetterTestSuite) expectHelloWorld() {
+func (s *BulkGetterSuite) expectHelloWorld() {
 	testJSON := []byte(`{
 	  "name" : "0fc08b13cdab",
 	  "cluster_name" : "docker-cluster",
@@ -51,7 +51,7 @@ func (s *BatchingGetterTestSuite) expectHelloWorld() {
 
 }
 
-func (s *BatchingGetterTestSuite) SetupTest() {
+func (s *BulkGetterSuite) SetupTest() {
 	s.ctx = context.Background()
 
 	// Setup mock search API
@@ -75,7 +75,7 @@ func (s *BatchingGetterTestSuite) SetupTest() {
 	s.bg = New(s.cfg)
 }
 
-func (s *BatchingGetterTestSuite) TestGet() {
+func (s *BulkGetterSuite) TestGet() {
 	req := GetRequest{}
 	dst := struct{}{}
 	resp := s.bg.Get(s.ctx, &req, &dst)
@@ -83,7 +83,7 @@ func (s *BatchingGetterTestSuite) TestGet() {
 	s.Empty(resp)
 }
 
-func (s *BatchingGetterTestSuite) TestProcessBatchContextCancel() {
+func (s *BulkGetterSuite) TestProcessBatchContextCancel() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	cancel()
 
@@ -91,7 +91,7 @@ func (s *BatchingGetterTestSuite) TestProcessBatchContextCancel() {
 	s.ErrorIs(err, context.Canceled)
 }
 
-func (s *BatchingGetterTestSuite) TestProcessBatchTimeout() {
+func (s *BulkGetterSuite) TestProcessBatchTimeout() {
 	t := time.Now()
 
 	err := s.bg.processBatch(s.ctx)
@@ -100,7 +100,7 @@ func (s *BatchingGetterTestSuite) TestProcessBatchTimeout() {
 	s.True(time.Now().After(t.Add(s.cfg.BatchTimeout)))
 }
 
-func (s *BatchingGetterTestSuite) TestPopulateBatch() {
+func (s *BulkGetterSuite) TestPopulateBatch() {
 	var dst interface{}
 	queue := make(chan reqresp, 4)
 	rChan := make(chan GetResponse, 1)
@@ -152,7 +152,7 @@ func (s *BatchingGetterTestSuite) TestPopulateBatch() {
 }
 
 // TestProcessBatch is an integration test.
-func (s *BatchingGetterTestSuite) TestProcessBatch() {
+func (s *BulkGetterSuite) TestProcessBatch() {
 	testFound := []byte(`{
 	  "took": 3,
 	  "timed_out": false,
@@ -234,6 +234,6 @@ func (s *BatchingGetterTestSuite) TestProcessBatch() {
 	s.Empty(dst2)
 }
 
-func TestBatchingGetterTestSuite(t *testing.T) {
-	suite.Run(t, new(BatchingGetterTestSuite))
+func TestBulkGetterSuite(t *testing.T) {
+	suite.Run(t, new(BulkGetterSuite))
 }

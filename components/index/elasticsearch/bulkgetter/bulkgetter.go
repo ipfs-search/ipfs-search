@@ -8,14 +8,14 @@ import (
 	"github.com/opensearch-project/opensearch-go"
 )
 
-// BatchingGetter allows batching/bulk gets.
-type BatchingGetter struct {
+// BulkGetter allows batching/bulk gets.
+type BulkGetter struct {
 	config Config
 	queue  chan reqresp
 }
 
-// New returns a new BatchingGetter, setting sensible defaults for the configuration.
-func New(cfg Config) *BatchingGetter {
+// New returns a new BulkGetter, setting sensible defaults for the configuration.
+func New(cfg Config) *BulkGetter {
 	if cfg.Client == nil {
 		cfg.Client, _ = opensearch.NewDefaultClient()
 	}
@@ -24,7 +24,7 @@ func New(cfg Config) *BatchingGetter {
 		cfg.BatchSize = 100
 	}
 
-	bg := BatchingGetter{
+	bg := BulkGetter{
 		config: cfg,
 		queue:  make(chan reqresp, cfg.BatchSize),
 	}
@@ -33,7 +33,7 @@ func New(cfg Config) *BatchingGetter {
 }
 
 // Get queues a single Get() for a batching get.
-func (bg *BatchingGetter) Get(ctx context.Context, req *GetRequest, dst interface{}) <-chan GetResponse {
+func (bg *BulkGetter) Get(ctx context.Context, req *GetRequest, dst interface{}) <-chan GetResponse {
 	resp := make(chan GetResponse, 1)
 
 	bg.queue <- reqresp{req, resp, dst}
@@ -42,7 +42,7 @@ func (bg *BatchingGetter) Get(ctx context.Context, req *GetRequest, dst interfac
 }
 
 // StartWorker starts a single worker processing batched Get() requests. It will terminate on errors.
-func (bg *BatchingGetter) StartWorker(ctx context.Context) error {
+func (bg *BulkGetter) StartWorker(ctx context.Context) error {
 	var err error
 
 	for err != nil {
@@ -52,7 +52,7 @@ func (bg *BatchingGetter) StartWorker(ctx context.Context) error {
 	return err
 }
 
-func (bg *BatchingGetter) processBatch(ctx context.Context) error {
+func (bg *BulkGetter) processBatch(ctx context.Context) error {
 	b, err := bg.populateBatch(ctx, bg.queue)
 
 	if err != nil {
@@ -62,7 +62,7 @@ func (bg *BatchingGetter) processBatch(ctx context.Context) error {
 	return b.execute(ctx, bg.config.Client)
 }
 
-func (bg *BatchingGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (batch, error) {
+func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (batch, error) {
 	b := newBatch()
 
 	for i := 0; i < bg.config.BatchSize; i++ {
