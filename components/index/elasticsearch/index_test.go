@@ -23,7 +23,7 @@ type IndexTestSuite struct {
 	mockAPIHandler  *httpmock.MockHandler
 	mockAPIServer   *httpmock.Server
 	mockClient      *Client
-	mockAsyncGetter bulkgetter.AsyncGetter
+	mockAsyncGetter *bulkgetter.Mock
 	responseHeader  http.Header
 }
 
@@ -329,28 +329,6 @@ func (s *IndexTestSuite) TestDelete() {
 func (s *IndexTestSuite) TestGetFound() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
-	testFound := []byte(`{
-		"_index": "test",
-		"_type": "_doc",
-		"_id": "objId",
-		"_version": 1,
-		"_seq_no": 0,
-		"_primary_term": 1,
-		"found": true,
-		"_source": {
-   		"field1": "value",
-   		"field2": 5
-		}
-	}`)
-
-	testURL := "/test/_doc/objId?_source_includes=field1%2Cfield2&preference=_local&realtime=true"
-	s.mockAPIHandler.
-		On("Handle", "GET", testURL, mock.Anything).
-		Return(httpmock.Response{
-			Body: testFound,
-		}).
-		Once()
-
 	type testType struct {
 		Field1 string `json:"field1"`
 		Field2 int    `json:"field2"`
@@ -358,36 +336,23 @@ func (s *IndexTestSuite) TestGetFound() {
 
 	dst := testType{}
 
+	s.mockAsyncGetter.On(
+		"Get",
+		mock.Anything,
+		&bulkgetter.GetRequest{Index: "test", DocumentID: "objId", Fields: []string{"field1", "field2"}},
+		&dst,
+	).Return(bulkgetter.GetResponse{true, nil})
+
 	result, err := idx.Get(s.ctx, "objId", &dst, "field1", "field2")
 	s.NoError(err)
 	s.True(result)
-	s.Equal(dst, testType{
-		Field1: "value",
-		Field2: 5,
-	})
 
-	s.mockAPIHandler.AssertExpectations(s.T())
+	s.mockAsyncGetter.AssertExpectations(s.T())
 }
 
 func (s *IndexTestSuite) TestGetNotFound() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
-	testNotFound := []byte(`{
-		"_index": "ipfs_files",
-		"_type": "_doc",
-		"_id": "objId",
-		"found": false
-	}`)
-
-	testURL := "/test/_doc/objId?_source_includes=field1%2Cfield2&preference=_local&realtime=true"
-	s.mockAPIHandler.
-		On("Handle", "GET", testURL, mock.Anything).
-		Return(httpmock.Response{
-			Body:   testNotFound,
-			Status: 404,
-		}).
-		Once()
-
 	type testType struct {
 		Field1 string `json:"field1"`
 		Field2 int    `json:"field2"`
@@ -395,12 +360,18 @@ func (s *IndexTestSuite) TestGetNotFound() {
 
 	dst := testType{}
 
+	s.mockAsyncGetter.On(
+		"Get",
+		mock.Anything,
+		&bulkgetter.GetRequest{Index: "test", DocumentID: "objId", Fields: []string{"field1", "field2"}},
+		&dst,
+	).Return(bulkgetter.GetResponse{false, nil})
+
 	result, err := idx.Get(s.ctx, "objId", &dst, "field1", "field2")
 	s.NoError(err)
 	s.False(result)
-	s.Equal(dst, testType{})
 
-	s.mockAPIHandler.AssertExpectations(s.T())
+	s.mockAsyncGetter.AssertExpectations(s.T())
 }
 
 func (s *IndexTestSuite) TestClose() {

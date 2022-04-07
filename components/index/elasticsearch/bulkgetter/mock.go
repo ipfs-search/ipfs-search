@@ -13,7 +13,10 @@ type Mock struct {
 // Get mocks a get of an AsyncGetter.
 func (m *Mock) Get(ctx context.Context, req *GetRequest, dst interface{}) <-chan GetResponse {
 	args := m.Called(ctx, req, dst)
-	return args.Get(0).(<-chan GetResponse)
+
+	r := make(chan GetResponse, 1)
+	r <- args.Get(0).(GetResponse)
+	return r
 }
 
 // Start mocks the start of an AsyncGetter.
