@@ -41,9 +41,11 @@ func (bg *BulkGetter) Get(ctx context.Context, req *GetRequest, dst interface{})
 	return resp
 }
 
-// Start starts a single worker processing batched Get() requests. It will terminate on errors.
-func (bg *BulkGetter) Start(ctx context.Context) error {
+// Work starts a single worker processing batched Get() requests. It will terminate on errors.
+func (bg *BulkGetter) Work(ctx context.Context) error {
 	var err error
+
+	log.Println("Starting worker for BulkGetter.")
 
 	for err != nil {
 		err = bg.processBatch(ctx)
@@ -53,27 +55,35 @@ func (bg *BulkGetter) Start(ctx context.Context) error {
 }
 
 func (bg *BulkGetter) processBatch(ctx context.Context) error {
-	b, err := bg.populateBatch(ctx, bg.queue)
+	var (
+		b   batch
+		err error
+	)
 
-	if err != nil {
+	if b, err = bg.populateBatch(ctx, bg.queue); err != nil {
 		return err
 	}
 
+	log.Printf("Executing bulk Get, %d elements", len(b))
 	return b.execute(ctx, bg.config.Client)
 }
 
 func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (batch, error) {
+	log.Println("Populating BulkGetter batch.")
+
 	b := newBatch()
 
 	for i := 0; i < bg.config.BatchSize; i++ {
-		log.Println(i)
-
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		case <-time.After(bg.config.BatchTimeout):
+			log.Printf("Batch timeout, %d elements", len(b))
+
 			return b, nil
 		case rr := <-queue:
+			log.Printf("Batch add, %d elements", len(b))
+
 			b.add(rr)
 		}
 	}

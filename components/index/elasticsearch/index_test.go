@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/dankinder/httpmock"
 	"github.com/ipfs-search/ipfs-search/instr"
@@ -19,6 +20,7 @@ import (
 type IndexTestSuite struct {
 	suite.Suite
 	ctx             context.Context
+	ctxCancel       func()
 	instr           *instr.Instrumentation
 	mockAPIHandler  *httpmock.MockHandler
 	mockAPIServer   *httpmock.Server
@@ -55,8 +57,8 @@ func (s *IndexTestSuite) expectHelloWorld() {
 }
 
 func (s *IndexTestSuite) SetupTest() {
-	s.ctx = context.Background()
 	s.instr = instr.New()
+	s.ctx, s.ctxCancel = context.WithCancel(context.Background())
 
 	s.mockAPIHandler = &httpmock.MockHandler{}
 	s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
@@ -74,6 +76,10 @@ func (s *IndexTestSuite) SetupTest() {
 	s.mockClient.bulkGetter = s.mockAsyncGetter
 
 	s.expectHelloWorld()
+
+	// Start worker
+	s.mockAsyncGetter.On("Work", mock.Anything).Return(nil).Maybe()
+	go s.mockClient.Work(s.ctx)
 }
 
 func (s *IndexTestSuite) TestNewClient() {
@@ -81,9 +87,6 @@ func (s *IndexTestSuite) TestNewClient() {
 	client, err := NewClient(config, s.instr)
 	s.NoError(err)
 	s.NotNil(client)
-
-	err = client.Start(s.ctx)
-	s.NoError(err)
 }
 
 func (s *IndexTestSuite) TestNew() {
@@ -152,8 +155,8 @@ func (s *IndexTestSuite) TestIndex() {
 	s.NoError(err)
 
 	// Ensure flushing
-	err = s.mockClient.Close(s.ctx)
-	s.NoError(err)
+	s.ctxCancel()
+	time.Sleep(100 * time.Millisecond)
 
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
@@ -212,8 +215,8 @@ func (s *IndexTestSuite) TestUpdate() {
 	s.NoError(err)
 
 	// Ensure flushing
-	err = s.mockClient.Close(s.ctx)
-	s.NoError(err)
+	s.ctxCancel()
+	time.Sleep(100 * time.Millisecond)
 
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
@@ -272,8 +275,8 @@ func (s *IndexTestSuite) TestUpdateOmitEmpty() {
 	s.NoError(err)
 
 	// Ensure flushing
-	err = s.mockClient.Close(s.ctx)
-	s.NoError(err)
+	s.ctxCancel()
+	time.Sleep(100 * time.Millisecond)
 
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
@@ -320,8 +323,8 @@ func (s *IndexTestSuite) TestDelete() {
 	s.NoError(err)
 
 	// Ensure flushing
-	err = s.mockClient.Close(s.ctx)
-	s.NoError(err)
+	s.ctxCancel()
+	time.Sleep(100 * time.Millisecond)
 
 	s.mockAPIHandler.AssertExpectations(s.T())
 }
@@ -372,10 +375,6 @@ func (s *IndexTestSuite) TestGetNotFound() {
 	s.False(result)
 
 	s.mockAsyncGetter.AssertExpectations(s.T())
-}
-
-func (s *IndexTestSuite) TestClose() {
-
 }
 
 func TestIndexTestSuite(t *testing.T) {

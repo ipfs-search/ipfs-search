@@ -19,8 +19,8 @@ func (m *Mock) Get(ctx context.Context, req *GetRequest, dst interface{}) <-chan
 	return r
 }
 
-// Start mocks the start of an AsyncGetter.
-func (m *Mock) Start(ctx context.Context) error {
+// Work mocks the start of an AsyncGetter worker.
+func (m *Mock) Work(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
 }

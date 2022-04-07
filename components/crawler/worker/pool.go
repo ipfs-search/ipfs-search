@@ -78,6 +78,13 @@ func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
 		URL:       w.config.ElasticSearch.URL,
 		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 10),
 		Debug:     false,
+
+		// TODO: Make configurable.
+		BulkIndexerWorkers:    2,
+		BulkIndexerFlushBytes: 5 * 1024 * 1024, // 5 MB
+
+		BulkGetterBatchSize:    10,
+		BulkGetterBatchTimeout: time.Second * 1,
 	}
 
 	return elasticsearch.NewClient(clientConfig, w.Instrumentation)
@@ -89,11 +96,8 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 		return nil, err
 	}
 
-	go func() {
-		// Close client when context is closed
-		<-ctx.Done()
-		esClient.Close(ctx)
-	}()
+	// Start ES worker
+	go esClient.Work(ctx)
 
 	return &crawler.Indexes{
 		Files: elasticsearch.New(

@@ -31,6 +31,12 @@ type ClientConfig struct {
 	URL       string
 	Transport http.RoundTripper
 	Debug     bool
+
+	BulkIndexerWorkers    int
+	BulkIndexerFlushBytes int
+
+	BulkGetterBatchSize    int
+	BulkGetterBatchTimeout time.Duration
 }
 
 // NewClient returns a configured search index, or an error.
@@ -70,14 +76,13 @@ func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
 	}, nil
 }
 
-// Start client connection (background workers etc.)
-func (c *Client) Start(ctx context.Context) error {
-	return c.bulkGetter.Start(ctx)
-}
+// Work starts (and closes) a client worker.
+func (c *Client) Work(ctx context.Context) error {
+	// Flush indexing buffers on context close.
+	// Use background context because current context is already closed.
+	defer c.bulkIndexer.Close(context.Background())
 
-// Close client connection and flush bulk indexer.
-func (c *Client) Close(ctx context.Context) error {
-	return c.bulkIndexer.Close(ctx)
+	return c.bulkGetter.Work(ctx)
 }
 
 func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.Client, error) {
@@ -116,7 +121,8 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (opensearchutil.BulkIndexer, error) {
 	iCfg := opensearchutil.BulkIndexerConfig{
 		Client:     client,
-		NumWorkers: 1, // Start conservatively with 1 worker.
+		NumWorkers: cfg.BulkIndexerWorkers,
+		FlushBytes: cfg.BulkIndexerFlushBytes,
 		OnFlushStart: func(ctx context.Context) context.Context {
 			newCtx, _ := i.Tracer.Start(ctx, "index.elasticsearch.BulkIndexerFlush")
 			return newCtx
@@ -146,8 +152,8 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 func getBulkGetter(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (bulkgetter.AsyncGetter, error) {
 	bgCfg := bulkgetter.Config{
 		Client:       client,
-		BatchSize:    100,
-		BatchTimeout: time.Second * 10,
+		BatchSize:    cfg.BulkGetterBatchSize,
+		BatchTimeout: cfg.BulkGetterBatchTimeout,
 	}
 
 	return bulkgetter.New(bgCfg), nil
