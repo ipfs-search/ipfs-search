@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/opensearch-project/opensearch-go"
@@ -22,8 +21,6 @@ func newBulkRequest() bulkRequest {
 }
 
 func (r bulkRequest) bulkResponse(found bool, err error) {
-	log.Printf("Sending bulk response")
-
 	for _, rr := range r {
 		rr.resp <- GetResponse{found, err}
 		close(rr.resp)
@@ -36,8 +33,6 @@ func (r bulkRequest) add(rr reqresp) {
 }
 
 func (r bulkRequest) sendResponse(id string, found bool, err error) {
-	log.Printf("Sending response for %s", id)
-
 	rr := r[id]
 	rr.resp <- GetResponse{found, err}
 	close(rr.resp)

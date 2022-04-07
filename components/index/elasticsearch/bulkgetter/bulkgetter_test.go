@@ -226,8 +226,8 @@ func (s *BulkGetterSuite) TestProcessBatch() {
 
 	r1 := <-resp1
 	s.True(r1.Found)
-	s.Equal(dst1.Field1, "kaas")
-	s.Equal(dst1.Field2, 15)
+	s.Equal("kaas", dst1.Field1)
+	s.Equal(15, dst1.Field2)
 
 	r2 := <-resp2
 	s.False(r2.Found)
