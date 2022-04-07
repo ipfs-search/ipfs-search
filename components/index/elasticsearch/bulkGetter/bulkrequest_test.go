@@ -5,13 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
-	// "net/http"
-	// "testing"
-	// "time"
 
-	// "github.com/dankinder/httpmock"
-	// opensearch "github.com/opensearch-project/opensearch-go"
-	// "github.com/stretchr/testify/mock"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"github.com/stretchr/testify/suite"
 )
@@ -33,11 +27,6 @@ type BulkRequestTestSuite struct {
 	rChan2   chan GetResponse
 	dst2     interface{}
 	reqresp2 reqresp
-
-	// Mock search
-	// mockAPIHandler *httpmock.MockHandler
-	// mockAPIServer  *httpmock.Server
-	// responseHeader http.Header
 }
 
 func (s *BulkRequestTestSuite) SetupTest() {
@@ -58,18 +47,6 @@ func (s *BulkRequestTestSuite) SetupTest() {
 	}
 	s.rChan2 = make(chan GetResponse, 1)
 	s.reqresp2 = reqresp{s.req2, s.rChan2, s.dst2}
-
-	// Setup mock search API
-	// s.mockAPIHandler = &httpmock.MockHandler{}
-	// s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
-	// s.responseHeader = http.Header{
-	// 	"Content-Type": []string{"application/json"},
-	// }
-	// client, _ := opensearch.NewClient(opensearch.Config{
-	// 	Addresses: []string{s.mockAPIServer.URL()},
-	// })
-
-	// s.expectHelloWorld()
 }
 
 func (s *BulkRequestTestSuite) TestGetSearchRequest() {
