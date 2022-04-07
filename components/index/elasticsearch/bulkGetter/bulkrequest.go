@@ -22,8 +22,6 @@ func newBulkRequest() bulkRequest {
 }
 
 func (r bulkRequest) bulkResponse(found bool, err error) {
-	log.Printf("Sending bulk response")
-
 	for _, rr := range r {
 		rr.resp <- GetResponse{found, err}
 		close(rr.resp)
@@ -36,8 +34,6 @@ func (r bulkRequest) add(rr reqresp) {
 }
 
 func (r bulkRequest) sendResponse(id string, found bool, err error) {
-	log.Printf("Sending response for %s", id)
-
 	rr := r[id]
 	rr.resp <- GetResponse{found, err}
 	close(rr.resp)
@@ -148,7 +144,8 @@ func (r bulkRequest) processResponse(res *opensearchapi.Response) error {
 }
 
 func (r bulkRequest) performBulkRequest(ctx context.Context, client *opensearch.Client) error {
-	// Perform search request
+	log.Printf("Performing bulk GET, %d elements", len(r))
+
 	res, err := r.getSearchRequest().Do(ctx, client)
 	if err != nil {
 		r.bulkResponse(false, err)
