@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 
+	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
 	"github.com/ipfs-search/ipfs-search/instr"
 )
 
@@ -20,6 +21,7 @@ import (
 type Client struct {
 	searchClient *opensearch.Client
 	bulkIndexer  opensearchutil.BulkIndexer
+	bulkGetter   bulkgetter.AsyncGetter
 
 	*instr.Instrumentation
 }
@@ -33,6 +35,13 @@ type ClientConfig struct {
 
 // NewClient returns a configured search index, or an error.
 func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
+	var (
+		c   *opensearch.Client
+		bi  opensearchutil.BulkIndexer
+		bg  bulkgetter.AsyncGetter
+		err error
+	)
+
 	if cfg == nil {
 		panic("NewClient ClientConfig cannot be nil.")
 	}
@@ -41,19 +50,22 @@ func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
 		panic("NewCLient Instrumentation cannot be nil.")
 	}
 
-	c, err := getSearchClient(cfg, i)
-	if err != nil {
+	if c, err = getSearchClient(cfg, i); err != nil {
 		return nil, err
 	}
 
-	bi, err := getBulkIndexer(c, cfg, i)
-	if err != nil {
+	if bi, err = getBulkIndexer(c, cfg, i); err != nil {
+		return nil, err
+	}
+
+	if bg, err = getBulkGetter(c, cfg, i); err != nil {
 		return nil, err
 	}
 
 	return &Client{
 		searchClient:    c,
 		bulkIndexer:     bi,
+		bulkGetter:      bg,
 		Instrumentation: i,
 	}, nil
 }
@@ -124,4 +136,14 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 	}
 
 	return opensearchutil.NewBulkIndexer(iCfg)
+}
+
+func getBulkGetter(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (bulkgetter.AsyncGetter, error) {
+	bgCfg := bulkgetter.Config{
+		Client:       client,
+		BatchSize:    100,
+		BatchTimeout: time.Second * 10,
+	}
+
+	return bulkgetter.New(bgCfg), nil
 }
