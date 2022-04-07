@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+	"testing"
 
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"github.com/stretchr/testify/suite"
@@ -50,9 +51,9 @@ func (s *BulkRequestTestSuite) SetupTest() {
 }
 
 func (s *BulkRequestTestSuite) TestGetSearchRequest() {
-
 	br := newBulkRequest()
 	br.add(s.reqresp1)
+	br.add(s.reqresp2)
 
 	sr := br.getSearchRequest()
 	s.Equal(sr.Index, "test1")
@@ -63,11 +64,11 @@ func (s *BulkRequestTestSuite) TestGetSearchRequest() {
 
 	s.JSONEq(`
 	{
-		"query": {
-			"id": {
-				"values": ["5", "7")]
-			}
-		}
+	  "query": {
+	    "ids" : {
+	      "values" : ["5", "7"]
+	    }
+	  }
 	}
 	`, body.String())
 }
@@ -125,4 +126,8 @@ func (s *BulkRequestTestSuite) TestProcessResponseFound() {
 
 	s.Equal("kaas", s.dst1.Field1)
 	s.Equal(15, s.dst1.Field2)
+}
+
+func TestBulkRequestTestSuite(t *testing.T) {
+	suite.Run(t, new(BulkRequestTestSuite))
 }

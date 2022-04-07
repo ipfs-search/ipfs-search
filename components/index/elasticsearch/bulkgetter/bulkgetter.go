@@ -10,8 +10,8 @@ import (
 
 // BulkGetter allows batching/bulk gets.
 type BulkGetter struct {
-	config Config
-	queue  chan reqresp
+	cfg   Config
+	queue chan reqresp
 }
 
 // New returns a new BulkGetter, setting sensible defaults for the configuration.
@@ -25,8 +25,8 @@ func New(cfg Config) *BulkGetter {
 	}
 
 	bg := BulkGetter{
-		config: cfg,
-		queue:  make(chan reqresp, cfg.BatchSize),
+		cfg:   cfg,
+		queue: make(chan reqresp, cfg.BatchSize),
 	}
 
 	return &bg
@@ -47,9 +47,11 @@ func (bg *BulkGetter) Work(ctx context.Context) error {
 
 	log.Println("Starting worker for BulkGetter.")
 
-	for err != nil {
+	for err == nil {
 		err = bg.processBatch(ctx)
 	}
+
+	log.Printf("BulkGetter worker exiting, error: %s", err)
 
 	return err
 }
@@ -64,25 +66,25 @@ func (bg *BulkGetter) processBatch(ctx context.Context) error {
 		return err
 	}
 
-	log.Printf("Executing bulk Get, %d elements", len(b))
-	return b.execute(ctx, bg.config.Client)
+	log.Printf("Executing bulk Get, %d elements", len(bg.queue))
+	return b.execute(ctx, bg.cfg.Client)
 }
 
 func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (batch, error) {
 	log.Println("Populating BulkGetter batch.")
 
-	b := newBatch()
+	b := newBatch(bg.cfg.BatchSize)
 
-	for i := 0; i < bg.config.BatchSize; i++ {
+	for i := 0; i < bg.cfg.BatchSize; i++ {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
-		case <-time.After(bg.config.BatchTimeout):
-			log.Printf("Batch timeout, %d elements", len(b))
+		case <-time.After(bg.cfg.BatchTimeout):
+			log.Printf("Batch timeout, %d elements", len(bg.queue))
 
 			return b, nil
 		case rr := <-queue:
-			log.Printf("Batch add, %d elements", len(b))
+			log.Printf("Batch add, %d elements", len(bg.queue))
 
 			b.add(rr)
 		}

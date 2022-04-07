@@ -13,8 +13,8 @@ func getKey(rr reqresp) string {
 	return strings.Join(rr.req.Fields, "") + rr.req.Index
 }
 
-func newBatch() batch {
-	return make(batch)
+func newBatch(size int) batch {
+	return make(batch, size)
 }
 
 func (b batch) add(rr reqresp) {

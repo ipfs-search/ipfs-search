@@ -3,6 +3,7 @@ package bulkgetter
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -10,6 +11,9 @@ import (
 	"github.com/opensearch-project/opensearch-go"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
 )
+
+// ErrHTTP represents non-404 errors in HTTP requests.
+var ErrHTTP = errors.New("HTTP Error")
 
 type bulkRequest map[string]reqresp
 
@@ -76,8 +80,8 @@ func getReqBody(ids []string) string {
 	return `
 	{
 		"query": {
-			"id": {
-				"values": [` + strings.Join(ids, ", ") + `]
+			"ids": {
+				"values": ["` + strings.Join(ids, "\", \"") + `"]
 			}
 		}
 	}
@@ -133,8 +137,9 @@ func (r bulkRequest) processResponse(res *opensearchapi.Response) error {
 		// None found, pass so below w can mark all remaining documents as not found.
 
 	default:
-		// return err
-		panic("unexpected status from search")
+		if res.IsError() {
+			return fmt.Errorf("%w: %s", ErrHTTP, res)
+		}
 	}
 
 	r.bulkResponse(false, nil)
