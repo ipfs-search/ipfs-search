@@ -20,4 +20,5 @@ type GetResponse struct {
 // AsyncGetter is an interface to allow for asynchronous getting.
 type AsyncGetter interface {
 	Get(context.Context, *GetRequest, interface{}) <-chan GetResponse
+	Start(context.Context) error
 }

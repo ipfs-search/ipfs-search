@@ -41,8 +41,8 @@ func (bg *BulkGetter) Get(ctx context.Context, req *GetRequest, dst interface{})
 	return resp
 }
 
-// StartWorker starts a single worker processing batched Get() requests. It will terminate on errors.
-func (bg *BulkGetter) StartWorker(ctx context.Context) error {
+// Start starts a single worker processing batched Get() requests. It will terminate on errors.
+func (bg *BulkGetter) Start(ctx context.Context) error {
 	var err error
 
 	for err != nil {
