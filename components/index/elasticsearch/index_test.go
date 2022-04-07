@@ -12,16 +12,19 @@ import (
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
 )
 
 type IndexTestSuite struct {
 	suite.Suite
-	ctx            context.Context
-	instr          *instr.Instrumentation
-	mockAPIHandler *httpmock.MockHandler
-	mockAPIServer  *httpmock.Server
-	mockClient     *Client
-	responseHeader http.Header
+	ctx             context.Context
+	instr           *instr.Instrumentation
+	mockAPIHandler  *httpmock.MockHandler
+	mockAPIServer   *httpmock.Server
+	mockClient      *Client
+	mockAsyncGetter bulkgetter.AsyncGetter
+	responseHeader  http.Header
 }
 
 func (s *IndexTestSuite) expectHelloWorld() {
@@ -60,11 +63,15 @@ func (s *IndexTestSuite) SetupTest() {
 	s.responseHeader = http.Header{
 		"Content-Type": []string{"application/json"},
 	}
+
+	s.mockAsyncGetter = &bulkgetter.Mock{}
+
 	config := &ClientConfig{
 		URL:   s.mockAPIServer.URL(),
 		Debug: true,
 	}
 	s.mockClient, _ = NewClient(config, s.instr)
+	s.mockClient.bulkGetter = s.mockAsyncGetter
 
 	s.expectHelloWorld()
 }
@@ -74,6 +81,9 @@ func (s *IndexTestSuite) TestNewClient() {
 	client, err := NewClient(config, s.instr)
 	s.NoError(err)
 	s.NotNil(client)
+
+	err = client.Start(s.ctx)
+	s.NoError(err)
 }
 
 func (s *IndexTestSuite) TestNew() {

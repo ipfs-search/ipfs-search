@@ -70,6 +70,11 @@ func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
 	}, nil
 }
 
+// Start client connection (background workers etc.)
+func (c *Client) Start(ctx context.Context) error {
+	return c.bulkGetter.Start(ctx)
+}
+
 // Close client connection and flush bulk indexer.
 func (c *Client) Close(ctx context.Context) error {
 	return c.bulkIndexer.Close(ctx)
