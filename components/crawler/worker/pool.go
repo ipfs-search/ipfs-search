@@ -83,11 +83,26 @@ func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
 		BulkIndexerWorkers:    2,
 		BulkIndexerFlushBytes: 5 * 1024 * 1024, // 5 MB
 
-		BulkGetterBatchSize:    50,
-		BulkGetterBatchTimeout: 100 * time.Millisecond,
+		BulkGetterBatchSize:    100,
+		BulkGetterBatchTimeout: 50 * time.Millisecond,
 	}
 
 	return elasticsearch.NewClient(clientConfig, w.Instrumentation)
+}
+
+func startSearchWorker(ctx context.Context, esClient *elasticsearch.Client) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			if err := esClient.Work(ctx); err != nil {
+				log.Printf("Error in ES client worker, restarting worker: %s", err)
+				// Prevent overly tight restart loop
+				time.Sleep(time.Second)
+			}
+		}
+	}
 }
 
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
@@ -96,8 +111,9 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 		return nil, err
 	}
 
-	// Start ES worker
-	go esClient.Work(ctx)
+	// Start 2 ES workers
+	go startSearchWorker(ctx, esClient)
+	go startSearchWorker(ctx, esClient)
 
 	return &crawler.Indexes{
 		Files: elasticsearch.New(
