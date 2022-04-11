@@ -79,7 +79,8 @@ func getReqBody(ids []string) string {
 			"ids": {
 				"values": ["` + strings.Join(ids, "\", \"") + `"]
 			}
-		}
+		},
+		"sort": ["_doc"]
 	}
 	`
 }

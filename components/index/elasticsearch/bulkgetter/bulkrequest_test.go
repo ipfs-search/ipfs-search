@@ -65,6 +65,7 @@ func (s *BulkRequestTestSuite) TestGetSearchRequest() {
 				Values []string
 			}
 		}
+		Sort []string
 	}
 
 	err := json.NewDecoder(sr.Body).Decode(&res)
@@ -73,6 +74,9 @@ func (s *BulkRequestTestSuite) TestGetSearchRequest() {
 	values := res.Query.Ids.Values
 	s.Contains(values, "5")
 	s.Contains(values, "7")
+
+	sort := res.Sort
+	s.Equal("_doc", sort[0])
 }
 
 func (s *BulkRequestTestSuite) TestProcessResponseFound() {
