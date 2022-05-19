@@ -20,7 +20,7 @@ func MultiGet(ctx context.Context, indexes []Index, id string, dst interface{}, 
 		i := i // https://go.dev/doc/faq#closures_and_goroutines
 
 		g.Go(func() error {
-			log.Printf("MultiGet %s index %s", id, i)
+			// log.Printf("MultiGet %s index %s", id, i)
 
 			found, err := i.Get(groupCtx, id, dst, fields...)
 
