@@ -142,6 +142,15 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	resp := <-i.c.bulkGetter.Get(ctx, &req, dst)
 
+	// Turn on for increased verbosity.
+	// if resp.Found {
+	// 	log.Printf("Found %s in %s", id, i)
+	// } else {
+	// 	if resp.Error != nil {
+	// 		log.Printf("Error getting %s in %s", id, i)
+	// 	}
+	// }
+
 	return resp.Found, resp.Error
 }
 
