@@ -84,7 +84,7 @@ func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
 		BulkIndexerFlushBytes: 5 * 1024 * 1024, // 5 MB
 
 		BulkGetterBatchSize:    24,
-		BulkGetterBatchTimeout: 4 * time.Second,
+		BulkGetterBatchTimeout: 100 * time.Millisecond,
 	}
 
 	return elasticsearch.NewClient(clientConfig, w.Instrumentation)
