@@ -76,15 +76,15 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
 	clientConfig := &elasticsearch.ClientConfig{
 		URL:       w.config.ElasticSearch.URL,
-		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 150),
+		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 20),
 		Debug:     false,
 
 		// TODO: Make configurable.
 		BulkIndexerWorkers:    2,
 		BulkIndexerFlushBytes: 5 * 1024 * 1024, // 5 MB
 
-		BulkGetterBatchSize:    100,
-		BulkGetterBatchTimeout: 100 * time.Millisecond,
+		BulkGetterBatchSize:    20,
+		BulkGetterBatchTimeout: 5 * time.Second,
 	}
 
 	return elasticsearch.NewClient(clientConfig, w.Instrumentation)
