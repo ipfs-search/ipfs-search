@@ -76,7 +76,7 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
 	clientConfig := &elasticsearch.ClientConfig{
 		URL:       w.config.ElasticSearch.URL,
-		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 50),
+		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 150),
 		Debug:     false,
 
 		// TODO: Make configurable.
