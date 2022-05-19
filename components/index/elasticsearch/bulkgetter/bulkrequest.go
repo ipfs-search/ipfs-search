@@ -62,10 +62,13 @@ func (r bulkRequest) getSearchRequest() *opensearchapi.SearchRequest {
 
 	body := getReqBody(ids)
 
+	size := len(r)
+
 	req := opensearchapi.SearchRequest{
 		Index:          index,
 		SourceIncludes: fields,
 		Body:           strings.NewReader(body),
+		Size:           &size,
 		// Preference:     "_local",
 	}
 

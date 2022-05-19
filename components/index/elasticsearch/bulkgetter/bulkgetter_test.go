@@ -183,7 +183,7 @@ func (s *BulkGetterSuite) TestProcessBatch() {
 	  }
 	}`)
 
-	testURL := "/test_index/_search?_source_includes=field1%2Cfield2"
+	testURL := "/test_index/_search?_source_includes=field1%2Cfield2&size=2"
 	s.mockAPIHandler.
 		On("Handle", "POST", testURL, mock.Anything).
 		Return(httpmock.Response{
