@@ -69,7 +69,7 @@ func (r bulkRequest) getSearchRequest() *opensearchapi.SearchRequest {
 		SourceIncludes: fields,
 		Body:           strings.NewReader(body),
 		Size:           &size,
-		// Preference:     "_local",
+		Preference:     "_local",
 	}
 
 	return &req
