@@ -111,7 +111,9 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 		return nil, err
 	}
 
-	// Start 2 ES workers
+	// Start 4 ES workers
+	go startSearchWorker(ctx, esClient)
+	go startSearchWorker(ctx, esClient)
 	go startSearchWorker(ctx, esClient)
 	go startSearchWorker(ctx, esClient)
 
