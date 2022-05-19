@@ -82,15 +82,7 @@ func (c *Client) Work(ctx context.Context) error {
 	// Use background context because current context is already closed.
 	defer c.bulkIndexer.Close(context.Background())
 
-	// Start 4 workers
-	const bulkGetterWorkers = 4
-	for i := 1; i <= bulkGetterWorkers; i++ {
-		if err := c.bulkGetter.Work(ctx); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return c.bulkGetter.Work(ctx)
 }
 
 func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.Client, error) {
