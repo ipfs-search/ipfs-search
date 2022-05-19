@@ -7,6 +7,30 @@ import (
 	"github.com/opensearch-project/opensearch-go"
 )
 
+// TODO: Merge batch and bulkrequest, using multi-index MGET.
+
+// Ref: https://opensearch.org/docs/latest/opensearch/rest-api/document-apis/multi-get/
+//
+// GET _mget
+// {
+//   "docs": [
+//   {
+//     "_index": "sample-index1",
+//     "_id": "1"
+//   },
+//   {
+//     "_index": "sample-index2",
+//     "_id": "1",
+//     "_source": {
+//       "include": ["Length"]
+//     }
+//   }
+//   ]
+// }
+//
+// https://pkg.go.dev/github.com/opensearch-project/opensearch-go@v1.1.0/opensearchapi#Mget
+
+
 type batch map[string]bulkRequest
 
 func getKey(rr reqresp) string {
