@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
@@ -22,7 +23,7 @@ func (s *MultiGetTestSuite) SetupTest() {
 func (s *MultiGetTestSuite) TestMultiGetNotFound() {
 	dst := new(struct{})
 
-	s.mock.On("Get", s.ctx, "objId", dst, []string{"testField"}).Return(false, nil)
+	s.mock.On("Get", mock.Anything, "objId", dst, []string{"testField"}).Return(false, nil)
 
 	index, err := MultiGet(s.ctx, []Index{s.mock}, "objId", dst, "testField")
 
@@ -35,7 +36,7 @@ func (s *MultiGetTestSuite) TestMultiGetNotFound() {
 func (s *MultiGetTestSuite) TestMultiGetFound() {
 	dst := new(struct{})
 
-	s.mock.On("Get", s.ctx, "objId", dst, []string{"testField"}).Return(true, nil)
+	s.mock.On("Get", mock.Anything, "objId", dst, []string{"testField"}).Return(true, nil)
 
 	index, err := MultiGet(s.ctx, []Index{s.mock}, "objId", dst, "testField")
 
