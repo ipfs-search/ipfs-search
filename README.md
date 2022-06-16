@@ -17,7 +17,7 @@ The ipfs-search command consists of two components: the crawler and the sniffer.
 Documentation is hosted on [Read the Docs](https://ipfs-search.readthedocs.io/en/latest/), based on files contained in the [docs](https://github.com/ipfs-search/ipfs-search/tree/master/docs) folder. In addition, there's extensive [Go docs](https://pkg.go.dev/github.com/ipfs-search/ipfs-search) for the internal API as well as [SwaggerHub OpenAPI documentation](https://app.swaggerhub.com/apis-docs/ipfs-search/ipfs-search/) for the REST API.
 
 ## Contact
-Please find us on our Freenode/[Riot/Matrix](https://riot.im/app/#/room/#ipfs-search:chat.weho.st) channel [#ipfs-search:chat.weho.st](https://matrix.to/#/#ipfs-search:chat.weho.st).
+Please find us on our Freenode/[Riot/Matrix](https://riot.im/app/#/room/#ipfs-search:matrix.org) channel [#ipfs-search:matrix.org](https://matrix.to/#/#ipfs-search:matrix.org).
 
 ## Snapshots
 ipfs-search provides the daily snapshot for all of the indexed data using
