@@ -218,9 +218,9 @@ func (r *bulkRequest) decodeSource(src json.RawMessage, dst interface{}) error {
 }
 
 // processResponseDoc returns found, error
-func (r *bulkRequest) processResponseDoc(d *responseDoc, dst interface{}) (bool, error) {
+func (r *bulkRequest) processResponseDoc(d *responseDoc, key string) (bool, error) {
 	if d.Found {
-		if err := r.decodeSource(d.Source, dst); err != nil {
+		if err := r.decodeSource(d.Source, r.rrs[key].dst); err != nil {
 			err = fmt.Errorf("error decoding source: %w", err)
 			return false, err
 		}
@@ -248,7 +248,8 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 
 		for _, d := range docs {
 			key := r.keyFromResponseDoc(&d)
-			found, err := r.processResponseDoc(&d, r.rrs[key].dst)
+
+			found, err := r.processResponseDoc(&d, key)
 			r.sendResponse(key, found, err)
 		}
 
