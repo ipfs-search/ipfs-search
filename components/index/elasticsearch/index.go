@@ -76,11 +76,11 @@ func (i *Index) index(
 			body, err = getBody(struct {
 				Doc interface{} `json:"doc"`
 			}{properties})
-			if err != nil {
-				panic(err)
-			}
 		} else {
 			body, err = getBody(properties)
+		}
+		if err != nil {
+			panic(err)
 		}
 	}
 
@@ -98,11 +98,11 @@ func (i *Index) index(
 			res opensearchutil.BulkIndexerResponseItem, err error,
 		) {
 			if err == nil {
-				err = fmt.Errorf("Error flushing: %s: %s (%s)", res.Error.Type, res.Error.Reason, id)
+				err = fmt.Errorf("Error flushing: %+v (%s)", res, id)
 			}
 
 			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			log.Printf("Error flushing: %s (%s)", err, id)
+			log.Println(err)
 
 		},
 	}

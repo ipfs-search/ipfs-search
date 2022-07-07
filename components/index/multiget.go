@@ -10,7 +10,7 @@ import (
 // MultiGet returns `fields` for the first document with `id` from given `indexes`.
 // When the document is not found (nil, nil) is returned.
 func MultiGet(ctx context.Context, indexes []Index, id string, dst interface{}, fields ...string) (Index, error) {
-	var foundIdx Index
+	foundIdx := make(chan Index, 1)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel() // cancel when we are finished
@@ -29,13 +29,25 @@ func MultiGet(ctx context.Context, indexes []Index, id string, dst interface{}, 
 			}
 
 			if found {
-				cancel() // We're done
-				foundIdx = i
+				select {
+				case <-groupCtx.Done():
+					return nil
+				case foundIdx <- i:
+					cancel() // We're done
+				}
+
 			}
 
 			return nil
 		})
 	}
 
-	return foundIdx, g.Wait()
+	err := g.Wait()
+
+	select {
+	case result := <-foundIdx:
+		return result, err
+	default:
+		return nil, err
+	}
 }

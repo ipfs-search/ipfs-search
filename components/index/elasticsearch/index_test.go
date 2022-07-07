@@ -78,7 +78,7 @@ func (s *IndexTestSuite) SetupTest() {
 	s.expectHelloWorld()
 
 	// Start worker
-	s.mockAsyncGetter.On("Work", mock.Anything).Return(nil).Maybe()
+	s.mockAsyncGetter.On("Work", mock.Anything).WaitUntil(time.After(time.Second)).Return(nil).Maybe()
 	go s.mockClient.Work(s.ctx)
 }
 
@@ -105,10 +105,10 @@ func (s *IndexTestSuite) TestIndex() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
 	// Note whitespace here! This is NDJSON
-	request := []byte(`{"create":{"_id":"objId","_index":"test"}}
+	request := []byte(`{"create":{"_index":"test","_id":"objId"}}
 {"field1":"hoi","field2":4}
-
 `)
+
 	response := []byte(`{
 	   "took": 30,
 	   "errors": false,
@@ -165,9 +165,8 @@ func (s *IndexTestSuite) TestUpdate() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
 	// Note whitespace here! This is NDJSON
-	request := []byte(`{"update":{"_id":"objId","_index":"test"}}
+	request := []byte(`{"update":{"_index":"test","_id":"objId"}}
 {"doc":{"field1":"hoi","field2":4}}
-
 `)
 	response := []byte(`{
 	   "took": 30,
@@ -225,9 +224,8 @@ func (s *IndexTestSuite) TestUpdateOmitEmpty() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
 	// Note whitespace here! This is NDJSON
-	request := []byte(`{"update":{"_id":"objId","_index":"test"}}
+	request := []byte(`{"update":{"_index":"test","_id":"objId"}}
 {"doc":{}}
-
 `)
 	response := []byte(`{
 	   "took": 30,
@@ -285,7 +283,7 @@ func (s *IndexTestSuite) TestDelete() {
 	idx := New(s.mockClient, &Config{Name: "test"})
 
 	// Note whitespace here! This is NDJSON
-	request := []byte(`{"delete":{"_id":"objId","_index":"test"}}
+	request := []byte(`{"delete":{"_index":"test","_id":"objId"}}
 `)
 	response := []byte(`{
 	   "took": 30,
@@ -303,7 +301,7 @@ func (s *IndexTestSuite) TestDelete() {
 	               "successful": 1,
 	               "failed": 0
 	            },
-	            "status": 202,
+	            "status": 200,
 	            "_seq_no" : 1,
 	            "_primary_term" : 2
 	         }

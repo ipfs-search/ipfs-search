@@ -107,7 +107,7 @@ func (s *BulkRequestTestSuite) SetupTest() {
 		DocumentID: "5",
 	}
 	s.rChan1 = make(chan GetResponse, 1)
-	s.reqresp1 = reqresp{s.req1, s.rChan1, &s.dst1}
+	s.reqresp1 = reqresp{s.ctx, s.req1, s.rChan1, &s.dst1}
 
 	s.req2 = &GetRequest{
 		Index:      "test2",
@@ -115,7 +115,7 @@ func (s *BulkRequestTestSuite) SetupTest() {
 		DocumentID: "7",
 	}
 	s.rChan2 = make(chan GetResponse, 1)
-	s.reqresp2 = reqresp{s.req2, s.rChan2, &s.dst2}
+	s.reqresp2 = reqresp{s.ctx, s.req2, s.rChan2, &s.dst2}
 }
 
 func (s *BulkRequestTestSuite) TestGetRequest() {

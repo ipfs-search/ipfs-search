@@ -41,7 +41,7 @@ func New(cfg Config) *BulkGetter {
 func (bg *BulkGetter) Get(ctx context.Context, req *GetRequest, dst interface{}) <-chan GetResponse {
 	resp := make(chan GetResponse, 1)
 
-	bg.queue <- reqresp{req, resp, dst}
+	bg.queue <- reqresp{ctx, req, resp, dst}
 
 	return resp
 }

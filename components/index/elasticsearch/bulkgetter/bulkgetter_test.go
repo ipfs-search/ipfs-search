@@ -66,7 +66,8 @@ func (s *BulkGetterSuite) expectResolveAlias(index string) {
 		On("Handle", "GET", url, mock.Anything).
 		Return(httpmock.Response{
 			Body: testJSON,
-		})
+		}).
+		Maybe()
 }
 
 func (s *BulkGetterSuite) SetupTest() {
@@ -123,28 +124,28 @@ func (s *BulkGetterSuite) TestPopulateBatch() {
 	queue := make(chan reqresp, 4)
 	rChan := make(chan GetResponse, 1)
 
-	reqresp1 := reqresp{&GetRequest{
+	reqresp1 := reqresp{s.ctx, &GetRequest{
 		Index:      "index1",
 		Fields:     []string{"f1", "f2"},
 		DocumentID: "1",
 	}, rChan, dst}
 
 	// Same everything, should be grouped
-	reqresp2 := reqresp{&GetRequest{
+	reqresp2 := reqresp{s.ctx, &GetRequest{
 		Index:      "index1",
 		Fields:     []string{"f1", "f2"},
 		DocumentID: "2",
 	}, rChan, dst}
 
 	// Different index
-	reqresp3 := reqresp{&GetRequest{
+	reqresp3 := reqresp{s.ctx, &GetRequest{
 		Index:      "index2",
 		Fields:     []string{"f1", "f2"},
 		DocumentID: "3",
 	}, rChan, dst}
 
 	// Different fields
-	reqresp4 := reqresp{&GetRequest{
+	reqresp4 := reqresp{s.ctx, &GetRequest{
 		Index:      "index1",
 		Fields:     []string{"f1", "f3"},
 		DocumentID: "4",
