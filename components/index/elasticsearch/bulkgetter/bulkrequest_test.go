@@ -3,17 +3,29 @@ package bulkgetter
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"net/http"
 	"strings"
 	"testing"
 
+	"github.com/dankinder/httpmock"
+	"github.com/opensearch-project/opensearch-go"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
 
 type BulkRequestTestSuite struct {
 	suite.Suite
-	ctx context.Context
+
+	ctx    context.Context
+	client *opensearch.Client
+
+	// Mock search
+	mockAPIHandler *httpmock.MockHandler
+	mockAPIServer  *httpmock.Server
+	responseHeader http.Header
 
 	req1   *GetRequest
 	rChan1 chan GetResponse
@@ -29,8 +41,65 @@ type BulkRequestTestSuite struct {
 	reqresp2 reqresp
 }
 
+func (s *BulkRequestTestSuite) expectHelloWorld() {
+	testJSON := []byte(`{
+	  "name" : "0fc08b13cdab",
+	  "cluster_name" : "docker-cluster",
+	  "cluster_uuid" : "T9t1q7kFRSyL15qVkIlWZQ",
+	  "version" : {
+	    "number" : "7.8.1",
+	    "build_flavor" : "oss",
+	    "build_type" : "docker",
+	    "build_hash" : "b5ca9c58fb664ca8bf9e4057fc229b3396bf3a89",
+	    "build_date" : "2020-07-21T16:40:44.668009Z",
+	    "build_snapshot" : false,
+	    "lucene_version" : "8.5.1",
+	    "minimum_wire_compatibility_version" : "6.8.0",
+	    "minimum_index_compatibility_version" : "6.0.0-beta1"
+	  },
+	  "tagline" : "You Know, for Search"
+	}`)
+	s.mockAPIHandler.
+		On("Handle", "GET", "/", mock.Anything).
+		Return(httpmock.Response{
+			Body: testJSON,
+		}).
+		Once()
+
+}
+
+func (s *BulkRequestTestSuite) expectResolveAlias(from string, to string) {
+	testJSON := []byte(`{
+		"` + to + `": {
+			"aliases": {
+				"` + from + `": {}
+			}
+		}
+	}`)
+
+	url := fmt.Sprintf("/%s/_alias?allow_no_indices=true&expand_wildcards=none", from)
+
+	s.mockAPIHandler.
+		On("Handle", "GET", url, mock.Anything).
+		Return(httpmock.Response{
+			Body: testJSON,
+		})
+}
+
 func (s *BulkRequestTestSuite) SetupTest() {
 	s.ctx = context.Background()
+
+	// Setup mock search API
+	s.mockAPIHandler = &httpmock.MockHandler{}
+	s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
+	s.responseHeader = http.Header{
+		"Content-Type": []string{"application/json"},
+	}
+	s.client, _ = opensearch.NewClient(opensearch.Config{
+		Addresses: []string{s.mockAPIServer.URL()},
+	})
+
+	s.expectHelloWorld()
 
 	s.req1 = &GetRequest{
 		Index:      "test1",
@@ -50,9 +119,15 @@ func (s *BulkRequestTestSuite) SetupTest() {
 }
 
 func (s *BulkRequestTestSuite) TestGetRequest() {
-	br := newBulkRequest(2)
-	br.add(s.reqresp1)
-	br.add(s.reqresp2)
+	s.expectResolveAlias("test1", "test1")
+	s.expectResolveAlias("test2", "test2")
+
+	br := newBulkRequest(s.ctx, s.client, 2)
+
+	err := br.add(s.reqresp1)
+	s.NoError(err)
+	err = br.add(s.reqresp2)
+	s.NoError(err)
 
 	r := br.getRequest()
 
@@ -73,7 +148,7 @@ func (s *BulkRequestTestSuite) TestGetRequest() {
 		Docs []doc `json:"docs"`
 	}{}
 
-	err := json.NewDecoder(r.Body).Decode(&bodyStruct)
+	err = json.NewDecoder(r.Body).Decode(&bodyStruct)
 	s.NoError(err)
 
 	s.Equal(s.req1.Index, bodyStruct.Docs[0].Index)
@@ -83,9 +158,15 @@ func (s *BulkRequestTestSuite) TestGetRequest() {
 }
 
 func (s *BulkRequestTestSuite) TestProcessResponseFound() {
-	br := newBulkRequest(2)
-	br.add(s.reqresp1)
-	br.add(s.reqresp2)
+	s.expectResolveAlias("test1", "test1")
+	s.expectResolveAlias("test2", "test2")
+
+	br := newBulkRequest(s.ctx, s.client, 2)
+
+	err := br.add(s.reqresp1)
+	s.NoError(err)
+	err = br.add(s.reqresp2)
+	s.NoError(err)
 
 	respStr := `{
 	  "docs": [
@@ -117,7 +198,7 @@ func (s *BulkRequestTestSuite) TestProcessResponseFound() {
 		Body:       ioutil.NopCloser(strings.NewReader(respStr)),
 	}
 
-	err := br.processResponse(&resp)
+	err = br.processResponse(&resp)
 	s.NoError(err)
 
 	s.NotEmpty(s.reqresp1.resp)
@@ -130,6 +211,39 @@ func (s *BulkRequestTestSuite) TestProcessResponseFound() {
 
 	s.Equal("kaas", s.dst1.Field1)
 	s.Equal(15, s.dst1.Field2)
+}
+
+func (s *BulkRequestTestSuite) TestResolveIndex() {
+	s.expectResolveAlias("test1", "actual_index")
+
+	br := newBulkRequest(s.ctx, s.client, 1)
+	s.NoError(br.add(s.reqresp1))
+
+	respStr := `{
+	  "docs": [
+	    {
+	      "_index": "actual_index",
+	      "_id": "5",
+	      "_version": 4,
+	      "_seq_no": 5,
+	      "_primary_term": 19,
+	      "found": true,
+	      "_source": {
+	        "a1": "kaas",
+	        "a2": 15
+	      }
+	    }
+	  ]
+	}`
+
+	resp := opensearchapi.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(strings.NewReader(respStr)),
+	}
+
+	s.NoError(br.processResponse(&resp))
+
+	s.NotEmpty(s.reqresp1.resp)
 }
 
 func TestBulkRequestTestSuite(t *testing.T) {

@@ -2,6 +2,7 @@ package bulkgetter
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -48,7 +49,24 @@ func (s *BulkGetterSuite) expectHelloWorld() {
 			Body: testJSON,
 		}).
 		Once()
+}
 
+func (s *BulkGetterSuite) expectResolveAlias(index string) {
+	testJSON := []byte(`{
+		"` + index + `": {
+			"aliases": {
+				"` + index + `": {}
+			}
+		}
+	}`)
+
+	url := fmt.Sprintf("/%s/_alias?allow_no_indices=true&expand_wildcards=none", index)
+
+	s.mockAPIHandler.
+		On("Handle", "GET", url, mock.Anything).
+		Return(httpmock.Response{
+			Body: testJSON,
+		})
 }
 
 func (s *BulkGetterSuite) SetupTest() {
@@ -132,6 +150,9 @@ func (s *BulkGetterSuite) TestPopulateBatch() {
 		DocumentID: "4",
 	}, rChan, dst}
 
+	s.expectResolveAlias("index1")
+	s.expectResolveAlias("index2")
+
 	// Async; prevent buffer lock up.
 	go func() {
 		queue <- reqresp1
@@ -148,7 +169,8 @@ func (s *BulkGetterSuite) TestPopulateBatch() {
 	s.Len(b.rrs, 4)
 	s.NoError(err)
 
-	s.Equal(reqresp1, b.rrs[keyFromRR(reqresp1)])
+	key, _ := b.keyFromRR(reqresp1)
+	s.Equal(reqresp1, b.rrs[key])
 }
 
 // TestProcessBatch is an integration test.
@@ -210,6 +232,9 @@ func (s *BulkGetterSuite) TestProcessBatch() {
 		DocumentID: "2",
 		Fields:     []string{"field1", "field2"},
 	}
+
+	s.expectResolveAlias("test_index_1")
+	s.expectResolveAlias("test_index_2")
 
 	go func() {
 		s.NoError(s.bg.Work(s.ctx))

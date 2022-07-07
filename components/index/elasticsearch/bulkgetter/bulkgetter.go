@@ -76,13 +76,13 @@ func (bg *BulkGetter) processBatch(ctx context.Context) error {
 		return nil
 	}
 
-	return b.execute(ctx, bg.cfg.Client)
+	return b.execute()
 }
 
 func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (*bulkRequest, error) {
 	// log.Println("Populating BulkGetter batch.")
 
-	b := newBulkRequest(bg.cfg.BatchSize)
+	b := newBulkRequest(ctx, bg.cfg.Client, bg.cfg.BatchSize)
 
 	for i := 0; i < bg.cfg.BatchSize; i++ {
 		select {
@@ -95,7 +95,9 @@ func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (
 		case rr := <-queue:
 			// log.Printf("Batch add, %d elements", len(b.rrs))
 
-			b.add(rr)
+			if err := b.add(rr); err != nil {
+				return b, err
+			}
 		}
 	}
 

@@ -18,13 +18,17 @@ import (
 var ErrHTTP = errors.New("HTTP Error")
 
 type bulkRequest struct {
+	ctx         context.Context
+	client      *opensearch.Client
 	rrs         map[string]reqresp
 	decodeMutex sync.Mutex
 }
 
-func newBulkRequest(size int) *bulkRequest {
+func newBulkRequest(ctx context.Context, client *opensearch.Client, size int) *bulkRequest {
 	return &bulkRequest{
-		rrs: make(map[string]reqresp, size),
+		ctx:    ctx,
+		client: client,
+		rrs:    make(map[string]reqresp, size),
 	}
 }
 
@@ -42,17 +46,74 @@ type responseDoc struct {
 	Source json.RawMessage `json:"_source"`
 }
 
-func keyFromResponseDoc(doc *responseDoc) string {
-	// TODO: Resolve aliases; indexes in results are real indexes, whereas request indexes might be aliases!
+func (r *bulkRequest) resolveAlias(indexOrAlias string) (string, error) {
+	// TODO: Memoize-it!
+
+	// GET /<index_or_alias>/_alias
+	// {
+	// 	"<index>": {
+	// 		"aliases": {
+	// 			"ipfs_directories": {}
+	// 		}
+	// 	}
+	// }
+
+	falseConst := true
+
+	req := opensearchapi.IndicesGetAliasRequest{
+		Index:           []string{indexOrAlias},
+		AllowNoIndices:  &falseConst,
+		ExpandWildcards: "none",
+	}
+
+	res, err := req.Do(r.ctx, r.client)
+
+	if err != nil {
+		return "", fmt.Errorf("error executing request: %w", err)
+	}
+
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return "", fmt.Errorf("%w: %s", ErrHTTP, res)
+	}
+
+	var response map[string]struct {
+		Aliases map[string]struct{} `json:"aliases"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return "", err
+	}
+
+	for k := range response {
+		return k, nil
+	}
+
+	return "", fmt.Errorf("index or alias %s not found", indexOrAlias)
+}
+
+func (r *bulkRequest) keyFromResponseDoc(doc *responseDoc) string {
 	return doc.Index + doc.ID
 }
 
-func keyFromRR(rr reqresp) string {
-	return rr.req.Index + rr.req.DocumentID
+func (r *bulkRequest) keyFromRR(rr reqresp) (string, error) {
+	indexName, err := r.resolveAlias(rr.req.Index)
+	if err != nil {
+		return "", err
+	}
+	return indexName + rr.req.DocumentID, nil
 }
 
-func (r *bulkRequest) add(rr reqresp) {
-	r.rrs[keyFromRR(rr)] = rr
+func (r *bulkRequest) add(rr reqresp) error {
+	key, err := r.keyFromRR(rr)
+	if err != nil {
+		return err
+	}
+
+	r.rrs[key] = rr
+
+	return nil
 }
 
 func (r *bulkRequest) sendResponse(key string, found bool, err error) {
@@ -180,7 +241,7 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 		// log.Printf("Processing %d returned documents", len(docs))
 
 		for _, d := range docs {
-			key := keyFromResponseDoc(&d)
+			key := r.keyFromResponseDoc(&d)
 			found, err := r.processResponseDoc(&d, r.rrs[key].dst)
 			r.sendResponse(key, found, err)
 		}
@@ -198,10 +259,10 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 	return err
 }
 
-func (r *bulkRequest) execute(ctx context.Context, client *opensearch.Client) error {
+func (r *bulkRequest) execute() error {
 	log.Printf("Performing bulk GET, %d elements", len(r.rrs))
 
-	res, err := r.getRequest().Do(ctx, client)
+	res, err := r.getRequest().Do(r.ctx, r.client)
 	if err != nil {
 		err = fmt.Errorf("error executing request: %w", err)
 		r.sendBulkResponse(false, err)
