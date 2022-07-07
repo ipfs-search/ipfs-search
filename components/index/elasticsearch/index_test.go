@@ -78,7 +78,7 @@ func (s *IndexTestSuite) SetupTest() {
 	s.expectHelloWorld()
 
 	// Start worker
-	s.mockAsyncGetter.On("Work", mock.Anything).Return(nil).Maybe()
+	s.mockAsyncGetter.On("Work", mock.Anything).WaitUntil(time.After(time.Second)).Return(nil).Maybe()
 	go s.mockClient.Work(s.ctx)
 }
 
