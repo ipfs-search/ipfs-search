@@ -210,7 +210,7 @@ func decodeResponse(res *opensearchapi.Response) ([]responseDoc, error) {
 }
 
 func (r *bulkRequest) decodeSource(src json.RawMessage, dst interface{}) error {
-	// Wrap Unmarshall in mutex to prevent race conditions as dst might be shared!
+	// Wrap Unmarshall in mutex to prevent race conditions as dst may be shared!
 	r.decodeMutex.Lock()
 	defer r.decodeMutex.Unlock()
 
@@ -249,8 +249,14 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 		for _, d := range docs {
 			key := r.keyFromResponseDoc(&d)
 
-			found, err := r.processResponseDoc(&d, key)
-			r.sendResponse(key, found, err)
+			// Only decode and send response when the other side is listening.
+			if r.rrs[key].ctx.Err() == nil {
+				found, err := r.processResponseDoc(&d, key)
+				r.sendResponse(key, found, err)
+			} else {
+				log.Printf("Not writing response from bulk get, request context cancelled.")
+				close(r.rrs[key].resp)
+			}
 		}
 
 		return nil
