@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dankinder/httpmock"
-	opensearch "github.com/opensearch-project/opensearch-go"
+	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )

@@ -2,7 +2,8 @@ package queue
 
 import (
 	"context"
-	"github.com/streadway/amqp"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/mock"
 )
 
