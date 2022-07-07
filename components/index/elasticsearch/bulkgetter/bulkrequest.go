@@ -22,13 +22,15 @@ type bulkRequest struct {
 	client      *opensearch.Client
 	rrs         map[string]reqresp
 	decodeMutex sync.Mutex
+	aliases     map[string]string
 }
 
 func newBulkRequest(ctx context.Context, client *opensearch.Client, size int) *bulkRequest {
 	return &bulkRequest{
-		ctx:    ctx,
-		client: client,
-		rrs:    make(map[string]reqresp, size),
+		ctx:     ctx,
+		client:  client,
+		rrs:     make(map[string]reqresp, size),
+		aliases: make(map[string]string),
 	}
 }
 
@@ -47,8 +49,6 @@ type responseDoc struct {
 }
 
 func (r *bulkRequest) resolveAlias(indexOrAlias string) (string, error) {
-	// TODO: Memoize-it!
-
 	// GET /<index_or_alias>/_alias
 	// {
 	// 	"<index>": {
@@ -57,6 +57,11 @@ func (r *bulkRequest) resolveAlias(indexOrAlias string) (string, error) {
 	// 		}
 	// 	}
 	// }
+
+	index, ok := r.aliases[indexOrAlias]
+	if ok {
+		return index, nil
+	}
 
 	falseConst := true
 
@@ -87,6 +92,7 @@ func (r *bulkRequest) resolveAlias(indexOrAlias string) (string, error) {
 	}
 
 	for k := range response {
+		r.aliases[indexOrAlias] = k
 		return k, nil
 	}
 
