@@ -301,7 +301,7 @@ func (s *IndexTestSuite) TestDelete() {
 	               "successful": 1,
 	               "failed": 0
 	            },
-	            "status": 202,
+	            "status": 200,
 	            "_seq_no" : 1,
 	            "_primary_term" : 2
 	         }
