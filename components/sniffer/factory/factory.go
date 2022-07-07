@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"time"
 
+	"net"
+
 	"github.com/ipfs-search/ipfs-search/components/queue/amqp"
 	"github.com/ipfs-search/ipfs-search/components/sniffer"
 	"github.com/ipfs-search/ipfs-search/config"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/utils"
+
 	"github.com/ipfs/go-datastore"
-	samqp "github.com/streadway/amqp"
-	"net"
+	samqp "github.com/rabbitmq/amqp091-go"
 )
 
 func getConfig() (*config.Config, error) {

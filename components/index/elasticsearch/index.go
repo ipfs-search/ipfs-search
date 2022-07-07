@@ -1,12 +1,14 @@
 package elasticsearch
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 
-	opensearchutil "github.com/opensearch-project/opensearch-go/opensearchutil"
+	opensearchutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
@@ -44,6 +46,15 @@ func (i *Index) String() string {
 	return i.cfg.Name
 }
 
+func getBody(v interface{}) (io.ReadSeeker, error) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(b), nil
+}
+
 // index wraps BulkIndexer.Add().
 func (i *Index) index(
 	ctx context.Context,
@@ -54,16 +65,22 @@ func (i *Index) index(
 	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.index")
 	defer span.End()
 
-	var body io.Reader
+	var (
+		body io.ReadSeeker
+		err  error
+	)
 
 	if properties != nil {
 		if action == "update" {
 			// For updates, the updated fields need to be wrapped in a `doc` field
-			body = opensearchutil.NewJSONReader(struct {
+			body, err = getBody(struct {
 				Doc interface{} `json:"doc"`
 			}{properties})
+			if err != nil {
+				panic(err)
+			}
 		} else {
-			body = opensearchutil.NewJSONReader(properties)
+			body, err = getBody(properties)
 		}
 	}
 

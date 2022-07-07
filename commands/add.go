@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	samqp "github.com/streadway/amqp"
+	samqp "github.com/rabbitmq/amqp091-go"
 
 	"github.com/ipfs-search/ipfs-search/components/queue/amqp"
 	"github.com/ipfs-search/ipfs-search/config"

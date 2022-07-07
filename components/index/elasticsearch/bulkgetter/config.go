@@ -3,7 +3,7 @@ package bulkgetter
 import (
 	"time"
 
-	"github.com/opensearch-project/opensearch-go"
+	"github.com/opensearch-project/opensearch-go/v2"
 )
 
 // Config provides configuration for a BatchingGetter.

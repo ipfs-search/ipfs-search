@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/jpillora/backoff"
-	opensearch "github.com/opensearch-project/opensearch-go"
-	opensearchtransport "github.com/opensearch-project/opensearch-go/opensearchtransport"
-	opensearchutil "github.com/opensearch-project/opensearch-go/opensearchutil"
+	opensearch "github.com/opensearch-project/opensearch-go/v2"
+	opensearchtransport "github.com/opensearch-project/opensearch-go/v2/opensearchtransport"
+	opensearchutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 

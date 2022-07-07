@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	samqp "github.com/streadway/amqp"
+	samqp "github.com/rabbitmq/amqp091-go"
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
