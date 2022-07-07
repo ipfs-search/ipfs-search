@@ -66,7 +66,8 @@ func (s *BulkGetterSuite) expectResolveAlias(index string) {
 		On("Handle", "GET", url, mock.Anything).
 		Return(httpmock.Response{
 			Body: testJSON,
-		})
+		}).
+		Maybe()
 }
 
 func (s *BulkGetterSuite) SetupTest() {
