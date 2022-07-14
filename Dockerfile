@@ -18,7 +18,8 @@ RUN go mod download && go mod graph | awk '{if ($1 !~ "@") print $2}' | xargs go
 COPY . /src/
 
 # Run the build
-RUN go install -v ./...
+ENV GORACE="halt_on_error=1"
+RUN go install -v -race ./...
 
 # This results in a single layer image
 FROM alpine
