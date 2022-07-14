@@ -26,6 +26,9 @@ type bulkRequest struct {
 }
 
 func newBulkRequest(ctx context.Context, client *opensearch.Client, size int) *bulkRequest {
+	if ctx == nil {
+		panic("required context is nil")
+	}
 	return &bulkRequest{
 		ctx:     ctx,
 		client:  client,
@@ -48,6 +51,36 @@ type responseDoc struct {
 	Source json.RawMessage `json:"_source"`
 }
 
+type aliasesResponse map[string]struct {
+	Aliases map[string]struct{} `json:"aliases"`
+}
+
+func (r *bulkRequest) getAliases(indexOrAlias string) (aliasesResponse, error) {
+	response := aliasesResponse{}
+
+	falseConst := true
+	req := opensearchapi.IndicesGetAliasRequest{
+		Index:           []string{indexOrAlias},
+		AllowNoIndices:  &falseConst,
+		ExpandWildcards: "none",
+	}
+
+	res, err := req.Do(r.ctx, r.client)
+	if err != nil {
+		return response, fmt.Errorf("error executing request: %w", err)
+	}
+
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return response, fmt.Errorf("%w: %s", ErrHTTP, res)
+	}
+
+	err = json.NewDecoder(res.Body).Decode(&response)
+
+	return response, err
+}
+
 func (r *bulkRequest) resolveAlias(indexOrAlias string) (string, error) {
 	// GET /<index_or_alias>/_alias
 	// {
@@ -63,31 +96,8 @@ func (r *bulkRequest) resolveAlias(indexOrAlias string) (string, error) {
 		return index, nil
 	}
 
-	falseConst := true
-
-	req := opensearchapi.IndicesGetAliasRequest{
-		Index:           []string{indexOrAlias},
-		AllowNoIndices:  &falseConst,
-		ExpandWildcards: "none",
-	}
-
-	res, err := req.Do(r.ctx, r.client)
-
+	response, err := r.getAliases(indexOrAlias)
 	if err != nil {
-		return "", fmt.Errorf("error executing request: %w", err)
-	}
-
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return "", fmt.Errorf("%w: %s", ErrHTTP, res)
-	}
-
-	var response map[string]struct {
-		Aliases map[string]struct{} `json:"aliases"`
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
 		return "", err
 	}
 
@@ -250,12 +260,18 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 			key := r.keyFromResponseDoc(&d)
 
 			// Only decode and send response when the other side is listening.
-			if r.rrs[key].ctx.Err() == nil {
+			rr, ok := r.rrs[key]
+			if !ok {
+				log.Printf("%+v", r.rrs)
+				panic("")
+				return fmt.Errorf("unknown key '%s' in response to bulk request", key)
+			}
+			if rr.ctx.Err() == nil {
 				found, err := r.processResponseDoc(&d, key)
 				r.sendResponse(key, found, err)
 			} else {
 				log.Printf("Not writing response from bulk get, request context cancelled.")
-				close(r.rrs[key].resp)
+				close(rr.resp)
 			}
 		}
 
