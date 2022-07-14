@@ -1,46 +1,53 @@
 ipfs:
-  api_url: http://localhost:5001
-  gateway_url: http://localhost:8080
-  partial_size: 256KB
+    api_url: http://localhost:5001
+    gateway_url: http://localhost:8080
+    partial_size: 256KB
 elasticsearch:
-  url: http://localhost:9200
+    url: http://localhost:9200
+    bulk_indexer_workers: 8
+    bulk_flush_bytes: 5000000B
+    bulk_getter_batch_size: 48
+    bulk_getter_batch_timeout: 150ms
 amqp:
-  url: amqp://guest:guest@localhost:5672/
-  max_reconnect: 100
-  reconnect_time: 2s
+    url: amqp://guest:guest@localhost:5672/
+    max_reconnect: 100
+    reconnect_time: 2s
+    message_ttl: 4h0m0s
 tika:
-  url: http://localhost:8081
-  timeout: 5m0s
-  max_file_size: 4GB
+    url: http://localhost:8081
+    timeout: 5m0s
+    max_file_size: 4GB
 instrumentation:
-  sampling_ratio: 0.01
-  jaeger_endpoint: http://localhost:14268/api/traces
+    sampling_ratio: 0.01
+    jaeger_endpoint: http://localhost:14268/api/traces
 crawler:
-  direntry_buffer_size: 8192
-  min_update_age: 1h0m0s
-  stat_timeout: 1m0s
-  direntry_timeout: 1m0s
-  max_dirsize: 32768
+    direntry_buffer_size: 8192
+    min_update_age: 1h0m0s
+    stat_timeout: 1m0s
+    direntry_timeout: 1m0s
+    max_dirsize: 32768
 sniffer:
-  lastseen_expiration: 1h0m0s
-  lastseen_prunelen: 32768
-  logger_timeout: 1m0s
-  buffer_size: 512
+    lastseen_expiration: 1h0m0s
+    lastseen_prunelen: 32768
+    logger_timeout: 1m0s
+    buffer_size: 512
 indexes:
-  files:
-    name: ipfs_files
-  directories:
-    name: ipfs_directories
-  invalids:
-    name: ipfs_invalids
+    files:
+        name: ipfs_files
+    directories:
+        name: ipfs_directories
+    invalids:
+        name: ipfs_invalids
+    partials:
+        name: ipfs_partials
 queues:
-  files:
-    name: files
-  directories:
-    name: directories
-  hashes:
-    name: hashes
+    files:
+        name: files
+    directories:
+        name: directories
+    hashes:
+        name: hashes
 workers:
-  hash_workers: 70
-  file_workers: 120
-  directory_workers: 70
+    hash_workers: 70
+    file_workers: 120
+    directory_workers: 70

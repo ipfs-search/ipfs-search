@@ -1,19 +1,20 @@
 package elasticsearch
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 
-	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
-	opensearchutil "github.com/opensearch-project/opensearch-go/opensearchutil"
+	opensearchutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
+	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
 )
 
 // Index wraps an Elasticsearch index to store documents
@@ -45,6 +46,15 @@ func (i *Index) String() string {
 	return i.cfg.Name
 }
 
+func getBody(v interface{}) (io.ReadSeeker, error) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(b), nil
+}
+
 // index wraps BulkIndexer.Add().
 func (i *Index) index(
 	ctx context.Context,
@@ -52,39 +62,51 @@ func (i *Index) index(
 	id string,
 	properties interface{},
 ) error {
-	var body io.Reader
+	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.index")
+	defer span.End()
+
+	var (
+		body io.ReadSeeker
+		err  error
+	)
 
 	if properties != nil {
 		if action == "update" {
 			// For updates, the updated fields need to be wrapped in a `doc` field
-			body = opensearchutil.NewJSONReader(struct {
+			body, err = getBody(struct {
 				Doc interface{} `json:"doc"`
 			}{properties})
 		} else {
-			body = opensearchutil.NewJSONReader(properties)
+			body, err = getBody(properties)
+		}
+		if err != nil {
+			panic(err)
 		}
 	}
 
-	retries := 3
-
 	item := opensearchutil.BulkIndexerItem{
-		Index:           i.cfg.Name,
-		Action:          action,
-		Body:            body,
-		DocumentID:      id,
-		RetryOnConflict: &retries,
+		Index:      i.cfg.Name,
+		Action:     action,
+		Body:       body,
+		DocumentID: id,
+		Version:    nil,
 		OnFailure: func(
 			ctx context.Context,
 			item opensearchutil.BulkIndexerItem,
 			res opensearchutil.BulkIndexerResponseItem, err error,
 		) {
-			if err != nil {
-				log.Printf("Error flushing: %s\nitem: %v", err, item)
-			} else {
-				log.Printf("Error flushing: %s: %s\nitem: %v", res.Error.Type, res.Error.Reason, item)
+			if err == nil {
+				err = fmt.Errorf("Error flushing: %+v (%s)", res, id)
 			}
+
+			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			log.Println(err)
+
 		},
 	}
+
+	ctx, span = i.c.Tracer.Start(ctx, "index.elasticsearch.bulkIndexer.Add")
+	defer span.End()
 
 	return i.c.bulkIndexer.Add(ctx, item)
 }
@@ -136,58 +158,24 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Get")
 	defer span.End()
 
-	req := opensearchapi.GetRequest{
-		Index:          i.cfg.Name,
-		DocumentID:     id,
-		SourceIncludes: fields,
-		Realtime:       &[]bool{true}[0],
-		Preference:     "_local",
+	req := bulkgetter.GetRequest{
+		Index:      i.cfg.Name,
+		DocumentID: id,
+		Fields:     fields,
 	}
 
-	res, err := req.Do(ctx, i.c.searchClient)
+	resp := <-i.c.bulkGetter.Get(ctx, &req, dst)
 
-	// Handle connection errors
-	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return false, err
-	}
+	// Turn on for increased verbosity.
+	// if resp.Found {
+	// 	log.Printf("Found %s in %s", id, i)
+	// } else {
+	// 	if resp.Error != nil {
+	// 		log.Printf("Error getting %s in %s", id, i)
+	// 	}
+	// }
 
-	// We should have a valid body.
-	defer res.Body.Close()
-
-	switch res.StatusCode {
-	case 200:
-		// Found
-		response := struct {
-			Found  bool            `json:"found"`
-			Source json.RawMessage `json:"_source"`
-		}{}
-
-		decoder := json.NewDecoder(res.Body)
-		err = decoder.Decode(&response)
-		if err != nil {
-			err = fmt.Errorf("error decoding body: %w", err)
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			return false, err
-		}
-
-		// Decode source into destination
-		err = json.Unmarshal(response.Source, &dst)
-		if err != nil {
-			err = fmt.Errorf("error decoding source: %w", err)
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-			return false, err
-		}
-
-		return true, nil
-	case 404:
-		// Not found
-		return false, nil
-	default:
-		err = fmt.Errorf("unexpected status from backend: %s", res.Status())
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return false, err
-	}
+	return resp.Found, resp.Error
 }
 
 // Compile-time assurance that implementation satisfies interface.

@@ -3,7 +3,8 @@ package queue
 
 import (
 	"context"
-	"github.com/streadway/amqp"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // Publisher allows publishing of sniffed items.
