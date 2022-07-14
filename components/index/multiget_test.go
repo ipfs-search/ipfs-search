@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -47,17 +48,21 @@ func (s *MultiGetTestSuite) TestNotFound() {
 	s.NoError(err)
 }
 
+type dstStruct struct {
+	mu    sync.Mutex
+	Value int
+}
+
 // TestMultiGetFound tests "Document is found, with field not set"
 func (s *MultiGetTestSuite) TestFound() {
-	type dstStruct struct {
-		Changed bool
-	}
 
-	dst := dstStruct{false}
+	dst := dstStruct{Value: 1}
 
 	s.mock1.On("Get", mock.Anything, "objId", &dst, []string{"testField"}).Run(func(args mock.Arguments) {
 		u := args.Get(2).(*dstStruct)
-		u.Changed = true
+		u.mu.Lock()
+		u.Value = 2
+		u.mu.Unlock()
 	}).Return(true, nil)
 	s.mock2.On("Get", mock.Anything, "objId", &dst, []string{"testField"}).Return(false, nil)
 
@@ -65,25 +70,25 @@ func (s *MultiGetTestSuite) TestFound() {
 
 	s.NoError(err)
 	s.Equal(index, s.mock1)
-	s.True(dst.Changed)
+	s.Equal(dst.Value, 2)
 }
 
 // TestMultiFound tets for predictable behaviour in case the item is found in multiple indexes.
 // This implies a problem and hence should return an error.
 func (s *MultiGetTestSuite) TestMultiFound() {
-	type dstStruct struct {
-		Value int
-	}
-
 	dst := dstStruct{}
 
 	s.mock1.On("Get", mock.Anything, "objId", mock.Anything, []string{"testField"}).Run(func(args mock.Arguments) {
 		u := args.Get(2).(*dstStruct)
+		u.mu.Lock()
 		u.Value = 1
+		u.mu.Unlock()
 	}).Return(true, nil)
 	s.mock2.On("Get", mock.Anything, "objId", mock.Anything, []string{"testField"}).Run(func(args mock.Arguments) {
 		u := args.Get(2).(*dstStruct)
+		u.mu.Lock()
 		u.Value = 2
+		u.mu.Unlock()
 	}).Return(true, nil)
 
 	index, err := MultiGet(s.ctx, s.indexes, "objId", &dst, "testField")
