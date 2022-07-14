@@ -33,7 +33,7 @@ services:
       restart_policy:
         condition: on-failure
   ipfs:
-    image: ipfs/go-ipfs:v0.12.1
+    image: ipfs/go-ipfs:v0.13.1
     ports:
       - 4001:4001
       - 5001:5001
