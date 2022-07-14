@@ -201,7 +201,7 @@ func (s *BulkGetterSuite) TestProcessBatch() {
 	  ]
 	}`)
 
-	testURL := "/_mget?preference=_local&realtime=true"
+	testURL := "/_mget"
 	s.mockAPIHandler.
 		On("Handle", "POST", testURL, mock.Anything).
 		Return(httpmock.Response{

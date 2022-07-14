@@ -131,9 +131,6 @@ func (s *BulkRequestTestSuite) TestGetRequest() {
 
 	r := br.getRequest()
 
-	s.Equal("_local", r.Preference)
-	s.True(*(r.Realtime))
-
 	type source struct {
 		Include []string `json:"include"`
 	}
@@ -152,14 +149,14 @@ func (s *BulkRequestTestSuite) TestGetRequest() {
 	s.NoError(err)
 
 	s.True(
-		(s.Equal(s.req1.Index, bodyStruct.Docs[0].Index) &&
-			s.Equal(s.req1.DocumentID, bodyStruct.Docs[0].ID) &&
-			s.Equal(s.req2.Index, bodyStruct.Docs[1].Index) &&
-			s.Equal(s.req2.DocumentID, bodyStruct.Docs[1].ID)) ||
-			(s.Equal(s.req2.Index, bodyStruct.Docs[0].Index) &&
-				s.Equal(s.req2.DocumentID, bodyStruct.Docs[0].ID) &&
-				s.Equal(s.req1.Index, bodyStruct.Docs[1].Index) &&
-				s.Equal(s.req1.DocumentID, bodyStruct.Docs[1].ID)))
+		(s.req1.Index == bodyStruct.Docs[0].Index &&
+			s.req1.DocumentID == bodyStruct.Docs[0].ID &&
+			s.req2.Index == bodyStruct.Docs[1].Index &&
+			s.req2.DocumentID == bodyStruct.Docs[1].ID) ||
+			(s.req2.Index == bodyStruct.Docs[0].Index &&
+				s.req2.DocumentID == bodyStruct.Docs[0].ID &&
+				s.req1.Index == bodyStruct.Docs[1].Index &&
+				s.req1.DocumentID == bodyStruct.Docs[1].ID))
 }
 
 func (s *BulkRequestTestSuite) TestProcessResponseFound() {

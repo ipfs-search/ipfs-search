@@ -193,12 +193,8 @@ func (r *bulkRequest) getReqBody() io.Reader {
 func (r *bulkRequest) getRequest() *opensearchapi.MgetRequest {
 	body := r.getReqBody()
 
-	trueConst := true
-
 	req := opensearchapi.MgetRequest{
-		Body:       body,
-		Preference: "_local",
-		Realtime:   &trueConst,
+		Body: body,
 	}
 
 	return &req
