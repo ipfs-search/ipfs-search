@@ -262,15 +262,13 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 			// Only decode and send response when the other side is listening.
 			rr, ok := r.rrs[key]
 			if !ok {
-				log.Printf("%+v", r.rrs)
-				panic("")
 				return fmt.Errorf("unknown key '%s' in response to bulk request", key)
 			}
 			if rr.ctx.Err() == nil {
 				found, err := r.processResponseDoc(&d, key)
 				r.sendResponse(key, found, err)
 			} else {
-				log.Printf("Not writing response from bulk get, request context cancelled.")
+				// log.Printf("Not writing response from bulk get, request context cancelled.")
 				close(rr.resp)
 			}
 		}
