@@ -40,7 +40,14 @@ func (p *Pool) startWorkers(ctx context.Context, deliveries <-chan samqp.Deliver
 
 	for i := 0; i < workers; i++ {
 		name := fmt.Sprintf("%s-%d", poolName, i)
-		worker := worker.New(name, p.crawler, p.Instrumentation)
+		cfg := &worker.Config{
+			Name:         name,
+			MaxLoadRatio: p.config.MaxLoadRatio,
+			ThrottleMin:  p.config.ThrottleMin,
+			ThrottleMax:  p.config.ThrottleMax,
+		}
+
+		worker := worker.New(cfg, p.crawler, p.Instrumentation)
 		go worker.Start(ctx, deliveries)
 	}
 }
@@ -80,7 +87,7 @@ func (p *Pool) init(ctx context.Context) error {
 	return nil
 }
 
-// New initializes and returns a new pool pool.
+// New initializes and returns a new pool.
 func New(ctx context.Context, c *config.Config, i *instr.Instrumentation) (*Pool, error) {
 	if i == nil {
 		panic("Instrumentation cannot be null.")

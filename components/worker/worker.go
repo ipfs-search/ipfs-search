@@ -16,17 +16,27 @@ import (
 
 // Worker crawls deliveries from a queue.
 type Worker struct {
-	name    string
+	cfg     *Config
 	crawler *crawler.Crawler
+	ll      LoadLimiter
 
 	*instr.Instrumentation
 }
 
 // New returns a new worker.
-func New(name string, crawler *crawler.Crawler, i *instr.Instrumentation) *Worker {
+func New(cfg *Config, crawler *crawler.Crawler, i *instr.Instrumentation) *Worker {
+	ll := NewLoadLimiter(cfg.Name, cfg.MaxLoadRatio, cfg.ThrottleMin, cfg.ThrottleMax)
+
+	//# 0.8, 10*time.Second, 5*time.Minute)
+
 	return &Worker{
-		name, crawler, i,
+		cfg, crawler, ll, i,
 	}
+}
+
+// String returns the name of the worker.
+func (w *Worker) String() string {
+	return w.cfg.Name
 }
 
 // Start crawling deliveries, synchronously.
@@ -43,6 +53,12 @@ func (w *Worker) Start(ctx context.Context, deliveries <-chan samqp.Delivery) {
 				// This is a fatal error; it should never happen - crash the program!
 				panic("unexpected channel close")
 			}
+
+			if err := w.ll.LoadLimit(); err != nil {
+				log.Printf("load limit exception: %s", err)
+				span.RecordError(err)
+			}
+
 			if err := w.crawlDelivery(ctx, d); err != nil {
 				// By default, do not retry.
 				shouldRetry := false
