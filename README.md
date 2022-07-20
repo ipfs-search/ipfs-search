@@ -31,7 +31,7 @@ To learn more about downloading and restoring snapshots please refer to the [rel
 
 ## Contributors wanted
 Building a search engine like this takes a considerable amount of resources (money _and_ TLC).
-If you are able to help out with either of them, mail us at info@ipfs-search.com or find us at #ipfssearch on Freenode (or #ipfs-search:chat.weho.st on Matrix).
+If you are able to help out with either of them, do reach out (see the contact section in this file).
 
 Please read the Contributing.md file before contributing.
 
