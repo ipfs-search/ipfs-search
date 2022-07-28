@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 services:
   rabbitmq:
     image: library/rabbitmq:management-alpine
@@ -33,7 +33,7 @@ services:
       restart_policy:
         condition: on-failure
   ipfs:
-    image: ipfs/go-ipfs:v0.13.1
+    image: ipfs/kubo:v0.14.0
     ports:
       - 4001:4001
       - 5001:5001
@@ -53,16 +53,24 @@ services:
   ipfs-crawler:
     build: .
     depends_on:
-      - rabbitmq
-      - elasticsearch
-      - ipfs
-      - tika-extractor
-      - jaeger
+      rabbitmq:
+        condition: service_started
+      elasticsearch:
+        condition: service_started
+      tika-extractor:
+        condition: service_started
+      jaeger:
+        condition: service_started
+      ipfs:
+        condition: service_healthy
+      nsfw-server:
+        condition: service_healthy
     environment:
       - TIKA_EXTRACTOR=http://tika-extractor:8081
       - IPFS_API_URL=http://ipfs:5001
       - IPFS_GATEWAY_URL=http://ipfs:8080
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - NSFW_URL=http://nsfw-server:3000
       - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
       - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces
       - OTEL_TRACE_SAMPLER_ARG=1.0
@@ -103,6 +111,18 @@ services:
       - "14268:14268" # HTTP Collector
       - "16686:16686" # Frontend
     command: ["--es.num-shards=1", "--es.num-replicas=0"]
+    deploy:
+      restart_policy:
+        condition: on-failure
+  nsfw-server:
+    build: ../nsfw-server
+    ports:
+      - 3000:3000
+    depends_on:
+      ipfs:
+        condition: service_healthy
+    environment:
+      IPFS_GATEWAY_URL: http://ipfs:8080
     deploy:
       restart_policy:
         condition: on-failure
