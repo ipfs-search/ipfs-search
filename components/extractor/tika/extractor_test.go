@@ -56,7 +56,7 @@ func (s *TikaTestSuite) TearDownTest() {
     s.mockAPIServer.Close()
 }
 
-func (s TikaTestSuite) TestExtract() {
+func (s *TikaTestSuite) TestExtract() {
     testJSON := []byte(`
         {
           "metadata": {
@@ -124,7 +124,7 @@ func (s TikaTestSuite) TestExtract() {
     s.Contains(f.URLs, "https://proto.school/#/tutorials?course=filecoin")
 }
 
-func (s TikaTestSuite) TestExtractMaxFileSize() {
+func (s *TikaTestSuite) TestExtractMaxFileSize() {
     s.cfg.MaxFileSize = 100
     s.e = New(s.cfg, http.DefaultClient, s.protocol, instr.New())
 
@@ -145,7 +145,7 @@ func (s TikaTestSuite) TestExtractMaxFileSize() {
     s.mockAPIHandler.AssertExpectations(s.T())
 }
 
-func (s TikaTestSuite) TestExtractUpstreamError() {
+func (s *TikaTestSuite) TestExtractUpstreamError() {
     r := &t.AnnotatedResource{
         Resource: &t.Resource{
             Protocol: t.IPFSProtocol,
@@ -177,7 +177,7 @@ func (s TikaTestSuite) TestExtractUpstreamError() {
     s.Error(err, extractor.ErrRequest)
 }
 
-func (s TikaTestSuite) TestURLEscape() {
+func (s *TikaTestSuite) TestURLEscape() {
     // Regression test:
     // http://ipfs-tika:8081/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp/Killing_Yourself_to_Live:_85%_of_a_True_Story.html
     // panic: creating request: parse http://ipfs-tika:8081/ipfs/QmehSxmTPRCr85Xjgzjut6uWQihoTfqg9VVihJ892bmZCp/Killing_Yourself_to_Live:_85%_of_a_True_Story.html: invalid URL escape "%_o"
@@ -213,7 +213,7 @@ func (s TikaTestSuite) TestURLEscape() {
     s.mockAPIHandler.AssertExpectations(s.T())
 }
 
-func (s TikaTestSuite) TestTika500() {
+func (s *TikaTestSuite) TestTika500() {
     // 500 will just propagate whatever error we're getting from a lower level
     r := &t.AnnotatedResource{
         Resource: &t.Resource{
@@ -246,7 +246,7 @@ func (s TikaTestSuite) TestTika500() {
     s.mockAPIHandler.AssertExpectations(s.T())
 }
 
-func (s TikaTestSuite) TestExtractInvalidJSON() {
+func (s *TikaTestSuite) TestExtractInvalidJSON() {
     testJSON := []byte(`invalid JSON`)
 
     r := &t.AnnotatedResource{
