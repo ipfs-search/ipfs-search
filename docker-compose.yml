@@ -115,7 +115,7 @@ services:
       restart_policy:
         condition: on-failure
   nsfw-server:
-    build: ../nsfw-server
+    image: registry.gitlab.com/ipfs-search.com/nsfw-server/main:latest
     ports:
       - 3000:3000
     depends_on:
