@@ -258,7 +258,8 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 			// Only decode and send response when the other side is listening.
 			rr, ok := r.rrs[key]
 			if !ok {
-				return fmt.Errorf("unknown key '%s' in response to bulk request", key)
+				// Panic, this is a proper bug.
+				panic(fmt.Sprintf("unknown key '%s' in response to bulk request", key))
 			}
 			if rr.ctx.Err() == nil {
 				found, err := r.processResponseDoc(&d, key)
