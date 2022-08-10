@@ -11,6 +11,7 @@ type NSFWClassification struct {
 
 // NSFW represents nsfw-server classification.
 type NSFW struct {
-	Classification NSFWClassification `json:"classification"`
-	NSFWVersion    string             `json:"nsfwjsVersion"`
+	Classification    NSFWClassification `json:"classification"`
+	NSFWServerVersion string             `json:"nsfwServerVersion"`
+	ModelCID          string             `json:"modelCid"`
 }

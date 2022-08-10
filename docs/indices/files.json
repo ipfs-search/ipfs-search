@@ -197,6 +197,56 @@
                 "type": "long",
                 "ignore_malformed": true
             },
+            "nfsw": {
+                "properties": {
+                    "classification": {
+                        "properties": {
+                            "drawing": {
+                                "type": "float"
+                            },
+                            "hentai": {
+                                "type": "float"
+                            },
+                            "neutral": {
+                                "type": "float"
+                            },
+                            "porn": {
+                                "type": "float"
+                            },
+                            "sexy": {
+                                "type": "float"
+                            }
+                        }
+                    },
+                    "modelCid": {
+                        "type": "text",
+                        "fields": {
+                            "keyword": {
+                                "type": "keyword",
+                                "ignore_above": 256
+                            }
+                        }
+                    },
+                    "nsfwServerVersion": {
+                        "type": "text",
+                        "fields": {
+                            "keyword": {
+                                "type": "keyword",
+                                "ignore_above": 256
+                            }
+                        }
+                    },
+                    "nsfwjsVersion": {
+                        "type": "text",
+                        "fields": {
+                            "keyword": {
+                                "type": "keyword",
+                                "ignore_above": 256
+                            }
+                        }
+                    }
+                }
+            },
             "references": {
                 "properties": {
                     "name": {

@@ -13,8 +13,8 @@ import (
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 
 	"github.com/ipfs-search/ipfs-search/instr"
-	"github.com/ipfs-search/ipfs-search/utils"
 	t "github.com/ipfs-search/ipfs-search/types"
+	"github.com/ipfs-search/ipfs-search/utils"
 )
 
 const testCID = "QmehHHRh1a7u66r7fugebp6f6wGNMGCa7eho9cgjwhAcm2"
@@ -22,8 +22,8 @@ const testCID = "QmehHHRh1a7u66r7fugebp6f6wGNMGCa7eho9cgjwhAcm2"
 type NSFWTestSuite struct {
 	suite.Suite
 
-	ctx context.Context
-	e   extractor.Extractor
+	ctx    context.Context
+	e      extractor.Extractor
 	getter utils.HTTPBodyGetter
 
 	cfg *Config
@@ -65,7 +65,8 @@ func (s *NSFWTestSuite) TestExtract() {
 		    "hentai": 0.00016194644558709115,
 		    "sexy": 0.00016178081568796188
 		  },
-		  "nsfwjsVersion": "2.4.1"
+		  "modelCid": "QmfBNCmYLxwTr3CHaknd5HdzA6uXcTZqn1hsuLf8mRc3xS",
+		  "nsfwServerVersion": "0.9.0"
 		}
     `)
 
@@ -105,7 +106,8 @@ func (s *NSFWTestSuite) TestExtract() {
 	s.Equal(0.00050011818530038, f.NSFW.Classification.Porn)
 	s.Equal(0.00016194644558709115, f.NSFW.Classification.Hentai)
 	s.Equal(0.00016178081568796188, f.NSFW.Classification.Sexy)
-	s.Equal("2.4.1", f.NSFW.NSFWVersion)
+	s.Equal("0.9.0", f.NSFW.NSFWServerVersion)
+	s.Equal("QmfBNCmYLxwTr3CHaknd5HdzA6uXcTZqn1hsuLf8mRc3xS", f.NSFW.ModelCID)
 }
 
 func (s *NSFWTestSuite) TestExtractMaxFileSize() {
