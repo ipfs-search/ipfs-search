@@ -13,6 +13,7 @@ import (
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 
 	"github.com/ipfs-search/ipfs-search/instr"
+	"github.com/ipfs-search/ipfs-search/utils"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -23,6 +24,7 @@ type NSFWTestSuite struct {
 
 	ctx context.Context
 	e   extractor.Extractor
+	getter utils.HTTPBodyGetter
 
 	cfg *Config
 
@@ -43,7 +45,10 @@ func (s *NSFWTestSuite) SetupTest() {
 	s.cfg = DefaultConfig()
 	s.cfg.NSFWServerURL = s.mockAPIServer.URL()
 
-	s.e = New(s.cfg, http.DefaultClient, instr.New())
+	i := instr.New()
+	s.getter = utils.NewHTTPBodyGetter(http.DefaultClient, i)
+
+	s.e = New(s.cfg, s.getter, i)
 }
 
 func (s *NSFWTestSuite) TearDownTest() {
@@ -105,7 +110,7 @@ func (s *NSFWTestSuite) TestExtract() {
 
 func (s *NSFWTestSuite) TestExtractMaxFileSize() {
 	s.cfg.MaxFileSize = 100
-	s.e = New(s.cfg, http.DefaultClient, instr.New())
+	s.e = New(s.cfg, s.getter, instr.New())
 
 	r := &t.AnnotatedResource{
 		Resource: &t.Resource{
@@ -148,7 +153,7 @@ func (s *NSFWTestSuite) TestExtractUpstreamError() {
 	}
 
 	err := s.e.Extract(s.ctx, r, &f)
-	s.Error(err, extractor.ErrRequest)
+	s.Error(err, t.ErrRequest)
 
 	s.Nil(f.NSFW)
 }
@@ -180,7 +185,7 @@ func (s *NSFWTestSuite) TestServer500() {
 
 	err := s.e.Extract(s.ctx, r, &f)
 
-	s.Error(err, extractor.ErrUnexpectedResponse)
+	s.Error(err, t.ErrUnexpectedResponse)
 	s.mockAPIHandler.AssertExpectations(s.T())
 
 	s.Nil(f.NSFW)
@@ -216,7 +221,7 @@ func (s *NSFWTestSuite) TestExtractInvalidJSON() {
 
 	err := s.e.Extract(s.ctx, r, &f)
 
-	s.Error(err, extractor.ErrUnexpectedResponse)
+	s.Error(err, t.ErrUnexpectedResponse)
 	s.mockAPIHandler.AssertExpectations(s.T())
 
 	s.Nil(f.NSFW)

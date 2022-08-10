@@ -16,6 +16,7 @@ import (
     "github.com/ipfs-search/ipfs-search/components/protocol"
 
     "github.com/ipfs-search/ipfs-search/instr"
+    "github.com/ipfs-search/ipfs-search/utils"
     t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -26,6 +27,7 @@ type TikaTestSuite struct {
 
     ctx context.Context
     e   extractor.Extractor
+    getter utils.HTTPBodyGetter
 
     cfg      *Config
     protocol *protocol.Mock
@@ -49,7 +51,10 @@ func (s *TikaTestSuite) SetupTest() {
 
     s.protocol = &protocol.Mock{}
 
-    s.e = New(s.cfg, http.DefaultClient, s.protocol, instr.New())
+    i := instr.New()
+    s.getter = utils.NewHTTPBodyGetter(http.DefaultClient, i)
+
+    s.e = New(s.cfg, s.getter, s.protocol, i)
 }
 
 func (s *TikaTestSuite) TearDownTest() {
@@ -126,7 +131,7 @@ func (s *TikaTestSuite) TestExtract() {
 
 func (s *TikaTestSuite) TestExtractMaxFileSize() {
     s.cfg.MaxFileSize = 100
-    s.e = New(s.cfg, http.DefaultClient, s.protocol, instr.New())
+    s.e = New(s.cfg, s.getter, s.protocol, instr.New())
 
     r := &t.AnnotatedResource{
         Resource: &t.Resource{
@@ -174,7 +179,7 @@ func (s *TikaTestSuite) TestExtractUpstreamError() {
     }
 
     err := s.e.Extract(s.ctx, r, &f)
-    s.Error(err, extractor.ErrRequest)
+    s.Error(err, t.ErrRequest)
 }
 
 func (s *TikaTestSuite) TestURLEscape() {
@@ -242,7 +247,7 @@ func (s *TikaTestSuite) TestTika500() {
 
     err := s.e.Extract(s.ctx, r, &f)
 
-    s.Error(err, extractor.ErrUnexpectedResponse)
+    s.Error(err, t.ErrUnexpectedResponse)
     s.mockAPIHandler.AssertExpectations(s.T())
 }
 
@@ -282,7 +287,7 @@ func (s *TikaTestSuite) TestExtractInvalidJSON() {
 
     err := s.e.Extract(s.ctx, r, &f)
 
-    s.Error(err, extractor.ErrUnexpectedResponse)
+    s.Error(err, t.ErrUnexpectedResponse)
     s.mockAPIHandler.AssertExpectations(s.T())
 }
 

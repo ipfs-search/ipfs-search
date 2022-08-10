@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"regexp"
 
 	"go.opentelemetry.io/otel/api/trace"
@@ -16,24 +15,15 @@ import (
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
+	"github.com/ipfs-search/ipfs-search/utils"
 )
 
 // Extractor extracts metadata using the nsfw-server.
 type Extractor struct {
 	config *Config
-	client *http.Client
+	getter utils.HTTPBodyGetter
 
 	*instr.Instrumentation
-}
-
-func (e *Extractor) get(ctx context.Context, url string) (resp *http.Response, err error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		// Errors here are programming errors.
-		panic(fmt.Sprintf("creating request: %s", err))
-	}
-
-	return e.client.Do(req)
 }
 
 func (e *Extractor) getExtractURL(r *t.AnnotatedResource) string {
@@ -90,6 +80,7 @@ func isCompatible(r *t.AnnotatedResource, f *indexTypes.File) bool {
 	return matchOne(contentType, compatibleMimes)
 }
 
+
 // Extract metadata from a (potentially) referenced resource, updating
 // Metadata or returning an error.
 func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m interface{}) error {
@@ -117,27 +108,20 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 		return err
 	}
 
-	resp, err := e.get(ctx, e.getExtractURL(r))
+	body, err := e.getter.GetBody(ctx, e.getExtractURL(r), 200)
 	if err != nil {
-		err := fmt.Errorf("%w: %v", extractor.ErrRequest, err)
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		err := fmt.Errorf("%w: unexpected status %s", extractor.ErrUnexpectedResponse, resp.Status)
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return err
-	}
+	defer body.Close()
 
 	var nsfwData indexTypes.NSFW
-	if err := json.NewDecoder(resp.Body).Decode(&nsfwData); err != nil {
-		err := fmt.Errorf("%w: decoding error %s", extractor.ErrUnexpectedResponse, err)
+	if err := json.NewDecoder(body).Decode(&nsfwData); err != nil {
+		err := fmt.Errorf("%w: decoding error %s", t.ErrUnexpectedResponse, err)
 		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
 		return err
 	}
 
+	// Success, update NSFW data.
 	file.NSFW = &nsfwData
 
 	log.Printf("Got nsfw metadata metadata for '%v'", r)
@@ -145,10 +129,10 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 }
 
 // New returns a new nsfw-server extractor.
-func New(config *Config, client *http.Client, instr *instr.Instrumentation) extractor.Extractor {
+func New(config *Config, getter utils.HTTPBodyGetter, instr *instr.Instrumentation) extractor.Extractor {
 	return &Extractor{
 		config,
-		client,
+		getter,
 		instr,
 	}
 }

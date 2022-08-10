@@ -67,10 +67,11 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 
 	// Limited extractor connections (as resources are generally known to be available by now)
 	extractorTransport := utils.GetHTTPTransport(w.dialer.DialContext, 100)
-	extractorClient := &http.Client{Transport: extractorTransport}
 
-	tikaExtractor := tika.New(w.config.TikaConfig(), extractorClient, protocol, w.Instrumentation)
-	nsfwExtractor := nsfw.New(w.config.NSFWConfig(), extractorClient, w.Instrumentation)
+	getter := utils.NewHTTPBodyGetter(&http.Client{Transport: extractorTransport}, w.Instrumentation)
+
+	tikaExtractor := tika.New(w.config.TikaConfig(), getter, protocol, w.Instrumentation)
+	nsfwExtractor := nsfw.New(w.config.NSFWConfig(), getter, w.Instrumentation)
 	extractors := []extractor.Extractor{tikaExtractor, nsfwExtractor}
 
 	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractors, w.Instrumentation)
