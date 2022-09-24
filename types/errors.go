@@ -26,4 +26,11 @@ var (
 
 	// ErrUnsupportedType is returned when the type of a resource is currently unsupported.
 	ErrUnsupportedType = WrappedError{ErrInvalidResource, "unsupported type"}
+
+	// ErrUnexpectedResponse is returned upon unexpected response code.
+	ErrUnexpectedResponse = errors.New("unexpected response")
+
+	// ErrRequest is returned on errors in upstream requests.
+	ErrRequest = errors.New("request error")
+
 )

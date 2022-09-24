@@ -15,6 +15,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs-search/ipfs-search/components/crawler"
+	"github.com/ipfs-search/ipfs-search/components/extractor"
+	"github.com/ipfs-search/ipfs-search/components/extractor/nsfw"
 	"github.com/ipfs-search/ipfs-search/components/extractor/tika"
 	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch"
 	"github.com/ipfs-search/ipfs-search/components/protocol/ipfs"
@@ -63,12 +65,16 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 	ipfsClient := &http.Client{Transport: ipfsTransport}
 	protocol := ipfs.New(w.config.IPFSConfig(), ipfsClient, w.Instrumentation)
 
-	// Limited Tika connections (as resources are generally known to be available by now)
-	tikaTransport := utils.GetHTTPTransport(w.dialer.DialContext, 100)
-	tikaClient := &http.Client{Transport: tikaTransport}
-	extractor := tika.New(w.config.TikaConfig(), tikaClient, protocol, w.Instrumentation)
+	// Limited extractor connections (as resources are generally known to be available by now)
+	extractorTransport := utils.GetHTTPTransport(w.dialer.DialContext, 100)
 
-	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractor, w.Instrumentation)
+	getter := utils.NewHTTPBodyGetter(&http.Client{Transport: extractorTransport}, w.Instrumentation)
+
+	tikaExtractor := tika.New(w.config.TikaConfig(), getter, protocol, w.Instrumentation)
+	nsfwExtractor := nsfw.New(w.config.NSFWConfig(), getter, w.Instrumentation)
+	extractors := []extractor.Extractor{tikaExtractor, nsfwExtractor}
+
+	w.crawler = crawler.New(w.config.CrawlerConfig(), indexes, queues, protocol, extractors, w.Instrumentation)
 
 	return nil
 }

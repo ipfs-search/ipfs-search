@@ -4,13 +4,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ipfs-search/ipfs-search/commands"
-	"github.com/ipfs-search/ipfs-search/config"
-	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/ipfs-search/ipfs-search/commands"
+	"github.com/ipfs-search/ipfs-search/config"
+	"gopkg.in/urfave/cli.v1"
 )
 
 func main() {

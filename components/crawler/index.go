@@ -49,51 +49,63 @@ func (c *Crawler) indexInvalid(ctx context.Context, r *t.AnnotatedResource, err 
 	})
 }
 
-func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
-	ctx, span := c.Tracer.Start(ctx, "crawler.index",
-		trace.WithAttributes(label.Stringer("type", r.Type)),
-	)
-	defer span.End()
+func (c *Crawler) getFileProperties(ctx context.Context, r *t.AnnotatedResource) (interface{}, error) {
+	var err error
 
-	var (
-		err        error
-		index      index.Index
-		properties interface{}
-	)
+	span := trace.SpanFromContext(ctx)
 
-	switch r.Type {
-	case t.FileType:
-		f := &indexTypes.File{
-			Document: makeDocument(r),
-		}
-		err = c.extractor.Extract(ctx, r, f)
+	properties := &indexTypes.File{
+		Document: makeDocument(r),
+	}
+
+	// Note; this assumes to be sequential to allow for dependencies amongst extractors.
+	for _, e := range c.extractors {
+		err = e.Extract(ctx, r, properties)
 		if errors.Is(err, extractor.ErrFileTooLarge) {
 			// Interpret files which are too large as invalid resources; prevent repeated attempts.
 			span.RecordError(ctx, err)
-			err = fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
+			return nil, fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
 		}
+	}
 
-		index = c.indexes.Files
-		properties = f
+	return properties, err
+}
+
+func (c *Crawler) getDirectoryProperties(ctx context.Context, r *t.AnnotatedResource) (interface{}, error) {
+	properties := &indexTypes.Directory{
+		Document: makeDocument(r),
+	}
+	err := c.crawlDir(ctx, r, properties)
+
+	return properties, err
+}
+
+func (c *Crawler) getProperties(ctx context.Context, r *t.AnnotatedResource) (index.Index, interface{}, error) {
+	var err error
+
+	span := trace.SpanFromContext(ctx)
+
+	switch r.Type {
+	case t.FileType:
+		f, err := c.getFileProperties(ctx, r)
+
+		return c.indexes.Files, f, err
 
 	case t.DirectoryType:
-		d := &indexTypes.Directory{
-			Document: makeDocument(r),
-		}
-		err = c.crawlDir(ctx, r, d)
+		d, err := c.getDirectoryProperties(ctx, r)
 
-		index = c.indexes.Directories
-		properties = d
+		return c.indexes.Directories, d, err
 
 	case t.UnsupportedType:
 		// Index unsupported items as invalid.
-		span.RecordError(ctx, err)
 		err = t.ErrUnsupportedType
+		span.RecordError(ctx, err)
+
+		return nil, nil, err
 
 	case t.PartialType:
 		// Index partial (no properties)
-		index = c.indexes.Partials
-		properties = &indexTypes.Partial{}
+		return c.indexes.Partials, &indexTypes.Partial{}, nil
 
 	case t.UndefinedType:
 		panic("undefined type after Stat call")
@@ -101,6 +113,15 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	default:
 		panic("unexpected type")
 	}
+}
+
+func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
+	ctx, span := c.Tracer.Start(ctx, "crawler.index",
+		trace.WithAttributes(label.Stringer("type", r.Type)),
+	)
+	defer span.End()
+
+	index, properties, err := c.getProperties(ctx, r)
 
 	if err != nil {
 		if errors.Is(err, t.ErrInvalidResource) {

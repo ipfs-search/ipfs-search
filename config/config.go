@@ -41,6 +41,7 @@ type Config struct {
 	ElasticSearch `yaml:"elasticsearch"`
 	AMQP          `yaml:"amqp"`
 	Tika          `yaml:"tika"`
+	NSFW          `yaml:"nsfw"`
 
 	Instr   `yaml:"instrumentation"`
 	Crawler `yaml:"crawler"`
