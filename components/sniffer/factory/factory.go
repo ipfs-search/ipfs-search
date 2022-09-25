@@ -30,7 +30,7 @@ func getConfig() (*config.Config, error) {
 	return cfg, nil
 }
 
-func getInstr(cfg *instr.Config) (*instr.Instrumentation, func(), error) {
+func getInstr(cfg *instr.Config) (*instr.Instrumentation, func(context.Context), error) {
 	instFlusher, err := instr.Install(cfg, "ipfs-sniffer")
 	if err != nil {
 		return nil, nil, err
@@ -95,7 +95,7 @@ func Start(ctx context.Context, ds datastore.Batching) (context.Context, datasto
 	go func() {
 		// Cancel parent context when done
 		defer cancel()
-		defer instFlusher()
+		defer instFlusher(ctx)
 
 		err = s.Sniff(ctx)
 		fmt.Printf("Sniffer exited: %s\n", err)

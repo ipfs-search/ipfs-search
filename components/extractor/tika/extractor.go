@@ -7,9 +7,6 @@ import (
 	"log"
 	"net/url"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/protocol"
 
@@ -21,7 +18,7 @@ import (
 // Extractor extracts metadata using the ipfs-tika server.
 type Extractor struct {
 	config   *Config
-	getter utils.HTTPBodyGetter
+	getter   utils.HTTPBodyGetter
 	protocol protocol.Protocol
 
 	*instr.Instrumentation
@@ -44,11 +41,9 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 
 	if r.Size > uint64(e.config.MaxFileSize) {
 		err := fmt.Errorf("%w: %d", extractor.ErrFileTooLarge, r.Size)
-		span.RecordError(
-			ctx, extractor.ErrFileTooLarge, trace.WithErrorStatus(codes.Error),
-			// TODO: Enable after otel upgrade.
-			// label.Int64("file.size", r.Size),
-		)
+		span.RecordError(extractor.ErrFileTooLarge) // TODO: Enable after otel upgrade.
+		// attribute.Int64("file.size", r.Size),
+
 		return err
 	}
 
@@ -61,7 +56,7 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	// Parse resulting JSON
 	if err := json.NewDecoder(body).Decode(m); err != nil {
 		err := fmt.Errorf("%w: %v", t.ErrUnexpectedResponse, err)
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 

@@ -6,9 +6,8 @@ import (
 	"errors"
 	"log"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/protocol"
@@ -40,7 +39,7 @@ func isSupportedType(rType t.ResourceType) bool {
 // Crawl updates existing or crawls new resources, extracting metadata where applicable.
 func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	ctx, span := c.Tracer.Start(ctx, "crawler.Crawl",
-		trace.WithAttributes(label.String("cid", r.ID)),
+		trace.WithAttributes(attribute.String("cid", r.ID)),
 	)
 	defer span.End()
 
@@ -59,13 +58,13 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 
 	exists, err := c.updateMaybeExisting(ctx, r)
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 
 	if exists {
 		log.Printf("Not updating existing resource %v", r)
-		span.AddEvent(ctx, "Not updating existing resource")
+		span.AddEvent("Not updating existing resource")
 		return nil
 	}
 
@@ -73,14 +72,14 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 		if errors.Is(err, t.ErrInvalidResource) {
 			// Resource is invalid, index as such, throwing away ErrInvalidResource in favor of the result of indexing operation.
 			log.Printf("Indexing invalid resource %v", r)
-			span.AddEvent(ctx, "Indexing invalid resource")
+			span.AddEvent("Indexing invalid resource")
 
 			err = c.indexInvalid(ctx, r, err)
 		}
 
 		// Errors from ensureType imply that no type could be found, hence we can't index.
 		if err != nil {
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			span.RecordError(err)
 		}
 		return err
 	}
@@ -88,7 +87,7 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	log.Printf("Indexing new item %v", r)
 	err = c.index(ctx, r)
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 	}
 	return err
 }
@@ -117,7 +116,7 @@ func (c *Crawler) ensureType(ctx context.Context, r *t.AnnotatedResource) error 
 
 		err = c.protocol.Stat(ctx, r)
 		if err != nil {
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			span.RecordError(err)
 		}
 	}
 

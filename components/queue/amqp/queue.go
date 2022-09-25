@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 
 	amqp "github.com/rabbitmq/amqp091-go"
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/components/queue"
 	"github.com/ipfs-search/ipfs-search/instr"
@@ -30,15 +29,16 @@ func (q *Queue) String() string {
 // TODO: Add context parameter, allow for timeouts etc
 func (q *Queue) Publish(ctx context.Context, params interface{}, priority uint8) error {
 	ctx, span := q.Tracer.Start(ctx, "queue.amqp.Publish",
-		trace.WithAttributes(label.String("queue", q.name)),
-		trace.WithAttributes(label.Any("params", params)),
-		trace.WithAttributes(label.Uint("priority", uint(priority))),
+		trace.WithAttributes(
+			attribute.String("queue", q.name),
+			// attribute.Any("params", params)),
+			attribute.Int("priority", int(priority))),
 	)
 	defer span.End()
 
 	body, err := json.Marshal(params)
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 
@@ -55,7 +55,7 @@ func (q *Queue) Publish(ctx context.Context, params interface{}, priority uint8)
 		})
 
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 	}
 
 	return err
@@ -77,7 +77,7 @@ func (q *Queue) Consume(ctx context.Context) (<-chan amqp.Delivery, error) {
 	)
 
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return nil, err
 	}
 

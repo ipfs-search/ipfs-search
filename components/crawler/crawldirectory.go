@@ -8,9 +8,6 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
@@ -116,7 +113,7 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 
 			// Only add to properties up to limit (preventing oversized directory entries) - but queue entries nonetheless.
 			if dirCnt == c.config.MaxDirSize {
-				span.AddEvent(ctx, "large-directory")
+				span.AddEvent("large-directory")
 				log.Printf("Directory %v is large, crawling entries but not directory itself.", entry.Parent)
 				isLarge = true
 			}
@@ -151,7 +148,7 @@ func (c *Crawler) processDirEntries(ctx context.Context, entries <-chan *t.Annot
 	}
 
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 	}
 
 	return err

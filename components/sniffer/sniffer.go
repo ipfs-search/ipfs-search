@@ -10,9 +10,10 @@ package sniffer
 import (
 	"context"
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"log"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	// "go.opentelemetry.io/otel/codes"
 	"github.com/ipfs/go-datastore"
@@ -70,7 +71,7 @@ func (s *Sniffer) subscribe(ctx context.Context, c chan<- t.Provider) error {
 	h := handler.New(c)
 
 	err := s.es.Subscribe(ctx, h.HandleFunc)
-	// span.RecordError(ctx, err)
+	// span.RecordError(err)
 	// span.SetStatus(codes.Internal, err.Error())
 	return err
 }
@@ -85,7 +86,7 @@ func (s *Sniffer) filter(ctx context.Context, in <-chan t.Provider, out chan<- t
 	f := filter.New(mutliFilter, in, out)
 
 	err := f.Filter(ctx)
-	// span.RecordError(ctx, err)
+	// span.RecordError(err)
 	// span.SetStatus(codes.Internal, err.Error())
 	return err
 }
@@ -102,7 +103,7 @@ func (s *Sniffer) queue(ctx context.Context, c <-chan t.Provider) error {
 	q := queuer.New(publisher, c)
 
 	err = q.Queue(ctx)
-	// span.RecordError(ctx, err)
+	// span.RecordError(err)
 	// span.SetStatus(codes.Internal, err.Error())
 	return err
 }
@@ -120,7 +121,7 @@ func (s *Sniffer) iterate(ctx context.Context, sniffed, filtered chan t.Provider
 	// Wait until all contexts are closed, then return *first* error
 	err := errg.Wait()
 
-	// span.RecordError(ctx, err)
+	// span.RecordError(err)
 	// span.SetStatus(codes.Internal, err.Error())
 
 	return err
@@ -140,7 +141,7 @@ func (s *Sniffer) Sniff(ctx context.Context) error {
 		// Closing the parent context should cause a return, other errors cause a restart
 		if err := ctx.Err(); err != nil {
 			log.Printf("Parent context closed with error '%s', returning error", err)
-			// span.RecordError(ctx, err)
+			// span.RecordError(err)
 			// span.SetStatus(codes.Internal, err.Error())
 			return err
 		}

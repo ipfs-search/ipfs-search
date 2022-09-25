@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
@@ -53,7 +50,7 @@ func (i *IPFS) Stat(ctx context.Context, r *t.AnnotatedResource) error {
 			err = fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
 		}
 
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 

@@ -20,7 +20,7 @@ func AddHash(ctx context.Context, cfg *config.Config, hash string) error {
 	if err != nil {
 		return err
 	}
-	defer instFlusher()
+	defer instFlusher(ctx)
 
 	i := instr.New()
 

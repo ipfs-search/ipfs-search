@@ -3,8 +3,8 @@ package streamfilter
 import (
 	"context"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
@@ -39,15 +39,15 @@ func (f *Filter) iterate(ctx context.Context) error {
 		return func() error {
 			ctx = trace.ContextWithRemoteSpanContext(ctx, p.SpanContext)
 			ctx, span := f.Tracer.Start(ctx, "providerfilter.Filter", trace.WithAttributes(
-				label.String("cid", p.ID),
-				label.String("peerid", p.Provider),
+				attribute.String("cid", p.ID),
+				attribute.String("peerid", p.Provider),
 			))
 			defer span.End()
 
 			include, err := f.f.Filter(p)
 
 			if err != nil {
-				span.RecordError(ctx, err)
+				span.RecordError(err)
 			}
 
 			if include {

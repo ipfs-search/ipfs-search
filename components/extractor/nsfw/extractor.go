@@ -7,9 +7,6 @@ import (
 	"log"
 	"regexp"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
@@ -80,7 +77,6 @@ func isCompatible(r *t.AnnotatedResource, f *indexTypes.File) bool {
 	return matchOne(contentType, compatibleMimes)
 }
 
-
 // Extract metadata from a (potentially) referenced resource, updating
 // Metadata or returning an error.
 func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m interface{}) error {
@@ -100,11 +96,9 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 
 	if r.Size > uint64(e.config.MaxFileSize) {
 		err := fmt.Errorf("%w: %d", extractor.ErrFileTooLarge, r.Size)
-		span.RecordError(
-			ctx, extractor.ErrFileTooLarge, trace.WithErrorStatus(codes.Error),
-			// TODO: Enable after otel upgrade.
-			// label.Int64("file.size", r.Size),
-		)
+		span.RecordError(extractor.ErrFileTooLarge) // TODO: Enable after otel upgrade.
+		// attribute.Int64("file.size", r.Size),
+
 		return err
 	}
 
@@ -117,7 +111,7 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	var nsfwData indexTypes.NSFW
 	if err := json.NewDecoder(body).Decode(&nsfwData); err != nil {
 		err := fmt.Errorf("%w: decoding error %s", t.ErrUnexpectedResponse, err)
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 

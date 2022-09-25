@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/components/queue"
 
@@ -44,8 +44,8 @@ func (q *Queuer) iterate(ctx context.Context) error {
 		return func() error {
 			ctx = trace.ContextWithRemoteSpanContext(ctx, p.SpanContext)
 			_, span := q.Tracer.Start(ctx, "queue.Publish", trace.WithAttributes(
-				label.String("cid", p.ID),
-				label.String("peerid", p.Provider),
+				attribute.String("cid", p.ID),
+				attribute.String("peerid", p.Provider),
 			), trace.WithSpanKind(trace.SpanKindProducer))
 			defer span.End()
 
@@ -60,7 +60,7 @@ func (q *Queuer) iterate(ctx context.Context) error {
 			err := q.queue.Publish(ctx, &r, 9)
 
 			if err != nil {
-				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+				span.RecordError(err)
 			} else {
 				span.SetStatus(codes.Ok, "published")
 			}
