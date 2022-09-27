@@ -86,10 +86,6 @@ func (c *Client) Work(ctx context.Context) error {
 }
 
 func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.Client, error) {
-
-	// TODO: Re-enable
-	// httpClient := utils.GetHTTPClient(w.dialer.DialContext, 5)
-
 	b := backoff.Backoff{
 		Factor: 2.0,
 		Jitter: true,
