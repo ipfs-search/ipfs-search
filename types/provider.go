@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	"go.opentelemetry.io/otel/api/trace"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Provider represents a Resource available from an identified provider at a particular moment.

@@ -9,8 +9,6 @@ import (
 	"log"
 
 	opensearchutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
-
-	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
@@ -99,7 +97,7 @@ func (i *Index) index(
 				err = fmt.Errorf("Error flushing: %+v (%s)", res, id)
 			}
 
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			span.RecordError(err)
 			log.Println(err)
 
 		},
@@ -110,7 +108,8 @@ func (i *Index) index(
 
 	err = i.c.bulkIndexer.Add(ctx, item)
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "Error adding to BulkIndexer.")
 	}
 
 	return err

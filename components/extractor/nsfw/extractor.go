@@ -7,11 +7,7 @@ import (
 	"log"
 	"regexp"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-
 	"github.com/ipfs-search/ipfs-search/components/extractor"
-
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
@@ -80,12 +76,15 @@ func isCompatible(r *t.AnnotatedResource, f *indexTypes.File) bool {
 	return matchOne(contentType, compatibleMimes)
 }
 
-
 // Extract metadata from a (potentially) referenced resource, updating
 // Metadata or returning an error.
 func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m interface{}) error {
 	ctx, span := e.Tracer.Start(ctx, "extractor.nsfw_server.Extract")
 	defer span.End()
+
+	if err := extractor.ValidateMaxSize(ctx, r, e.config.MaxFileSize); err != nil {
+		return err
+	}
 
 	// Timeout if extraction hasn't fully completed within this time.
 	ctx, cancel := context.WithTimeout(ctx, e.config.RequestTimeout)
@@ -98,16 +97,6 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 		return nil
 	}
 
-	if r.Size > uint64(e.config.MaxFileSize) {
-		err := fmt.Errorf("%w: %d", extractor.ErrFileTooLarge, r.Size)
-		span.RecordError(
-			ctx, extractor.ErrFileTooLarge, trace.WithErrorStatus(codes.Error),
-			// TODO: Enable after otel upgrade.
-			// label.Int64("file.size", r.Size),
-		)
-		return err
-	}
-
 	body, err := e.getter.GetBody(ctx, e.getExtractURL(r), 200)
 	if err != nil {
 		return err
@@ -117,7 +106,7 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	var nsfwData indexTypes.NSFW
 	if err := json.NewDecoder(body).Decode(&nsfwData); err != nil {
 		err := fmt.Errorf("%w: decoding error %s", t.ErrUnexpectedResponse, err)
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 

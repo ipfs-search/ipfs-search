@@ -10,8 +10,7 @@ import (
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	opensearchtransport "github.com/opensearch-project/opensearch-go/v2/opensearchtransport"
 	opensearchutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 	"github.com/ipfs-search/ipfs-search/instr"
@@ -125,7 +124,7 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 		},
 		OnError: func(ctx context.Context, err error) {
 			span := trace.SpanFromContext(ctx)
-			span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+			span.RecordError(err)
 			log.Printf("Error flushing index buffer: %s", err)
 		},
 		OnFlushEnd: func(ctx context.Context) {

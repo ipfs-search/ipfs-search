@@ -6,9 +6,8 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/instr"
 )
@@ -22,13 +21,13 @@ type Connection struct {
 
 // NewConnection returns new AMQP connection
 func NewConnection(ctx context.Context, cfg *Config, amqpConfig *amqp.Config, i *instr.Instrumentation) (*Connection, error) {
-	ctx, span := i.Tracer.Start(ctx, "queue.amqp.NewConnection", trace.WithAttributes(label.String("amqp_url", cfg.URL)))
+	ctx, span := i.Tracer.Start(ctx, "queue.amqp.NewConnection", trace.WithAttributes(attribute.String("amqp_url", cfg.URL)))
 	defer span.End()
 
 	amqpConn, err := amqp.DialConfig(cfg.URL, *amqpConfig)
 
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return nil, err
 	}
 
@@ -42,7 +41,7 @@ func NewConnection(ctx context.Context, cfg *Config, amqpConfig *amqp.Config, i 
 	closeChan := amqpConn.NotifyClose(make(chan *amqp.Error, 1))
 
 	monitorConn := func() {
-		ctx, span := i.Tracer.Start(ctx, "queue.amqp.monitorConn", trace.WithAttributes(label.Stringer("connection", c)))
+		ctx, span := i.Tracer.Start(ctx, "queue.amqp.monitorConn", trace.WithAttributes(attribute.Stringer("connection", c)))
 		defer span.End()
 
 		errCnt := 0
@@ -50,20 +49,20 @@ func NewConnection(ctx context.Context, cfg *Config, amqpConfig *amqp.Config, i 
 			select {
 			case <-ctx.Done():
 				err := ctx.Err()
-				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+				span.RecordError(err)
 				return
 			case b := <-blockChan:
 				if b.Active {
-					span.AddEvent(ctx, "amqp-connection-blocked",
-						label.String("reason", b.Reason),
+					span.AddEvent("amqp-connection-blocked",
+						trace.WithAttributes(attribute.String("reason", b.Reason)),
 					)
 					log.Println("AMQP connection blocked")
 				} else {
-					span.AddEvent(ctx, "amqp-connection-unblocked")
+					span.AddEvent("amqp-connection-unblocked")
 					log.Println("AMQP connection unblocked")
 				}
 			case err := <-closeChan:
-				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+				span.RecordError(err)
 				log.Printf("AMQP connection lost, attempting reconnect in %s", cfg.ReconnectTime)
 				time.Sleep(cfg.ReconnectTime)
 
@@ -71,12 +70,12 @@ func NewConnection(ctx context.Context, cfg *Config, amqpConfig *amqp.Config, i 
 				if amqpErr != nil {
 					if errCnt > cfg.MaxReconnect {
 						// TODO: Proper error propagation/recovery
-						span.RecordError(ctx, amqpErr, trace.WithErrorStatus(codes.Error))
+						span.RecordError(amqpErr)
 						panic("Repeated AMQP reconnect errors")
 					} else {
 						errCnt++
 						log.Printf("Error connecting to AMQP: %v", amqpErr)
-						span.RecordError(ctx, amqpErr)
+						span.RecordError(amqpErr)
 					}
 
 				}
@@ -99,7 +98,7 @@ func (c *Connection) channel(ctx context.Context, prefetchCount int) (*Channel, 
 	// Create channel
 	ch, err := c.conn.Channel()
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return nil, err
 	}
 
@@ -110,7 +109,7 @@ func (c *Connection) channel(ctx context.Context, prefetchCount int) (*Channel, 
 		false, // global
 	)
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return nil, err
 	}
 
@@ -123,7 +122,7 @@ func (c *Connection) channel(ctx context.Context, prefetchCount int) (*Channel, 
 
 // NewChannelQueue returns a new queue on a new channel
 func (c *Connection) NewChannelQueue(ctx context.Context, name string, prefetchCount int) (*Queue, error) {
-	ctx, span := c.Tracer.Start(ctx, "queue.amqp.NewChannelQueue", trace.WithAttributes(label.String("queue", name)))
+	ctx, span := c.Tracer.Start(ctx, "queue.amqp.NewChannelQueue", trace.WithAttributes(attribute.String("queue", name)))
 	defer span.End()
 
 	ch, err := c.channel(ctx, prefetchCount)

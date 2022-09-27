@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/components/sniffer/eventsource"
 
@@ -31,8 +31,8 @@ func New(providers chan<- t.Provider) Handler {
 func (h *Handler) HandleFunc(ctx context.Context, e eventsource.EvtProviderPut) error {
 	ctx = trace.ContextWithRemoteSpanContext(ctx, e.SpanContext)
 	ctx, span := h.Tracer.Start(ctx, "handler.HandleFunc", trace.WithAttributes(
-		label.Stringer("cid", e.CID),
-		label.Stringer("peerid", e.PeerID),
+		attribute.Stringer("cid", e.CID),
+		attribute.Stringer("peerid", e.PeerID),
 	), trace.WithSpanKind(trace.SpanKindConsumer))
 	defer span.End()
 

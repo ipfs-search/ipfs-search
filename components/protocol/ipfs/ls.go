@@ -7,9 +7,6 @@ import (
 	"fmt"
 	"io"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-
 	unixfs "github.com/ipfs/go-unixfs"
 	unixfs_pb "github.com/ipfs/go-unixfs/pb"
 
@@ -148,7 +145,7 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.Ann
 			return fmt.Errorf("%w: %v", t.ErrInvalidResource, resp.Error)
 		}
 
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 
@@ -170,7 +167,7 @@ func (i *IPFS) Ls(ctx context.Context, r *t.AnnotatedResource, out chan<- *t.Ann
 			}
 
 			if err != nil {
-				span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+				span.RecordError(err)
 			}
 			return err
 		}

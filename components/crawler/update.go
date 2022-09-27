@@ -6,7 +6,8 @@ import (
 	"log"
 	"time"
 
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	index_types "github.com/ipfs-search/ipfs-search/components/index/types"
 	t "github.com/ipfs-search/ipfs-search/types"
@@ -42,10 +43,11 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 		refs, refsUpdated := appendReference(i.References, &i.AnnotatedResource.Reference)
 
 		if refsUpdated {
-			span.AddEvent(ctx, "Updating",
-				label.String("reason", "reference-added"),
-				label.Any("new-reference", i.AnnotatedResource.Reference),
-			)
+			span.AddEvent("Updating",
+				trace.WithAttributes(
+					attribute.String("reason", "reference-added"),
+					attribute.Stringer("new-reference", &i.AnnotatedResource.Reference),
+				))
 
 			return i.Index.Update(ctx, i.AnnotatedResource.ID, &index_types.Update{
 				References: refs,
@@ -70,11 +72,11 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 		}
 
 		if isRecent {
-			span.AddEvent(ctx, "Updating",
-				label.String("reason", "is-recent"),
-				// TODO: This causes a panic when LastSeen is nil.
-				// label.Stringer("last-seen", i.LastSeen),
-			)
+			span.AddEvent("Updating",
+				trace.WithAttributes(
+					attribute.String("reason", "is-recent")))
+			// TODO: This causes a panic when LastSeen is nil.
+			// attribute.Stringer("last-seen", i.LastSeen),
 
 			return i.Index.Update(ctx, i.AnnotatedResource.ID, &index_types.Update{
 				LastSeen: &now,
@@ -89,7 +91,7 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 		panic(fmt.Sprintf("Unexpected source %s for item %+v", i.Source, i))
 	}
 
-	span.AddEvent(ctx, "Not updating")
+	span.AddEvent("Not updating")
 
 	return nil
 }
@@ -147,7 +149,7 @@ func (c *Crawler) updateMaybeExisting(ctx context.Context, r *t.AnnotatedResourc
 	// Process existing item
 	if existing != nil {
 		if span.IsRecording() {
-			span.AddEvent(ctx, "existing", label.Any("index", existing.Index))
+			span.AddEvent("existing") //, trace.WithAttributes(attribute.Stringer("index", existing.Index)))
 		}
 
 		return c.processExisting(ctx, existing)

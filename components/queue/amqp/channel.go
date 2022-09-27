@@ -5,9 +5,8 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/instr"
 )
@@ -21,7 +20,7 @@ type Channel struct {
 
 // Queue creates a named queue on a given chennel
 func (c *Channel) Queue(ctx context.Context, name string) (*Queue, error) {
-	ctx, span := c.Tracer.Start(ctx, "queue.amqp.Channel.Queue", trace.WithAttributes(label.String("queue", name)))
+	ctx, span := c.Tracer.Start(ctx, "queue.amqp.Channel.Queue", trace.WithAttributes(attribute.String("queue", name)))
 	defer span.End()
 
 	_, err := c.ch.QueueDeclare(
@@ -37,7 +36,7 @@ func (c *Channel) Queue(ctx context.Context, name string) (*Queue, error) {
 		},
 	)
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return nil, err
 	}
 

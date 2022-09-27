@@ -16,7 +16,7 @@ func Crawl(ctx context.Context, cfg *config.Config) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer instFlusher()
+	defer instFlusher(ctx)
 
 	i := instr.New()
 

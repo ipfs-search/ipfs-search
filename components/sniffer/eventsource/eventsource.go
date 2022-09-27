@@ -9,9 +9,8 @@ import (
 	"github.com/libp2p/go-eventbus"
 	"github.com/libp2p/go-libp2p-core/event"
 
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 
 	"github.com/ipfs-search/ipfs-search/components/sniffer/proxy"
 	"github.com/ipfs-search/ipfs-search/instr"
@@ -50,36 +49,36 @@ func New(b event.Bus, ds datastore.Batching) (EventSource, error) {
 }
 
 func (s *EventSource) afterPut(k datastore.Key, v []byte, err error) error {
-	ctx, span := s.Tracer.Start(context.TODO(), "eventsource.afterPut")
+	_, span := s.Tracer.Start(context.TODO(), "eventsource.afterPut")
 	defer span.End()
 
 	// Ignore error'ed Put's
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Ok))
+		span.RecordError(err)
 		return err
 	}
 
 	// Ignore non-provider keys
 	if !isProviderKey(k) {
-		span.RecordError(ctx, fmt.Errorf("Non-provider key"), trace.WithErrorStatus(codes.Ok))
+		span.RecordError(fmt.Errorf("Non-provider key"))
 		return nil
 	}
 
 	cid, err := keyToCID(k)
 	if err != nil {
-		span.RecordError(ctx, fmt.Errorf("cid from key '%s': %w", k, err), trace.WithErrorStatus(codes.Error))
+		span.RecordError(fmt.Errorf("cid from key '%s': %w", k, err))
 		return nil
 	}
 
 	pid, err := keyToPeerID(k)
 	if err != nil {
-		span.RecordError(ctx, fmt.Errorf("pid from key '%s': %w", k, err), trace.WithErrorStatus(codes.Error))
+		span.RecordError(fmt.Errorf("pid from key '%s': %w", k, err))
 		return nil
 	}
 
 	span.SetAttributes(
-		label.Stringer("cid", cid),
-		label.Stringer("peerid", pid),
+		attribute.Stringer("cid", cid),
+		attribute.Stringer("peerid", pid),
 	)
 
 	e := EvtProviderPut{
@@ -89,7 +88,7 @@ func (s *EventSource) afterPut(k datastore.Key, v []byte, err error) error {
 	}
 
 	if err := s.emitter.Emit(e); err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 	} else {
 		span.SetStatus(codes.Ok, "emitted")
 	}

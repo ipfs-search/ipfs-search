@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/index"
@@ -63,7 +63,7 @@ func (c *Crawler) getFileProperties(ctx context.Context, r *t.AnnotatedResource)
 		err = e.Extract(ctx, r, properties)
 		if errors.Is(err, extractor.ErrFileTooLarge) {
 			// Interpret files which are too large as invalid resources; prevent repeated attempts.
-			span.RecordError(ctx, err)
+			span.RecordError(err)
 			return nil, fmt.Errorf("%w: %v", t.ErrInvalidResource, err)
 		}
 	}
@@ -99,7 +99,7 @@ func (c *Crawler) getProperties(ctx context.Context, r *t.AnnotatedResource) (in
 	case t.UnsupportedType:
 		// Index unsupported items as invalid.
 		err = t.ErrUnsupportedType
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 
 		return nil, nil, err
 
@@ -117,7 +117,7 @@ func (c *Crawler) getProperties(ctx context.Context, r *t.AnnotatedResource) (in
 
 func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	ctx, span := c.Tracer.Start(ctx, "crawler.index",
-		trace.WithAttributes(label.Stringer("type", r.Type)),
+		trace.WithAttributes(attribute.Stringer("type", r.Type)),
 	)
 	defer span.End()
 
@@ -126,7 +126,7 @@ func (c *Crawler) index(ctx context.Context, r *t.AnnotatedResource) error {
 	if err != nil {
 		if errors.Is(err, t.ErrInvalidResource) {
 			log.Printf("Indexing invalid '%v', err: %v", r, err)
-			span.RecordError(ctx, err)
+			span.RecordError(err)
 			return c.indexInvalid(ctx, r, err)
 		}
 

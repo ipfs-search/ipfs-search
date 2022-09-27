@@ -11,8 +11,7 @@ import (
 
 	samqp "github.com/rabbitmq/amqp091-go"
 
-	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/components/crawler"
 	"github.com/ipfs-search/ipfs-search/components/extractor"
@@ -183,13 +182,13 @@ func (w *Pool) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
 	}
 
 	if err := json.Unmarshal(d.Body, r); err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 
 	if !r.IsValid() {
 		err := fmt.Errorf("Invalid resource: %v", r)
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 		return err
 	}
 
@@ -198,7 +197,7 @@ func (w *Pool) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
 	log.Printf("Done crawling '%s', result: %v", r, err)
 
 	if err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+		span.RecordError(err)
 	}
 
 	return err
@@ -221,14 +220,14 @@ func (w *Pool) startWorker(ctx context.Context, deliveries <-chan samqp.Delivery
 				// By default, do not retry.
 				shouldRetry := false
 
-				span.RecordError(ctx, err)
+				span.RecordError(err)
 
 				if err := d.Reject(shouldRetry); err != nil {
-					span.RecordError(ctx, err)
+					span.RecordError(err)
 				}
 			} else {
 				if err := d.Ack(false); err != nil {
-					span.RecordError(ctx, err)
+					span.RecordError(err)
 				}
 			}
 		}
