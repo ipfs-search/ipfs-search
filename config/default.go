@@ -4,7 +4,7 @@ package config
 func Default() *Config {
 	return &Config{
 		IPFSDefaults(),
-		ElasticSearchDefaults(),
+		OpenSearchDefaults(),
 		AMQPDefaults(),
 		TikaDefaults(),
 		NSFWDefaults(),

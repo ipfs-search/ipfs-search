@@ -1,7 +1,7 @@
 # Indices
 
-## Elasticsearch index mapping and settings
-To be used in the [Create index API](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html):
+## OpenSearch index mapping and settings
+To be used in the [Create index API](https://www.elastic.co/guide/en/opensearch/reference/current/indices-create-index.html):
 ```
 $ curl -d <index.json> -X PUT http://localhost:9200/<index-name>
 ```

@@ -27,21 +27,22 @@ package config
 
 import (
 	"fmt"
-	env "github.com/Netflix/go-env"
-	yaml "gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	env "github.com/Netflix/go-env"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // Config contains the configuration for all components.
 type Config struct {
-	IPFS          `yaml:"ipfs"`
-	ElasticSearch `yaml:"elasticsearch"`
-	AMQP          `yaml:"amqp"`
-	Tika          `yaml:"tika"`
-	NSFW          `yaml:"nsfw"`
+	IPFS       `yaml:"ipfs"`
+	OpenSearch `yaml:"opensearch"`
+	AMQP       `yaml:"amqp"`
+	Tika       `yaml:"tika"`
+	NSFW       `yaml:"nsfw"`
 
 	Instr   `yaml:"instrumentation"`
 	Crawler `yaml:"crawler"`

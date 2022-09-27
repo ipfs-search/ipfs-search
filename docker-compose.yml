@@ -8,14 +8,16 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.8.1
+  opensearch:
+    image: opensearchproject/opensearch:2.3.0
     ports:
       - 9200:9200
       - 9300:9300
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
@@ -23,15 +25,18 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-  kibana:
-    image: docker.elastic.co/kibana/kibana-oss:7.8.1
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.3.0
     depends_on:
-      - elasticsearch
+      - opensearch
     ports:
       - 5601:5601
     deploy:
       restart_policy:
         condition: on-failure
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
   ipfs:
     image: ipfs/kubo:v0.14.0
     ports:
@@ -55,7 +60,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_started
-      elasticsearch:
+      opensearch:
         condition: service_started
       tika-extractor:
         condition: service_started
@@ -69,7 +74,7 @@ services:
       - TIKA_EXTRACTOR=http://tika-extractor:8081
       - IPFS_API_URL=http://ipfs:5001
       - IPFS_GATEWAY_URL=http://ipfs:8080
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - OPENSEARCH_URL=http://opensearch:9200
       - NSFW_URL=http://nsfw-server:3000
       - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
       - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces
@@ -82,9 +87,9 @@ services:
     ports:
       - 9615:9615
     depends_on:
-      - elasticsearch
+      - opensearch
     environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - OPENSEARCH_URL=http://opensearch:9200
     deploy:
       restart_policy:
         condition: on-failure
@@ -102,11 +107,12 @@ services:
   jaeger:
     image: jaegertracing/all-in-one
     environment:
-      - SPAN_STORAGE_TYPE=elasticsearch
-      - ES_SERVER_URLS=http://elasticsearch:9200
+      - SPAN_STORAGE_TYPE=opensearch
+      - ES_SERVER_URLS=http://opensearch:9200
+      - ES_VERSION=7
       - ES_TAGS_AS_FIELDS_ALL=true
     depends_on:
-      - elasticsearch
+      - opensearch
     ports:
       - "14268:14268" # HTTP Collector
       - "16686:16686" # Frontend

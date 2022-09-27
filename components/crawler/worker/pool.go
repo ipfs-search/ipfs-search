@@ -18,7 +18,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/extractor/nsfw"
 	"github.com/ipfs-search/ipfs-search/components/extractor/tika"
-	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch"
 	"github.com/ipfs-search/ipfs-search/components/protocol/ipfs"
 	"github.com/ipfs-search/ipfs-search/components/queue/amqp"
 
@@ -79,22 +79,22 @@ func (w *Pool) makeCrawler(ctx context.Context) error {
 	return nil
 }
 
-func (w *Pool) getSearchClient() (*elasticsearch.Client, error) {
-	clientConfig := &elasticsearch.ClientConfig{
-		URL:       w.config.ElasticSearch.URL,
+func (w *Pool) getSearchClient() (*opensearch.Client, error) {
+	clientConfig := &opensearch.ClientConfig{
+		URL:       w.config.OpenSearch.URL,
 		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 100),
 		Debug:     false,
 
-		BulkIndexerWorkers:     w.config.ElasticSearch.BulkIndexerWorkers,
-		BulkIndexerFlushBytes:  int(w.config.ElasticSearch.BulkIndexerFlushBytes),
-		BulkGetterBatchSize:    w.config.ElasticSearch.BulkGetterBatchSize,
-		BulkGetterBatchTimeout: w.config.ElasticSearch.BulkGetterBatchTimeout,
+		BulkIndexerWorkers:     w.config.OpenSearch.BulkIndexerWorkers,
+		BulkIndexerFlushBytes:  int(w.config.OpenSearch.BulkIndexerFlushBytes),
+		BulkGetterBatchSize:    w.config.OpenSearch.BulkGetterBatchSize,
+		BulkGetterBatchTimeout: w.config.OpenSearch.BulkGetterBatchTimeout,
 	}
 
-	return elasticsearch.NewClient(clientConfig, w.Instrumentation)
+	return opensearch.NewClient(clientConfig, w.Instrumentation)
 }
 
-func startSearchWorker(ctx context.Context, esClient *elasticsearch.Client) {
+func startSearchWorker(ctx context.Context, esClient *opensearch.Client) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -119,21 +119,21 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 	go startSearchWorker(ctx, esClient)
 
 	return &crawler.Indexes{
-		Files: elasticsearch.New(
+		Files: opensearch.New(
 			esClient,
-			&elasticsearch.Config{Name: w.config.Indexes.Files.Name},
+			&opensearch.Config{Name: w.config.Indexes.Files.Name},
 		),
-		Directories: elasticsearch.New(
+		Directories: opensearch.New(
 			esClient,
-			&elasticsearch.Config{Name: w.config.Indexes.Directories.Name},
+			&opensearch.Config{Name: w.config.Indexes.Directories.Name},
 		),
-		Invalids: elasticsearch.New(
+		Invalids: opensearch.New(
 			esClient,
-			&elasticsearch.Config{Name: w.config.Indexes.Invalids.Name},
+			&opensearch.Config{Name: w.config.Indexes.Invalids.Name},
 		),
-		Partials: elasticsearch.New(
+		Partials: opensearch.New(
 			esClient,
-			&elasticsearch.Config{Name: w.config.Indexes.Partials.Name},
+			&opensearch.Config{Name: w.config.Indexes.Partials.Name},
 		),
 	}, nil
 }

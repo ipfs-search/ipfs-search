@@ -9,7 +9,7 @@
 
 Search engine for the [Interplanetary Filesystem](https://ipfs.io). Sniffs the DHT gossip and indexes file and directory hashes.
 
-Metadata and contents are extracted using [ipfs-tika](https://github.com/ipfs-search/ipfs-tika), searching is done using ElasticSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
+Metadata and contents are extracted using [ipfs-tika](https://github.com/ipfs-search/ipfs-tika), searching is done using OpenSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
 
 The ipfs-search command consists of two components: the crawler and the sniffer. The sniffer extracts hashes from the gossip between nodes. The crawler extracts data from the hashes and indexes them.
 
@@ -21,7 +21,7 @@ Please find us on our Freenode/[Riot/Matrix](https://riot.im/app/#/room/#ipfs-se
 
 ## Snapshots
 ipfs-search provides the daily snapshot for all of the indexed data using
-[elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html).
+[snapshots](https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/index/).
 To learn more about downloading and restoring snapshots please refer to the [relevant section](https://ipfs-search.readthedocs.io/en/latest/snapshots.html) in our documentation.
 
 ## Related repo's
@@ -43,7 +43,7 @@ For discussing and suggesting features, look at the [issues](https://github.com/
 ## External dependencies
 
 * Go 1.16
-* Elasticsearch 7.x
+* OpenSearch 2.3.x
 * RabbitMQ / AMQP server
 * NodeJS 9.x
 * IPFS 0.7
@@ -92,7 +92,7 @@ Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com
 
 ## Sponsors
 
-<a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/logo/banner.png"></a> <a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/image/logos/NGI0_tag.png"></a> 
+<a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/logo/banner.png"></a> <a href="https://nlnet.nl/project/IPFS-search/"><img width="200pt" src="https://nlnet.nl/image/logos/NGI0_tag.png"></a>
 <br>
 ipfs-search is supported by NLNet through the EU's Next Generation Internet (NGI0) programme.
 

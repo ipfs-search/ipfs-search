@@ -2,7 +2,7 @@ ipfs:
     api_url: http://localhost:5001
     gateway_url: http://localhost:8080
     partial_size: 256KB
-elasticsearch:
+opensearch:
     url: http://localhost:9200
     bulk_indexer_workers: 8
     bulk_flush_bytes: 5000000B

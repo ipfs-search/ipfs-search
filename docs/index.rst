@@ -11,7 +11,7 @@ This is the main documentation repository for ipfs-search.com
 
 Search engine for the `Interplanetary Filesystem <https://ipfs.io>`_. Sniffs the DHT gossip and indexes file and directory hashes.
 
-Metadata and contents are extracted using `ipfs-tika <https://github.com/ipfs-search/ipfs-tika>`_, searching is done using ElasticSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
+Metadata and contents are extracted using `ipfs-tika <https://github.com/ipfs-search/ipfs-tika>`_, searching is done using OpenSearch 7, queueing is done using RabbitMQ. The crawler is implemented in Go, the API and frontend are built using Node.js.
 
 The ipfs-search command consists of two components: the crawler and the sniffer. The sniffer extracts hashes from the gossip between nodes. The crawler extracts data from the hashes and indexes them.
 

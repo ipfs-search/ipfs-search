@@ -1,4 +1,4 @@
-package elasticsearch
+package opensearch
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 
-	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 	"github.com/ipfs-search/ipfs-search/instr"
 )
 
@@ -101,7 +101,7 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 		Transport:    cfg.Transport,
 		DisableRetry: cfg.Debug,
 		// Retry/backoff management
-		// https://www.elastic.co/guide/en/elasticsearch/reference/master/tune-for-indexing-speed.html#multiple-workers-threads
+		// https://www.elastic.co/guide/en/opensearch/reference/master/tune-for-indexing-speed.html#multiple-workers-threads
 		RetryOnStatus:        []int{429, 502, 503, 504},
 		EnableRetryOnTimeout: true,
 		RetryBackoff:         func(i int) time.Duration { return b.ForAttempt(float64(i)) },
@@ -124,7 +124,7 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 		NumWorkers: cfg.BulkIndexerWorkers,
 		FlushBytes: cfg.BulkIndexerFlushBytes,
 		OnFlushStart: func(ctx context.Context) context.Context {
-			newCtx, _ := i.Tracer.Start(ctx, "index.elasticsearch.BulkIndexerFlush")
+			newCtx, _ := i.Tracer.Start(ctx, "index.opensearch.BulkIndexerFlush")
 			return newCtx
 		},
 		OnError: func(ctx context.Context, err error) {

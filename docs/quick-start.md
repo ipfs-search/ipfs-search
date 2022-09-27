@@ -3,7 +3,7 @@
 ## Dependencies
 
 * Go 1.13
-* Elasticsearch 7.x
+* OpenSearch 7.x
 * RabbitMQ / AMQP server
 * NodeJS 9.x
 * IPFS 0.7

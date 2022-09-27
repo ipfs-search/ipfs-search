@@ -2,8 +2,8 @@ ipfs:
   api_url: http://localhost:5001                      # IPFS API endpoint, also IPFS_API_URL in env
   gateway_url: http://localhost:8080                  # IPFS gateway, also IPFS_GATEWAY_URL in env
   partial_size: 256KB                                 # Size of items considered to be partial (when unreferenced)
-elasticsearch:
-  url: http://localhost:9200                          # Also ELASTICSEARCH_URL in env
+opensearch:
+  url: http://localhost:9200                          # Also OPENSEARCH_URL in env
   bulk_indexer_workers: 16                            # Workers to use for bulk writes.
   bulk_flush_bytes: 5MB                               # Bytesize treshold for bulk writes.
   bulk_getter_batch_size: 48                          # Item treshold for execution of bulk gets.
