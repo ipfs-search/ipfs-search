@@ -83,7 +83,7 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 
 // Get retreives `fields` from document with `id` from the index, returning:
 func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
-	ctx, span := i.Tracer.Start(ctx, "index.elasticsearch.Get")
+	ctx, span := i.Tracer.Start(ctx, "index.opensearch.Get")
 	defer span.End()
 
 	// First, try caching index

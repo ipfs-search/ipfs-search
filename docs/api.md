@@ -1,7 +1,7 @@
 # API
 
 ## REST API
-We're using [Elasticsearch querystring query API](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html), allowing filters by field like so: `references.name:epub` or like so `last-seen:>now-1M`.
+We're using the [querystring query API](https://www.elastic.co/guide/en/opensearch/reference/current/query-dsl-query-string-query.html), allowing filters by field like so: `references.name:epub` or like so `last-seen:>now-1M`.
 
 An up-to-date list of available fields can be found in the index mapping definition for [files](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/files.json) and [directories](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/directories.json).
 

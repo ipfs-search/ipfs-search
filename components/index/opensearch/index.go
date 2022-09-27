@@ -1,4 +1,4 @@
-package elasticsearch
+package opensearch
 
 import (
 	"bytes"
@@ -14,10 +14,10 @@ import (
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
-	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 )
 
-// Index wraps an Elasticsearch index to store documents
+// Index wraps an OpenSearch index to store documents
 type Index struct {
 	cfg *Config
 	c   *Client
@@ -62,7 +62,7 @@ func (i *Index) index(
 	id string,
 	properties interface{},
 ) error {
-	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.index")
+	ctx, span := i.c.Tracer.Start(ctx, "index.opensearch.index")
 	defer span.End()
 
 	var (
@@ -105,7 +105,7 @@ func (i *Index) index(
 		},
 	}
 
-	ctx, span = i.c.Tracer.Start(ctx, "index.elasticsearch.bulkIndexer.Add")
+	ctx, span = i.c.Tracer.Start(ctx, "index.opensearch.bulkIndexer.Add")
 	defer span.End()
 
 	return i.c.bulkIndexer.Add(ctx, item)
@@ -113,7 +113,7 @@ func (i *Index) index(
 
 // Index a document's properties, identified by id
 func (i *Index) Index(ctx context.Context, id string, properties interface{}) error {
-	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Index")
+	ctx, span := i.c.Tracer.Start(ctx, "index.opensearch.Index")
 	defer span.End()
 
 	if err := i.index(ctx, "create", id, properties); err != nil {
@@ -126,7 +126,7 @@ func (i *Index) Index(ctx context.Context, id string, properties interface{}) er
 
 // Update a document's properties, given id
 func (i *Index) Update(ctx context.Context, id string, properties interface{}) error {
-	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Update")
+	ctx, span := i.c.Tracer.Start(ctx, "index.opensearch.Update")
 	defer span.End()
 
 	if err := i.index(ctx, "update", id, properties); err != nil {
@@ -139,7 +139,7 @@ func (i *Index) Update(ctx context.Context, id string, properties interface{}) e
 
 // Delete item from index
 func (i *Index) Delete(ctx context.Context, id string) error {
-	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Delete")
+	ctx, span := i.c.Tracer.Start(ctx, "index.opensearch.Delete")
 	defer span.End()
 
 	if err := i.index(ctx, "delete", id, nil); err != nil {
@@ -155,7 +155,7 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 // - (false, nil) when not found
 // - (false, error) otherwise
 func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
-	ctx, span := i.c.Tracer.Start(ctx, "index.elasticsearch.Get")
+	ctx, span := i.c.Tracer.Start(ctx, "index.opensearch.Get")
 	defer span.End()
 
 	req := bulkgetter.GetRequest{

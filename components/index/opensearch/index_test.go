@@ -1,4 +1,4 @@
-package elasticsearch
+package opensearch
 
 // TODO: Test whether indexed items with omitempty are actually left out - otherwise
 // non-updating references will overwrite the existing!
@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/ipfs-search/ipfs-search/components/index/elasticsearch/bulkgetter"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 )
 
 type IndexTestSuite struct {

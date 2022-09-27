@@ -37,8 +37,8 @@ IPFS-TIKA uses the local IPFS gateway to fetch a (named) IPFS resource and strea
 
 It currently extracts body text up to a certain limit, links and any available metadata. In the future we hope to detect the language as well.
 
-## Search backend: Elasticsearch
-Any crawled items will be stored in Elasticsearch, which has a custom mapping defined to prevent the many returned metadata fields from all being indexed (for obvious efficiency reasons).
+## Search backend: OpenSearch
+Any crawled items will be stored in OpenSearch, which has a custom mapping defined to prevent the many returned metadata fields from all being indexed (for obvious efficiency reasons).
 
 It has been found that it is necessary to regularly update the index to circumvent occasional problems with indexing, performance, queries or other factors.
 

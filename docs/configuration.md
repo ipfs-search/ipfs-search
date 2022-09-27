@@ -3,7 +3,7 @@
 Configuration can be done using a YAML configuration file, or by specifying the following environment variables:
 * `IPFS_API_URL`
 * `IPFS_GATEWAY_URL`
-* `ELASTICSEARCH_URL`
+* `OPENSEARCH_URL`
 * `AMQP_URL`
 * `AMQP_MESSAGE_TTL`
 * `TIKA_EXTRACTOR`
@@ -39,8 +39,8 @@ ipfs:
   api_url: http://localhost:5001                      # IPFS API endpoint, also IPFS_API_URL in env
   gateway_url: http://localhost:8080                  # IPFS gateway, also IPFS_GATEWAY_URL in env
   partial_size: 256KB                                 # Size of items considered to be partial (when unreferenced)
-elasticsearch:
-  url: http://localhost:9200                          # Also ELASTICSEARCH_URL in env
+opensearch:
+  url: http://localhost:9200                          # Also OPENSEARCH_URL in env
 amqp:
   url: amqp://guest:guest@localhost:5672/             # Also AMQP_URL in env.
   max_reconnect: 100                                  # Maximum number of reconnect attempts

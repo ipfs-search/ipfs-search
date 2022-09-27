@@ -1,16 +1,16 @@
 # Snapshots
-ipfs-search makes daily [elasticsearch snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/7.12/snapshot-restore.html) of the indexed data.
+ipfs-search makes daily [OpenSearch snapshots](https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/index/) of the indexed data.
 
-We are working towards sharing our index snapshots over IPFS through [Filebase](filebase.com). Until that time, our index snapshots are publicly available over S3/HTTPS and can be loaded directly into an Elasticsearch or OpenSearch cluster with sufficient disk space.
+We are working towards sharing our index snapshots over IPFS through [Filebase](filebase.com). Until that time, our index snapshots are publicly available over S3/HTTPS and can be loaded directly into an OpenSearch or OpenSearch cluster with sufficient disk space.
 
 As of the time of writing (April 4, 2022) the full index is about 20 TB.
 
 ## Restoring
-Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-read-only-repository.html) into a Elasticsearch 7 (or later) or OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v8.s3.filebase.com/
+Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/opensearch/reference/current/snapshots-read-only-repository.html) into a OpenSearch 7 (or later) or OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v8.s3.filebase.com/
 
 ### Steps
-1. Ensure that an Elasticsearch 7+/OpenSearch cluster with sufficient disk space is available at `localhost:9200`.
-2. Add our repository URL to the `repositories.url.allowed_urls` setting in `elasticsearch.yml`:
+1. Ensure that an OpenSearch 7+/OpenSearch cluster with sufficient disk space is available at `localhost:9200`.
+2. Add our repository URL to the `repositories.url.allowed_urls` setting in `opensearch.yml`:
    ```
    allowed_urls: ["https://ipfs-search-snapshots-v8.s3.filebase.com/*"]
    ```
@@ -31,7 +31,7 @@ Our snapshots can be configured as a [read-only URL snapshot repository](https:/
    curl -X GET "localhost:9200/_snapshot/ipfs_search/_all?pretty"
    ```
 
-   Reference: https://www.elastic.co/guide/en/elasticsearch/reference/7.12/get-snapshot-repo-api.html
+   Reference: https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/get-snapshot/
 
 6. Pick a *succesful* snapshot (substitute `<snapshot_id>` from the available snapshots above) from the list and start restoring it:
    ```
@@ -39,7 +39,7 @@ Our snapshots can be configured as a [read-only URL snapshot repository](https:/
    ```
    **WARNING**: This initiates a large transfer and will take a considerable amount of time! Make sure you have a fast & reliable connection!
 
-   Reference: https://www.elastic.co/guide/en/elasticsearch/reference/7.12/snapshots-restore-snapshot.html
+   Reference: https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/restore-snapshot/
 
 7. Track progress of running snapshot restore task:
    ```
