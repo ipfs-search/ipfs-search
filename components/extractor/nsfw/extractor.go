@@ -8,7 +8,6 @@ import (
 	"regexp"
 
 	"github.com/ipfs-search/ipfs-search/components/extractor"
-
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
@@ -83,6 +82,10 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	ctx, span := e.Tracer.Start(ctx, "extractor.nsfw_server.Extract")
 	defer span.End()
 
+	if err := extractor.ValidateMaxSize(ctx, r, e.config.MaxFileSize); err != nil {
+		return err
+	}
+
 	// Timeout if extraction hasn't fully completed within this time.
 	ctx, cancel := context.WithTimeout(ctx, e.config.RequestTimeout)
 	defer cancel()
@@ -92,14 +95,6 @@ func (e *Extractor) Extract(ctx context.Context, r *t.AnnotatedResource, m inter
 	if !isCompatible(r, file) {
 		// log.Printf("Not extracting NSFW for incompatible %s", r)
 		return nil
-	}
-
-	if r.Size > uint64(e.config.MaxFileSize) {
-		err := fmt.Errorf("%w: %d", extractor.ErrFileTooLarge, r.Size)
-		span.RecordError(extractor.ErrFileTooLarge) // TODO: Enable after otel upgrade.
-		// attribute.Int64("file.size", r.Size),
-
-		return err
 	}
 
 	body, err := e.getter.GetBody(ctx, e.getExtractURL(r), 200)
