@@ -18,6 +18,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/components/extractor"
 	"github.com/ipfs-search/ipfs-search/components/extractor/nsfw"
 	"github.com/ipfs-search/ipfs-search/components/extractor/tika"
+	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch"
 	"github.com/ipfs-search/ipfs-search/components/protocol/ipfs"
 	"github.com/ipfs-search/ipfs-search/components/queue/amqp"
@@ -109,33 +110,41 @@ func startSearchWorker(ctx context.Context, esClient *opensearch.Client) {
 	}
 }
 
+func getIndex(client *opensearch.Client, name string) (index.Index, error) {
+	return opensearch.New(
+		client,
+		&opensearch.Config{Name: name},
+	)
+}
+
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 	esClient, err := w.getSearchClient()
 	if err != nil {
 		return nil, err
 	}
 
+	indexCfg := w.config.Indexes
+
+	// Create indexes
+	indexes := crawler.Indexes{}
+
+	if indexes.Files, err = getIndex(esClient, indexCfg.Files.Name); err != nil {
+		return nil, err
+	}
+	if indexes.Directories, err = getIndex(esClient, indexCfg.Directories.Name); err != nil {
+		return nil, err
+	}
+	if indexes.Invalids, err = getIndex(esClient, indexCfg.Invalids.Name); err != nil {
+		return nil, err
+	}
+	if indexes.Partials, err = getIndex(esClient, indexCfg.Partials.Name); err != nil {
+		return nil, err
+	}
+
 	// Start ES workers
 	go startSearchWorker(ctx, esClient)
 
-	return &crawler.Indexes{
-		Files: opensearch.New(
-			esClient,
-			&opensearch.Config{Name: w.config.Indexes.Files.Name},
-		),
-		Directories: opensearch.New(
-			esClient,
-			&opensearch.Config{Name: w.config.Indexes.Directories.Name},
-		),
-		Invalids: opensearch.New(
-			esClient,
-			&opensearch.Config{Name: w.config.Indexes.Invalids.Name},
-		),
-		Partials: opensearch.New(
-			esClient,
-			&opensearch.Config{Name: w.config.Indexes.Partials.Name},
-		),
-	}, nil
+	return &indexes, nil
 }
 
 func (w *Pool) getQueues(ctx context.Context) (*crawler.Queues, error) {

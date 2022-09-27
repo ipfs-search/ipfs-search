@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	opensearchutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 
 	"go.opentelemetry.io/otel/api/trace"
@@ -23,8 +24,65 @@ type Index struct {
 	c   *Client
 }
 
+// exists determines whether an index exists.
+func (i *Index) exists() (bool, error) {
+	req := opensearchapi.IndicesExistsRequest{
+		Index: []string{i.cfg.Name},
+	}
+	res, err := req.Do(context.Background(), i.c.searchClient)
+	if err != nil {
+		return false, err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode == 200 {
+		return true, nil
+	}
+
+	if res.StatusCode == 404 {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("Unexpected status code on index exists query: %s", res.Status())
+}
+
+// create creates an index when it doesn't exist yet.
+func (i *Index) create() error {
+	req := opensearchapi.IndicesCreateRequest{
+		Index: i.cfg.Name,
+	}
+	res, err := req.Do(context.Background(), i.c.searchClient)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("Unexpected status code on index create query: %s", res.Status())
+	}
+
+	return nil
+}
+
+// init performs initialisation for an index.
+func (i *Index) init() error {
+	exists, err := i.exists()
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		log.Printf("Index '%s' not found, creating...", i.cfg.Name)
+		return i.create()
+	}
+
+	return nil
+}
+
 // New returns a new index.
-func New(client *Client, cfg *Config) index.Index {
+func New(client *Client, cfg *Config) (index.Index, error) {
 	if client == nil {
 		panic("Index.New Client cannot be nil.")
 	}
@@ -38,7 +96,7 @@ func New(client *Client, cfg *Config) index.Index {
 		cfg: cfg,
 	}
 
-	return index
+	return index, index.init()
 }
 
 // String returns the name of the index, for convenient logging.
