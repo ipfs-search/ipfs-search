@@ -9,42 +9,42 @@ As of the time of writing (April 4, 2022) the full index is about 20 TB.
 Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/opensearch/reference/current/snapshots-read-only-repository.html) into a OpenSearch 7 (or later) or OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v8.s3.filebase.com/
 
 ### Steps
-1. Ensure that an OpenSearch 7+/OpenSearch cluster with sufficient disk space is available at `localhost:9200`.
-2. Add our repository URL to the `repositories.url.allowed_urls` setting in `opensearch.yml`:
-   ```
-   allowed_urls: ["https://ipfs-search-snapshots-v8.s3.filebase.com/*"]
-   ```
-3. Restart your cluster for the config changes to take affect.
-4. Configure our snapshot repo as a read-only URL repository:
-   ```
-   curl -X PUT "localhost:9200/_snapshot/ipfs_search?pretty" -H 'Content-Type: application/json' -d'
-   {
-     "type": "url",
-     "settings": {
-       "url": "https://ipfs-search-snapshots-v8.s3.filebase.com/"
-     }
-   }
-   '
-   ```
-5. List available snapshots:
-   ```
-   curl -X GET "localhost:9200/_snapshot/ipfs_search/_all?pretty"
-   ```
+1.  Ensure that an OpenSearch 7+/OpenSearch cluster with sufficient disk space is available at `localhost:9200`.
+2.  Add our repository URL to the `repositories.url.allowed_urls` setting in `opensearch.yml`:
+    ```yaml
+    allowed_urls: ["https://ipfs-search-snapshots-v8.s3.filebase.com/*"]
+    ```
+3.  Restart your cluster for the config changes to take affect.
+4.  Configure our snapshot repo as a read-only URL repository:
+    ```sh
+    curl -X PUT "localhost:9200/_snapshot/ipfs_search?pretty" -H 'Content-Type: application/json' -d'
+    {
+      "type": "url",
+      "settings": {
+        "url": "https://ipfs-search-snapshots-v8.s3.filebase.com/"
+      }
+    }
+    '
+    ```
+5.  List available snapshots:
+    ```sh
+    curl -X GET "localhost:9200/_snapshot/ipfs_search/_all?pretty"
+    ```
 
-   Reference: https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/get-snapshot/
+    Reference: https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/get-snapshot/
 
-6. Pick a *succesful* snapshot (substitute `<snapshot_id>` from the available snapshots above) from the list and start restoring it:
-   ```
-   curl -X POST "localhost:9200/_snapshot/ipfs_search/<snapshot_id>/_restore?pretty"
-   ```
-   **WARNING**: This initiates a large transfer and will take a considerable amount of time! Make sure you have a fast & reliable connection!
+6.  Pick a *succesful* snapshot (substitute `<snapshot_id>` from the available snapshots above) from the list and start restoring it:
+    ```sh
+    curl -X POST "localhost:9200/_snapshot/ipfs_search/<snapshot_id>/_restore?pretty"
+    ```
+    **WARNING**: This initiates a large transfer and will take a considerable amount of time! Make sure you have a fast & reliable connection!
 
-   Reference: https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/restore-snapshot/
+    Reference: https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/restore-snapshot/
 
-7. Track progress of running snapshot restore task:
-   ```
-   curl "localhost:9200/_recovery/"
-   ```
+7.  Track progress of running snapshot restore task:
+    ```sh
+    curl "localhost:9200/_recovery/"
+    ```
 
 Once recovered, you should have *all* of our data available. As long as you don't make updates, future restores should be incremental and, hence, a lot faster.
 
