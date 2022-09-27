@@ -108,46 +108,27 @@ func (i *Index) index(
 	ctx, span = i.c.Tracer.Start(ctx, "index.opensearch.bulkIndexer.Add")
 	defer span.End()
 
-	return i.c.bulkIndexer.Add(ctx, item)
+	err = i.c.bulkIndexer.Add(ctx, item)
+	if err != nil {
+		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
+	}
+
+	return err
 }
 
 // Index a document's properties, identified by id
 func (i *Index) Index(ctx context.Context, id string, properties interface{}) error {
-	ctx, span := i.c.Tracer.Start(ctx, "index.opensearch.Index")
-	defer span.End()
-
-	if err := i.index(ctx, "create", id, properties); err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return err
-	}
-
-	return nil
+	return i.index(ctx, "create", id, properties)
 }
 
 // Update a document's properties, given id
 func (i *Index) Update(ctx context.Context, id string, properties interface{}) error {
-	ctx, span := i.c.Tracer.Start(ctx, "index.opensearch.Update")
-	defer span.End()
-
-	if err := i.index(ctx, "update", id, properties); err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return err
-	}
-
-	return nil
+	return i.index(ctx, "update", id, properties)
 }
 
 // Delete item from index
 func (i *Index) Delete(ctx context.Context, id string) error {
-	ctx, span := i.c.Tracer.Start(ctx, "index.opensearch.Delete")
-	defer span.End()
-
-	if err := i.index(ctx, "delete", id, nil); err != nil {
-		span.RecordError(ctx, err, trace.WithErrorStatus(codes.Error))
-		return err
-	}
-
-	return nil
+	return i.index(ctx, "delete", id, nil)
 }
 
 // Get retreives `fields` from document with `id` from the index, returning:
