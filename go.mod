@@ -36,5 +36,5 @@ require (
 
 replace github.com/stretchr/testify => github.com/ipfs-search/testify v1.8.1-0.20220714120938-9ebebef47942
 
-// +heroku goVersion go1.16
-go 1.16
+// +heroku goVersion go1.19
+go 1.19

@@ -10,7 +10,7 @@ variables:
 
 test:
   stage: test
-  image: golang:1.16-alpine
+  image: golang:1.19-alpine
 
   before_script:
     # Install CodeClimate test reporter
