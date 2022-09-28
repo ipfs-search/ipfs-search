@@ -29,6 +29,7 @@ func newBulkRequest(ctx context.Context, client *opensearch.Client, size int) *b
 	if ctx == nil {
 		panic("required context is nil")
 	}
+
 	return &bulkRequest{
 		ctx:     ctx,
 		client:  client,
@@ -143,8 +144,10 @@ func (r *bulkRequest) sendResponse(key string, found bool, err error) {
 		panic(fmt.Sprintf("Invalid value for response channel for reqresp %v", rr))
 	}
 
-	// log.Printf("Sending response to %v", rr.resp)
-	// defer log.Printf("Done sending response")
+	if debug {
+		log.Printf("bulkrequest: Sending response to %+v", rr.resp)
+		defer log.Printf("bulkrequest: Done sending response")
+	}
 
 	rr.resp <- GetResponse{found, err}
 	close(rr.resp)
@@ -201,8 +204,10 @@ func (r *bulkRequest) getRequest() *opensearchapi.MgetRequest {
 }
 
 func decodeResponse(res *opensearchapi.Response) ([]responseDoc, error) {
-	// log.Printf("Decoding response to bulk GET")
-	// defer log.Printf("Done decoding response to bulk GET")
+	if debug {
+		log.Printf("bulkrequest: Decoding response to bulk GET")
+		defer log.Printf("bulkrequest: Done decoding response to bulk GET")
+	}
 
 	response := struct {
 		Docs []responseDoc `json:"docs"`
@@ -225,6 +230,23 @@ func (r *bulkRequest) decodeSource(src json.RawMessage, dst interface{}) error {
 
 // processResponseDoc returns found, error
 func (r *bulkRequest) processResponseDoc(d *responseDoc, key string) (bool, error) {
+	// Only decode and send response when the other side is listening.
+	rr, ok := r.rrs[key]
+	if !ok {
+		// Panic, this is a proper bug.
+		panic(fmt.Sprintf("unknown key '%s' in response to bulk request", key))
+	}
+
+	if err := rr.ctx.Err(); err != nil {
+		if debug {
+			log.Printf("bulkrequest: Not writing response from bulk get, request context cancelled.")
+		}
+
+		return false, err
+
+	}
+
+	// Context still open
 	if d.Found {
 		if err := r.decodeSource(d.Source, r.rrs[key].dst); err != nil {
 			err = fmt.Errorf("error decoding source: %w", err)
@@ -238,8 +260,10 @@ func (r *bulkRequest) processResponseDoc(d *responseDoc, key string) (bool, erro
 }
 
 func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
-	// log.Printf("Processing response to bulk GET")
-	// defer log.Printf("Done processing response to bulk GET")
+	if debug {
+		log.Printf("bulkrequest: processing response to bulk GET")
+		defer log.Printf("bulkrequest: done processing response to bulk GET")
+	}
 
 	var err error
 
@@ -250,24 +274,14 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 			return err
 		}
 
-		// log.Printf("Processing %d returned documents", len(docs))
+		if debug {
+			log.Printf("bulkrequest: Processing %d returned documents", len(docs))
+		}
 
 		for _, d := range docs {
 			key := r.keyFromResponseDoc(&d)
-
-			// Only decode and send response when the other side is listening.
-			rr, ok := r.rrs[key]
-			if !ok {
-				// Panic, this is a proper bug.
-				panic(fmt.Sprintf("unknown key '%s' in response to bulk request", key))
-			}
-			if rr.ctx.Err() == nil {
-				found, err := r.processResponseDoc(&d, key)
-				r.sendResponse(key, found, err)
-			} else {
-				// log.Printf("Not writing response from bulk get, request context cancelled.")
-				close(rr.resp)
-			}
+			found, err := r.processResponseDoc(&d, key)
+			r.sendResponse(key, found, err)
 		}
 
 		return nil
@@ -283,8 +297,16 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 	return err
 }
 
+// func (r *bulkRequest) cancelWatcher() {
+// 	// If one of requests in r.rrs has a canceled context, check whether all others are cancelled.
+// 	// If so, cancel the bulk request and return resources to our index.
+// 	for _, rr := range r.rrs {
+// 		rr.ctx.Done()
+// 	}
+// }
+
 func (r *bulkRequest) execute() error {
-	log.Printf("Performing bulk GET, %d elements", len(r.rrs))
+	log.Printf("bulkrequest: performing bulk GET, %d elements", len(r.rrs))
 
 	res, err := r.getRequest().Do(r.ctx, r.client)
 	if err != nil {

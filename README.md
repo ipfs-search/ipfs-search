@@ -47,6 +47,7 @@ For discussing and suggesting features, look at the [issues](https://github.com/
 * RabbitMQ / AMQP server
 * NodeJS 9.x
 * IPFS 0.7
+* Redis
 
 ## Internal dependencies
 

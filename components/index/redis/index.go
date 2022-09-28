@@ -2,10 +2,13 @@ package redis
 
 import (
 	"context"
+	"log"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/rueian/rueidis"
 )
+
+const debug bool = false
 
 // Index stores properties as JSON in Redis.
 type Index struct {
@@ -38,6 +41,10 @@ func (i *Index) getKey(key string) string {
 func (i *Index) set(ctx context.Context, id string, properties interface{}) error {
 	key := i.getKey(id)
 	val := rueidis.JSON(properties)
+
+	if debug {
+		log.Printf("redis: set %s", key)
+	}
 
 	cmd := i.c.B().Set().Key(key).Value(val).Build()
 	res := i.c.Do(ctx, cmd)
@@ -72,6 +79,11 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 	defer span.End()
 
 	key := i.getKey(id)
+
+	if debug {
+		log.Printf("redis: delete %s", key)
+	}
+
 	cmd := i.c.B().Del().Key(key).Build()
 	res := i.c.Do(ctx, cmd)
 
@@ -89,15 +101,33 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	defer span.End()
 
 	key := i.getKey(id)
+
+	if debug {
+		log.Printf("redis: get %s", key)
+	}
+
 	cmd := i.c.B().Get().Key(key).Build()
 	res := i.c.Do(ctx, cmd)
 
 	if err := res.Error(); err != nil {
+		if err := res.RedisError(); err != nil && err.IsNil() {
+			if debug {
+				log.Printf("redis: not found %s", key)
+			}
+
+			return false, nil
+		}
+
+		if debug {
+			log.Printf("redis: error %s: %s", key, err.Error())
+		}
+
+		// Errors other than not found: propagate
 		return false, err
 	}
 
-	if res.RedisError().IsNil() {
-		return false, nil
+	if debug {
+		log.Printf("redis: found %s", key)
 	}
 
 	return true, res.DecodeJSON(dst)

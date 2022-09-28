@@ -9,6 +9,8 @@ import (
 	"github.com/opensearch-project/opensearch-go/v2"
 )
 
+const debug bool = false
+
 // BulkGetter allows batching/bulk gets.
 type BulkGetter struct {
 	cfg   Config
@@ -80,22 +82,34 @@ func (bg *BulkGetter) processBatch(ctx context.Context) error {
 }
 
 func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (*bulkRequest, error) {
-	// log.Println("Populating BulkGetter batch.")
+	if debug {
+		log.Println("Populating BulkGetter batch.")
+	}
 
 	b := newBulkRequest(ctx, bg.cfg.Client, bg.cfg.BatchSize)
 
 	for i := 0; i < bg.cfg.BatchSize; i++ {
 		select {
 		case <-ctx.Done():
+			if debug {
+				log.Printf("bulkgetter: context closed in populateBatch")
+			}
 			return b, ctx.Err()
 		case <-time.After(bg.cfg.BatchTimeout):
-			// log.Printf("Batch timeout, %d elements", len(b.rrs))
+			if debug {
+				log.Printf("bulkgetter: Batch timeout, %d elements", len(b.rrs))
+			}
 
 			return b, nil
 		case rr := <-queue:
-			// log.Printf("Batch add, %d elements", len(b.rrs))
+			if debug {
+				log.Printf("bulkgetter: Batch add, %d elements", len(b.rrs))
+			}
 
 			if err := b.add(rr); err != nil {
+				if debug {
+					log.Printf("bulkgetter: error %s", err.Error())
+				}
 				return b, err
 			}
 		}

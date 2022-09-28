@@ -3,11 +3,14 @@ package cache
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/ipfs-search/ipfs-search/instr"
 )
+
+const debug bool = false
 
 // Index wraps a backing index and caches it using another index.
 type Index struct {
@@ -70,28 +73,15 @@ func (i *Index) makeCachingProperties(properties interface{}) map[string]interfa
 	dst := make(map[string]interface{}, len(i.cfg.CachingFields))
 	fields := reflect.VisibleFields(valueof.Type())
 
-	for k, field := range fields {
+	for _, field := range fields {
 		if contains(i.cfg.CachingFields, field.Name) {
-			dst[field.Name] = valueof.Field(k).Interface()
-		}
-	}
+			value := valueof.FieldByName(field.Name).Interface()
 
-	if len(dst) == 0 {
-		panic("no cachable properties found")
+			dst[field.Name] = value
+		}
 	}
 
 	return dst
-}
-
-func (i *Index) allFieldsCachable(fields []string) bool {
-	for _, field := range fields {
-		exists := contains(i.cfg.CachingFields, field)
-		if !exists {
-			return false
-		}
-	}
-
-	return true
 }
 
 func (i *Index) cacheGet(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
@@ -100,11 +90,12 @@ func (i *Index) cacheGet(ctx context.Context, id string, dst interface{}, fields
 		err   error
 	)
 
-	if i.allFieldsCachable(fields) {
-		if found, err = i.cachingIndex.Get(ctx, id, dst, fields...); err != nil {
-			err = ErrCache{err, fmt.Sprintf("cache error deleting: %e", err)}
-		}
-	} else {
+	// Ignore fields for now; the OpenSearch API uses the json field names
+	// Ref: https://github.com/ipfs-search/ipfs-search/issues/234
+
+	if found, err = i.cachingIndex.Get(ctx, id, dst, fields...); err != nil {
+		// Ignore context closed
+		err = ErrCache{err, fmt.Sprintf("cache error in get: %s", err.Error())}
 	}
 
 	return found, err
@@ -115,8 +106,12 @@ type indexWrite func(context.Context, string, interface{}) error
 func (i *Index) cacheWrite(ctx context.Context, id string, properties interface{}, f indexWrite) error {
 	cachingProperties := i.makeCachingProperties(properties)
 
+	if debug {
+		log.Printf("cache: write %s", id)
+	}
+
 	if err := f(ctx, id, cachingProperties); err != nil {
-		return ErrCache{err, fmt.Sprintf("cache error in '%v': %e", f, err)}
+		return ErrCache{err, fmt.Sprintf("cache error in '%v': %s", f, err.Error())}
 	}
 
 	return nil
@@ -160,9 +155,16 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 	ctx, span := i.Tracer.Start(ctx, "index.cache.Delete")
 	defer span.End()
 
+	if debug {
+		log.Printf("cache: delete %s", id)
+	}
+
 	// Delete cache first; maintain consistency as our backing index is the source of truth.
 	if err := i.cachingIndex.Delete(ctx, id); err != nil {
-		return ErrCache{err, "error deleting cache"}
+		return ErrCache{
+			err,
+			fmt.Sprintf("error deleting cache: %s", err.Error()),
+		}
 	}
 
 	if err := i.backingIndex.Delete(ctx, id); err != nil {
@@ -173,7 +175,6 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 }
 
 // Get retreives *all* fields from document with `id` from the cache, falling back to the backing index.
-// `fields` parameter is used to determine whether cache can be used based on configured CachingFields.
 // Returns: (exists, err) where err is of type ErrCache if there was (only) an error from the
 // caching index.
 func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
@@ -186,7 +187,15 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	)
 
 	if found, err = i.cacheGet(ctx, id, dst, fields...); found {
+		// if debug {
+		log.Printf("cache: hit %s", id)
+		// }
+
 		return found, err
+	}
+
+	if debug {
+		log.Printf("cache: miss %s", id)
 	}
 
 	var backingErr error
@@ -196,9 +205,17 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	}
 
 	if found {
+		if debug {
+			log.Printf("backing: hit %s", id)
+		}
+
 		if indexErr := i.cacheWrite(ctx, id, dst, i.cachingIndex.Index); indexErr != nil {
 			err = indexErr
 		}
+	}
+
+	if debug {
+		log.Printf("backing: miss %s", id)
 	}
 
 	return found, err

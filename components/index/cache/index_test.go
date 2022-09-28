@@ -79,7 +79,7 @@ func (s *CacheTestSuite) TestString() {
 	s.Equal(exp, s.i.String())
 }
 
-func (s CacheTestSuite) TestContains() {
+func (s *CacheTestSuite) TestContains() {
 	l := []string{"a", "bee", "cee"}
 
 	s.True(contains(l, "bee"))

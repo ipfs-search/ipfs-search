@@ -8,6 +8,9 @@ opensearch:
   bulk_flush_bytes: 5MB                               # Bytesize treshold for bulk writes.
   bulk_getter_batch_size: 48                          # Item treshold for execution of bulk gets.
   bulk_getter_batch_timeout: 150ms                    # Time treshold for bulk gets.
+redis:
+    addresses:                                        # Address(es) to Redis server(s).
+        - localhost:6379
 amqp:
   url: amqp://guest:guest@localhost:5672/             # Also AMQP_URL in env.
   max_reconnect: 100                                  # Maximum number of reconnect attempts
@@ -52,3 +55,5 @@ workers:
   hash_workers: 70                                    # Amount of workers for various resources. Also HASH_WORKERS in env.
   file_workers: 120                                   # Also FILE_WORKERS in env.
   directory_workers: 70                               # Also DIRECTORY in env.
+  ipfs_max_connections: 1000                          # Maximum simultaneous connections to IPFS.
+  extractor_max_connections: 100                      # Maximum simultaneous connections to extractors.

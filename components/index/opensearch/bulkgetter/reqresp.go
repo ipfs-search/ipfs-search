@@ -10,3 +10,7 @@ type reqresp struct {
 	resp chan GetResponse
 	dst  interface{}
 }
+
+func (rr *reqresp) String() string {
+	return rr.req.String()
+}

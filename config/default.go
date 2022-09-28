@@ -5,6 +5,7 @@ func Default() *Config {
 	return &Config{
 		IPFSDefaults(),
 		OpenSearchDefaults(),
+		RedisDefaults(),
 		AMQPDefaults(),
 		TikaDefaults(),
 		NSFWDefaults(),

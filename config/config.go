@@ -40,6 +40,7 @@ import (
 type Config struct {
 	IPFS       `yaml:"ipfs"`
 	OpenSearch `yaml:"opensearch"`
+	Redis      `yaml:"redis"`
 	AMQP       `yaml:"amqp"`
 	Tika       `yaml:"tika"`
 	NSFW       `yaml:"nsfw"`
