@@ -46,6 +46,7 @@ func MultiGet(ctx context.Context, indexes []Index, id string, dst interface{}, 
 			if found {
 				select {
 				case <-groupCtx.Done():
+					// Don't attempt to write if our context is closed.
 					return nil
 				case foundIdx <- i:
 					cancel() // Found, we're done.
@@ -57,7 +58,11 @@ func MultiGet(ctx context.Context, indexes []Index, id string, dst interface{}, 
 		})
 	}
 
+	// Wait blocks until all function calls from the Go method have returned, then returns the first non-nil error (if any) from them.
 	err := g.Wait()
+
+	// Close channel, return resources.
+	close(foundIdx)
 
 	select {
 	case result := <-foundIdx:
