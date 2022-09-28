@@ -2,6 +2,7 @@ package bulkgetter
 
 import (
 	"context"
+	"fmt"
 )
 
 type reqresp struct {
@@ -12,5 +13,5 @@ type reqresp struct {
 }
 
 func (rr *reqresp) String() string {
-	return rr.req.String()
+	return fmt.Sprintf("reqresp: %v", rr.req)
 }

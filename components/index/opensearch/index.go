@@ -150,10 +150,10 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	if debug {
 		if resp.Found {
-			log.Printf("Found %s in %s", id, i)
+			log.Printf("opensearch: found %s in %s", id, i)
 		} else {
 			if resp.Error != nil {
-				log.Printf("Error getting %s in %s", id, i)
+				log.Printf("opensearch: error getting %s in %s: %v", id, i, resp.Error)
 			}
 		}
 	}

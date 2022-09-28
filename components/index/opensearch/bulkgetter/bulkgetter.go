@@ -74,16 +74,12 @@ func (bg *BulkGetter) processBatch(ctx context.Context) error {
 		return err
 	}
 
-	if len(b.rrs) == 0 {
-		return nil
-	}
-
 	return b.execute()
 }
 
 func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (*bulkRequest, error) {
 	if debug {
-		log.Println("Populating BulkGetter batch.")
+		log.Println("bulkgetter: populating BulkGetter batch.")
 	}
 
 	b := newBulkRequest(ctx, bg.cfg.Client, bg.cfg.BatchSize)

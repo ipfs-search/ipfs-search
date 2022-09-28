@@ -17,10 +17,12 @@ import (
 // ErrHTTP represents non-404 errors in HTTP requests.
 var ErrHTTP = errors.New("HTTP Error")
 
+type reqrespmap map[string]reqresp
+
 type bulkRequest struct {
 	ctx         context.Context
 	client      *opensearch.Client
-	rrs         map[string]reqresp
+	rrs         reqrespmap
 	decodeMutex sync.Mutex
 	aliases     map[string]string
 }
@@ -33,7 +35,7 @@ func newBulkRequest(ctx context.Context, client *opensearch.Client, size int) *b
 	return &bulkRequest{
 		ctx:     ctx,
 		client:  client,
-		rrs:     make(map[string]reqresp, size),
+		rrs:     make(reqrespmap, size),
 		aliases: make(map[string]string),
 	}
 }
@@ -145,7 +147,7 @@ func (r *bulkRequest) sendResponse(key string, found bool, err error) {
 	}
 
 	if debug {
-		log.Printf("bulkrequest: Sending response to %+v", rr.resp)
+		log.Printf("bulkrequest: Sending response for %v", &rr)
 		defer log.Printf("bulkrequest: Done sending response")
 	}
 
@@ -297,16 +299,44 @@ func (r *bulkRequest) processResponse(res *opensearchapi.Response) error {
 	return err
 }
 
-// func (r *bulkRequest) cancelWatcher() {
-// 	// If one of requests in r.rrs has a canceled context, check whether all others are cancelled.
-// 	// If so, cancel the bulk request and return resources to our index.
-// 	for _, rr := range r.rrs {
-// 		rr.ctx.Done()
-// 	}
-// }
+// removeCanceled removes items from query if they're canceled before the request
+func (r *bulkRequest) removeCanceled() {
+	removed := 0
+
+	for key, rr := range r.rrs {
+		if err := rr.ctx.Err(); err != nil {
+			if debug {
+				log.Printf("bulkrequest: request canceled, removing %v", &rr)
+				removed++
+			}
+
+			// Send response, cleaning up resources.
+			r.sendResponse(key, false, err)
+
+			// Delete request, preventing it from being sent.
+			delete(r.rrs, key)
+		}
+	}
+
+	if debug && removed > 0 {
+		log.Printf("bulkrequest: removed %d canceled requests", removed)
+	}
+}
 
 func (r *bulkRequest) execute() error {
-	log.Printf("bulkrequest: performing bulk GET, %d elements", len(r.rrs))
+	r.removeCanceled()
+
+	if len(r.rrs) == 0 {
+		if debug {
+			log.Printf("bulkrequest: empty request map, not sending request")
+		}
+
+		return nil
+	}
+
+	if debug {
+		log.Printf("bulkrequest: performing bulk GET, %d elements", len(r.rrs))
+	}
 
 	res, err := r.getRequest().Do(r.ctx, r.client)
 	if err != nil {
