@@ -32,7 +32,7 @@ import (
 	"os"
 	"strings"
 
-	env "github.com/Netflix/go-env"
+	env "github.com/ipfs-search/go-env"
 	yaml "gopkg.in/yaml.v3"
 )
 
