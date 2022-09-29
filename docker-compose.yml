@@ -45,7 +45,7 @@ services:
       - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
       - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
   ipfs:
-    image: ipfs/kubo:v0.14.0
+    image: ipfs/kubo:v0.15.0
     ports:
       - 4001:4001
       - 5001:5001
