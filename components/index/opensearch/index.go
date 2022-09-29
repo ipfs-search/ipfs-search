@@ -15,6 +15,8 @@ import (
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 )
 
+const debug bool = false
+
 // Index wraps an OpenSearch index to store documents
 type Index struct {
 	cfg *Config
@@ -146,14 +148,15 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	resp := <-i.c.bulkGetter.Get(ctx, &req, dst)
 
-	// Turn on for increased verbosity.
-	// if resp.Found {
-	// 	log.Printf("Found %s in %s", id, i)
-	// } else {
-	// 	if resp.Error != nil {
-	// 		log.Printf("Error getting %s in %s", id, i)
-	// 	}
-	// }
+	if debug {
+		if resp.Found {
+			log.Printf("opensearch: found %s in %s", id, i)
+		} else {
+			if resp.Error != nil {
+				log.Printf("opensearch: error getting %s in %s: %v", id, i, resp.Error)
+			}
+		}
+	}
 
 	return resp.Found, resp.Error
 }

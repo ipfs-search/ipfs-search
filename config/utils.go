@@ -22,8 +22,8 @@ func findZeroElements(s interface{}) []string {
 			for _, newE := range findZeroElements(f.Interface()) {
 				output = append(output, fmt.Sprintf("%s.%s", name, newE))
 			}
-		case reflect.Map:
-			// Map type, require non-zero length
+		case reflect.Map, reflect.Slice:
+			// Map or array, require non-zero length
 			if f.Len() == 0 {
 				output = append(output, name)
 			}

@@ -342,7 +342,7 @@ func (s *IndexTestSuite) TestGetFound() {
 		mock.Anything,
 		&bulkgetter.GetRequest{Index: "test", DocumentID: "objId", Fields: []string{"field1", "field2"}},
 		&dst,
-	).Return(bulkgetter.GetResponse{true, nil})
+	).Return(bulkgetter.GetResponse{Found: true, Error: nil})
 
 	result, err := idx.Get(s.ctx, "objId", &dst, "field1", "field2")
 	s.NoError(err)
@@ -366,7 +366,7 @@ func (s *IndexTestSuite) TestGetNotFound() {
 		mock.Anything,
 		&bulkgetter.GetRequest{Index: "test", DocumentID: "objId", Fields: []string{"field1", "field2"}},
 		&dst,
-	).Return(bulkgetter.GetResponse{false, nil})
+	).Return(bulkgetter.GetResponse{Found: false, Error: nil})
 
 	result, err := idx.Get(s.ctx, "objId", &dst, "field1", "field2")
 	s.NoError(err)

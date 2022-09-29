@@ -32,7 +32,7 @@ import (
 	"os"
 	"strings"
 
-	env "github.com/Netflix/go-env"
+	env "github.com/ipfs-search/go-env"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -40,6 +40,7 @@ import (
 type Config struct {
 	IPFS       `yaml:"ipfs"`
 	OpenSearch `yaml:"opensearch"`
+	Redis      `yaml:"redis"`
 	AMQP       `yaml:"amqp"`
 	Tika       `yaml:"tika"`
 	NSFW       `yaml:"nsfw"`

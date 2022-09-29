@@ -1,11 +1,23 @@
 package index
 
 import (
-	// "log"
 	"context"
+	"errors"
+	"log"
 
 	"golang.org/x/sync/errgroup"
 )
+
+const debug bool = false
+
+func contextDone(ctx context.Context, err error) bool {
+	ctxErr := ctx.Err()
+	if ctxErr != nil {
+		return errors.Is(err, ctxErr)
+	}
+
+	return false
+}
 
 // MultiGet returns `fields` for the first document with `id` from given `indexes`.
 // When the document is not found (nil, nil) is returned.
@@ -20,20 +32,24 @@ func MultiGet(ctx context.Context, indexes []Index, id string, dst interface{}, 
 		i := i // https://go.dev/doc/faq#closures_and_goroutines
 
 		g.Go(func() error {
-			// log.Printf("MultiGet %s index %s", id, i)
+			if debug {
+				log.Printf("MultiGet %s index %s", id, i)
+			}
 
 			found, err := i.Get(groupCtx, id, dst, fields...)
 
-			if err != nil {
+			if err != nil && !contextDone(ctx, err) {
+				// Ignore context done errors if MultiGet context is canceled.
 				return err
 			}
 
 			if found {
 				select {
 				case <-groupCtx.Done():
+					// Don't attempt to write if our context is closed.
 					return nil
 				case foundIdx <- i:
-					cancel() // We're done
+					cancel() // Found, we're done.
 				}
 
 			}
@@ -42,7 +58,11 @@ func MultiGet(ctx context.Context, indexes []Index, id string, dst interface{}, 
 		})
 	}
 
+	// Wait blocks until all function calls from the Go method have returned, then returns the first non-nil error (if any) from them.
 	err := g.Wait()
+
+	// Close channel, return resources.
+	close(foundIdx)
 
 	select {
 	case result := <-foundIdx:

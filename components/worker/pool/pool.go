@@ -59,6 +59,8 @@ func (p *Pool) Start(ctx context.Context) {
 }
 
 func (p *Pool) init(ctx context.Context) error {
+	var err error
+
 	p.dialer = &utils.RetryingDialer{
 		Dialer: net.Dialer{
 			Timeout:   30 * time.Second,
@@ -69,12 +71,11 @@ func (p *Pool) init(ctx context.Context) error {
 	}
 
 	log.Println("Initializing crawler.")
-	if err := p.getCrawler(ctx); err != nil {
+	if p.crawler, err = p.getCrawler(ctx); err != nil {
 		return err
 	}
 
 	log.Println("Initializing consuming channels.")
-	var err error
 	if p.consumeChans, err = p.getConsumeChans(ctx); err != nil {
 		return err
 	}
@@ -84,6 +85,14 @@ func (p *Pool) init(ctx context.Context) error {
 
 // New initializes and returns a new pool pool.
 func New(ctx context.Context, c *config.Config, i *instr.Instrumentation) (*Pool, error) {
+	if i == nil {
+		panic("Instrumentation cannot be null.")
+	}
+
+	if c == nil {
+		panic("Config cannot be nil.")
+	}
+
 	p := &Pool{
 		config:          c,
 		Instrumentation: i,

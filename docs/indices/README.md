@@ -3,7 +3,7 @@
 ## OpenSearch index mapping and settings
 To be used in the [Create index API](https://www.elastic.co/guide/en/opensearch/reference/current/indices-create-index.html):
 ```
-$ curl -d <index.json> -X PUT http://localhost:9200/<index-name>
+$ curl -d <index.json> -H 'Content-Type: application/json' -X PUT http://localhost:9200/<index-name>
 ```
 
 * [Files](https://github.com/ipfs-search/ipfs-search/blob/master/docs/indices/files.json)

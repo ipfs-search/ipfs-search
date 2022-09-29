@@ -7,7 +7,7 @@ import (
 // AnnotatedResource annotates a referenced Resource with additional information.
 type AnnotatedResource struct {
 	*Resource
-	Source    SourceType `json:",omitempty`
+	Source    SourceType `json:",omitempty"`
 	Reference `json:",omitempty"`
 	Stat      `json:",omitempty"`
 }

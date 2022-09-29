@@ -3,9 +3,10 @@ package ipfs
 import (
 	"context"
 	"errors"
-	ipfs "github.com/ipfs/go-ipfs-api"
 	"log"
 	"strings"
+
+	ipfs "github.com/ipfs/go-ipfs-api"
 )
 
 var invalidErrorPrefixes = [...]string{
@@ -19,6 +20,7 @@ var invalidErrorPrefixes = [...]string{
 	"protobuf: (PBNode) invalid wireType",
 	"protobuf: (PBNode) invalid fieldNumber",
 	"proto: invalid field number",
+	"proto: invalid field number", // Thefuck
 	"proto: variable length integer overflow",
 }
 
