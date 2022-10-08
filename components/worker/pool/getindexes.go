@@ -88,7 +88,7 @@ func (f *indexFactory) getIndex(name string) index.Index {
 		&redis.Config{Name: name},
 	)
 
-	return cache.New(osIndex, redisIndex, f.cacheCfg, f.Instrumentation)
+	return cache.New(osIndex, redisIndex, indexTypes.Update{}, f.cacheCfg, f.Instrumentation)
 }
 
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
@@ -105,9 +105,7 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 	go ensureRedisClose(ctx, redisClient)
 	go startOpenSearchWorker(ctx, osClient)
 
-	cacheCfg := &cache.Config{
-		CachingFields: getCachingFields(),
-	}
+	cacheCfg := &cache.Config{}
 
 	iFactory := indexFactory{
 		osClient, redisClient, cacheCfg, w.Instrumentation,

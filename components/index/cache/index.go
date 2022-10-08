@@ -17,21 +17,33 @@ type Index struct {
 	cfg          *Config
 	backingIndex index.Index
 	cachingIndex index.Index
+	cachingType  reflect.Type
 
 	*instr.Instrumentation
 }
 
 // New returns a new index.
-func New(backing index.Index, caching index.Index,
+func New(backing index.Index, caching index.Index, cachingType interface{},
 	cfg *Config, instr *instr.Instrumentation) index.Index {
 
 	if cfg == nil {
 		panic("Index.New Config cannot be nil.")
 	}
 
+	t := reflect.TypeOf(cachingType)
+	if t.Kind() == reflect.Pointer {
+		// Dereference pointer
+		t = t.Elem()
+	}
+
+	if t.Kind() != reflect.Struct {
+		panic("caching type should be a struct")
+	}
+
 	index := &Index{
 		backingIndex:    backing,
 		cachingIndex:    caching,
+		cachingType:     t,
 		cfg:             cfg,
 		Instrumentation: instr,
 	}
@@ -44,44 +56,24 @@ func (i *Index) String() string {
 	return fmt.Sprintf("cache for '%s' through '%s'", i.backingIndex, i.cachingIndex)
 }
 
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
+func (i *Index) makeCachingProperties(props interface{}) interface{} {
+	src := GetStructElem(props)
+
+	// Create pointer cache struct
+	dstPtr := reflect.New(i.cachingType)
+	dstFields := reflect.VisibleFields(i.cachingType)
+
+	// Get the underlying struct
+	dst := dstPtr.Elem()
+
+	// Iterate fields of destination
+	for _, dstField := range dstFields {
+		// Set dst field to corresponding src value.
+		// Note: this will panic when a dst field is not present in the src struct.
+		dst.FieldByIndex(dstField.Index).Set(src.FieldByName(dstField.Name))
 	}
 
-	return false
-}
-
-func (i *Index) makeCachingProperties(properties interface{}) map[string]interface{} {
-	// Take care to allocate map for caching properties on the stack.
-
-	valueof := reflect.ValueOf(properties)
-
-	if valueof.Kind() != reflect.Pointer {
-		panic(fmt.Sprintf("not called with pointer but %T", properties))
-	}
-
-	// Dereference pointer
-	valueof = valueof.Elem()
-
-	if valueof.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("not struct pointer but %T", properties))
-	}
-
-	dst := make(map[string]interface{}, len(i.cfg.CachingFields))
-	fields := reflect.VisibleFields(valueof.Type())
-
-	for _, field := range fields {
-		if contains(i.cfg.CachingFields, field.Name) {
-			value := valueof.FieldByName(field.Name).Interface()
-
-			dst[field.Name] = value
-		}
-	}
-
-	return dst
+	return dstPtr.Interface()
 }
 
 func (i *Index) cacheGet(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
@@ -111,7 +103,7 @@ func (i *Index) cacheWrite(ctx context.Context, id string, properties interface{
 	}
 
 	if err := f(ctx, id, cachingProperties); err != nil {
-		return ErrCache{err, fmt.Sprintf("cache error in '%v': %s", f, err.Error())}
+		return ErrCache{err, fmt.Sprintf("cache error in writing %+v to %s: %s", cachingProperties, id, err.Error())}
 	}
 
 	return nil
