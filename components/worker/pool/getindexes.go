@@ -16,24 +16,20 @@ import (
 	"github.com/ipfs-search/ipfs-search/utils"
 )
 
-func startOpenSearchWorker(ctx context.Context, osClient *opensearch.Client) {
+func osWorkLoop(ctx context.Context, workFunc func(context.Context) error) {
 	for {
+		// Keep starting worker unless context is done.
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			if err := osClient.Work(ctx); err != nil {
-				log.Printf("Error in ES client pool, restarting pool: %s", err)
+			if err := workFunc(ctx); err != nil {
+				log.Printf("Error in worker: %s, restarting.", err)
 				// Prevent overly tight restart loop
 				time.Sleep(time.Second)
 			}
 		}
 	}
-}
-
-func ensureRedisClose(ctx context.Context, client *redis.Client) {
-	<-ctx.Done()
-	client.Close()
 }
 
 func (w *Pool) getOpenSearchClient() (*opensearch.Client, error) {
@@ -102,8 +98,13 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 		return nil, err
 	}
 
-	go ensureRedisClose(ctx, redisClient)
-	go startOpenSearchWorker(ctx, osClient)
+	go osWorkLoop(ctx, osClient.Work)
+
+	redisClient.Start(ctx)
+	go func() {
+		<-ctx.Done()
+		redisClient.Close(ctx)
+	}()
 
 	cacheCfg := &cache.Config{}
 

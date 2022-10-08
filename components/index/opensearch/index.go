@@ -15,7 +15,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 )
 
-const debug bool = false
+const debug bool = true
 
 // Index wraps an OpenSearch index to store documents
 type Index struct {

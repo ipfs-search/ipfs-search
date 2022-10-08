@@ -25,7 +25,7 @@ type testStruct struct {
 }
 
 type cacheStruct struct {
-	ValOne   string
+	ValOne   *string
 	ValThree float64
 	ValFour  struct {
 		v string
@@ -34,8 +34,10 @@ type cacheStruct struct {
 
 var cachingFields []string = []string{"ValOne", "ValThree", "ValFour", "neverFound"}
 var props = testStruct{"test", 5, 5.5, struct{ v string }{"h"}, 3}
-var cachedProps = cacheStruct{"test", 5.5, struct{ v string }{"h"}}
-var emptyCachedProps = cacheStruct{"", 0.0, struct{ v string }{""}}
+var testStr = "test"
+var emptyStr = ""
+var cachedProps = cacheStruct{&testStr, 5.5, struct{ v string }{"h"}}
+var emptyCachedProps = cacheStruct{&emptyStr, 0.0, struct{ v string }{""}}
 
 var testID = "testID"
 var testErr = errors.New("errr")
@@ -76,7 +78,7 @@ func (s *CacheTestSuite) TestNew() {
 }
 
 func (s *CacheTestSuite) TestString() {
-	exp := fmt.Sprintf("cache for '%s' through '%s'", s.backingIndex, s.cachingIndex)
+	exp := fmt.Sprintf("'%s' through '%s'", s.backingIndex, s.cachingIndex)
 	s.Equal(exp, s.i.String())
 }
 
@@ -87,10 +89,10 @@ func (s *CacheTestSuite) TestMakeCachingProperties() {
 
 	s.IsType(res, &cacheStruct{})
 
-	casres := res.(*cacheStruct)
-	s.Equal(props.ValOne, casres.ValOne)
-	s.Equal(props.ValThree, casres.ValThree)
-	s.Equal(props.ValFour, casres.ValFour)
+	cacheres := res.(*cacheStruct)
+	s.Equal(props.ValOne, *cacheres.ValOne)
+	s.Equal(props.ValThree, cacheres.ValThree)
+	s.Equal(props.ValFour, cacheres.ValFour)
 }
 
 func (s *CacheTestSuite) TestIndexSuccess() {

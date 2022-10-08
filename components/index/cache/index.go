@@ -10,7 +10,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/instr"
 )
 
-const debug bool = false
+const debug bool = true
 
 // Index wraps a backing index and caches it using another index.
 type Index struct {
@@ -53,7 +53,7 @@ func New(backing index.Index, caching index.Index, cachingType interface{},
 
 // String returns the name of the index, for convenient logging.
 func (i *Index) String() string {
-	return fmt.Sprintf("cache for '%s' through '%s'", i.backingIndex, i.cachingIndex)
+	return fmt.Sprintf("'%s' through '%s'", i.backingIndex, i.cachingIndex)
 }
 
 func (i *Index) makeCachingProperties(props interface{}) interface{} {
@@ -70,7 +70,33 @@ func (i *Index) makeCachingProperties(props interface{}) interface{} {
 	for _, dstField := range dstFields {
 		// Set dst field to corresponding src value.
 		// Note: this will panic when a dst field is not present in the src struct.
-		dst.FieldByIndex(dstField.Index).Set(src.FieldByName(dstField.Name))
+		val := src.FieldByName(dstField.Name)
+		field := dst.FieldByIndex(dstField.Index)
+
+		if field.Kind() == reflect.Pointer {
+			log.Printf("field is pointer")
+			if val.Kind() != reflect.Pointer {
+				log.Printf("val is no pointer")
+				if val.CanAddr() {
+					val = val.Addr()
+				} else {
+					panic(fmt.Sprintf("cannot address val %v for field %v", val, dstField))
+				}
+			}
+		} else {
+			// field not pointer
+			if val.Kind() == reflect.Pointer {
+				log.Printf("val is pointer")
+				val = val.Elem()
+			}
+		}
+
+		field.Set(val)
+	}
+
+	if debug {
+		log.Printf("makeCachingProperties - src: %s: %v", src.Type(), src)
+		log.Printf("makeCachingProperties - dst: %s: %v", dst.Type(), dst)
 	}
 
 	return dstPtr.Interface()
@@ -99,7 +125,7 @@ func (i *Index) cacheWrite(ctx context.Context, id string, properties interface{
 	cachingProperties := i.makeCachingProperties(properties)
 
 	if debug {
-		log.Printf("cache: write %s", id)
+		log.Printf("cache %s: write %s", i, id)
 	}
 
 	if err := f(ctx, id, cachingProperties); err != nil {
@@ -148,7 +174,7 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 	defer span.End()
 
 	if debug {
-		log.Printf("cache: delete %s", id)
+		log.Printf("cache %s: delete %s", i, id)
 	}
 
 	// Delete cache first; maintain consistency as our backing index is the source of truth.
@@ -180,14 +206,14 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	if found, err = i.cacheGet(ctx, id, dst, fields...); found {
 		// if debug {
-		log.Printf("cache: hit %s", id)
+		log.Printf("cache %s: hit %s", i.cachingIndex, id)
 		// }
 
 		return found, err
 	}
 
 	if debug {
-		log.Printf("cache: miss %s", id)
+		log.Printf("cache %s: miss %s", i.cachingIndex, id)
 	}
 
 	var backingErr error
@@ -198,7 +224,7 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	if found {
 		if debug {
-			log.Printf("backing: hit %s", id)
+			log.Printf("backing %s: hit %s", i.backingIndex, id)
 		}
 
 		if indexErr := i.cacheWrite(ctx, id, dst, i.cachingIndex.Index); indexErr != nil {
@@ -207,7 +233,7 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	}
 
 	if debug {
-		log.Printf("backing: miss %s", id)
+		log.Printf("backing %s: miss %s", i.backingIndex, id)
 	}
 
 	return found, err

@@ -17,7 +17,7 @@ type Reference struct {
 // References is a collection of references to a Document.
 type References []Reference
 
-// MarshallBinary marshalls into BSON and compresses it.
+// MarshalBinary marshalls into LZ4 compressed BSON.
 func (r References) MarshalBinary() ([]byte, error) {
 	data, err := cbor.Marshal([]Reference(r))
 	if err != nil {
@@ -36,7 +36,7 @@ func (r References) MarshalBinary() ([]byte, error) {
 	return compressed.Bytes(), nil
 }
 
-// MarshallBinary unmarshalls from BSON and compresses it.
+// UnmarshalBinary unmarshalls from LZ4 compressed BSON.
 func (r *References) UnmarshalBinary(data []byte) error {
 	compressed := bytes.NewBuffer(data)
 	uncompressed := new(bytes.Buffer)

@@ -1,24 +1,27 @@
 package redis
 
 import (
-	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/rueidisotel"
+	"context"
+	"log"
+	"strings"
+
+	radix "github.com/mediocregopher/radix/v4"
 
 	"github.com/ipfs-search/ipfs-search/instr"
 )
-
-// Client represents a Redis client.
-type Client struct {
-	cfg *ClientConfig
-
-	rueidis.Client
-	*instr.Instrumentation
-}
 
 // ClientConfig contains configuration for the Redis client.
 type ClientConfig struct {
 	Addrs  []string // Address or addresses of a Redis node/cluster.
 	Prefix string   // Prefix for storing entries.
+}
+
+// Client represents a Redis client.
+type Client struct {
+	cfg *ClientConfig
+	*instr.Instrumentation
+
+	radixClient radix.MultiClient
 }
 
 // NewClient instantiates a new Redis client.
@@ -27,29 +30,51 @@ func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
 		panic("NewClient ClientConfig cannot be nil.")
 	}
 
+	if len(cfg.Addrs) == 0 {
+		panic("No Redis addresses specified.")
+	}
+
 	if i == nil {
 		panic("NewCLient Instrumentation cannot be nil.")
 	}
 
-	c, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: cfg.Addrs,
-		ShuffleInit: true, // Recommended for cluster.
-		// To connect to sentinels, specify the required master set name:
-		// Sentinel: rueidis.SentinelOption{
-		//     MasterSet: "my_master",
-		// },
-	})
+	return &Client{
+		cfg:             cfg,
+		Instrumentation: i,
+	}, nil
+}
 
-	// Enable OpenTelemetry Tracing
-	c = rueidisotel.WithClient(c)
+func isClusterNotSupportedError(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := err.Error()
+	return strings.Contains(s, "cluster support disabled") || strings.Contains(s, "unknown command")
+}
 
-	if err != nil {
-		return nil, err
+// Start starts radix connections and closes them when done.
+func (c *Client) Start(ctx context.Context) error {
+	var err error
+	if c.radixClient, err = (radix.ClusterConfig{}).New(ctx, c.cfg.Addrs); err != nil {
+		if isClusterNotSupportedError(err) && len(c.cfg.Addrs) == 1 {
+			log.Printf("Redis not a cluster, attempting single connection.")
+			singleClient, err := (radix.PoolConfig{}).New(ctx, "tcp", c.cfg.Addrs[0])
+			if err != nil {
+				return err
+			}
+
+			c.radixClient = radix.NewMultiClient(radix.ReplicaSet{
+				Primary: singleClient,
+			})
+		} else {
+			return err
+		}
 	}
 
-	return &Client{
-		cfg,
-		c,
-		i,
-	}, nil
+	return nil
+}
+
+// Close closes the Redis client connection.
+func (c *Client) Close(ctx context.Context) error {
+	return c.radixClient.Close()
 }
