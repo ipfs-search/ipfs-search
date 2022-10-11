@@ -7,12 +7,10 @@ import (
 	"time"
 
 	"github.com/ipfs-search/ipfs-search/components/crawler"
-	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/ipfs-search/ipfs-search/components/index/cache"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch"
 	"github.com/ipfs-search/ipfs-search/components/index/redis"
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
-	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/utils"
 )
 
@@ -55,13 +53,6 @@ func (w *Pool) getRedisClient() (*redis.Client, error) {
 	return redis.NewClient(&config, w.Instrumentation)
 }
 
-type indexFactory struct {
-	osClient    *opensearch.Client
-	redisClient *redis.Client
-	cacheCfg    *cache.Config
-	*instr.Instrumentation
-}
-
 // getCachingFields() returns fields for caching based on fields in the indexTypes.Update struct.
 func getCachingFields() []string {
 	updateFields := reflect.VisibleFields(reflect.TypeOf(indexTypes.Update{}))
@@ -71,20 +62,6 @@ func getCachingFields() []string {
 	}
 
 	return cachingFields
-}
-
-func (f *indexFactory) getIndex(name string, prefix string) index.Index {
-	osIndex := opensearch.New(
-		f.osClient,
-		&opensearch.Config{Name: name},
-	)
-
-	redisIndex := redis.New(
-		f.redisClient,
-		&redis.Config{Name: name, Prefix: prefix},
-	)
-
-	return cache.New(osIndex, redisIndex, indexTypes.Update{}, f.cacheCfg, f.Instrumentation)
 }
 
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
@@ -108,37 +85,34 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 
 	cacheCfg := &cache.Config{}
 
-	iFactory := indexFactory{
-		osClient, redisClient, cacheCfg, w.Instrumentation,
-	}
-
-	// Note: Manually adjust indexCount whenever the amount of indexes change
-	const indexCount = 4
-	var (
-		indexNames = [indexCount]string{
-			w.config.Indexes.Files.Name,
-			w.config.Indexes.Directories.Name,
-			w.config.Indexes.Invalids.Name,
-			w.config.Indexes.Partials.Name,
-		}
-		indexPrefixes = [indexCount]string{
-			w.config.Indexes.Files.Prefix,
-			w.config.Indexes.Directories.Prefix,
-			w.config.Indexes.Invalids.Prefix,
-			w.config.Indexes.Partials.Prefix,
-		}
-		indexes [indexCount]index.Index
-	)
-
-	for i, name := range indexNames {
-		indexes[i] = iFactory.getIndex(name, indexPrefixes[i])
-	}
-
-	// Note: Manually adjust order here!
 	return &crawler.Indexes{
-		Files:       indexes[0],
-		Directories: indexes[1],
-		Invalids:    indexes[2],
-		Partials:    indexes[3],
+		Files: cache.New(opensearch.New(
+			osClient,
+			&opensearch.Config{Name: w.config.Indexes.Files.Name},
+		), redis.New(
+			redisClient,
+			&redis.Config{Name: w.config.Indexes.Files.Name, Prefix: w.config.Indexes.Files.Prefix},
+		), indexTypes.Update{}, cacheCfg, w.Instrumentation),
+		Directories: cache.New(opensearch.New(
+			osClient,
+			&opensearch.Config{Name: w.config.Indexes.Directories.Name},
+		), redis.New(
+			redisClient,
+			&redis.Config{Name: w.config.Indexes.Directories.Name, Prefix: w.config.Indexes.Directories.Prefix},
+		), indexTypes.Update{}, cacheCfg, w.Instrumentation),
+		Invalids: cache.New(opensearch.New(
+			osClient,
+			&opensearch.Config{Name: w.config.Indexes.Invalids.Name},
+		), redis.NewExistsIndex(
+			redisClient,
+			&redis.Config{Name: w.config.Indexes.Invalids.Name, Prefix: w.config.Indexes.Invalids.Prefix},
+		), struct{}{}, cacheCfg, w.Instrumentation),
+		Partials: cache.New(opensearch.New(
+			osClient,
+			&opensearch.Config{Name: w.config.Indexes.Partials.Name},
+		), redis.NewExistsIndex(
+			redisClient,
+			&redis.Config{Name: w.config.Indexes.Partials.Name, Prefix: w.config.Indexes.Partials.Prefix},
+		), struct{}{}, cacheCfg, w.Instrumentation),
 	}, nil
 }

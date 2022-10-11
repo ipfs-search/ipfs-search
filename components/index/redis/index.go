@@ -50,8 +50,7 @@ func (i *Index) set(ctx context.Context, id string, properties interface{}) erro
 	}
 
 	if len(flattened) == 0 {
-		// Existence only, use bogus value
-		flattened = []string{"0", "0"}
+		panic("Redis cannot index without properties.")
 	}
 
 	if debug {

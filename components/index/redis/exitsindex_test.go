@@ -14,21 +14,15 @@ import (
 	"github.com/ipfs-search/ipfs-search/instr"
 )
 
-const indexName = "indexName"
-const indexPrefix = "indexPrefix"
-const testId = "testId"
-
-type RedisTestSuite struct {
+type ExistsIndexTestSuite struct {
 	suite.Suite
 	ctx   context.Context
 	instr *instr.Instrumentation
 
-	i *Index
+	i *ExistsIndex
 }
 
-type stubFunc func(context.Context, []string) interface{}
-
-func (s *RedisTestSuite) stubClient(fn stubFunc) *Client {
+func (s *ExistsIndexTestSuite) stubClient(fn stubFunc) *Client {
 	conn := radix.NewStubConn("", "", fn)
 	rClient := radix.NewMultiClient(radix.ReplicaSet{
 		Primary: conn,
@@ -40,7 +34,7 @@ func (s *RedisTestSuite) stubClient(fn stubFunc) *Client {
 	}
 }
 
-func (s *RedisTestSuite) stubIndex(fn stubFunc) *Index {
+func (s *ExistsIndexTestSuite) stubIndex(fn stubFunc) *Index {
 	client := s.stubClient(fn)
 	cfg := &Config{
 		Name:   indexName,
@@ -52,11 +46,11 @@ func (s *RedisTestSuite) stubIndex(fn stubFunc) *Index {
 	}
 }
 
-func (s *RedisTestSuite) SetupTest() {
+func (s *ExistsIndexTestSuite) SetupTest() {
 	s.ctx = context.Background()
 }
 
-func (s *RedisTestSuite) TestGetKey() {
+func (s *ExistsIndexTestSuite) TestGetKey() {
 	i := s.stubIndex(func(_ context.Context, _ []string) interface{} {
 		return nil
 	})
@@ -65,7 +59,7 @@ func (s *RedisTestSuite) TestGetKey() {
 	s.Equal(indexPrefix+":"+testId, k)
 }
 
-func (s *RedisTestSuite) TestSetLastSeenOnly() {
+func (s *ExistsIndexTestSuite) TestSetLastSeenOnly() {
 	now := time.Now().Truncate(time.Second)
 	i := s.stubIndex(func(_ context.Context, args []string) interface{} {
 		s.Len(args, 4)
@@ -84,7 +78,7 @@ func (s *RedisTestSuite) TestSetLastSeenOnly() {
 	s.NoError(err)
 }
 
-func (s *RedisTestSuite) TestSetReferencesOnly() {
+func (s *ExistsIndexTestSuite) TestSetReferencesOnly() {
 	r1 := types.Reference{
 		ParentHash: "p1",
 		Name:       "f1",
@@ -119,7 +113,7 @@ func (s *RedisTestSuite) TestSetReferencesOnly() {
 	s.NoError(err)
 }
 
-// func (s *RedisTestSuite) TestEmpty() {
+// func (s *ExistsIndexTestSuite) TestEmpty() {
 // 	u := &types.Update{}
 
 // 	i := s.stubIndex(func(_ context.Context, args []string) interface{} {
@@ -135,7 +129,7 @@ func (s *RedisTestSuite) TestSetReferencesOnly() {
 // 	s.NoError(err)
 // }
 
-func (s *RedisTestSuite) TestSetAll() {
+func (s *ExistsIndexTestSuite) TestSetAll() {
 	now := time.Now().Truncate(time.Second)
 
 	r1 := types.Reference{
@@ -173,7 +167,7 @@ func (s *RedisTestSuite) TestSetAll() {
 	s.NoError(err)
 }
 
-func (s *RedisTestSuite) TestString() {
+func (s *ExistsIndexTestSuite) TestString() {
 	i := s.stubIndex(func(_ context.Context, _ []string) interface{} {
 		return nil
 	})
@@ -183,10 +177,10 @@ func (s *RedisTestSuite) TestString() {
 }
 
 // Identical to set
-// func (s *RedisTestSuite) TestIndex() {}
-// func (s *RedisTestSuite) TestUpdate() {}
+// func (s *ExistsIndexTestSuite) TestIndex() {}
+// func (s *ExistsIndexTestSuite) TestUpdate() {}
 
-func (s *RedisTestSuite) TestDelete() {
+func (s *ExistsIndexTestSuite) TestDelete() {
 	i := s.stubIndex(func(_ context.Context, args []string) interface{} {
 		s.Len(args, 2)
 		s.Equal("UNLINK", args[0])
@@ -197,7 +191,7 @@ func (s *RedisTestSuite) TestDelete() {
 	s.NoError(err)
 }
 
-func (s *RedisTestSuite) TestGetFound() {
+func (s *ExistsIndexTestSuite) TestGetFound() {
 	now := time.Now().Truncate(time.Second)
 	nBytes, _ := now.MarshalText()
 
@@ -236,7 +230,7 @@ func (s *RedisTestSuite) TestGetFound() {
 	s.Equal(u, dst)
 }
 
-func (s *RedisTestSuite) TestGetNotFound() {
+func (s *ExistsIndexTestSuite) TestGetNotFound() {
 	i := s.stubIndex(func(_ context.Context, args []string) interface{} {
 		s.Len(args, 2)
 		s.Equal("HGETALL", args[0])
@@ -252,7 +246,7 @@ func (s *RedisTestSuite) TestGetNotFound() {
 	s.False(found)
 }
 
-func (s *RedisTestSuite) TestError() {
+func (s *ExistsIndexTestSuite) TestError() {
 	testErr := errors.New("error")
 	i := s.stubIndex(func(_ context.Context, args []string) interface{} {
 		return testErr
@@ -266,6 +260,6 @@ func (s *RedisTestSuite) TestError() {
 	s.Equal(testErr, err)
 }
 
-func TestRedisTestSuite(t *testing.T) {
-	suite.Run(t, new(RedisTestSuite))
+func TestExistsIndexTestSuite(t *testing.T) {
+	suite.Run(t, new(ExistsIndexTestSuite))
 }
