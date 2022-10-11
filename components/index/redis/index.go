@@ -37,7 +37,7 @@ func New(client *Client, cfg *Config) index.Index {
 }
 
 func (i *Index) getKey(key string) string {
-	return i.c.cfg.Prefix + i.cfg.Name + ":" + key
+	return i.c.cfg.Prefix + i.cfg.Prefix + ":" + key
 }
 
 func (i *Index) set(ctx context.Context, id string, properties interface{}) error {

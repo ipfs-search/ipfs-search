@@ -73,7 +73,7 @@ func getCachingFields() []string {
 	return cachingFields
 }
 
-func (f *indexFactory) getIndex(name string) index.Index {
+func (f *indexFactory) getIndex(name string, prefix string) index.Index {
 	osIndex := opensearch.New(
 		f.osClient,
 		&opensearch.Config{Name: name},
@@ -81,7 +81,7 @@ func (f *indexFactory) getIndex(name string) index.Index {
 
 	redisIndex := redis.New(
 		f.redisClient,
-		&redis.Config{Name: name},
+		&redis.Config{Name: name, Prefix: prefix},
 	)
 
 	return cache.New(osIndex, redisIndex, indexTypes.Update{}, f.cacheCfg, f.Instrumentation)
@@ -115,12 +115,23 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 	// Note: Manually adjust indexCount whenever the amount of indexes change
 	const indexCount = 4
 	var (
-		indexNames = [indexCount]string{w.config.Indexes.Files.Name, w.config.Indexes.Directories.Name, w.config.Indexes.Invalids.Name, w.config.Indexes.Partials.Name}
-		indexes    [indexCount]index.Index
+		indexNames = [indexCount]string{
+			w.config.Indexes.Files.Name,
+			w.config.Indexes.Directories.Name,
+			w.config.Indexes.Invalids.Name,
+			w.config.Indexes.Partials.Name,
+		}
+		indexPrefixes = [indexCount]string{
+			w.config.Indexes.Files.Prefix,
+			w.config.Indexes.Directories.Prefix,
+			w.config.Indexes.Invalids.Prefix,
+			w.config.Indexes.Partials.Prefix,
+		}
+		indexes [indexCount]index.Index
 	)
 
 	for i, name := range indexNames {
-		indexes[i] = iFactory.getIndex(name)
+		indexes[i] = iFactory.getIndex(name, indexPrefixes[i])
 	}
 
 	// Note: Manually adjust order here!

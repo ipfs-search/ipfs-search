@@ -15,6 +15,7 @@ import (
 )
 
 const indexName = "indexName"
+const indexPrefix = "indexPrefix"
 const testId = "testId"
 
 type RedisTestSuite struct {
@@ -42,7 +43,8 @@ func (s *RedisTestSuite) stubClient(fn stubFunc) *Client {
 func (s *RedisTestSuite) stubIndex(fn stubFunc) *Index {
 	client := s.stubClient(fn)
 	cfg := &Config{
-		Name: indexName,
+		Name:   indexName,
+		Prefix: indexPrefix,
 	}
 
 	return &Index{
@@ -60,7 +62,7 @@ func (s *RedisTestSuite) TestGetKey() {
 	})
 
 	k := i.getKey(testId)
-	s.Equal(indexName+":"+testId, k)
+	s.Equal(indexPrefix+":"+testId, k)
 }
 
 func (s *RedisTestSuite) TestSetLastSeenOnly() {

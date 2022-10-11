@@ -39,11 +39,17 @@ sniffer:
   buffer_size: 512                                    # Size of the channels buffering between yielder, filter and adder
 indexes:
   files:
-    name: ipfs_files                                  # Name of ES index to use.
+    name: ipfs_files                                  # Name of index to use, internally as well as in OpenSearch.
+    prefix: f                                         # Key prefix for Redis cache.
   directories:
     name: ipfs_directories
+    prefix: d
   invalids:
     name: ipfs_invalids
+    prefix: i
+  partials:
+    name: ipfs_partials
+    prefix: p
 queues:
   files:
     name: files                                       # Name of RabbitMQ queue to use.
