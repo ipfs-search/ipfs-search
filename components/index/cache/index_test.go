@@ -69,11 +69,11 @@ func (s *CacheTestSuite) SetupTest() {
 
 func (s *CacheTestSuite) TestNew() {
 	// Allow value.
-	i := New(s.backingIndex, s.cachingIndex, cacheStruct{}, &Config{}, s.instr)
+	i := New(s.backingIndex, s.cachingIndex, cacheStruct{}, s.instr)
 	s.NotNil(i)
 
 	// Allow pointer as well.
-	i = New(s.backingIndex, s.cachingIndex, &cacheStruct{}, &Config{}, s.instr)
+	i = New(s.backingIndex, s.cachingIndex, &cacheStruct{}, s.instr)
 	s.NotNil(i)
 }
 

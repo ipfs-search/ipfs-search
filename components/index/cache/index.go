@@ -14,7 +14,6 @@ const debug bool = true
 
 // Index wraps a backing index and caches it using another index.
 type Index struct {
-	cfg          *Config
 	backingIndex index.Index
 	cachingIndex index.Index
 	cachingType  reflect.Type
@@ -23,13 +22,7 @@ type Index struct {
 }
 
 // New returns a new index.
-func New(backing index.Index, caching index.Index, cachingType interface{},
-	cfg *Config, instr *instr.Instrumentation) index.Index {
-
-	if cfg == nil {
-		panic("Index.New Config cannot be nil.")
-	}
-
+func New(backing index.Index, caching index.Index, cachingType interface{}, instr *instr.Instrumentation) index.Index {
 	t := reflect.TypeOf(cachingType)
 	if t.Kind() == reflect.Pointer {
 		// Dereference pointer
@@ -44,7 +37,6 @@ func New(backing index.Index, caching index.Index, cachingType interface{},
 		backingIndex:    backing,
 		cachingIndex:    caching,
 		cachingType:     t,
-		cfg:             cfg,
 		Instrumentation: instr,
 	}
 

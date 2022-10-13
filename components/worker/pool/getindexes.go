@@ -83,8 +83,6 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 		redisClient.Close(ctx)
 	}()
 
-	cacheCfg := &cache.Config{}
-
 	return &crawler.Indexes{
 		Files: cache.New(opensearch.New(
 			osClient,
@@ -92,27 +90,27 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 		), redis.New(
 			redisClient,
 			&redis.Config{Name: w.config.Indexes.Files.Name, Prefix: w.config.Indexes.Files.Prefix},
-		), indexTypes.Update{}, cacheCfg, w.Instrumentation),
+		), indexTypes.Update{}, w.Instrumentation),
 		Directories: cache.New(opensearch.New(
 			osClient,
 			&opensearch.Config{Name: w.config.Indexes.Directories.Name},
 		), redis.New(
 			redisClient,
 			&redis.Config{Name: w.config.Indexes.Directories.Name, Prefix: w.config.Indexes.Directories.Prefix},
-		), indexTypes.Update{}, cacheCfg, w.Instrumentation),
+		), indexTypes.Update{}, w.Instrumentation),
 		Invalids: cache.New(opensearch.New(
 			osClient,
 			&opensearch.Config{Name: w.config.Indexes.Invalids.Name},
 		), redis.NewExistsIndex(
 			redisClient,
 			&redis.Config{Name: w.config.Indexes.Invalids.Name, Prefix: w.config.Indexes.Invalids.Prefix},
-		), struct{}{}, cacheCfg, w.Instrumentation),
+		), struct{}{}, w.Instrumentation),
 		Partials: cache.New(opensearch.New(
 			osClient,
 			&opensearch.Config{Name: w.config.Indexes.Partials.Name},
 		), redis.NewExistsIndex(
 			redisClient,
 			&redis.Config{Name: w.config.Indexes.Partials.Name, Prefix: w.config.Indexes.Partials.Prefix},
-		), struct{}{}, cacheCfg, w.Instrumentation),
+		), struct{}{}, w.Instrumentation),
 	}, nil
 }
