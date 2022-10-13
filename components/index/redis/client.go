@@ -7,6 +7,7 @@ import (
 
 	radix "github.com/mediocregopher/radix/v4"
 
+	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/ipfs-search/ipfs-search/instr"
 )
 
@@ -72,6 +73,21 @@ func (c *Client) Start(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// NewIndex returns a new index given with given name and prefix. When existsIndex is true, an ExistsIndex will be returned.
+func (c *Client) NewIndex(name, prefix string, existsIndex bool) index.Index {
+	if existsIndex {
+		return NewExistsIndex(
+			c,
+			&Config{Name: name, Prefix: prefix},
+		)
+	}
+
+	return New(
+		c,
+		&Config{Name: name, Prefix: prefix},
+	)
 }
 
 // Close closes the Redis client connection.
