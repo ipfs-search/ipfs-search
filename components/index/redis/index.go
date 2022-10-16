@@ -21,11 +21,19 @@ type Index struct {
 // New returns a new index.
 func New(client *Client, cfg *Config) index.Index {
 	if client == nil {
-		panic("Index.New Client cannot be nil.")
+		panic("client cannot be nil")
 	}
 
 	if cfg == nil {
-		panic("Index.New Config cannot be nil.")
+		panic("cfg cannot be nil")
+	}
+
+	if cfg.Name == "" {
+		panic("Name cannot be empty")
+	}
+
+	if cfg.Prefix == "" {
+		panic("Prefix cannot be empty")
 	}
 
 	index := &Index{
