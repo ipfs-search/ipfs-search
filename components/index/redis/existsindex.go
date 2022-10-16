@@ -89,7 +89,7 @@ func (i *ExistsIndex) Get(ctx context.Context, id string, dst interface{}, field
 	err := i.c.radixClient.Do(ctx, action)
 
 	if debug {
-		log.Printf("redis exists %s: get %s from %s, res: %v", i, id, i.key, found)
+		log.Printf("redis exists %s: get %s from %s, res: %v, err: %v", i, id, i.key, found, err)
 	}
 
 	return found, err

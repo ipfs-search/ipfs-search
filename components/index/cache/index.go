@@ -10,7 +10,7 @@ import (
 	"github.com/ipfs-search/ipfs-search/instr"
 )
 
-const debug bool = true
+const debug bool = false
 
 // Index wraps a backing index and caches it using another index.
 type Index struct {
@@ -95,11 +95,10 @@ func (i *Index) makeCachingProperties(props interface{}) interface{} {
 		setFieldVal(src, dst, dstField)
 	}
 
-	if debug {
-		// Note: this dumps excessive amounts of data to the log!
-		// log.Printf("makeCachingProperties - src: %s: %v", src.Type(), src)
-		log.Printf("makeCachingProperties - dst: %s: %v", dst.Type(), dst)
-	}
+	// if debug {
+	// 	log.Printf("makeCachingProperties - src: %s: %v", src.Type(), src)
+	// 	log.Printf("makeCachingProperties - dst: %s: %v", dst.Type(), dst)
+	// }
 
 	return dstPtr.Interface()
 }

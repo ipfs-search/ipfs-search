@@ -10,7 +10,7 @@ import (
 	"github.com/mediocregopher/radix/v4/resp/resp3"
 )
 
-const debug bool = true
+const debug bool = false
 
 // Index stores properties as JSON in Redis.
 type Index struct {
@@ -62,7 +62,7 @@ func (i *Index) set(ctx context.Context, id string, properties interface{}) erro
 	}
 
 	if debug {
-		log.Printf("redis %s: writing %+v to %s", i, flattened, key)
+		log.Printf("redis %s: writing to %s", i, key)
 	}
 
 	args = append(args, flattened...)
@@ -125,13 +125,12 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	action := radix.Cmd(mb, "HGETALL", key)
 	err := i.c.radixClient.Do(ctx, action)
 
-	// if debug {
-	// 	log.Printf("redis %s: get %s", i, key)
-	// 	log.Printf("redis %s: maybe: %+v", i, mb)
-	// 	log.Printf("redis %s: dst: %T: %v", i, dst, dst)
-	// }
+	found := !(mb.Null || mb.Empty)
+	if debug {
+		log.Printf("redis %s: get %s from %s, res: %v, err: %v", i, id, key, found, err)
+	}
 
-	return !(mb.Null || mb.Empty || err != nil), err
+	return err == nil && found, err
 }
 
 // Compile-time assurance that implementation satisfies interface.
