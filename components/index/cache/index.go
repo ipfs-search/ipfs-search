@@ -48,6 +48,38 @@ func (i *Index) String() string {
 	return fmt.Sprintf("'%s' through '%s'", i.backingIndex, i.cachingIndex)
 }
 
+func matchDstKind(src, dst reflect.Value) reflect.Value {
+	dKind, sKind := dst.Kind(), src.Kind()
+
+	if dKind == reflect.Pointer && sKind != reflect.Pointer {
+		// dst is pointer, src is not.
+
+		if !src.CanAddr() {
+			panic(fmt.Sprintf("cannot address val %v for field %v", src, dst))
+		}
+
+		return src.Addr()
+	}
+
+	if dKind != reflect.Pointer && sKind == reflect.Pointer {
+		// dst is value, src is pointer.
+		return src.Elem()
+	}
+
+	return src
+}
+
+func setFieldVal(src, dst reflect.Value, dstField reflect.StructField) {
+	// Set dst field to corresponding src value.
+	// Note: this will panic when a dst field is not present in the src struct.
+	srcVal := src.FieldByName(dstField.Name)
+	dstVal := dst.FieldByIndex(dstField.Index)
+
+	srcVal = matchDstKind(srcVal, dstVal)
+
+	dstVal.Set(srcVal)
+}
+
 func (i *Index) makeCachingProperties(props interface{}) interface{} {
 	src := GetStructElem(props)
 
@@ -60,34 +92,12 @@ func (i *Index) makeCachingProperties(props interface{}) interface{} {
 
 	// Iterate fields of destination
 	for _, dstField := range dstFields {
-		// Set dst field to corresponding src value.
-		// Note: this will panic when a dst field is not present in the src struct.
-		val := src.FieldByName(dstField.Name)
-		field := dst.FieldByIndex(dstField.Index)
-
-		if field.Kind() == reflect.Pointer {
-			log.Printf("field is pointer")
-			if val.Kind() != reflect.Pointer {
-				log.Printf("val is no pointer")
-				if val.CanAddr() {
-					val = val.Addr()
-				} else {
-					panic(fmt.Sprintf("cannot address val %v for field %v", val, dstField))
-				}
-			}
-		} else {
-			// field not pointer
-			if val.Kind() == reflect.Pointer {
-				log.Printf("val is pointer")
-				val = val.Elem()
-			}
-		}
-
-		field.Set(val)
+		setFieldVal(src, dst, dstField)
 	}
 
 	if debug {
-		log.Printf("makeCachingProperties - src: %s: %v", src.Type(), src)
+		// Note: this dumps excessive amounts of data to the log!
+		// log.Printf("makeCachingProperties - src: %s: %v", src.Type(), src)
 		log.Printf("makeCachingProperties - dst: %s: %v", dst.Type(), dst)
 	}
 
