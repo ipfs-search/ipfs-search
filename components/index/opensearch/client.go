@@ -110,6 +110,9 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 		RetryOnStatus:        []int{429, 502, 503, 504},
 		EnableRetryOnTimeout: true,
 		RetryBackoff:         func(i int) time.Duration { return b.ForAttempt(float64(i)) },
+		// Spread queries/load; discover nodes on start and do it again every 5 minutes.
+		DiscoverNodesOnStart:  true,
+		DiscoverNodesInterval: 5 * time.Minute,
 	}
 
 	if cfg.Debug {
