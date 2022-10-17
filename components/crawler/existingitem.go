@@ -17,7 +17,7 @@ type existingItem struct {
 func (c *Crawler) getExistingItem(ctx context.Context, r *t.AnnotatedResource) (*existingItem, error) {
 	indexes := []index.Index{c.indexes.Files, c.indexes.Directories, c.indexes.Invalids, c.indexes.Partials}
 
-	update := new(index_types.Update)
+	update := &index_types.Update{}
 
 	index, err := index.MultiGet(ctx, indexes, r.ID, update, "references", "last-seen")
 	if err != nil {

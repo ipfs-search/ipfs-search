@@ -14,25 +14,29 @@ const debug bool = false
 
 // Index wraps a backing index and caches it using another index.
 type Index struct {
-	cfg          *Config
 	backingIndex index.Index
 	cachingIndex index.Index
+	cachingType  reflect.Type
 
 	*instr.Instrumentation
 }
 
 // New returns a new index.
-func New(backing index.Index, caching index.Index,
-	cfg *Config, instr *instr.Instrumentation) index.Index {
+func New(backing index.Index, caching index.Index, cachingType interface{}, instr *instr.Instrumentation) index.Index {
+	t := reflect.TypeOf(cachingType)
+	if t.Kind() == reflect.Pointer {
+		// Dereference pointer
+		t = t.Elem()
+	}
 
-	if cfg == nil {
-		panic("Index.New Config cannot be nil.")
+	if t.Kind() != reflect.Struct {
+		panic("caching type should be a struct")
 	}
 
 	index := &Index{
 		backingIndex:    backing,
 		cachingIndex:    caching,
-		cfg:             cfg,
+		cachingType:     t,
 		Instrumentation: instr,
 	}
 
@@ -41,47 +45,62 @@ func New(backing index.Index, caching index.Index,
 
 // String returns the name of the index, for convenient logging.
 func (i *Index) String() string {
-	return fmt.Sprintf("cache for '%s' through '%s'", i.backingIndex, i.cachingIndex)
+	return fmt.Sprintf("'%s' through '%s'", i.backingIndex, i.cachingIndex)
 }
 
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
+func matchDstKind(src, dst reflect.Value) reflect.Value {
+	dKind, sKind := dst.Kind(), src.Kind()
+
+	if dKind == reflect.Pointer && sKind != reflect.Pointer {
+		// dst is pointer, src is not.
+
+		if !src.CanAddr() {
+			panic(fmt.Sprintf("cannot address val %v for field %v", src, dst))
 		}
+
+		return src.Addr()
 	}
 
-	return false
+	if dKind != reflect.Pointer && sKind == reflect.Pointer {
+		// dst is value, src is pointer.
+		return src.Elem()
+	}
+
+	return src
 }
 
-func (i *Index) makeCachingProperties(properties interface{}) map[string]interface{} {
-	// Take care to allocate map for caching properties on the stack.
+func setFieldVal(src, dst reflect.Value, dstField reflect.StructField) {
+	// Set dst field to corresponding src value.
+	// Note: this will panic when a dst field is not present in the src struct.
+	srcVal := src.FieldByName(dstField.Name)
+	dstVal := dst.FieldByIndex(dstField.Index)
 
-	valueof := reflect.ValueOf(properties)
+	srcVal = matchDstKind(srcVal, dstVal)
 
-	if valueof.Kind() != reflect.Pointer {
-		panic(fmt.Sprintf("not called with pointer but %T", properties))
+	dstVal.Set(srcVal)
+}
+
+func (i *Index) makeCachingProperties(props interface{}) interface{} {
+	src := GetStructElem(props)
+
+	// Create pointer cache struct
+	dstPtr := reflect.New(i.cachingType)
+	dstFields := reflect.VisibleFields(i.cachingType)
+
+	// Get the underlying struct
+	dst := dstPtr.Elem()
+
+	// Iterate fields of destination
+	for _, dstField := range dstFields {
+		setFieldVal(src, dst, dstField)
 	}
 
-	// Dereference pointer
-	valueof = valueof.Elem()
+	// if debug {
+	// 	log.Printf("makeCachingProperties - src: %s: %v", src.Type(), src)
+	// 	log.Printf("makeCachingProperties - dst: %s: %v", dst.Type(), dst)
+	// }
 
-	if valueof.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("not struct pointer but %T", properties))
-	}
-
-	dst := make(map[string]interface{}, len(i.cfg.CachingFields))
-	fields := reflect.VisibleFields(valueof.Type())
-
-	for _, field := range fields {
-		if contains(i.cfg.CachingFields, field.Name) {
-			value := valueof.FieldByName(field.Name).Interface()
-
-			dst[field.Name] = value
-		}
-	}
-
-	return dst
+	return dstPtr.Interface()
 }
 
 func (i *Index) cacheGet(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {
@@ -107,11 +126,11 @@ func (i *Index) cacheWrite(ctx context.Context, id string, properties interface{
 	cachingProperties := i.makeCachingProperties(properties)
 
 	if debug {
-		log.Printf("cache: write %s", id)
+		log.Printf("cache %s: write %s", i, id)
 	}
 
 	if err := f(ctx, id, cachingProperties); err != nil {
-		return ErrCache{err, fmt.Sprintf("cache error in '%v': %s", f, err.Error())}
+		return ErrCache{err, fmt.Sprintf("cache error in writing %+v to %s: %s", cachingProperties, id, err.Error())}
 	}
 
 	return nil
@@ -156,7 +175,7 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 	defer span.End()
 
 	if debug {
-		log.Printf("cache: delete %s", id)
+		log.Printf("cache %s: delete %s", i, id)
 	}
 
 	// Delete cache first; maintain consistency as our backing index is the source of truth.
@@ -188,14 +207,14 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	if found, err = i.cacheGet(ctx, id, dst, fields...); found {
 		// if debug {
-		log.Printf("cache: hit %s", id)
+		log.Printf("cache %s: hit %s", i.cachingIndex, id)
 		// }
 
 		return found, err
 	}
 
 	if debug {
-		log.Printf("cache: miss %s", id)
+		log.Printf("cache %s: miss %s", i.cachingIndex, id)
 	}
 
 	var backingErr error
@@ -206,7 +225,7 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	if found {
 		if debug {
-			log.Printf("backing: hit %s", id)
+			log.Printf("backing %s: hit %s", i.backingIndex, id)
 		}
 
 		if indexErr := i.cacheWrite(ctx, id, dst, i.cachingIndex.Index); indexErr != nil {
@@ -215,7 +234,7 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 	}
 
 	if debug {
-		log.Printf("backing: miss %s", id)
+		log.Printf("backing %s: miss %s", i.backingIndex, id)
 	}
 
 	return found, err

@@ -12,28 +12,23 @@ import (
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch"
 	"github.com/ipfs-search/ipfs-search/components/index/redis"
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
-	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/utils"
 )
 
-func startOpenSearchWorker(ctx context.Context, osClient *opensearch.Client) {
+func osWorkLoop(ctx context.Context, workFunc func(context.Context) error) {
 	for {
+		// Keep starting worker unless context is done.
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			if err := osClient.Work(ctx); err != nil {
-				log.Printf("Error in ES client pool, restarting pool: %s", err)
+			if err := workFunc(ctx); err != nil {
+				log.Printf("Error in worker: %s, restarting.", err)
 				// Prevent overly tight restart loop
 				time.Sleep(time.Second)
 			}
 		}
 	}
-}
-
-func ensureRedisClose(ctx context.Context, client *redis.Client) {
-	<-ctx.Done()
-	client.Close()
 }
 
 func (w *Pool) getOpenSearchClient() (*opensearch.Client, error) {
@@ -59,13 +54,6 @@ func (w *Pool) getRedisClient() (*redis.Client, error) {
 	return redis.NewClient(&config, w.Instrumentation)
 }
 
-type indexFactory struct {
-	osClient    *opensearch.Client
-	redisClient *redis.Client
-	cacheCfg    *cache.Config
-	*instr.Instrumentation
-}
-
 // getCachingFields() returns fields for caching based on fields in the indexTypes.Update struct.
 func getCachingFields() []string {
 	updateFields := reflect.VisibleFields(reflect.TypeOf(indexTypes.Update{}))
@@ -77,58 +65,61 @@ func getCachingFields() []string {
 	return cachingFields
 }
 
-func (f *indexFactory) getIndex(name string) index.Index {
-	osIndex := opensearch.New(
-		f.osClient,
+func getOsIndex(c *opensearch.Client, name string) index.Index {
+	return opensearch.New(
+		c,
 		&opensearch.Config{Name: name},
 	)
-
-	redisIndex := redis.New(
-		f.redisClient,
-		&redis.Config{Name: name},
-	)
-
-	return cache.New(osIndex, redisIndex, f.cacheCfg, f.Instrumentation)
 }
 
 func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
-	osClient, err := w.getOpenSearchClient()
+	os, err := w.getOpenSearchClient()
 	if err != nil {
 		return nil, err
 	}
 
-	redisClient, err := w.getRedisClient()
+	redis, err := w.getRedisClient()
 	if err != nil {
 		return nil, err
 	}
 
-	go ensureRedisClose(ctx, redisClient)
-	go startOpenSearchWorker(ctx, osClient)
+	go osWorkLoop(ctx, os.Work)
 
-	cacheCfg := &cache.Config{
-		CachingFields: getCachingFields(),
+	if err := redis.Start(ctx); err != nil {
+		return nil, err
 	}
 
-	iFactory := indexFactory{
-		osClient, redisClient, cacheCfg, w.Instrumentation,
-	}
+	go func() {
+		<-ctx.Done()
+		redis.Close(ctx)
+	}()
 
-	// Note: Manually adjust indexCount whenever the amount of indexes change
-	const indexCount = 4
-	var (
-		indexNames = [indexCount]string{w.config.Indexes.Files.Name, w.config.Indexes.Directories.Name, w.config.Indexes.Invalids.Name, w.config.Indexes.Partials.Name}
-		indexes    [indexCount]index.Index
-	)
+	cfg := w.config.Indexes
 
-	for i, name := range indexNames {
-		indexes[i] = iFactory.getIndex(name)
-	}
-
-	// Note: Manually adjust order here!
 	return &crawler.Indexes{
-		Files:       indexes[0],
-		Directories: indexes[1],
-		Invalids:    indexes[2],
-		Partials:    indexes[3],
+		Files: cache.New(
+			os.NewIndex(cfg.Files.Name),
+			redis.NewIndex(cfg.Files.Name, cfg.Files.Prefix, false),
+			indexTypes.Update{},
+			w.Instrumentation,
+		),
+		Directories: cache.New(
+			os.NewIndex(cfg.Directories.Name),
+			redis.NewIndex(cfg.Directories.Name, cfg.Directories.Prefix, false),
+			indexTypes.Update{},
+			w.Instrumentation,
+		),
+		Invalids: cache.New(
+			os.NewIndex(cfg.Invalids.Name),
+			redis.NewIndex(cfg.Invalids.Name, cfg.Invalids.Prefix, true),
+			struct{}{},
+			w.Instrumentation,
+		),
+		Partials: cache.New(
+			os.NewIndex(cfg.Partials.Name),
+			redis.NewIndex(cfg.Partials.Name, cfg.Partials.Prefix, true),
+			struct{}{},
+			w.Instrumentation,
+		),
 	}, nil
 }

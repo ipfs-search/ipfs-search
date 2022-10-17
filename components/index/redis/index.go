@@ -5,7 +5,9 @@ import (
 	"log"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
-	"github.com/rueian/rueidis"
+
+	radix "github.com/mediocregopher/radix/v4"
+	"github.com/mediocregopher/radix/v4/resp/resp3"
 )
 
 const debug bool = false
@@ -19,11 +21,19 @@ type Index struct {
 // New returns a new index.
 func New(client *Client, cfg *Config) index.Index {
 	if client == nil {
-		panic("Index.New Client cannot be nil.")
+		panic("client cannot be nil")
 	}
 
 	if cfg == nil {
-		panic("Index.New Config cannot be nil.")
+		panic("cfg cannot be nil")
+	}
+
+	if cfg.Name == "" {
+		panic("Name cannot be empty")
+	}
+
+	if cfg.Prefix == "" {
+		panic("Prefix cannot be empty")
 	}
 
 	index := &Index{
@@ -35,21 +45,30 @@ func New(client *Client, cfg *Config) index.Index {
 }
 
 func (i *Index) getKey(key string) string {
-	return i.c.cfg.Prefix + i.cfg.Name + ":" + key
+	return i.c.cfg.Prefix + i.cfg.Prefix + ":" + key
 }
 
 func (i *Index) set(ctx context.Context, id string, properties interface{}) error {
 	key := i.getKey(id)
-	val := rueidis.JSON(properties)
+	args := []string{key}
 
-	if debug {
-		log.Printf("redis: set %s", key)
+	flattened, err := resp3.Flatten(properties, nil)
+	if err != nil {
+		return err
 	}
 
-	cmd := i.c.B().Set().Key(key).Value(val).Build()
-	res := i.c.Do(ctx, cmd)
+	if len(flattened) == 0 {
+		panic("Redis cannot index without properties.")
+	}
 
-	return res.Error()
+	if debug {
+		log.Printf("redis %s: writing to %s", i, key)
+	}
+
+	args = append(args, flattened...)
+
+	action := radix.Cmd(nil, "HSET", args...)
+	return i.c.radixClient.Do(ctx, action)
 }
 
 // String returns the name of the index, for convenient logging.
@@ -81,13 +100,12 @@ func (i *Index) Delete(ctx context.Context, id string) error {
 	key := i.getKey(id)
 
 	if debug {
-		log.Printf("redis: delete %s", key)
+		log.Printf("redis %s: delete %s", i, key)
 	}
 
-	cmd := i.c.B().Del().Key(key).Build()
-	res := i.c.Do(ctx, cmd)
-
-	return res.Error()
+	// Non-blocking DEL-equivalent
+	action := radix.Cmd(nil, "UNLINK", key)
+	return i.c.radixClient.Do(ctx, action)
 }
 
 // Get *all* fields from document with `id` from the index, ignoring the 'fields' parameters.
@@ -102,35 +120,17 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 
 	key := i.getKey(id)
 
+	// Wrap receiver so we can determine whether we're found or not.
+	mb := &radix.Maybe{Rcv: dst}
+	action := radix.Cmd(mb, "HGETALL", key)
+	err := i.c.radixClient.Do(ctx, action)
+
+	found := !(mb.Null || mb.Empty)
 	if debug {
-		log.Printf("redis: get %s", key)
+		log.Printf("redis %s: get %s from %s, res: %v, err: %v", i, id, key, found, err)
 	}
 
-	cmd := i.c.B().Get().Key(key).Build()
-	res := i.c.Do(ctx, cmd)
-
-	if err := res.Error(); err != nil {
-		if err := res.RedisError(); err != nil && err.IsNil() {
-			if debug {
-				log.Printf("redis: not found %s", key)
-			}
-
-			return false, nil
-		}
-
-		if debug {
-			log.Printf("redis: error %s: %s", key, err.Error())
-		}
-
-		// Errors other than not found: propagate
-		return false, err
-	}
-
-	if debug {
-		log.Printf("redis: found %s", key)
-	}
-
-	return true, res.DecodeJSON(dst)
+	return err == nil && found, err
 }
 
 // Compile-time assurance that implementation satisfies interface.

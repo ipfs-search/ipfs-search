@@ -65,7 +65,7 @@ func (c *Crawler) updateExisting(ctx context.Context, i *existingItem) error {
 
 		var isRecent bool
 		if i.LastSeen == nil {
-			// No LastSeen set, override isRecent
+			log.Printf("LastSeen is nil, overriding isRecent.")
 			isRecent = true
 		} else {
 			isRecent = now.Sub(*i.LastSeen) > c.config.MinUpdateAge

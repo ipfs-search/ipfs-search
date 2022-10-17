@@ -41,12 +41,16 @@ sniffer:
 indexes:
     files:
         name: ipfs_files
+        prefix: f
     directories:
         name: ipfs_directories
+        prefix: d
     invalids:
         name: ipfs_invalids
+        prefix: i
     partials:
         name: ipfs_partials
+        prefix: p
 queues:
     files:
         name: files

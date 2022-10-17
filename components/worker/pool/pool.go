@@ -32,11 +32,13 @@ type Pool struct {
 	*instr.Instrumentation
 }
 
-func (p *Pool) startWorkers(ctx context.Context, deliveries <-chan samqp.Delivery, pools int, poolName string) {
+func (p *Pool) startWorkers(ctx context.Context, deliveries <-chan samqp.Delivery, workers int, poolName string) {
 	ctx, span := p.Tracer.Start(ctx, "crawler.pool.start")
 	defer span.End()
 
-	for i := 0; i < pools; i++ {
+	log.Printf("Starting %d workers for %s", workers, poolName)
+
+	for i := 0; i < workers; i++ {
 		name := fmt.Sprintf("%s-%d", poolName, i)
 		worker := worker.New(name, p.crawler, p.Instrumentation)
 		go worker.Start(ctx, deliveries)
@@ -48,13 +50,8 @@ func (p *Pool) Start(ctx context.Context) {
 	ctx, span := p.Tracer.Start(ctx, "crawler.pool.Start")
 	defer span.End()
 
-	log.Printf("Starting %d pools for files", p.config.Workers.FileWorkers)
 	p.startWorkers(ctx, p.consumeChans.Files, p.config.Workers.FileWorkers, "files")
-
-	log.Printf("Starting %d pools for hashes", p.config.Workers.HashWorkers)
 	p.startWorkers(ctx, p.consumeChans.Hashes, p.config.Workers.HashWorkers, "hashes")
-
-	log.Printf("Starting %d pools for directories", p.config.Workers.DirectoryWorkers)
 	p.startWorkers(ctx, p.consumeChans.Directories, p.config.Workers.DirectoryWorkers, "directories")
 }
 

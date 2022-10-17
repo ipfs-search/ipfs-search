@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -23,18 +24,20 @@ type testStruct struct {
 	valNope int
 }
 
+type cacheStruct struct {
+	ValOne   *string
+	ValThree float64
+	ValFour  struct {
+		v string
+	}
+}
+
 var cachingFields []string = []string{"ValOne", "ValThree", "ValFour", "neverFound"}
-var props testStruct = testStruct{"test", 5, 5.5, struct{ v string }{"h"}, 3}
-var cachedProps = map[string]interface{}{
-	"ValOne":   "test",
-	"ValThree": 5.5,
-	"ValFour":  struct{ v string }{"h"},
-}
-var emptyCachedProps = map[string]interface{}{
-	"ValOne":   "",
-	"ValThree": 0.0,
-	"ValFour":  struct{ v string }{""},
-}
+var props = testStruct{"test", 5, 5.5, struct{ v string }{"h"}, 3}
+var testStr = "test"
+var emptyStr = ""
+var cachedProps = cacheStruct{&testStr, 5.5, struct{ v string }{"h"}}
+var emptyCachedProps = cacheStruct{&emptyStr, 0.0, struct{ v string }{""}}
 
 var testID = "testID"
 var testErr = errors.New("errr")
@@ -57,33 +60,26 @@ func (s *CacheTestSuite) SetupTest() {
 	s.backingIndex = &index.Mock{}
 
 	s.i = &Index{
-		backingIndex: s.backingIndex,
-		cachingIndex: s.cachingIndex,
-		cfg: &Config{
-			CachingFields: cachingFields,
-		},
+		backingIndex:    s.backingIndex,
+		cachingIndex:    s.cachingIndex,
+		cachingType:     reflect.TypeOf(cacheStruct{}),
 		Instrumentation: s.instr,
 	}
 }
 
 func (s *CacheTestSuite) TestNew() {
-	i := New(s.backingIndex, s.cachingIndex, &Config{
-		CachingFields: cachingFields,
-	}, s.instr)
+	// Allow value.
+	i := New(s.backingIndex, s.cachingIndex, cacheStruct{}, s.instr)
+	s.NotNil(i)
 
+	// Allow pointer as well.
+	i = New(s.backingIndex, s.cachingIndex, &cacheStruct{}, s.instr)
 	s.NotNil(i)
 }
 
 func (s *CacheTestSuite) TestString() {
-	exp := fmt.Sprintf("cache for '%s' through '%s'", s.backingIndex, s.cachingIndex)
+	exp := fmt.Sprintf("'%s' through '%s'", s.backingIndex, s.cachingIndex)
 	s.Equal(exp, s.i.String())
-}
-
-func (s *CacheTestSuite) TestContains() {
-	l := []string{"a", "bee", "cee"}
-
-	s.True(contains(l, "bee"))
-	s.False(contains(l, "monkey"))
 }
 
 func (s *CacheTestSuite) TestMakeCachingProperties() {
@@ -91,20 +87,17 @@ func (s *CacheTestSuite) TestMakeCachingProperties() {
 
 	s.NotNil(res)
 
-	s.Len(res, 3)
+	s.IsType(res, &cacheStruct{})
 
-	s.Contains(res, "ValOne")
-	s.Contains(res, "ValThree")
-	s.Contains(res, "ValFour")
-
-	s.Equal(props.ValOne, res["ValOne"])
-	s.Equal(props.ValThree, res["ValThree"])
-	s.Equal(props.ValFour, res["ValFour"])
+	cacheres := res.(*cacheStruct)
+	s.Equal(props.ValOne, *cacheres.ValOne)
+	s.Equal(props.ValThree, cacheres.ValThree)
+	s.Equal(props.ValFour, cacheres.ValFour)
 }
 
 func (s *CacheTestSuite) TestIndexSuccess() {
 	s.backingIndex.On("Index", mock.Anything, testID, &props).Return(nil).Once()
-	s.cachingIndex.On("Index", mock.Anything, testID, cachedProps).Return(nil).Once()
+	s.cachingIndex.On("Index", mock.Anything, testID, &cachedProps).Return(nil).Once()
 
 	err := s.i.Index(s.ctx, testID, &props)
 	s.NoError(err)
@@ -124,7 +117,7 @@ func (s *CacheTestSuite) TestIndexBackingFail() {
 
 func (s *CacheTestSuite) TestIndexCachingFail() {
 	s.backingIndex.On("Index", mock.Anything, testID, &props).Return(nil).Once()
-	s.cachingIndex.On("Index", mock.Anything, testID, cachedProps).Return(testErr).Once()
+	s.cachingIndex.On("Index", mock.Anything, testID, &cachedProps).Return(testErr).Once()
 
 	err := s.i.Index(s.ctx, testID, &props)
 	s.Error(err)
@@ -134,7 +127,7 @@ func (s *CacheTestSuite) TestIndexCachingFail() {
 
 func (s *CacheTestSuite) TestUpdateSuccess() {
 	s.backingIndex.On("Update", mock.Anything, testID, &props).Return(nil).Once()
-	s.cachingIndex.On("Update", mock.Anything, testID, cachedProps).Return(nil).Once()
+	s.cachingIndex.On("Update", mock.Anything, testID, &cachedProps).Return(nil).Once()
 
 	err := s.i.Update(s.ctx, testID, &props)
 	s.NoError(err)
@@ -142,7 +135,7 @@ func (s *CacheTestSuite) TestUpdateSuccess() {
 
 func (s *CacheTestSuite) TestUpdateBackingFail() {
 	s.backingIndex.On("Update", mock.Anything, testID, &props).Return(testErr).Once()
-	s.cachingIndex.On("Update", mock.Anything, testID, cachedProps).Return(nil).Once()
+	s.cachingIndex.On("Update", mock.Anything, testID, &cachedProps).Return(nil).Once()
 
 	err := s.i.Update(s.ctx, testID, &props)
 	s.Error(err)
@@ -151,7 +144,7 @@ func (s *CacheTestSuite) TestUpdateBackingFail() {
 }
 
 func (s *CacheTestSuite) TestUpdateCachingFail() {
-	s.cachingIndex.On("Update", mock.Anything, testID, cachedProps).Return(testErr).Once()
+	s.cachingIndex.On("Update", mock.Anything, testID, &cachedProps).Return(testErr).Once()
 
 	err := s.i.Update(s.ctx, testID, &props)
 	s.Error(err)
@@ -210,7 +203,7 @@ func (s *CacheTestSuite) TestGetBackingSuccess() {
 	s.backingIndex.On("Get", mock.Anything, testID, &data, mock.Anything).Return(true, nil).Once()
 
 	// If an item is not in the cache but is found in the backing, it will be added to the cache.
-	s.cachingIndex.On("Index", mock.Anything, testID, emptyCachedProps).Return(nil).Once()
+	s.cachingIndex.On("Index", mock.Anything, testID, &emptyCachedProps).Return(nil).Once()
 
 	found, err := s.i.Get(s.ctx, testID, &data)
 	s.True(found)
@@ -224,7 +217,7 @@ func (s *CacheTestSuite) TestGetCacheIndexFail() {
 	s.backingIndex.On("Get", mock.Anything, testID, &data, mock.Anything).Return(true, nil).Once()
 
 	// When there is an error adding things to the cache, we should still get results
-	s.cachingIndex.On("Index", mock.Anything, testID, emptyCachedProps).Return(testErr).Once()
+	s.cachingIndex.On("Index", mock.Anything, testID, &emptyCachedProps).Return(testErr).Once()
 
 	found, err := s.i.Get(s.ctx, testID, &data)
 	s.True(found)
@@ -241,7 +234,7 @@ func (s *CacheTestSuite) TestGetCacheFail() {
 	s.backingIndex.On("Get", mock.Anything, testID, &data, mock.Anything).Return(true, nil).Once()
 
 	// We will still *try* to index it.
-	s.cachingIndex.On("Index", mock.Anything, testID, emptyCachedProps).Return(nil).Once()
+	s.cachingIndex.On("Index", mock.Anything, testID, &emptyCachedProps).Return(nil).Once()
 
 	found, err := s.i.Get(s.ctx, testID, &data)
 	s.True(found)

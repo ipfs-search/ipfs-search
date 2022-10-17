@@ -12,6 +12,7 @@ import (
 	opensearchutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 	"github.com/ipfs-search/ipfs-search/instr"
 )
@@ -82,6 +83,14 @@ func (c *Client) Work(ctx context.Context) error {
 	defer c.bulkIndexer.Close(context.Background())
 
 	return c.bulkGetter.Work(ctx)
+}
+
+// NewIndex returns a new index given with given name.
+func (c *Client) NewIndex(name string) index.Index {
+	return New(
+		c,
+		&Config{Name: name},
+	)
 }
 
 func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.Client, error) {
