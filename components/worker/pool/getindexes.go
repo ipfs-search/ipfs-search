@@ -37,10 +37,11 @@ func (w *Pool) getOpenSearchClient() (*opensearch.Client, error) {
 		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 100),
 		Debug:     false,
 
-		BulkIndexerWorkers:     w.config.OpenSearch.BulkIndexerWorkers,
-		BulkIndexerFlushBytes:  int(w.config.OpenSearch.BulkIndexerFlushBytes),
-		BulkGetterBatchSize:    w.config.OpenSearch.BulkGetterBatchSize,
-		BulkGetterBatchTimeout: w.config.OpenSearch.BulkGetterBatchTimeout,
+		BulkIndexerWorkers:      w.config.OpenSearch.BulkIndexerWorkers,
+		BulkIndexerFlushBytes:   int(w.config.OpenSearch.BulkIndexerFlushBytes),
+		BulkIndexerFlushTimeout: w.config.OpenSearch.BulkIndexerFlushTimeout,
+		BulkGetterBatchSize:     w.config.OpenSearch.BulkGetterBatchSize,
+		BulkGetterBatchTimeout:  w.config.OpenSearch.BulkGetterBatchTimeout,
 	}
 
 	return opensearch.NewClient(config, w.Instrumentation)

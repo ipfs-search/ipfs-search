@@ -5,7 +5,8 @@ ipfs:
 opensearch:
     url: http://localhost:9200
     bulk_indexer_workers: 8
-    bulk_flush_bytes: 5000000B
+    bulk_flush_bytes: 5MB
+    bulk_flush_timeout: 5m
     bulk_getter_batch_size: 48
     bulk_getter_batch_timeout: 150ms
 redis:
