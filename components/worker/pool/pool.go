@@ -2,7 +2,6 @@ package pool
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"time"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/ipfs-search/ipfs-search/components/crawler"
 	"github.com/ipfs-search/ipfs-search/components/worker"
+	"github.com/ipfs-search/ipfs-search/components/worker/group"
 	"github.com/ipfs-search/ipfs-search/config"
 	"github.com/ipfs-search/ipfs-search/instr"
 	"github.com/ipfs-search/ipfs-search/utils"
@@ -32,37 +32,36 @@ type Pool struct {
 	*instr.Instrumentation
 }
 
-func (p *Pool) startWorkers(ctx context.Context, deliveries <-chan samqp.Delivery, workers int, poolName string) {
-	ctx, span := p.Tracer.Start(ctx, "crawler.pool.start")
-	defer span.End()
-
-	log.Printf("Starting %d workers for %s", workers, poolName)
-
-	for i := 0; i < workers; i++ {
-		name := fmt.Sprintf("%s-%d", poolName, i)
-		cfg := &worker.Config{
-			Name:         name,
-			MaxLoadRatio: p.config.MaxLoadRatio,
-			ThrottleMin:  p.config.ThrottleMin,
-			ThrottleMax:  p.config.ThrottleMax,
-		}
-
-		worker := worker.New(cfg, p.crawler, p.Instrumentation)
-		go worker.Start(ctx, deliveries)
+func (p *Pool) getWorkerConfig(name string) *worker.Config {
+	return &worker.Config{
+		Name:         name,
+		MaxLoadRatio: p.config.MaxLoadRatio,
+		ThrottleMin:  p.config.ThrottleMin,
+		ThrottleMax:  p.config.ThrottleMax,
 	}
 }
 
+func (p *Pool) getWorker(name string) *worker.Worker {
+	cfg := p.getWorkerConfig(name)
+	return worker.New(cfg, p.crawler, p.Instrumentation)
+}
+
 // Start launches the pool.
-func (p *Pool) Start(ctx context.Context) {
+func (p *Pool) Start(ctx context.Context) error {
 	ctx, span := p.Tracer.Start(ctx, "crawler.pool.Start")
 	defer span.End()
 
-	p.startWorkers(ctx, p.consumeChans.Files, p.config.Workers.FileWorkers, "files")
-	p.startWorkers(ctx, p.consumeChans.Hashes, p.config.Workers.HashWorkers, "hashes")
-	p.startWorkers(ctx, p.consumeChans.Directories, p.config.Workers.DirectoryWorkers, "directories")
+	g := group.New(ctx, p.getWorker, p.Instrumentation)
+
+	g.Go(p.consumeChans.Files, p.config.Workers.FileWorkers, "files")
+	g.Go(p.consumeChans.Hashes, p.config.Workers.HashWorkers, "hashes")
+	g.Go(p.consumeChans.Directories, p.config.Workers.DirectoryWorkers, "directories")
+
+	return g.Wait()
 }
 
-func (p *Pool) init(ctx context.Context) error {
+// Init initializes a worker poool.
+func (p *Pool) Init(ctx context.Context) error {
 	var err error
 
 	p.dialer = &utils.RetryingDialer{
@@ -87,8 +86,8 @@ func (p *Pool) init(ctx context.Context) error {
 	return nil
 }
 
-// New initializes and returns a new pool.
-func New(ctx context.Context, c *config.Config, i *instr.Instrumentation) (*Pool, error) {
+// New returns a new pool.
+func New(c *config.Config, i *instr.Instrumentation) *Pool {
 	if i == nil {
 		panic("Instrumentation cannot be null.")
 	}
@@ -102,7 +101,5 @@ func New(ctx context.Context, c *config.Config, i *instr.Instrumentation) (*Pool
 		Instrumentation: i,
 	}
 
-	err := p.init(ctx)
-
-	return p, err
+	return p
 }

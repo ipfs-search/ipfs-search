@@ -23,15 +23,11 @@ func Crawl(ctx context.Context, cfg *config.Config) error {
 	ctx, span := i.Tracer.Start(ctx, "commands.Crawl")
 	defer span.End()
 
-	pool, err := pool.New(ctx, cfg, i)
-	if err != nil {
+	pool := pool.New(cfg, i)
+
+	if err := pool.Init(ctx); err != nil {
 		return err
 	}
 
-	pool.Start(ctx)
-
-	// Context closure or panic is the only way to stop crawling
-	<-ctx.Done()
-
-	return ctx.Err()
+	return pool.Start(ctx)
 }
