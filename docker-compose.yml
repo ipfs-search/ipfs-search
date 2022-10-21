@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.3'
 services:
   rabbitmq:
     image: library/rabbitmq:management-alpine
@@ -52,6 +52,17 @@ services:
       - 8081:8081
     depends_on:
       - ipfs
+    deploy:
+      restart_policy:
+        condition: on-failure
+  pinservice:
+    build: ../ipfs-search-queue-pinning-service
+    ports:
+      - 7070:7070
+    depends_on:
+      - rabbitmq
+    environment:
+      - AMQP_URL=amqp://guest:guest@rabbitmq:5672/
     deploy:
       restart_policy:
         condition: on-failure
