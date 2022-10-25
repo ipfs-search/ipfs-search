@@ -22,6 +22,7 @@ type RedisTestSuite struct {
 	suite.Suite
 	ctx   context.Context
 	instr *instr.Instrumentation
+	now   *time.Time
 
 	i *Index
 }
@@ -54,6 +55,8 @@ func (s *RedisTestSuite) stubIndex(fn stubFunc) *Index {
 
 func (s *RedisTestSuite) SetupTest() {
 	s.ctx = context.Background()
+	now := time.Now().Truncate(time.Second).UTC()
+	s.now = &now
 }
 
 func (s *RedisTestSuite) TestGetKey() {
@@ -66,18 +69,17 @@ func (s *RedisTestSuite) TestGetKey() {
 }
 
 func (s *RedisTestSuite) TestSetLastSeenOnly() {
-	now := time.Now().Truncate(time.Second)
 	i := s.stubIndex(func(_ context.Context, args []string) interface{} {
 		s.Len(args, 4)
 		s.Equal("HSET", args[0])
 		// We test key generation elsewhere, ignore args[1]
 		s.Equal("l", args[2]) // Use the `redis` tag.
-		s.Equal(now.Format(time.RFC3339), args[3])
+		s.Equal(s.now.Format(time.RFC3339), args[3])
 
 		return nil
 	})
 	u := &types.Update{
-		LastSeen: &now,
+		LastSeen: s.now,
 	}
 
 	err := i.set(s.ctx, testId, u)
@@ -136,8 +138,6 @@ func (s *RedisTestSuite) TestSetReferencesOnly() {
 // }
 
 func (s *RedisTestSuite) TestSetAll() {
-	now := time.Now().Truncate(time.Second)
-
 	r1 := types.Reference{
 		ParentHash: "p1",
 		Name:       "f1",
@@ -146,7 +146,7 @@ func (s *RedisTestSuite) TestSetAll() {
 		r1,
 	}
 	u := &types.Update{
-		LastSeen:   &now,
+		LastSeen:   s.now,
 		References: r,
 	}
 
@@ -156,7 +156,7 @@ func (s *RedisTestSuite) TestSetAll() {
 		// We test key generation elsewhere, ignore args[1]
 
 		s.Equal("l", args[2]) // Use the `redis` tag.
-		s.Equal(now.Format(time.RFC3339), args[3])
+		s.Equal(s.now.Format(time.RFC3339), args[3])
 
 		s.Equal("r", args[4]) // Use the `redis` tag.
 
@@ -198,8 +198,7 @@ func (s *RedisTestSuite) TestDelete() {
 }
 
 func (s *RedisTestSuite) TestGetFound() {
-	now := time.Now().Truncate(time.Second)
-	nBytes, _ := now.MarshalText()
+	nBytes, _ := s.now.MarshalText()
 
 	r1 := types.Reference{
 		ParentHash: "p1",
@@ -211,15 +210,13 @@ func (s *RedisTestSuite) TestGetFound() {
 	rBytes, _ := r.MarshalBinary()
 
 	u := &types.Update{
-		LastSeen:   &now,
+		LastSeen:   s.now,
 		References: r,
 	}
 
 	i := s.stubIndex(func(_ context.Context, args []string) interface{} {
 		s.Len(args, 2)
 		s.Equal("HGETALL", args[0])
-
-		// return []string{"l", string(nBytes)}
 
 		return [][]byte{
 			{'l'}, nBytes,
