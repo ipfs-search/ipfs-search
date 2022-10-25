@@ -18,6 +18,7 @@ type ExistsIndexTestSuite struct {
 	suite.Suite
 	ctx   context.Context
 	instr *instr.Instrumentation
+	now   *time.Time
 
 	i *ExistsIndex
 }
@@ -48,6 +49,8 @@ func (s *ExistsIndexTestSuite) stubIndex(fn stubFunc) *Index {
 
 func (s *ExistsIndexTestSuite) SetupTest() {
 	s.ctx = context.Background()
+	now := time.Now().Truncate(time.Second).UTC()
+	s.now = &now
 }
 
 func (s *ExistsIndexTestSuite) TestGetKey() {
@@ -60,18 +63,17 @@ func (s *ExistsIndexTestSuite) TestGetKey() {
 }
 
 func (s *ExistsIndexTestSuite) TestSetLastSeenOnly() {
-	now := time.Now().Truncate(time.Second)
 	i := s.stubIndex(func(_ context.Context, args []string) interface{} {
 		s.Len(args, 4)
 		s.Equal("HSET", args[0])
 		// We test key generation elsewhere, ignore args[1]
 		s.Equal("l", args[2]) // Use the `redis` tag.
-		s.Equal(now.Format(time.RFC3339), args[3])
+		s.Equal(s.now.Format(time.RFC3339), args[3])
 
 		return nil
 	})
 	u := &types.Update{
-		LastSeen: &now,
+		LastSeen: s.now,
 	}
 
 	err := i.set(s.ctx, testId, u)
@@ -130,8 +132,6 @@ func (s *ExistsIndexTestSuite) TestSetReferencesOnly() {
 // }
 
 func (s *ExistsIndexTestSuite) TestSetAll() {
-	now := time.Now().Truncate(time.Second)
-
 	r1 := types.Reference{
 		ParentHash: "p1",
 		Name:       "f1",
@@ -140,7 +140,7 @@ func (s *ExistsIndexTestSuite) TestSetAll() {
 		r1,
 	}
 	u := &types.Update{
-		LastSeen:   &now,
+		LastSeen:   s.now,
 		References: r,
 	}
 
@@ -150,7 +150,7 @@ func (s *ExistsIndexTestSuite) TestSetAll() {
 		// We test key generation elsewhere, ignore args[1]
 
 		s.Equal("l", args[2]) // Use the `redis` tag.
-		s.Equal(now.Format(time.RFC3339), args[3])
+		s.Equal(s.now.Format(time.RFC3339), args[3])
 
 		s.Equal("r", args[4]) // Use the `redis` tag.
 
@@ -192,8 +192,7 @@ func (s *ExistsIndexTestSuite) TestDelete() {
 }
 
 func (s *ExistsIndexTestSuite) TestGetFound() {
-	now := time.Now().Truncate(time.Second)
-	nBytes, _ := now.MarshalText()
+	nBytes, _ := s.now.MarshalText()
 
 	r1 := types.Reference{
 		ParentHash: "p1",
@@ -205,7 +204,7 @@ func (s *ExistsIndexTestSuite) TestGetFound() {
 	rBytes, _ := r.MarshalBinary()
 
 	u := &types.Update{
-		LastSeen:   &now,
+		LastSeen:   s.now,
 		References: r,
 	}
 
