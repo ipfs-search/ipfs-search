@@ -1,6 +1,7 @@
-# Using the Queue-pinservice
+# Using the Queue-pinservice BETA
 
-You can use the queue-pinservice to make ipfs-search.com pick up your new/changed CIDs automatically.
+Queue-pinservice is an ipfs-pinservice implementation, you can use the queue-pinservice to make ipfs-search.com pick up your new/changed CIDs automatically.
+It is an  MVP, in BETA stage. It is free to use but no guarantees are given about service quality or availability, nor that it will stay completely free forever. If you are interested in high-volume usage of the service, please contact info@ipfs-search.com
 
 For documentation about using pinning services, see https://docs.ipfs.tech/how-to/work-with-pinning-services/
 
@@ -32,7 +33,7 @@ This does not mean the call did not come through! There is simply no persistent 
 
 ## Pinning service API spec implementation
 
-The queue-pinning service is fully compliant with https://ipfs.github.io/pinning-services-api-spec/, 
+The queue-pinning service complies with https://ipfs.github.io/pinning-services-api-spec/, 
 but only [Add Pin](https://ipfs.github.io/pinning-services-api-spec/#operation/addPin) has been implemented. 
 [Replace pin object](bafybeib32tuqzs2wrc52rdt56cz73sqe3qu2deqdudssspnu4gbezmhig4) is routed to the **Add pin** service.
 
