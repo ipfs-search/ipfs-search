@@ -7,7 +7,7 @@ It is an  MVP, in BETA stage. It is free to use but no guarantees are given abou
 For documentation about using pinning services, see https://docs.ipfs.tech/how-to/work-with-pinning-services/
 
 ## Authentication
-Note that (for now), authentication has been disabled, because there is no persistent data storage. 
+Note that (for now), authentication has been disabled, because there is no persistent data storage.
 Nonetheless, the ipfs client expects an authentication key and won't work without one. You can use anything as an authentication key, except for nothing.
 
 ## IPFS Desktop or IPFS Web UI
@@ -29,17 +29,15 @@ Sending a CID to this queue pinning service:
 ipfs pin remote add --service=queue-pinservice --name=war-and-peace.txt bafybeib32tuqzs2wrc52rdt56cz73sqe3qu2deqdudssspnu4gbezmhig4
 ```
 
-**N.b.** Because the ipfs client immediately after **Add pin** checks for the status of the request using **Get pin object**, this gives a not-implemented-error (code `456`). 
+**N.b.** Because the ipfs client immediately after **Add pin** checks for the status of the request using **Get pin object**, this gives a not-implemented-error (code `456`).
 This does not mean the call did not come through! There is simply no persistent data to retrieve about the call, and no way to reconstruct this information (at least for now).
 
 ## Pinning service API spec implementation
 
-The queue-pinning service complies with https://ipfs.github.io/pinning-services-api-spec/, 
-but only [Add Pin](https://ipfs.github.io/pinning-services-api-spec/#operation/addPin) has been implemented. 
+The queue-pinning service complies with https://ipfs.github.io/pinning-services-api-spec/,
+but only [Add Pin](https://ipfs.github.io/pinning-services-api-spec/#operation/addPin) has been implemented.
 [Replace pin object](bafybeib32tuqzs2wrc52rdt56cz73sqe3qu2deqdudssspnu4gbezmhig4) is routed to the **Add pin** service.
 
 **List pin objects** returns an empty object.
 
-Other calls throw a not-implemented-error with code `456`. 
-
-
+Other calls throw a not-implemented-error with code `456`.
