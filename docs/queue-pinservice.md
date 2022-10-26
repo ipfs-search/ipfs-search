@@ -10,12 +10,17 @@ For documentation about using pinning services, see https://docs.ipfs.tech/how-t
 Note that (for now), authentication has been disabled, because there is no persistent data storage.
 Nonetheless, the ipfs client expects an authentication key and won't work without one. You can use anything as an authentication key, except for nothing.
 
-## IPFS Desktop or IPFS Web UI
+## IPFS Desktop or IPFS Web GUI
 Add a Custom service as described here: https://docs.ipfs.tech/how-to/work-with-pinning-services/#use-an-existing-pinning-service
 
 - Name: ipfs-search
 - API endpoint: `https://api.ipfs-search.com/v1/queue-pinservice/`
 - Secret access token: "secretAccessToken" (see authentication above)
+
+### 'Auto Upload' in GUI
+By enabling Auto Upload, eveything you will add to your local [MFS root]() will automatically be submitted to our queue.
+
+![Click on the 3 dots to find the 'Auto Upload' option.!](/images/auto_pinning.png "Enable Auto Upload").
 
 ## Command line usage
 Setting up your IPFS client:
