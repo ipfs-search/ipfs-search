@@ -18,15 +18,15 @@ Add a Custom service as described here: https://docs.ipfs.tech/how-to/work-with-
 - Secret access token: "secretAccessToken" (see authentication above)
 
 
-## Command line usage:
+## Command line usage
 Setting up your ipfs client:
 ```
-ipfs pin remote service add queue-pinservice https://api.ipfs-search.com/v1/queue-pinservice/ anyAuthenticationKey
+ipfs pin remote service add ipfs-search https://api.ipfs-search.com/v1/queue-pinservice/ anyAuthenticationKey
 ```
 
 Sending a CID to this queue pinning service:
 ```
-ipfs pin remote add --service=queue-pinservice --name=war-and-peace.txt bafybeib32tuqzs2wrc52rdt56cz73sqe3qu2deqdudssspnu4gbezmhig4
+ipfs pin remote add --service=ipfs-search --name=war-and-peace.txt bafybeib32tuqzs2wrc52rdt56cz73sqe3qu2deqdudssspnu4gbezmhig4
 ```
 
 **N.b.** Because the ipfs client immediately after **Add pin** checks for the status of the request using **Get pin object**, this gives a not-implemented-error (code `456`).
