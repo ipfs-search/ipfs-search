@@ -13,13 +13,12 @@ Nonetheless, the ipfs client expects an authentication key and won't work withou
 ## IPFS Desktop or IPFS Web UI
 Add a Custom service as described here: https://docs.ipfs.tech/how-to/work-with-pinning-services/#use-an-existing-pinning-service
 
-- Nickname: queue-pinservice
-- api endpoint: https://api.ipfs-search.com/v1/queue-pinservice/
+- Name: ipfs-search
+- API endpoint: `https://api.ipfs-search.com/v1/queue-pinservice/`
 - Secret access token: "secretAccessToken" (see authentication above)
 
-
 ## Command line usage
-Setting up your ipfs client:
+Setting up your IPFS client:
 ```
 ipfs pin remote service add ipfs-search https://api.ipfs-search.com/v1/queue-pinservice/ anyAuthenticationKey
 ```
@@ -29,7 +28,7 @@ Sending a CID to this queue pinning service:
 ipfs pin remote add --service=ipfs-search --name=war-and-peace.txt bafybeib32tuqzs2wrc52rdt56cz73sqe3qu2deqdudssspnu4gbezmhig4
 ```
 
-**N.b.** Because the ipfs client immediately after **Add pin** checks for the status of the request using **Get pin object**, this gives a not-implemented-error (code `456`).
+**N.b.** Because the IPFS client immediately after **Add pin** checks for the status of the request using **Get pin object**, this gives a not-implemented-error (code `456`).
 This does not mean the call did not come through! There is simply no persistent data to retrieve about the call, and no way to reconstruct this information (at least for now).
 
 ## Pinning service API spec implementation
@@ -41,3 +40,6 @@ but only [Add Pin](https://ipfs.github.io/pinning-services-api-spec/#operation/a
 **List pin objects** returns an empty object.
 
 Other calls throw a not-implemented-error with code `456`.
+
+## Source code/repository
+https://github.com/ipfs-search/ipfs-search-queue-pinservice
