@@ -1,7 +1,7 @@
 # Using the Queue-pinservice BETA
 
 Queue-pinservice is an ipfs-pinservice implementation, you can use the queue-pinservice to make ipfs-search.com pick up your new/changed CIDs automatically.
-It is an  MVP, in BETA stage. It is free to use but no guarantees are given about service quality or availability, nor that it will stay completely free forever. If you are interested in high-volume usage of the service, please contact info@ipfs-search.com
+It is an  MVP, in BETA stage. It is free to use but no guarantees are given about service quality or availability, nor that it will stay completely free forever, and using it is on one's own responsibility. If you are interested in high-volume usage of the service, please contact info@ipfs-search.com
 
 For documentation about using pinning services, see https://docs.ipfs.tech/how-to/work-with-pinning-services/
 
