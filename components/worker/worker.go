@@ -85,6 +85,26 @@ func getResource(d samqp.Delivery) (*t.AnnotatedResource, error) {
 	return r, err
 }
 
+// ackOrRejec based on crawler result: returns nil on crawler errors, rejects relevant deliveries instead.
+func ackOrReject(err error, d samqp.Delivery) error {
+	if err != nil {
+		// Crawler error
+		if err := d.Reject(shouldRetry); err != nil {
+			// Error rejecting delivery,
+			return err
+		}
+
+		// Crawl errors are expected: do not propagate error.
+		return nil
+	}
+
+	if err := d.Ack(false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (w *Worker) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
 	ctx, span := w.Tracer.Start(ctx, "crawler.pool.crawlDelivery", trace.WithNewRoot())
 	defer span.End()
@@ -100,37 +120,27 @@ func (w *Worker) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
 		return err
 	}
 
-	log.Printf("worker: Start crawling '%s'", r)
+	log.Printf("worker: Crawling '%s'", r)
 
-	// Failures in the crawler will reject the delivery but will not terminate the crawler.
-	if err := w.crawler.Crawl(ctx, r); err != nil {
+	err = w.crawler.Crawl(ctx, r)
+	if err != nil {
 		if debug {
 			log.Printf("worker: Error crawling '%s': %v", r, err)
 		}
 		span.RecordError(err)
-
-		if err := d.Reject(shouldRetry); err != nil {
-			if debug {
-				log.Printf("worker: Reject error '%s': %v", r, err)
-			}
-			span.RecordError(err)
-			return err
-		}
-
-		// Crawl error noted: continue.
-		return nil
 	}
 
-	if err := d.Ack(false); err != nil {
+	err = ackOrReject(err, d)
+	if err != nil {
 		if debug {
-			log.Printf("worker: Ack error '%s': %v", r, err)
+			log.Printf("worker: Delivery Ack/Reject error '%s': %v", r, err)
 		}
 		span.RecordError(err)
-		return err
 	}
 
 	if debug {
 		log.Printf("worker: Done crawling '%s'", r)
 	}
-	return nil
+
+	return err
 }
