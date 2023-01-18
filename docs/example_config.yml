@@ -64,6 +64,3 @@ workers:
   directory_workers: 70                               # Also DIRECTORY in env.
   ipfs_max_connections: 1000                          # Maximum simultaneous connections to IPFS.
   extractor_max_connections: 100                      # Maximum simultaneous connections to extractors.
-  throttle_max_load: 0.7                              # Maximum system load before throttling / load limiting kicks in, as 1-minute load divided per CPU.
-  throttle_min_wait: 2s                               # Minimum time to wait when throttling. The actual wait doubles whenever load is above max until reaching throttle max and is reset whenever load is below max.
-  throttle_max_wait: 1m                               # Maximum time to wait when throttling.
