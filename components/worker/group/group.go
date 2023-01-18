@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"golang.org/x/sync/errgroup"
 	samqp "github.com/rabbitmq/amqp091-go"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ipfs-search/ipfs-search/components/worker"
 	"github.com/ipfs-search/ipfs-search/instr"
@@ -18,7 +18,7 @@ type WorkerGetter func(name string) *worker.Worker
 // Group wraps a group of workers in errgroup.
 type Group struct {
 	errg *errgroup.Group
-	ctx context.Context
+	ctx  context.Context
 
 	workerGetter WorkerGetter
 
