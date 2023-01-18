@@ -131,6 +131,8 @@ func (w *Worker) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
 	}
 
 	err = ackOrReject(err, d)
+	// BUG! This error *should* propagate through the worker to the error group and cause the crawler to crash.
+	// But it doens't, leaving the crawler in an unrecoverable state.
 	if err != nil {
 		if debug {
 			log.Printf("worker: Delivery Ack/Reject error '%s': %v", r, err)
