@@ -13,23 +13,44 @@ import (
 	t "github.com/ipfs-search/ipfs-search/types"
 )
 
+const debug bool = true
+
+const maxRefs = 256 // TODO: Make configurable.
+
 func appendReference(refs index_types.References, r *t.Reference) (index_types.References, bool) {
 	if r.Parent == nil {
 		// No new reference, not updating
 		return refs, false
 	}
 
+	if len(refs) > maxRefs {
+		if debug {
+			log.Printf("appendReference: %d references, maxRefs %d, not updating", len(refs), maxRefs)
+		}
+
+		return refs, false
+	}
+
 	for _, indexedRef := range refs {
 		if indexedRef.ParentHash == r.Parent.ID && indexedRef.Name == r.Name {
-			// Existing reference, not updating
+			if debug {
+				log.Printf("appendReference: existing reference, not updating")
+			}
+
 			return refs, false
 		}
 	}
 
-	return append(refs, index_types.Reference{
+	newRef := index_types.Reference{
 		ParentHash: r.Parent.ID,
 		Name:       r.Name,
-	}), true
+	}
+
+	if debug {
+		log.Printf("appendReference: adding reference %s to %s", newRef, refs)
+	}
+
+	return append(refs, newRef), true
 }
 
 // updateExisting updates known existing items.
