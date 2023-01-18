@@ -22,7 +22,7 @@ func osWorkLoop(ctx context.Context, workFunc func(context.Context) error) {
 		case <-ctx.Done():
 			return
 		default:
-			if err := workFunc(ctx); err != nil {
+			if err := workFunc(ctx); err != nil && ctx.Err() == nil {
 				log.Printf("Error in worker: %s, restarting.", err)
 				// Prevent overly tight restart loop
 				time.Sleep(time.Second)
