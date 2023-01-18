@@ -32,8 +32,9 @@ type ClientConfig struct {
 	Transport http.RoundTripper
 	Debug     bool
 
-	BulkIndexerWorkers    int
-	BulkIndexerFlushBytes int
+	BulkIndexerWorkers      int
+	BulkIndexerFlushBytes   int
+	BulkIndexerFlushTimeout time.Duration
 
 	BulkGetterBatchSize    int
 	BulkGetterBatchTimeout time.Duration
@@ -109,6 +110,9 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 		RetryOnStatus:        []int{429, 502, 503, 504},
 		EnableRetryOnTimeout: true,
 		RetryBackoff:         func(i int) time.Duration { return b.ForAttempt(float64(i)) },
+		// Spread queries/load; discover nodes on start and do it again every 5 minutes.
+		DiscoverNodesOnStart:  true,
+		DiscoverNodesInterval: 5 * time.Minute,
 	}
 
 	if cfg.Debug {
@@ -124,9 +128,10 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 
 func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (opensearchutil.BulkIndexer, error) {
 	iCfg := opensearchutil.BulkIndexerConfig{
-		Client:     client,
-		NumWorkers: cfg.BulkIndexerWorkers,
-		FlushBytes: cfg.BulkIndexerFlushBytes,
+		Client:        client,
+		NumWorkers:    cfg.BulkIndexerWorkers,
+		FlushBytes:    cfg.BulkIndexerFlushBytes,
+		FlushInterval: cfg.BulkIndexerFlushTimeout,
 		OnFlushStart: func(ctx context.Context) context.Context {
 			newCtx, _ := i.Tracer.Start(ctx, "index.opensearch.BulkIndexerFlush")
 			return newCtx

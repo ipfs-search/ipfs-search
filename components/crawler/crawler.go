@@ -63,8 +63,8 @@ func (c *Crawler) Crawl(ctx context.Context, r *t.AnnotatedResource) error {
 	}
 
 	if exists {
-		log.Printf("Not updating existing resource %v", r)
-		span.AddEvent("Not updating existing resource")
+		log.Printf("Done processing existing resource: %v", r)
+		span.AddEvent("existing resource")
 		return nil
 	}
 
