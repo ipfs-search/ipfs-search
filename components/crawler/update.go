@@ -16,6 +16,7 @@ import (
 func appendReference(refs index_types.References, r *t.Reference) (index_types.References, bool) {
 	if r.Parent == nil {
 		// No new reference, not updating
+		// Note: this situation should never happen and is potentially a bug.
 		return refs, false
 	}
 
