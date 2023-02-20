@@ -1,0 +1,87 @@
+byte[] digest(byte[] x) {
+  int[] blks = new int[(((x.length + 8) >> 6) + 1) * 16];
+  int i;
+
+  for(i = 0; i < x.length; i++) {
+    blks[i >> 2] |= (x[i] & 255) << (24 - (i % 4) * 8);
+  }
+
+  blks[i >> 2] |= 0x80 << (24 - (i % 4) * 8);
+  blks[blks.length - 1] = x.length * 8;
+
+  int[] w = new int[80];
+
+  int a =  1732584193;
+  int b = -271733879;
+  int c = -1732584194;
+  int d =  271733878;
+  int e = -1009589776;
+
+  for(i = 0; i < blks.length; i += 16) {
+    int olda = a;
+    int oldb = b;
+    int oldc = c;
+    int oldd = d;
+    int olde = e;
+
+    for(int j = 0; j < 80; j++) {
+      w[j] = (j < 16) ? blks[i + j] :
+             ( rol(w[j-3] ^ w[j-8] ^ w[j-14] ^ w[j-16], 1) );
+
+      int t = rol(a, 5) + e + w[j] +
+         ( (j < 20) ?  1518500249 + ((b & c) | ((~b) & d))
+         : (j < 40) ?  1859775393 + (b ^ c ^ d)
+         : (j < 60) ? -1894007588 + ((b & c) | (b & d) | (c & d))
+         : -899497514 + (b ^ c ^ d) );
+      e = d;
+      d = c;
+      c = rol(b, 30);
+      b = a;
+      a = t;
+    }
+
+    a = a + olda;
+    b = b + oldb;
+    c = c + oldc;
+    d = d + oldd;
+    e = e + olde;
+  }
+
+  byte[] hash = new byte[20];
+  System.arraycopy(intToBytes(a), 0, hash, 0, 4);
+  System.arraycopy(intToBytes(b), 0, hash, 4, 4);
+  System.arraycopy(intToBytes(c), 0, hash, 8, 4);
+  System.arraycopy(intToBytes(d), 0, hash, 12, 4);
+  System.arraycopy(intToBytes(e), 0, hash, 16, 4);
+  return hash;
+}
+
+int rol(int num, int cnt) {
+  return (num << cnt) | (num >>> (32 - cnt));
+}
+
+byte[] intToBytes(int i) {
+  byte[] b = new byte[4];
+  for (int c = 0; c < 4; c++) {
+    b[c] = (byte) ((i >>> (56 - 8 * c)) & 255);
+  }
+  return b;
+}
+
+byte[] charArrayToByteArray(char[] charArray) {
+  byte[] byteArray = new byte[charArray.length];
+  for(int i= 0; i < charArray.length; i++) {
+    byteArray[i] = (byte)(255 & (int)charArray[i]);
+  }
+  return byteArray;
+}
+
+String sha1(String input) {
+  char[] cArray = input.toCharArray();
+  byte[] bArray = charArrayToByteArray(cArray);
+  byte[] digest = digest(bArray);
+  return Base64.getEncoder().withoutPadding().encodeToString(digest);
+}
+
+ctx['cid'] = ctx['_id'];
+ctx['_id'] = sha1('ipfs://' + ctx['_id']);

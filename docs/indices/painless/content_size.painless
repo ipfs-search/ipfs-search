@@ -1,0 +1,11 @@
+String contentField = 'content';
+String sizeField = 'content:character-count';
+
+if (
+  !ctx.containsKey(contentField) ||
+  !(ctx[contentField] instanceof String) ||
+  ctx[contentField] == null ||
+  ctx[contentField].length() == 0
+) return;
+
+ctx[sizeField] = ctx[contentField].length()

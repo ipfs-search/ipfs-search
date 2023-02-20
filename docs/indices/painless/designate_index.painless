@@ -1,0 +1,129 @@
+String getIndex(String type, String subtype) {
+  String
+    videoIndex = 'ipfs_video',
+    audioIndex = 'ipfs_audio',
+    imageIndex = 'ipfs_image',
+    documentIndex = 'ipfs_docs',
+    dataIndex = 'ipfs_data',
+    otherIndex = 'ipfs_other',
+    codeIndex = 'ipfs_code';
+
+  // Fully determine images, video and audio.
+  if (type == 'image') {
+    if (subtype == 'vnd.djvu') return documentIndex;
+
+    return imageIndex;
+  }
+  if (type == 'video') return videoIndex;
+  if (type == 'audio') return audioIndex;
+
+  if (type == 'application') {
+    if (subtype == 'dicom') return imageIndex;
+    if (subtype == 'mp4') return videoIndex;
+    if (subtype == 'x-matroska') return videoIndex;
+    if (subtype == 'ogg') return audioIndex;
+
+    List docTypes = [
+      'xhtml+xml',
+      'x-tika-ooxml',
+      'x-tika-msoffice',
+      'x-tex',
+      'x-mobipocket-ebook',
+      'x-fictionbook+xml',
+      'x-dvi',
+      'vnd.sun.xml.writer.global',
+      'vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'vnd.openxmlformats-officedocument.presentationml.presentation',
+      'vnd.oasis.opendocument.text',
+      'vnd.ms-powerpoint',
+      'vnd.ms-htmlhelp',
+      'vnd.ms-excel',
+      'rtf',
+      'postscript',
+      'pdf',
+      'msword5',
+      'msword2',
+      'msword',
+      'epub+zip'
+    ];
+
+    if (docTypes.contains(subtype)) return documentIndex;
+  }
+
+  if (type == 'message') return documentIndex;
+
+  if (type == 'text') {
+    List dataTypes = [
+      'x-yaml',
+      'x-java-properties',
+      'x-ini',
+      'tsv',
+      'tab-separated-values',
+      'csv'
+    ];
+    if (dataTypes.contains(subtype)) return dataTypes;
+
+    List docTypes = ['x-web-markdown', 'x-rst', 'x-log', 'x-asciidoc', 'troff', 'plain', 'html'];
+    if (docTypes.contains(subtype)) return documentIndex;
+
+    List codeTypes = [
+      'x-sql',
+      'x-verilog',
+      'x-tcl',
+      'x-scala',
+      'x-ruby',
+      'x-python',
+      'x-php',
+      'x-perl',
+      'x-pascal',
+      'x-objcsrc',
+      'x-matlab',
+      'x-lua',
+      'x-less',
+      'x-jsp',
+      'x-java-source',
+      'x-haskell',
+      'x-groovy',
+      'x-go',
+      'x-expect',
+      'x-diff',
+      'x-d',
+      'x-csrc',
+      'x-csharp',
+      'x-common-lisp',
+      'x-coffeescript',
+      'x-clojure',
+      'x-chdr',
+      'x-c++src',
+      'x-c++hdr',
+      'x-assembly',
+      'x-actionscript',
+      'css'
+    ];
+    if (codeTypes.contains(subtype)) return codeIndex;
+
+  }
+
+  return otherIndex;
+}
+
+String nestedKey = 'metadata';
+String mimeKey = 'mime';
+String typeKey = 'type';
+String subtypeKey = 'subtype';
+
+// Actually better to fail hard here
+// if (!(
+//   ctx.containsKey(nestedKey) &&
+//   ctx[nestedKey] instanceof HashMap &&
+//   ctx[nestedKey][mimeKey] instanceof HashMap &&
+//   ctx[nestedKey][mimeKey][typeKey] instanceof String &&
+//   ctx[nestedKey][mimeKey][subtypeKey] instanceof String
+// )) return;
+
+String type = ctx[nestedKey][mimeKey][typeKey];
+String subtype = ctx[nestedKey][mimeKey][subtypeKey];
+
+ctx['_index'] = getIndex(type, subtype);
+

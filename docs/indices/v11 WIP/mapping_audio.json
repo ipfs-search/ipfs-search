@@ -1,0 +1,145 @@
+{
+  "xmpDM:audioSampleRate": {
+    "type": "keyword"
+  },
+  "xmpDM:audioCompressor": {
+    "type": "keyword"
+  },
+  "xmpDM:audioChannelType": {
+    "type": "keyword"
+  },
+  "xmpDM:duration": {
+    "type": "half_float",
+    "ignore_malformed": true
+  },
+  "xmpDM:album": {
+    "type": "text"
+  },
+  "xmpDM:releaseDate": {
+    "type": "short",
+    "ignore_malformed": true
+  },
+  "xmpDM:genre": {
+    "type": "keyword"
+  },
+  "xmpDM:audioSampleType": {
+    "type": "keyword"
+  },
+  "xmpDM:trackNumber": {
+    "type": "short",
+    "ignore_malformed": true
+  },
+  "xmpDM:discNumber": {
+    "type": "short",
+    "ignore_malformed": true
+  },
+
+  "musicbrainz_trackid": {
+    "type": "keyword",
+    "copy_to": "metadata.dc:identifier"
+  },
+  "acoustid_fingerprint": {
+    "type": "keyword",
+    "copy_to": "metadata.dc:identifier"
+  },
+
+  "xmpDM:albumArtist": {
+    "type": "text",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:creator"
+  },
+  "xmpDM:composer": {
+    "type": "text",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:creator"
+  },
+
+  "xmpDM:compilation": {
+    "type": "text",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "xmpDM:album"
+  },
+
+  "xmpDM:logComment": {
+    "type": "text",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "content"
+  },
+  "lyrics": {
+    "type": "text",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "content"
+  },
+
+  "acoustid_id": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "musicbrainz_artistid": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "musicbrainz_albumid": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "musicbrainz_albumartistid": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "musicbrainz_releasegroupid": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "musicbrainz_releasetrackid": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "isrc": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "asin": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "barcode": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "sourceid": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+  "catalognumber": {
+    "type": "keyword",
+    "index": false,
+    "doc_values": false,
+    "copy_to": "metadata.dc:identifier"
+  },
+}

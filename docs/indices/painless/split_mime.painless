@@ -1,0 +1,18 @@
+if (
+  !ctx.containsKey('metadata') ||
+  ctx.metadata == null ||
+  !ctx.metadata.containsKey('Content-Type') ||
+  ctx.metadata['Content-Type'] == null ||
+  ctx.metadata['Content-Type'].length == 0
+) return;
+
+StringTokenizer tokenizer = new StringTokenizer(ctx.metadata['Content-Type'][0], '/;=');
+
+if (!tokenizer.hasMoreTokens()) return;
+
+ctx.metadata['mime:type'] = tokenizer.nextToken().trim();
+ctx.metadata['mime:subtype'] = tokenizer.nextToken().trim();
+
+if (!tokenizer.hasMoreTokens()) return;
+
+ctx.metadata['mime:'+tokenizer.nextToken().trim()] = tokenizer.nextToken().trim();

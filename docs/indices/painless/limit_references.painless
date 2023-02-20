@@ -1,0 +1,18 @@
+String limitField = 'references';
+int limitLength = 8;
+
+if (
+  !ctx.containsKey(limitField) ||
+  !(ctx[limitField] instanceof ArrayList) ||
+  ctx[limitField] == null
+) return;
+
+ArrayList field = ctx[limitField];
+
+int fieldLength = field.getLength();
+if (fieldLength <= limitLength) return;
+
+int last = fieldLength - 1;
+int start = last - limitLength;
+
+ctx[limitField] = field.subList(start, last);

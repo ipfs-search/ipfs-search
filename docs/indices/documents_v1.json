@@ -1,0 +1,225 @@
+{
+  "aliases": {
+    "ipfs_documents": {}
+  },
+  "settings": {
+    "index": {
+      "refresh_interval": "-1",
+      "number_of_shards": "164",
+      "number_of_replicas": 0,
+      "translog": {
+        "durability": "async"
+      },
+      "default_pipeline": "ipfs_files_cleanup_v11"
+    }
+  },
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "cid": {
+        "type": "keyword"
+      },
+      "content": {
+        "type": "text",
+        "term_vector": "with_positions_offsets"
+      },
+      "content:character-count": {
+        "type": "integer"
+      },
+      "first-seen": {
+        "type": "date",
+        "format": "strict_date_time"
+      },
+      "last-seen": {
+        "type": "date",
+        "format": "strict_date_time"
+      },
+      "ipfs_tika_version": {
+        "index": false,
+        "type": "keyword"
+      },
+      "language": {
+        "properties": {
+          "confidence": {
+            "index": false,
+            "doc_values": false,
+            "type": "keyword"
+          },
+          "language": {
+            "type": "keyword"
+          },
+          "rawScore": {
+            "type": "double"
+          }
+        }
+      },
+      "references": {
+        "properties": {
+          "hash": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "text"
+          },
+          "parent_hash": {
+            "type": "keyword"
+          }
+        }
+      },
+      "size": {
+        "type": "long"
+      },
+      "urls": {
+        "enabled": false,
+        "type": "object"
+      },
+      "metadata": {
+        "dynamic": false,
+        "properties": {
+          "Content-Type": {
+            "type": "keyword"
+          },
+          "mime:type":{
+            "type": "keyword"
+          },
+          "mime:subtype":{
+            "type": "keyword"
+          },
+          "X-TIKA:Parsed-By": {
+            "index": false,
+            "type": "keyword"
+          },
+          "dc:title": {
+            "type": "text"
+          },
+          "dc:creator": {
+            "type": "text"
+          },
+          "dc:contributor": {
+            "type": "text",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:creator"
+          },
+          "meta:last-author": {
+            "type": "text",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:creator"
+          },
+          "article:author": {
+            "type": "text",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:creator"
+          },
+          "dc:identifier": {
+            "type": "keyword"
+          },
+          "xmpMM:DocumentID": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          },
+          "xmpMM:DerivedFrom:DocumentID": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          },
+          "xmpMM:DerivedFrom:InstanceID": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          },
+          "Content Identifier": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          },
+          "dc:language": {
+            "type": "keyword"
+          },
+          "dc:description": {
+            "type": "text"
+          },
+          "dc:subject": {
+            "type": "text",
+            "copy_to": "metadata.dc:description"
+          },
+          "meta:keyword": {
+            "type": "text",
+            "copy_to": "metadata.dc:description"
+          },
+          "dc:publisher": {
+            "type": "keyword"
+          },
+          "dcterms:created": {
+            "index": false,
+            "type": "date",
+            "format": "date_optional_time",
+            "ignore_malformed": true
+          },
+          "dcterms:modified": {
+            "index": false,
+            "type": "date",
+            "format": "date_optional_time",
+            "ignore_malformed": true
+          },
+          "w:comments": {
+            "type": "text",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "content"
+          },
+
+          "xmpTPg:NPages": {
+            "type": "short"
+          },
+
+          "og:site_name": {
+            "type": "text"
+          },
+
+          "og_type": {
+            "type": "keyword"
+          },
+
+          "doi": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          },
+          "pdf:docinfo:custom:IEEE Publication ID": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          },
+          "pdf:docinfo:custom:IEEE Issue ID": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          },
+          "pdf:docinfo:custom:IEEE Article ID": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          },
+          "WPS-JOURNALDOI": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false,
+            "copy_to": "metadata.dc:identifier"
+          }
+        }
+      }
+    }
+  }
+}

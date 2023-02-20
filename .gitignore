@@ -3,6 +3,9 @@
 *.a
 *.so
 
+# Mac crrap
+.DS_Store
+
 # Folders
 _obj
 _test

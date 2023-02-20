@@ -1,0 +1,40 @@
+// Init
+state.fields = new HashMap();
+
+// Map
+void iterateHashMap(String prefix, HashMap input, HashMap output) {
+  input.forEach((key, value) -> {
+    String fieldName = prefix + key;
+
+    if (value instanceof Map) {
+      iterateHashMap(fieldName + '.', value, output);
+      return null;
+    }
+
+    if (output.containsKey(fieldName)) {
+      output[fieldName] += 1;
+    } else {
+      output[fieldName] = 1;
+    }
+  });
+}
+
+iterateHashMap('', params['_source'], state.fields);
+
+// Combine
+state.fields
+
+// Reduce
+HashMap output = new HashMap();
+
+states.forEach(field -> {
+  field.forEach((fieldName, count) -> {
+    if (output.containsKey(fieldName)) {
+      output[fieldName] += count;
+    } else {
+      output[fieldName] = count;
+    }
+  })
+});
+
+return output;
