@@ -1,0 +1,8 @@
+{
+  "dynamic": "strict",
+  "properties": {
+    "error": {
+      "type": "keyword"
+    }
+  }
+}

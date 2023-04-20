@@ -1,0 +1,355 @@
+{
+  "dynamic": "strict",
+  "properties": {
+    "cid": {
+      "type": "keyword"
+    },
+    "content": {
+      "type": "text"
+    },
+    "content:character-count": {
+      "type": "integer",
+      "index": false
+    },
+    "first-seen": {
+      "type": "date",
+      "format": "strict_date_time"
+    },
+    "ipfs_tika_version": {
+      "type": "keyword",
+      "index": false
+    },
+    "language": {
+      "properties": {
+        "confidence": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false
+        },
+        "language": {
+          "type": "keyword"
+        },
+        "rawScore": {
+          "type": "double"
+        }
+      }
+    },
+    "last-seen": {
+      "type": "date",
+      "format": "strict_date_time"
+    },
+    "metadata": {
+      "dynamic": "false",
+      "properties": {
+        "Content Identifier": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "Content-Type": {
+          "type": "keyword"
+        },
+        "X-TIKA:Parsed-By": {
+          "type": "keyword",
+          "index": false
+        },
+        "acoustid_fingerprint": {
+          "type": "keyword",
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "acoustid_id": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "article:author": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "asin": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "barcode": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "catalognumber": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "dc:contributor": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "dc:creator": {
+          "type": "text"
+        },
+        "dc:description": {
+          "type": "text"
+        },
+        "dc:identifier": {
+          "type": "keyword"
+        },
+        "dc:language": {
+          "type": "keyword"
+        },
+        "dc:publisher": {
+          "type": "keyword"
+        },
+        "dc:subject": {
+          "type": "text",
+          "copy_to": [
+            "metadata.dc:description"
+          ]
+        },
+        "dc:title": {
+          "type": "text"
+        },
+        "dcterms:created": {
+          "type": "date",
+          "index": false,
+          "format": "date_optional_time",
+          "ignore_malformed": true
+        },
+        "dcterms:modified": {
+          "type": "date",
+          "index": false,
+          "format": "date_optional_time",
+          "ignore_malformed": true
+        },
+        "isrc": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "lyrics": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "content"
+          ]
+        },
+        "meta:last-author": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "metadata": {
+          "properties": {
+            "meta:keyword": {
+              "type": "text",
+              "copy_to": [
+                "metadata.dc:description"
+              ]
+            }
+          }
+        },
+        "mime:subtype": {
+          "type": "keyword"
+        },
+        "mime:type": {
+          "type": "keyword"
+        },
+        "musicbrainz_albumartistid": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "musicbrainz_albumid": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "musicbrainz_artistid": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "musicbrainz_releasegroupid": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "musicbrainz_releasetrackid": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "musicbrainz_trackid": {
+          "type": "keyword",
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "sourceid": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "w:comments": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "content"
+          ]
+        },
+        "xmpDM:album": {
+          "type": "text"
+        },
+        "xmpDM:albumArtist": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "xmpDM:audioChannelType": {
+          "type": "keyword"
+        },
+        "xmpDM:audioCompressor": {
+          "type": "keyword"
+        },
+        "xmpDM:audioSampleRate": {
+          "type": "keyword"
+        },
+        "xmpDM:audioSampleType": {
+          "type": "keyword"
+        },
+        "xmpDM:compilation": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.xmpDM:album"
+          ]
+        },
+        "xmpDM:composer": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "xmpDM:discNumber": {
+          "type": "short",
+          "ignore_malformed": true
+        },
+        "xmpDM:duration": {
+          "type": "float",
+          "ignore_malformed": true
+        },
+        "xmpDM:genre": {
+          "type": "keyword"
+        },
+        "xmpDM:logComment": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "content"
+          ]
+        },
+        "xmpDM:releaseDate": {
+          "type": "short",
+          "ignore_malformed": true
+        },
+        "xmpDM:trackNumber": {
+          "type": "short",
+          "ignore_malformed": true
+        },
+        "xmpMM:DerivedFrom:DocumentID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "xmpMM:DerivedFrom:InstanceID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "xmpMM:DocumentID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        }
+      }
+    },
+    "references": {
+      "properties": {
+        "hash": {
+          "type": "keyword"
+        },
+        "name": {
+          "type": "text"
+        },
+        "parent_hash": {
+          "type": "keyword"
+        }
+      }
+    },
+    "size": {
+      "type": "long"
+    },
+    "urls": {
+      "type": "object",
+      "enabled": false
+    }
+  }
+}

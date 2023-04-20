@@ -1,0 +1,70 @@
+{
+  "dynamic": "strict",
+  "properties": {
+    "cid": {
+      "type": "keyword"
+    },
+    "content": {
+      "type": "object",
+      "enabled": false
+    },
+    "content:character-count": {
+      "type": "object",
+      "enabled": false
+    },
+    "first-seen": {
+      "type": "date",
+      "format": "strict_date_time"
+    },
+    "ipfs_tika_version": {
+      "type": "keyword",
+      "index": false
+    },
+    "language": {
+      "type": "object",
+      "enabled": false
+    },
+    "last-seen": {
+      "type": "date",
+      "format": "strict_date_time"
+    },
+    "metadata": {
+      "dynamic": "false",
+      "properties": {
+        "Content-Type": {
+          "type": "keyword"
+        },
+        "X-TIKA:Parsed-By": {
+          "type": "keyword",
+          "index": false
+        },
+        "mime:subtype": {
+          "type": "keyword"
+        },
+        "mime:type": {
+          "type": "keyword"
+        }
+      }
+    },
+    "references": {
+      "properties": {
+        "hash": {
+          "type": "keyword"
+        },
+        "name": {
+          "type": "text"
+        },
+        "parent_hash": {
+          "type": "keyword"
+        }
+      }
+    },
+    "size": {
+      "type": "long"
+    },
+    "urls": {
+      "type": "object",
+      "enabled": false
+    }
+  }
+}
