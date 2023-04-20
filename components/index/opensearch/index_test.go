@@ -15,67 +15,34 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/testsuite"
 )
 
 type IndexTestSuite struct {
-	suite.Suite
+	testsuite.Suite
+
 	ctx             context.Context
 	ctxCancel       func()
 	instr           *instr.Instrumentation
-	mockAPIHandler  *httpmock.MockHandler
-	mockAPIServer   *httpmock.Server
 	mockClient      *Client
 	mockAsyncGetter *bulkgetter.Mock
 	responseHeader  http.Header
 }
 
-func (s *IndexTestSuite) expectHelloWorld() {
-	testJSON := []byte(`{
-	  "name" : "0fc08b13cdab",
-	  "cluster_name" : "docker-cluster",
-	  "cluster_uuid" : "T9t1q7kFRSyL15qVkIlWZQ",
-	  "version" : {
-	    "number" : "7.8.1",
-	    "build_flavor" : "oss",
-	    "build_type" : "docker",
-	    "build_hash" : "b5ca9c58fb664ca8bf9e4057fc229b3396bf3a89",
-	    "build_date" : "2020-07-21T16:40:44.668009Z",
-	    "build_snapshot" : false,
-	    "lucene_version" : "8.5.1",
-	    "minimum_wire_compatibility_version" : "6.8.0",
-	    "minimum_index_compatibility_version" : "6.0.0-beta1"
-	  },
-	  "tagline" : "You Know, for Search"
-	}`)
-	s.mockAPIHandler.
-		On("Handle", "GET", "/", mock.Anything).
-		Return(httpmock.Response{
-			Body: testJSON,
-		}).
-		Once()
-
-}
-
 func (s *IndexTestSuite) SetupTest() {
+	s.SetupSearchMock()
+
 	s.instr = instr.New()
 	s.ctx, s.ctxCancel = context.WithCancel(context.Background())
-
-	s.mockAPIHandler = &httpmock.MockHandler{}
-	s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
-	s.responseHeader = http.Header{
-		"Content-Type": []string{"application/json"},
-	}
 
 	s.mockAsyncGetter = &bulkgetter.Mock{}
 
 	config := &ClientConfig{
-		URL:   s.mockAPIServer.URL(),
+		URL:   s.MockAPIServer.URL(),
 		Debug: true,
 	}
 	s.mockClient, _ = NewClient(config, s.instr)
 	s.mockClient.bulkGetter = s.mockAsyncGetter
-
-	s.expectHelloWorld()
 
 	// Start worker
 	s.mockAsyncGetter.On("Work", mock.Anything).WaitUntil(time.After(time.Second)).Return(nil).Maybe()
@@ -144,7 +111,7 @@ func (s *IndexTestSuite) TestIndex() {
 	}
 
 	testURL := "/_bulk"
-	s.mockAPIHandler.
+	s.MockAPIHandler.
 		On("Handle", "POST", testURL, request).
 		Return(httpmock.Response{
 			Body: response,
@@ -158,7 +125,7 @@ func (s *IndexTestSuite) TestIndex() {
 	s.ctxCancel()
 	time.Sleep(100 * time.Millisecond)
 
-	s.mockAPIHandler.AssertExpectations(s.T())
+	s.MockAPIHandler.AssertExpectations(s.T())
 }
 
 func (s *IndexTestSuite) TestUpdate() {
@@ -203,7 +170,7 @@ func (s *IndexTestSuite) TestUpdate() {
 	}
 
 	testURL := "/_bulk"
-	s.mockAPIHandler.
+	s.MockAPIHandler.
 		On("Handle", "POST", testURL, request).
 		Return(httpmock.Response{
 			Body: response,
@@ -217,7 +184,7 @@ func (s *IndexTestSuite) TestUpdate() {
 	s.ctxCancel()
 	time.Sleep(100 * time.Millisecond)
 
-	s.mockAPIHandler.AssertExpectations(s.T())
+	s.MockAPIHandler.AssertExpectations(s.T())
 }
 
 func (s *IndexTestSuite) TestUpdateOmitEmpty() {
@@ -262,7 +229,7 @@ func (s *IndexTestSuite) TestUpdateOmitEmpty() {
 	}
 
 	testURL := "/_bulk"
-	s.mockAPIHandler.
+	s.MockAPIHandler.
 		On("Handle", "POST", testURL, request).
 		Return(httpmock.Response{
 			Body: response,
@@ -276,7 +243,7 @@ func (s *IndexTestSuite) TestUpdateOmitEmpty() {
 	s.ctxCancel()
 	time.Sleep(100 * time.Millisecond)
 
-	s.mockAPIHandler.AssertExpectations(s.T())
+	s.MockAPIHandler.AssertExpectations(s.T())
 }
 
 func (s *IndexTestSuite) TestDelete() {
@@ -310,7 +277,7 @@ func (s *IndexTestSuite) TestDelete() {
 	}`)
 
 	testURL := "/_bulk"
-	s.mockAPIHandler.
+	s.MockAPIHandler.
 		On("Handle", "POST", testURL, request).
 		Return(httpmock.Response{
 			Body: response,
@@ -324,7 +291,7 @@ func (s *IndexTestSuite) TestDelete() {
 	s.ctxCancel()
 	time.Sleep(100 * time.Millisecond)
 
-	s.mockAPIHandler.AssertExpectations(s.T())
+	s.MockAPIHandler.AssertExpectations(s.T())
 }
 
 func (s *IndexTestSuite) TestGetFound() {
