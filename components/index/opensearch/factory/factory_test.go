@@ -39,7 +39,19 @@ func (s *FactoryTestSuite) SetupTest() {
 	s.f = New(client)
 }
 
+func (s *FactoryTestSuite) TeardownTest() {
+	s.TeardownSearchMock()
+}
+
 func (s *FactoryTestSuite) TestGetDesiredMapping() {
+	for _, index := range indexes {
+		mapping, err := s.f.getDesiredMapping(index)
+		s.NoError(err)
+		s.NotNil(mapping)
+	}
+}
+
+func (s *FactoryTestSuite) TestResolveAlias() {
 	for _, index := range indexes {
 		mapping, err := s.f.getDesiredMapping(index)
 		s.NoError(err)

@@ -80,6 +80,10 @@ func (s *BulkRequestTestSuite) SetupTest() {
 	s.reqresp2 = reqresp{s.ctx, s.req2, s.rChan2, &s.dst2}
 }
 
+func (s *BulkRequestTestSuite) TeardownTest() {
+	s.TeardownSearchMock()
+}
+
 func (s *BulkRequestTestSuite) TestGetRequest() {
 	s.expectResolveAlias("test1", "test1")
 	s.expectResolveAlias("test2", "test2")

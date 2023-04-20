@@ -58,6 +58,10 @@ func (s *BulkGetterSuite) SetupTest() {
 	s.bg = New(s.cfg)
 }
 
+func (s *BulkGetterSuite) TeardownTest() {
+	s.TeardownSearchMock()
+}
+
 func (s *BulkGetterSuite) TestGet() {
 	req := GetRequest{}
 	dst := struct{}{}

@@ -49,6 +49,10 @@ func (s *IndexTestSuite) SetupTest() {
 	go s.mockClient.Work(s.ctx)
 }
 
+func (s *IndexTestSuite) TeardownTest() {
+	s.TeardownSearchMock()
+}
+
 func (s *IndexTestSuite) TestNewClient() {
 	config := &ClientConfig{}
 	client, err := NewClient(config, s.instr)

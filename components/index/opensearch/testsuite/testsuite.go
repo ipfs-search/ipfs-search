@@ -53,3 +53,7 @@ func (s *Suite) SetupSearchMock() {
 
 	s.expectHelloWorld()
 }
+
+func (s *Suite) TeardownSearchMock() {
+	s.MockAPIServer.Close()
+}
