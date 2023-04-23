@@ -12,6 +12,8 @@ import (
 
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
+
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/aliasresolver"
 )
 
 // ErrHTTP represents non-404 errors in HTTP requests.
@@ -24,19 +26,19 @@ type bulkRequest struct {
 	client      *opensearch.Client
 	rrs         reqrespmap
 	decodeMutex sync.Mutex
-	aliases     map[string]string
+	aResolver   aliasresolver.AliasResolver
 }
 
-func newBulkRequest(ctx context.Context, client *opensearch.Client, size int) *bulkRequest {
+func newBulkRequest(ctx context.Context, client *opensearch.Client, aliasResolver aliasresolver.AliasResolver, size int) *bulkRequest {
 	if ctx == nil {
 		panic("required context is nil")
 	}
 
 	return &bulkRequest{
-		ctx:     ctx,
-		client:  client,
-		rrs:     make(reqrespmap, size),
-		aliases: make(map[string]string),
+		ctx:       ctx,
+		client:    client,
+		rrs:       make(reqrespmap, size),
+		aResolver: aliasResolver,
 	}
 }
 
@@ -54,74 +56,17 @@ type responseDoc struct {
 	Source json.RawMessage `json:"_source"`
 }
 
-type aliasesResponse map[string]struct {
-	Aliases map[string]struct{} `json:"aliases"`
-}
-
-func (r *bulkRequest) getAliases(indexOrAlias string) (aliasesResponse, error) {
-	response := aliasesResponse{}
-
-	falseConst := true
-	req := opensearchapi.IndicesGetAliasRequest{
-		Index:           []string{indexOrAlias},
-		AllowNoIndices:  &falseConst,
-		ExpandWildcards: "none",
-	}
-
-	res, err := req.Do(r.ctx, r.client)
-	if err != nil {
-		return response, fmt.Errorf("error executing request: %w", err)
-	}
-
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return response, fmt.Errorf("%w: %s", ErrHTTP, res)
-	}
-
-	err = json.NewDecoder(res.Body).Decode(&response)
-
-	return response, err
-}
-
-func (r *bulkRequest) resolveAlias(indexOrAlias string) (string, error) {
-	// GET /<index_or_alias>/_alias
-	// {
-	// 	"<index>": {
-	// 		"aliases": {
-	// 			"ipfs_directories": {}
-	// 		}
-	// 	}
-	// }
-
-	index, ok := r.aliases[indexOrAlias]
-	if ok {
-		return index, nil
-	}
-
-	response, err := r.getAliases(indexOrAlias)
-	if err != nil {
-		return "", err
-	}
-
-	for k := range response {
-		r.aliases[indexOrAlias] = k
-		return k, nil
-	}
-
-	return "", fmt.Errorf("index or alias %s not found", indexOrAlias)
-}
-
 func (r *bulkRequest) keyFromResponseDoc(doc *responseDoc) string {
 	return doc.Index + doc.ID
 }
 
 func (r *bulkRequest) keyFromRR(rr reqresp) (string, error) {
-	indexName, err := r.resolveAlias(rr.req.Index)
+	// Resolve index back to alias
+	aliasName, err := r.aResolver.GetAlias(rr.ctx, rr.req.Index)
 	if err != nil {
 		return "", err
 	}
-	return indexName + rr.req.DocumentID, nil
+	return aliasName + rr.req.DocumentID, nil
 }
 
 func (r *bulkRequest) add(rr reqresp) error {

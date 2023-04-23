@@ -2,11 +2,11 @@ package bulkgetter
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/dankinder/httpmock"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/aliasresolver"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/testsuite"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	"github.com/stretchr/testify/mock"
@@ -16,28 +16,14 @@ import (
 type BulkGetterSuite struct {
 	testsuite.Suite
 
-	ctx context.Context
-	cfg Config
-	bg  *BulkGetter
+	ctx       context.Context
+	cfg       Config
+	bg        *BulkGetter
+	aResolver *aliasresolver.Mock
 }
 
 func (s *BulkGetterSuite) expectResolveAlias(index string) {
-	testJSON := []byte(`{
-		"` + index + `": {
-			"aliases": {
-				"` + index + `": {}
-			}
-		}
-	}`)
-
-	url := fmt.Sprintf("/%s/_alias?allow_no_indices=true&expand_wildcards=none", index)
-
-	s.MockAPIHandler.
-		On("Handle", "GET", url, mock.Anything).
-		Return(httpmock.Response{
-			Body: testJSON,
-		}).
-		Maybe()
+	s.aResolver.On("GetAlias", mock.Anything, index).Return(index, nil)
 }
 
 func (s *BulkGetterSuite) SetupTest() {
@@ -49,11 +35,14 @@ func (s *BulkGetterSuite) SetupTest() {
 		Addresses: []string{s.MockAPIServer.URL()},
 	})
 
+	s.aResolver = &aliasresolver.Mock{}
+
 	// Setup batching getter
 	s.cfg = Config{
-		Client:       client,
-		BatchTimeout: time.Millisecond,
-		BatchSize:    4,
+		Client:        client,
+		BatchTimeout:  time.Millisecond,
+		BatchSize:     4,
+		AliasResolver: s.aResolver,
 	}
 	s.bg = New(s.cfg)
 }

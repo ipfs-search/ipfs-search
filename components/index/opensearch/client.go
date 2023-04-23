@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ipfs-search/ipfs-search/components/index"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/aliasresolver"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 	"github.com/ipfs-search/ipfs-search/instr"
 )
@@ -160,9 +161,10 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 
 func getBulkGetter(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (bulkgetter.AsyncGetter, error) {
 	bgCfg := bulkgetter.Config{
-		Client:       client,
-		BatchSize:    cfg.BulkGetterBatchSize,
-		BatchTimeout: cfg.BulkGetterBatchTimeout,
+		Client:        client,
+		BatchSize:     cfg.BulkGetterBatchSize,
+		BatchTimeout:  cfg.BulkGetterBatchTimeout,
+		AliasResolver: aliasresolver.NewAliasResolver(client),
 	}
 
 	return bulkgetter.New(bgCfg), nil

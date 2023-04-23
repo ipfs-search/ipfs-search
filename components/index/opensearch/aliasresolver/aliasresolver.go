@@ -1,4 +1,4 @@
-package opensearch
+package aliasresolver
 
 import (
 	"context"
@@ -42,6 +42,7 @@ type aliasesResponse map[string]struct {
 
 func (r *defaultAliasResolver) refreshAliases(ctx context.Context) error {
 	// Get all aliases
+	// TODO: Only get configured aliases/indexes.
 	resp, err := r.client.API.Indices.GetAlias(
 		r.client.API.Indices.GetAlias.WithContext(ctx),
 	)

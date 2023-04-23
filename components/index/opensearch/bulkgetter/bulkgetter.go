@@ -31,6 +31,10 @@ func New(cfg Config) *BulkGetter {
 		cfg.BatchTimeout = 100 * time.Millisecond
 	}
 
+	if cfg.AliasResolver == nil {
+		panic("AliasResolver not defined on Config.")
+	}
+
 	bg := BulkGetter{
 		cfg:   cfg,
 		queue: make(chan reqresp, 5*cfg.BatchSize),
@@ -82,7 +86,7 @@ func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (
 		log.Println("bulkgetter: populating BulkGetter batch.")
 	}
 
-	b := newBulkRequest(ctx, bg.cfg.Client, bg.cfg.BatchSize)
+	b := newBulkRequest(ctx, bg.cfg.Client, bg.cfg.AliasResolver, bg.cfg.BatchSize)
 
 	for i := 0; i < bg.cfg.BatchSize; i++ {
 		select {
@@ -115,4 +119,4 @@ func (bg *BulkGetter) populateBatch(ctx context.Context, queue <-chan reqresp) (
 }
 
 // Compile-time assurance that implementation satisfies interface.
-var _ AsyncGetter = New(Config{})
+var _ AsyncGetter = &BulkGetter{}

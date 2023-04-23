@@ -3,12 +3,11 @@ package bulkgetter
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"testing"
 
-	"github.com/dankinder/httpmock"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/aliasresolver"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/testsuite"
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
@@ -19,8 +18,9 @@ import (
 type BulkRequestTestSuite struct {
 	testsuite.Suite
 
-	ctx    context.Context
-	client *opensearch.Client
+	ctx       context.Context
+	client    *opensearch.Client
+	aResolver *aliasresolver.Mock
 
 	req1   *GetRequest
 	rChan1 chan GetResponse
@@ -37,21 +37,7 @@ type BulkRequestTestSuite struct {
 }
 
 func (s *BulkRequestTestSuite) expectResolveAlias(from string, to string) {
-	testJSON := []byte(`{
-		"` + to + `": {
-			"aliases": {
-				"` + from + `": {}
-			}
-		}
-	}`)
-
-	url := fmt.Sprintf("/%s/_alias?allow_no_indices=true&expand_wildcards=none", from)
-
-	s.MockAPIHandler.
-		On("Handle", "GET", url, mock.Anything).
-		Return(httpmock.Response{
-			Body: testJSON,
-		})
+	s.aResolver.On("GetAlias", mock.Anything, from).Return(to, nil)
 }
 
 func (s *BulkRequestTestSuite) SetupTest() {
@@ -62,6 +48,8 @@ func (s *BulkRequestTestSuite) SetupTest() {
 	s.client, _ = opensearch.NewClient(opensearch.Config{
 		Addresses: []string{s.MockAPIServer.URL()},
 	})
+
+	s.aResolver = &aliasresolver.Mock{}
 
 	s.req1 = &GetRequest{
 		Index:      "test1",
@@ -88,7 +76,7 @@ func (s *BulkRequestTestSuite) TestGetRequest() {
 	s.expectResolveAlias("test1", "test1")
 	s.expectResolveAlias("test2", "test2")
 
-	br := newBulkRequest(s.ctx, s.client, 2)
+	br := newBulkRequest(s.ctx, s.client, s.aResolver, 2)
 
 	err := br.add(s.reqresp1)
 	s.NoError(err)
@@ -129,7 +117,7 @@ func (s *BulkRequestTestSuite) TestProcessResponseFound() {
 	s.expectResolveAlias("test1", "test1")
 	s.expectResolveAlias("test2", "test2")
 
-	br := newBulkRequest(s.ctx, s.client, 2)
+	br := newBulkRequest(s.ctx, s.client, s.aResolver, 2)
 
 	err := br.add(s.reqresp1)
 	s.NoError(err)
@@ -184,7 +172,7 @@ func (s *BulkRequestTestSuite) TestProcessResponseFound() {
 func (s *BulkRequestTestSuite) TestResolveIndex() {
 	s.expectResolveAlias("test1", "actual_index")
 
-	br := newBulkRequest(s.ctx, s.client, 1)
+	br := newBulkRequest(s.ctx, s.client, s.aResolver, 1)
 	s.NoError(br.add(s.reqresp1))
 
 	respStr := `{
