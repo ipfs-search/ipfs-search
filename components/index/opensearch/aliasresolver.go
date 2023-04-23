@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"sync"
+	"time"
 
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 )
@@ -20,15 +21,18 @@ type AliasResolver interface {
 }
 
 type defaultAliasResolver struct {
-	mu           sync.RWMutex
-	client       *opensearch.Client
-	indexToAlias map[string]string // Map from index name to alias name
-	aliasToIndex map[string]string // Map from alias name to index name
+	mu              sync.RWMutex
+	client          *opensearch.Client
+	lastRefresh     time.Time
+	refreshDuration time.Duration
+	indexToAlias    map[string]string // Map from index name to alias name
+	aliasToIndex    map[string]string // Map from alias name to index name
 }
 
 func NewAliasResolver(client *opensearch.Client) AliasResolver {
 	return &defaultAliasResolver{
-		client: client,
+		client:          client,
+		refreshDuration: 5 * time.Minute,
 	}
 }
 
@@ -83,57 +87,93 @@ func (r *defaultAliasResolver) refreshAliases(ctx context.Context) error {
 		r.aliasToIndex[aliasName] = indexName
 	}
 
+	r.lastRefresh = time.Now()
+
 	r.mu.Unlock()
 
 	return nil
 }
 
-func (r *defaultAliasResolver) GetIndex(ctx context.Context, aliasName string) (string, error) {
+func (r *defaultAliasResolver) conditionalRefresh(ctx context.Context) bool {
 	r.mu.RLock()
-	indexName, ok := r.aliasToIndex[aliasName]
+	if r.lastRefresh.Add(r.refreshDuration).Before(time.Now()) {
+		r.mu.RUnlock()
+		r.refreshAliases(ctx)
+		return true
+	}
+
+	r.mu.RUnlock()
+	return false
+}
+
+func (r *defaultAliasResolver) getCachedIndex(aliasName string) (string, bool) {
+	r.mu.RLock()
+	indexName, found := r.aliasToIndex[aliasName]
 	r.mu.RUnlock()
 
-	if ok {
+	return indexName, found
+}
+
+func (r *defaultAliasResolver) GetIndex(ctx context.Context, aliasName string) (string, error) {
+	refreshed := r.conditionalRefresh(ctx)
+	indexName, found := r.getCachedIndex(aliasName)
+
+	if found {
 		return indexName, nil
 	}
 
+	if refreshed {
+		// Not found, but we've already refreshed - just return.
+		return "", ErrNotFound
+	}
+
+	// Not refreshed, try refreshing.
 	err := r.refreshAliases(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	r.mu.RLock()
-	indexName, ok = r.aliasToIndex[aliasName]
-	r.mu.RUnlock()
+	indexName, found = r.getCachedIndex(aliasName)
 
-	if !ok {
-		return "", ErrNotFound
+	if found {
+		return indexName, nil
 	}
 
-	return indexName, nil
+	return "", ErrNotFound
+}
+
+func (r *defaultAliasResolver) getCachedAlias(indexName string) (string, bool) {
+	r.mu.RLock()
+	aliasName, found := r.indexToAlias[indexName]
+	r.mu.RUnlock()
+
+	return aliasName, found
 }
 
 func (r *defaultAliasResolver) GetAlias(ctx context.Context, indexName string) (string, error) {
-	r.mu.RLock()
-	aliasName, ok := r.indexToAlias[indexName]
-	r.mu.RUnlock()
+	refreshed := r.conditionalRefresh(ctx)
+	aliasName, found := r.getCachedAlias(indexName)
 
-	if ok {
+	if found {
 		return aliasName, nil
 	}
 
+	if refreshed {
+		// Not found, but we've already refreshed - just return.
+		return "", ErrNotFound
+	}
+
+	// Not refreshed, try refreshing.
 	err := r.refreshAliases(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	r.mu.RLock()
-	aliasName, ok = r.indexToAlias[indexName]
-	r.mu.RUnlock()
+	aliasName, found = r.getCachedAlias(indexName)
 
-	if !ok {
-		return "", ErrNotFound
+	if found {
+		return aliasName, nil
 	}
 
-	return aliasName, nil
+	return "", ErrNotFound
 }

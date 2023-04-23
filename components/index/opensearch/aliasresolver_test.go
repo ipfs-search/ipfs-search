@@ -3,6 +3,7 @@ package opensearch
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/dankinder/httpmock"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
@@ -29,12 +30,48 @@ func (s *AliasResolverTestSuite) SetupTest() {
 	})
 
 	s.r = &defaultAliasResolver{
-		client: client,
+		client:          client,
+		refreshDuration: 15 * time.Millisecond,
 	}
 }
 
 func (s *AliasResolverTestSuite) TeardownTest() {
 	s.TeardownSearchMock()
+}
+
+// Test that conditionalRefresh will be called after refreshDuration expired.
+func (s *AliasResolverTestSuite) TestConditionalRefresh() {
+	s.MockAPIHandler.
+		On("Handle", "GET", "/_alias", []byte{}).
+		Return(httpmock.Response{
+			Body: []byte(`{
+			"index1": {
+				"aliases": {
+					"index1_alias": {}
+				}
+			},
+			"index2": {
+				"aliases": {
+					"index2_alias": {}
+				}
+			}
+		}`),
+		}).
+		Once()
+
+	// First call should refresh
+	refreshed := s.r.conditionalRefresh(s.ctx)
+	s.True(refreshed)
+
+	// Second call should not refresh
+	refreshed = s.r.conditionalRefresh(s.ctx)
+	s.False(refreshed)
+
+	// Third call should refresh after refreshDuration has expired
+	time.Sleep(s.r.refreshDuration)
+
+	refreshed = s.r.conditionalRefresh(s.ctx)
+	s.True(refreshed)
 }
 
 func (s *AliasResolverTestSuite) TestRefreshAliases() {
