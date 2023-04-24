@@ -1,9 +1,8 @@
-package opensearch
+package client
 
 import (
 	"context"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/jpillora/backoff"
@@ -12,7 +11,6 @@ import (
 	opensearchutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/aliasresolver"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
 	"github.com/ipfs-search/ipfs-search/instr"
@@ -20,82 +18,54 @@ import (
 
 // Client for search index.
 type Client struct {
-	searchClient *opensearch.Client
-	bulkIndexer  opensearchutil.BulkIndexer
-	bulkGetter   bulkgetter.AsyncGetter
+	SearchClient  *opensearch.Client
+	AliasResolver aliasresolver.AliasResolver
+	BulkIndexer   opensearchutil.BulkIndexer
+	BulkGetter    bulkgetter.AsyncGetter
 
 	*instr.Instrumentation
 }
 
-// ClientConfig configures search index.
-type ClientConfig struct {
-	URL       string
-	Transport http.RoundTripper
-	Debug     bool
-
-	BulkIndexerWorkers      int
-	BulkIndexerFlushBytes   int
-	BulkIndexerFlushTimeout time.Duration
-
-	BulkGetterBatchSize    int
-	BulkGetterBatchTimeout time.Duration
-}
-
-// NewClient returns a configured search index, or an error.
-func NewClient(cfg *ClientConfig, i *instr.Instrumentation) (*Client, error) {
-	var (
-		c   *opensearch.Client
-		bi  opensearchutil.BulkIndexer
-		bg  bulkgetter.AsyncGetter
-		err error
-	)
-
+// New returns a configured search index, or an error.
+func New(cfg *Config, i *instr.Instrumentation) (*Client, error) {
 	if cfg == nil {
-		panic("NewClient ClientConfig cannot be nil.")
+		panic("Config cannot be nil.")
 	}
 
 	if i == nil {
-		panic("NewCLient Instrumentation cannot be nil.")
+		panic("Instrumentation cannot be nil.")
 	}
 
-	if c, err = getSearchClient(cfg, i); err != nil {
-		return nil, err
-	}
-
-	if bi, err = getBulkIndexer(c, cfg, i); err != nil {
-		return nil, err
-	}
-
-	if bg, err = getBulkGetter(c, cfg, i); err != nil {
-		return nil, err
-	}
-
-	return &Client{
-		searchClient:    c,
-		bulkIndexer:     bi,
-		bulkGetter:      bg,
+	c := Client{
 		Instrumentation: i,
-	}, nil
+	}
+
+	initFuncs := []func(*Config) error{
+		c.setSearchClient,
+		c.setAliasResolver,
+		c.setBulkIndexer,
+		c.setBulkGetter,
+	}
+
+	for _, initFunc := range initFuncs {
+		if err := initFunc(cfg); err != nil {
+			return nil, err
+		}
+	}
+
+	return &c, nil
 }
 
 // Work starts (and closes) a client worker.
 func (c *Client) Work(ctx context.Context) error {
 	// Flush indexing buffers on context close.
-	// Use background context because current context is already closed.
-	defer c.bulkIndexer.Close(context.Background())
+	// Use background context because current context might already closed.
+	defer c.BulkIndexer.Close(context.Background())
 
-	return c.bulkGetter.Work(ctx)
+	return c.BulkGetter.Work(ctx)
 }
 
-// NewIndex returns a new index given with given name.
-func (c *Client) NewIndex(name string) index.Index {
-	return New(
-		c,
-		&Config{Name: name},
-	)
-}
-
-func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.Client, error) {
+func (c *Client) setSearchClient(cfg *Config) error {
 	b := backoff.Backoff{
 		Factor: 2.0,
 		Jitter: true,
@@ -124,17 +94,27 @@ func getSearchClient(cfg *ClientConfig, i *instr.Instrumentation) (*opensearch.C
 		}
 	}
 
-	return opensearch.NewClient(clientConfig)
+	searchClient, err := opensearch.NewClient(clientConfig)
+	if err != nil {
+		return err
+	}
+
+	c.SearchClient = searchClient
+	return nil
 }
 
-func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (opensearchutil.BulkIndexer, error) {
+func (c *Client) setBulkIndexer(cfg *Config) error {
+	if c.SearchClient == nil {
+		panic("SearchClient is nil.")
+	}
+
 	iCfg := opensearchutil.BulkIndexerConfig{
-		Client:        client,
+		Client:        c.SearchClient,
 		NumWorkers:    cfg.BulkIndexerWorkers,
 		FlushBytes:    cfg.BulkIndexerFlushBytes,
 		FlushInterval: cfg.BulkIndexerFlushTimeout,
 		OnFlushStart: func(ctx context.Context) context.Context {
-			newCtx, _ := i.Tracer.Start(ctx, "index.opensearch.BulkIndexerFlush")
+			newCtx, _ := c.Tracer.Start(ctx, "index.opensearch.BulkIndexerFlush")
 			return newCtx
 		},
 		OnError: func(ctx context.Context, err error) {
@@ -156,16 +136,40 @@ func getBulkIndexer(client *opensearch.Client, cfg *ClientConfig, i *instr.Instr
 		iCfg.FlushInterval = 0
 	}
 
-	return opensearchutil.NewBulkIndexer(iCfg)
-}
-
-func getBulkGetter(client *opensearch.Client, cfg *ClientConfig, i *instr.Instrumentation) (bulkgetter.AsyncGetter, error) {
-	bgCfg := bulkgetter.Config{
-		Client:        client,
-		BatchSize:     cfg.BulkGetterBatchSize,
-		BatchTimeout:  cfg.BulkGetterBatchTimeout,
-		AliasResolver: aliasresolver.NewAliasResolver(client),
+	bulkIndexer, err := opensearchutil.NewBulkIndexer(iCfg)
+	if err != nil {
+		return err
 	}
 
-	return bulkgetter.New(bgCfg), nil
+	c.BulkIndexer = bulkIndexer
+	return nil
+}
+
+func (c *Client) setAliasResolver(cfg *Config) error {
+	if c.SearchClient == nil {
+		panic("SearchClient is nil.")
+	}
+
+	c.AliasResolver = aliasresolver.NewAliasResolver(c.SearchClient)
+	return nil
+}
+
+func (c *Client) setBulkGetter(cfg *Config) error {
+	if c.SearchClient == nil {
+		panic("SearchClient is nil.")
+	}
+
+	if c.AliasResolver == nil {
+		panic("AliasResolver is nil.")
+	}
+
+	bgCfg := bulkgetter.Config{
+		Client:        c.SearchClient,
+		BatchSize:     cfg.BulkGetterBatchSize,
+		BatchTimeout:  cfg.BulkGetterBatchTimeout,
+		AliasResolver: c.AliasResolver,
+	}
+
+	c.BulkGetter = bulkgetter.New(bgCfg)
+	return nil
 }

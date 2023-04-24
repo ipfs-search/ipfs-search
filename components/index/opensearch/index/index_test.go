@@ -1,4 +1,4 @@
-package opensearch
+package index
 
 // TODO: Test whether indexed items with omitempty are actually left out - otherwise
 // non-updating references will overwrite the existing!
@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/client"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/testsuite"
 )
 
@@ -24,7 +25,7 @@ type IndexTestSuite struct {
 	ctx             context.Context
 	ctxCancel       func()
 	instr           *instr.Instrumentation
-	mockClient      *Client
+	mockClient      *client.Client
 	mockAsyncGetter *bulkgetter.Mock
 	responseHeader  http.Header
 }
@@ -37,12 +38,12 @@ func (s *IndexTestSuite) SetupTest() {
 
 	s.mockAsyncGetter = &bulkgetter.Mock{}
 
-	config := &ClientConfig{
+	config := &client.Config{
 		URL:   s.MockAPIServer.URL(),
 		Debug: true,
 	}
-	s.mockClient, _ = NewClient(config, s.instr)
-	s.mockClient.bulkGetter = s.mockAsyncGetter
+	s.mockClient, _ = client.New(config, s.instr)
+	s.mockClient.BulkGetter = s.mockAsyncGetter
 
 	// Start worker
 	s.mockAsyncGetter.On("Work", mock.Anything).WaitUntil(time.After(time.Second)).Return(nil).Maybe()
@@ -53,21 +54,14 @@ func (s *IndexTestSuite) TeardownTest() {
 	s.TeardownSearchMock()
 }
 
-func (s *IndexTestSuite) TestNewClient() {
-	config := &ClientConfig{}
-	client, err := NewClient(config, s.instr)
-	s.NoError(err)
-	s.NotNil(client)
-}
-
 func (s *IndexTestSuite) TestNew() {
-	client, _ := NewClient(&ClientConfig{}, s.instr)
+	client, _ := client.New(&client.Config{}, s.instr)
 	idx := New(client, &Config{Name: "test"})
 	s.NotNil(idx)
 }
 
 func (s *IndexTestSuite) TestString() {
-	client, _ := NewClient(&ClientConfig{}, s.instr)
+	client, _ := client.New(&client.Config{}, s.instr)
 	idx := New(client, &Config{Name: "test"})
 	s.Equal(fmt.Sprintf("%s", idx), "test")
 }

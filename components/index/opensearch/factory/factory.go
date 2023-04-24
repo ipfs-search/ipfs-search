@@ -1,23 +1,26 @@
 package factory
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 
-	opensearch "github.com/opensearch-project/opensearch-go/v2"
+	"github.com/ipfs-search/ipfs-search/components/index"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/aliasresolver"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/client"
+	os_index "github.com/ipfs-search/ipfs-search/components/index/opensearch/index"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 )
 
 var (
-	errAliasNotFound  = errors.New("alias not found")
 	ErrMappingInvalid = errors.New("mapping invalid")
 )
 
 type Factory struct {
-	client *opensearch.Client
+	client *client.Client
 }
 
 //go:embed mappings/*
@@ -42,40 +45,9 @@ func (f *Factory) getDesiredMapping(aliasName string) (interface{}, error) {
 	return mapping, nil
 }
 
-func (f *Factory) resolveAlias(aliasName string) (string, error) {
-	resp, err := f.client.API.Indices.GetAlias(
-		f.client.API.Indices.GetAlias.WithName(aliasName),
-	)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case 404:
-		return "", errAliasNotFound
-	case 200:
-		var result map[string]interface{}
-		err = json.NewDecoder(resp.Body).Decode(&result)
-		if err != nil {
-			return "", err
-		}
-
-		if len(result) != 1 {
-			panic(fmt.Sprintf("unexpected result resolving alias '%s': %s", aliasName, result))
-		}
-
-		for indexName := range result {
-			return indexName, nil
-		}
-	}
-
-	panic("unexpected status code returned resolving alias")
-}
-
 func (f *Factory) getCurrentMapping(indexName string) (interface{}, error) {
-	resp, err := f.client.API.Indices.GetMapping(
-		f.client.API.Indices.GetMapping.WithIndex(indexName),
+	resp, err := f.client.SearchClient.API.Indices.GetMapping(
+		f.client.SearchClient.API.Indices.GetMapping.WithIndex(indexName),
 	)
 	if err != nil {
 		return nil, err
@@ -125,6 +97,8 @@ func (f *Factory) createIndex(aliasName, indexName string) error {
 	}
 
 	body := map[string]interface{}{
+		// For developing and testing, these are sensible defaults.
+		// For production, one will want to manually create indexes.
 		"settings": map[string]interface{}{
 			"index": map[string]interface{}{
 				"number_of_shards":   1,
@@ -133,13 +107,13 @@ func (f *Factory) createIndex(aliasName, indexName string) error {
 		},
 		"mappings": mapping,
 		"aliases": map[string]interface{}{
-			aliasName: nil,
+			aliasName: aliasName,
 		},
 	}
 
-	resp, err := f.client.API.Indices.Create(
+	resp, err := f.client.SearchClient.API.Indices.Create(
 		indexName,
-		f.client.API.Indices.Create.WithBody(opensearchutil.NewJSONReader(body)),
+		f.client.SearchClient.API.Indices.Create.WithBody(opensearchutil.NewJSONReader(body)),
 	)
 	if err != nil {
 		return err
@@ -150,26 +124,40 @@ func (f *Factory) createIndex(aliasName, indexName string) error {
 		return fmt.Errorf("unable to create index: %s", indexName)
 	}
 
-	return nil
+	// Validate resulting mapping.
+	return f.validateMapping(aliasName, indexName)
 }
 
-func New(client *opensearch.Client) *Factory {
+func New(client *client.Client) *Factory {
 	return &Factory{
 		client,
 	}
 }
 
-func (f *Factory) EnsureMapping(aliasName string) error {
-	indexName, err := f.resolveAlias(aliasName)
-	if err == errAliasNotFound {
-		indexName = aliasName + "_v1"
+func (f *Factory) generateIndexName(aliasName string) string {
+	return aliasName + "_v1"
+}
 
-		if err := f.createIndex(aliasName, indexName); err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
+func (f *Factory) resolveOrCreateIndex(ctx context.Context, aliasName string) (string, error) {
+	indexName, err := f.client.AliasResolver.GetIndex(ctx, aliasName)
+	if errors.Is(err, aliasresolver.ErrNotFound) {
+		// Alias not found, create index.
+		indexName = f.generateIndexName(aliasName)
+		return indexName, f.createIndex(aliasName, indexName)
 	}
 
-	return f.validateMapping(aliasName, indexName)
+	return indexName, err
+}
+
+func (f *Factory) GetIndex(ctx context.Context, aliasName string) (index.Index, error) {
+	indexName, err := f.resolveOrCreateIndex(ctx, aliasName)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := os_index.Config{
+		Name: indexName,
+	}
+
+	return os_index.New(f.client, &cfg), nil
 }

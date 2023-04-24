@@ -1,4 +1,4 @@
-package opensearch
+package index
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/ipfs-search/ipfs-search/components/index/opensearch/bulkgetter"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/client"
 )
 
 const debug bool = false
@@ -20,17 +21,17 @@ const debug bool = false
 // Index wraps an OpenSearch index to store documents
 type Index struct {
 	cfg *Config
-	c   *Client
+	c   *client.Client
 }
 
 // New returns a new index.
-func New(client *Client, cfg *Config) index.Index {
+func New(client *client.Client, cfg *Config) index.Index {
 	if client == nil {
-		panic("Index.New Client cannot be nil.")
+		panic("Client cannot be nil.")
 	}
 
 	if cfg == nil {
-		panic("Index.New Config cannot be nil.")
+		panic("Config cannot be nil.")
 	}
 
 	index := &Index{
@@ -108,7 +109,7 @@ func (i *Index) index(
 	ctx, span = i.c.Tracer.Start(ctx, "index.opensearch.bulkIndexer.Add")
 	defer span.End()
 
-	err = i.c.bulkIndexer.Add(ctx, item)
+	err = i.c.BulkIndexer.Add(ctx, item)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "Error adding to BulkIndexer.")
@@ -146,7 +147,7 @@ func (i *Index) Get(ctx context.Context, id string, dst interface{}, fields ...s
 		Fields:     fields,
 	}
 
-	resp := <-i.c.bulkGetter.Get(ctx, &req, dst)
+	resp := <-i.c.BulkGetter.Get(ctx, &req, dst)
 
 	if debug {
 		if resp.Found {

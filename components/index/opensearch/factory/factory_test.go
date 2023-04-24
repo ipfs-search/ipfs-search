@@ -3,9 +3,11 @@ package factory
 import (
 	"testing"
 
-	"github.com/ipfs-search/ipfs-search/components/index/opensearch/testsuite"
-	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/client"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/testsuite"
+	"github.com/ipfs-search/ipfs-search/instr"
 )
 
 var indexes = []string{
@@ -32,9 +34,12 @@ type FactoryTestSuite struct {
 func (s *FactoryTestSuite) SetupTest() {
 	s.SetupSearchMock()
 
-	client, _ := opensearch.NewClient(opensearch.Config{
-		Addresses: []string{s.MockAPIServer.URL()},
-	})
+	clientConfig := &client.Config{
+		URL:   s.MockAPIServer.URL(),
+		Debug: true,
+	}
+	instr := instr.New()
+	client, _ := client.New(clientConfig, instr)
 
 	s.f = New(client)
 }
