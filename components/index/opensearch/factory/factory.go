@@ -149,7 +149,7 @@ func (f *Factory) resolveOrCreateIndex(ctx context.Context, aliasName string) (s
 	return indexName, err
 }
 
-func (f *Factory) GetIndex(ctx context.Context, aliasName string) (index.Index, error) {
+func (f *Factory) NewIndex(ctx context.Context, aliasName string) (index.Index, error) {
 	indexName, err := f.resolveOrCreateIndex(ctx, aliasName)
 	if err != nil {
 		return nil, err
