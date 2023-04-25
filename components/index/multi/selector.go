@@ -1,7 +1,5 @@
 package multi
 
-import "strings"
-
 type Properties map[string]interface{}
 
 type Selector interface {
@@ -9,24 +7,9 @@ type Selector interface {
 	GetIndex(id string, properties Properties) string
 }
 
-type PrefixMatcher struct {
-	Name     string
-	Prefixes []string
-}
-
-func (p *PrefixMatcher) Match(property string) bool {
-	for _, prefix := range p.Prefixes {
-		if strings.HasPrefix(property, prefix) {
-			return true
-		}
-	}
-
-	return false
-}
-
 type PropertySelector struct {
 	PropertyName string
-	Matchers     []PrefixMatcher
+	Matchers     []*RegexpMatcher
 	DefaultIndex string
 }
 
