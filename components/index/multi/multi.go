@@ -57,7 +57,7 @@ func (m *Multi) Index(ctx context.Context, id string, properties interface{}) er
 
 func (m *Multi) Update(ctx context.Context, id string, properties interface{}) error {
 	index := m.getIndex(id, properties)
-	return index.Index(ctx, id, properties)
+	return index.Update(ctx, id, properties)
 }
 
 func (m *Multi) Get(ctx context.Context, id string, dst interface{}, fields ...string) (bool, error) {

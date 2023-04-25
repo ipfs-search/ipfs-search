@@ -6,14 +6,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func makeMetadataProp(mimetype string) Properties {
-	return map[string]interface{}{
-		"metadata": map[string]interface{}{
-			"Content-Type": mimetype,
-		},
-	}
-}
-
 type PropertySelectorTestSuite struct {
 	suite.Suite
 
