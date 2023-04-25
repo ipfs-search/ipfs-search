@@ -14,13 +14,13 @@ func makeMetadataProp(mimetype string) Properties {
 	}
 }
 
-type PropertySelectorTest struct {
+type PropertySelectorTestSuite struct {
 	suite.Suite
 
 	ps *PropertySelector
 }
 
-func (s *PropertySelectorTest) SetupTest() {
+func (s *PropertySelectorTestSuite) SetupTest() {
 	s.ps = &PropertySelector{
 		PropertyNameParts: []string{"metadata", "Content-Type"},
 		Matchers: []*RegexpMatcher{
@@ -33,31 +33,31 @@ func (s *PropertySelectorTest) SetupTest() {
 	}
 }
 
-func (s *PropertySelectorTest) TestListIndexes() {
+func (s *PropertySelectorTestSuite) TestListIndexes() {
 	expected := []string{"default", "prefix_matcher", "empty_match", "never_matcher", "multi_matcher"}
 	s.Equal(expected, s.ps.ListIndexes())
 }
 
-func (s *PropertySelectorTest) TestPrefixMatch() {
+func (s *PropertySelectorTestSuite) TestPrefixMatch() {
 	s.Equal("prefix_matcher", s.ps.GetIndex("", makeMetadataProp("prefix/something")))
 }
 
-func (s *PropertySelectorTest) TestEmptyMatch() {
+func (s *PropertySelectorTestSuite) TestEmptyMatch() {
 	s.Equal("empty_match", s.ps.GetIndex("", makeMetadataProp("")))
 }
 
-func (s *PropertySelectorTest) TestDefaultMatch() {
+func (s *PropertySelectorTestSuite) TestDefaultMatch() {
 	s.Equal("default", s.ps.GetIndex("", makeMetadataProp("something/else")))
 }
 
-func (s *PropertySelectorTest) TestMultiMatch() {
+func (s *PropertySelectorTestSuite) TestMultiMatch() {
 	s.Equal("multi_matcher", s.ps.GetIndex("", makeMetadataProp("ape")))
 	s.Equal("multi_matcher", s.ps.GetIndex("", makeMetadataProp("monkey")))
 	s.Equal("multi_matcher", s.ps.GetIndex("", makeMetadataProp("primate")))
 	s.Equal("multi_matcher", s.ps.GetIndex("", makeMetadataProp("human")))
 }
 
-func (s *PropertySelectorTest) TestGetPropValMissing() {
+func (s *PropertySelectorTestSuite) TestGetPropValMissing() {
 	// When property is missing, getPropVal should return "".
 	properties := map[string]interface{}{
 		"metadata": map[string]interface{}{},
@@ -65,12 +65,12 @@ func (s *PropertySelectorTest) TestGetPropValMissing() {
 	s.Empty(s.ps.getPropVal(properties))
 }
 
-func (s *PropertySelectorTest) TestGetPropValMissing2() {
+func (s *PropertySelectorTestSuite) TestGetPropValMissing2() {
 	// When not even metadata is defined, getPropVal should also return "".
 	properties := map[string]interface{}{}
 	s.Empty(s.ps.getPropVal(properties))
 }
 
-func TestPropertySelectorTest(t *testing.T) {
-	suite.Run(t, new(PropertySelectorTest))
+func TestPropertySelectorTestSuite(t *testing.T) {
+	suite.Run(t, new(PropertySelectorTestSuite))
 }
