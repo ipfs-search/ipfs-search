@@ -58,7 +58,7 @@ func (w *Worker) Start(ctx context.Context, deliveries <-chan samqp.Delivery) er
 				panic("unexpected channel close")
 			}
 
-			if err := w.crawlDelivery(ctx, d); err != nil {
+			if err := w.crawlDelivery(ctx, &d); err != nil {
 				span.RecordError(err)
 				return err
 			}
@@ -66,7 +66,7 @@ func (w *Worker) Start(ctx context.Context, deliveries <-chan samqp.Delivery) er
 	}
 }
 
-func getResource(d samqp.Delivery) (*t.AnnotatedResource, error) {
+func getResource(d *samqp.Delivery) (*t.AnnotatedResource, error) {
 	var err error
 
 	r := &t.AnnotatedResource{
@@ -74,18 +74,18 @@ func getResource(d samqp.Delivery) (*t.AnnotatedResource, error) {
 	}
 
 	if err = json.Unmarshal(d.Body, r); err != nil {
-		err = fmt.Errorf("Error unmarshalling delivery: %w", err)
+		return nil, fmt.Errorf("Error unmarshalling delivery: %w", err)
 	}
 
 	if !r.IsValid() {
-		err = fmt.Errorf("Invalid resource: %v", r)
+		return nil, fmt.Errorf("Invalid resource: %v", r)
 	}
 
-	return r, err
+	return r, nil
 }
 
 // ackOrRejec based on crawler result: returns nil on crawler errors, rejects relevant deliveries instead.
-func ackOrReject(err error, d samqp.Delivery) error {
+func ackOrReject(err error, d *samqp.Delivery) error {
 	if err != nil {
 		// Crawler error
 		if err := d.Reject(shouldRetry); err != nil {
@@ -104,7 +104,7 @@ func ackOrReject(err error, d samqp.Delivery) error {
 	return nil
 }
 
-func (w *Worker) crawlDelivery(ctx context.Context, d samqp.Delivery) error {
+func (w *Worker) crawlDelivery(ctx context.Context, d *samqp.Delivery) error {
 	ctx, span := w.Tracer.Start(ctx, "crawler.pool.crawlDelivery", trace.WithNewRoot())
 	defer span.End()
 
