@@ -9,7 +9,6 @@ import (
 	samqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/ipfs-search/ipfs-search/components/crawler"
 	"github.com/ipfs-search/ipfs-search/instr"
 	t "github.com/ipfs-search/ipfs-search/types"
 )
@@ -22,14 +21,14 @@ const shouldRetry = false
 // Worker crawls deliveries from a queue.
 type Worker struct {
 	cfg     *Config
-	crawler *crawler.Crawler
+	crawler Crawler
 	ll      LoadLimiter
 
 	*instr.Instrumentation
 }
 
 // New returns a new worker.
-func New(cfg *Config, crawler *crawler.Crawler, i *instr.Instrumentation) *Worker {
+func New(cfg *Config, crawler Crawler, i *instr.Instrumentation) *Worker {
 	ll := NewLoadLimiter(cfg.Name, cfg.MaxLoadRatio, cfg.ThrottleMin, cfg.ThrottleMax)
 
 	//# 0.8, 10*time.Second, 5*time.Minute)
