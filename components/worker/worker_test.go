@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"encoding/json"
@@ -104,6 +105,147 @@ func (s *WorkerTestSuite) TestGetResourceInvalid() {
 	// Validate response.
 	s.Error(err)
 	s.Nil(actual)
+}
+
+type mockAcknowledger struct {
+	mock.Mock
+}
+
+func (m *mockAcknowledger) Ack(tag uint64, multiple bool) error {
+	args := m.Called(tag, multiple)
+	return args.Error(0)
+}
+
+func (m *mockAcknowledger) Nack(tag uint64, multiple bool, requeue bool) error {
+	args := m.Called(tag, multiple, requeue)
+	return args.Error(0)
+}
+
+func (m *mockAcknowledger) Reject(tag uint64, requeue bool) error {
+	args := m.Called(tag, requeue)
+	return args.Error(0)
+}
+
+// Test ackOrReject(err error, d *samqp.Delivery) error
+func (s *WorkerTestSuite) TestAckOrRejectNoCrawlError() {
+	// Test reject.
+
+	acknowledger := &mockAcknowledger{}
+	acknowledger.On("Ack", mock.Anything, false).Return(nil)
+
+	// Create delivery.
+	d := &samqp.Delivery{
+		Acknowledger: acknowledger,
+	}
+
+	err := ackOrReject(nil, d)
+	s.NoError(err)
+	acknowledger.AssertExpectations(s.T())
+}
+
+func (s *WorkerTestSuite) TestAckOrRejectCrawlError() {
+	// Test reject.
+
+	acknowledger := &mockAcknowledger{}
+	acknowledger.On("Reject", mock.Anything, false).Return(nil)
+
+	// Create delivery.
+	d := &samqp.Delivery{
+		Acknowledger: acknowledger,
+	}
+
+	err := ackOrReject(fmt.Errorf("error"), d)
+	s.NoError(err)
+	acknowledger.AssertExpectations(s.T())
+}
+
+func (s *WorkerTestSuite) TestAckOrRejectRejectError() {
+	// Error during reject propagates.
+
+	acknowledger := &mockAcknowledger{}
+	acknowledger.On("Reject", mock.Anything, false).Return(fmt.Errorf("error2"))
+
+	// Create delivery.
+	d := &samqp.Delivery{
+		Acknowledger: acknowledger,
+	}
+
+	err := ackOrReject(fmt.Errorf("error"), d)
+	s.Error(err)
+	acknowledger.AssertExpectations(s.T())
+}
+
+func (s *WorkerTestSuite) TestAckOrRejectAckError() {
+	// Error during Ack propagates.
+
+	acknowledger := &mockAcknowledger{}
+	acknowledger.On("Ack", mock.Anything, false).Return(fmt.Errorf("error2"))
+
+	// Create delivery.
+	d := &samqp.Delivery{
+		Acknowledger: acknowledger,
+	}
+
+	err := ackOrReject(nil, d)
+	s.Error(err)
+	acknowledger.AssertExpectations(s.T())
+}
+
+func (s *WorkerTestSuite) TestCrawlDeliveryCrawlSuccess() {
+	ctx := context.Background()
+
+	acknowledger := &mockAcknowledger{}
+	acknowledger.On("Ack", mock.Anything, false).Return(nil)
+
+	s.ll.On("LoadLimit").Return(nil)
+
+	// Create resource.
+	r := &t.AnnotatedResource{
+		Resource: &t.Resource{
+			Protocol: t.IPFSProtocol,
+			ID:       "QmHash",
+		},
+		Source: t.DirectorySource,
+		Reference: t.Reference{
+			Parent: &t.Resource{
+				Protocol: t.IPFSProtocol,
+				ID:       "QmOtherHash",
+			},
+			Name: "hello",
+		},
+	}
+
+	encoded, err := json.Marshal(r)
+	s.NoError(err)
+
+	// Create delivery.
+	d := &samqp.Delivery{
+		Acknowledger: acknowledger,
+		Body:         encoded,
+	}
+
+	s.c.On("Crawl", mock.Anything, mock.Anything).Return(nil)
+
+	err = s.w.crawlDelivery(ctx, d)
+	s.NoError(err)
+	s.c.AssertExpectations(s.T())
+}
+
+func (s *WorkerTestSuite) TestCrawlDeliveryAckOrRejectPropagate() {
+	ctx := context.Background()
+
+	acknowledger := &mockAcknowledger{}
+	acknowledger.On("Ack", mock.Anything, false).Return(fmt.Errorf("error2"))
+
+	s.ll.On("LoadLimit").Return(nil)
+
+	// Create delivery.
+	d := &samqp.Delivery{
+		Acknowledger: acknowledger,
+	}
+
+	err := s.w.crawlDelivery(ctx, d)
+	s.Error(err)
 }
 
 func TestWorkerTestSuite(t *testing.T) {
