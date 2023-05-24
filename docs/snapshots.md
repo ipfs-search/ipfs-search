@@ -12,7 +12,7 @@ Our current production indexes are:
 We highly recommend users to only restore these; other indexes might not be complete or up to date (although you're welcome to play with them!). As of the time of writing (April 4, 2022) these indexes together take up about 22 TB.
 
 ## Restoring
-Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/opensearch/reference/current/snapshots-read-only-repository.html) into a OpenSearch 7 (or later) or OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v8.s3.filebase.com/
+Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/opensearch/reference/current/snapshots-read-only-repository.html) into an OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v8.s3.filebase.com/
 
 ### Steps
 1.  Ensure that an OpenSearch 7+/OpenSearch cluster with sufficient disk space is available at `localhost:9200`.
