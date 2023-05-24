@@ -1,9 +1,15 @@
 # Snapshots
 ipfs-search makes daily [OpenSearch snapshots](https://opensearch.org/docs/latest/opensearch/rest-api/snapshots/index/) of the indexed data.
 
-We are working towards sharing our index snapshots over IPFS through [Filebase](filebase.com). Until that time, our index snapshots are publicly available over S3/HTTPS and can be loaded directly into an OpenSearch or OpenSearch cluster with sufficient disk space.
+Our most current index snapshots are available at https://ipfs-search-snapshots-v9.s3.eu-central-1.amazonaws.com/ over S3/HTTPS and can be loaded directly into an OpenSearch or OpenSearch cluster with sufficient disk space.
 
-As of the time of writing (April 4, 2022) the full index is about 20 TB.
+Our current production indexes are:
+* `ipfs_files_v9`
+* `ipfs_directories_v9`
+* `ipfs_invalids_v8`
+* `ipfs_partials_v9`
+
+We highly recommend users to only restore these; other indexes might not be complete or up to date (although you're welcome to play with them!). As of the time of writing (April 4, 2022) these indexes together take up about 22 TB.
 
 ## Restoring
 Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/opensearch/reference/current/snapshots-read-only-repository.html) into a OpenSearch 7 (or later) or OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v8.s3.filebase.com/
