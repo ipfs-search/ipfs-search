@@ -12,13 +12,13 @@ Our current production indexes are:
 We highly recommend users to only restore these; other indexes might not be complete or up to date (although you're welcome to play with them!). As of the time of writing (April 4, 2022) these indexes together take up about 22 TB.
 
 ## Restoring
-Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/opensearch/reference/current/snapshots-read-only-repository.html) into an OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v8.s3.filebase.com/
+Our snapshots can be configured as a [read-only URL snapshot repository](https://www.elastic.co/guide/en/opensearch/reference/current/snapshots-read-only-repository.html) into an OpenSearch cluster. In order to do so, configure the following URL as the repository: https://ipfs-search-snapshots-v9.s3.eu-central-1.amazonaws.com/
 
 ### Steps
 1.  Ensure that an OpenSearch 7+/OpenSearch cluster with sufficient disk space is available at `localhost:9200`.
 2.  Add our repository URL to the `repositories.url.allowed_urls` setting in `opensearch.yml`:
     ```yaml
-    allowed_urls: ["https://ipfs-search-snapshots-v8.s3.filebase.com/*"]
+    allowed_urls: ["https://ipfs-search-snapshots-v9.s3.eu-central-1.amazonaws.com/*"]
     ```
 3.  Restart your cluster for the config changes to take affect.
 4.  Configure our snapshot repo as a read-only URL repository:
@@ -27,7 +27,7 @@ Our snapshots can be configured as a [read-only URL snapshot repository](https:/
     {
       "type": "url",
       "settings": {
-        "url": "https://ipfs-search-snapshots-v8.s3.filebase.com/"
+        "url": "https://ipfs-search-snapshots-v9.s3.eu-central-1.amazonaws.com/"
       }
     }
     '
