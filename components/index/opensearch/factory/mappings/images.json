@@ -1,0 +1,311 @@
+{
+  "dynamic": "strict",
+  "properties": {
+    "cid": {
+      "type": "keyword"
+    },
+    "content": {
+      "type": "text"
+    },
+    "content:character-count": {
+      "type": "integer",
+      "index": false
+    },
+    "first-seen": {
+      "type": "date",
+      "format": "strict_date_time"
+    },
+    "ipfs_tika_version": {
+      "type": "keyword",
+      "index": false
+    },
+    "language": {
+      "properties": {
+        "confidence": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false
+        },
+        "language": {
+          "type": "keyword"
+        },
+        "rawScore": {
+          "type": "double"
+        }
+      }
+    },
+    "last-seen": {
+      "type": "date",
+      "format": "strict_date_time"
+    },
+    "metadata": {
+      "dynamic": "false",
+      "properties": {
+        "Chroma NumChannels": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.tiff:SamplesPerPixel"
+          ]
+        },
+        "Content Identifier": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "Content-Type": {
+          "type": "keyword"
+        },
+        "Data BitsPerSample": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.tiff:BitsPerSample"
+          ]
+        },
+        "Exif SubIFD:Unique Image ID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "Has Alpha": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.Transparency Alpha"
+          ]
+        },
+        "Image Unique ID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "Live Photo ID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "Number of Components": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.tiff:SamplesPerPixel"
+          ]
+        },
+        "Transparency Alpha": {
+          "type": "keyword"
+        },
+        "Transparency TransparentIndex": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.Transparency Alpha"
+          ]
+        },
+        "X-TIKA:Parsed-By": {
+          "type": "keyword",
+          "index": false
+        },
+        "article:author": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "dc:contributor": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "dc:creator": {
+          "type": "text"
+        },
+        "dc:description": {
+          "type": "text"
+        },
+        "dc:identifier": {
+          "type": "keyword"
+        },
+        "dc:language": {
+          "type": "keyword"
+        },
+        "dc:publisher": {
+          "type": "keyword"
+        },
+        "dc:subject": {
+          "type": "text",
+          "copy_to": [
+            "metadata.dc:description"
+          ]
+        },
+        "dc:title": {
+          "type": "text"
+        },
+        "dcterms:created": {
+          "type": "date",
+          "index": false,
+          "format": "date_optional_time",
+          "ignore_malformed": true
+        },
+        "dcterms:modified": {
+          "type": "date",
+          "index": false,
+          "format": "date_optional_time",
+          "ignore_malformed": true
+        },
+        "meta:last-author": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "metadata": {
+          "properties": {
+            "meta:keyword": {
+              "type": "text",
+              "copy_to": [
+                "metadata.dc:description"
+              ]
+            }
+          }
+        },
+        "mime:subtype": {
+          "type": "keyword"
+        },
+        "mime:type": {
+          "type": "keyword"
+        },
+        "tiff:BitsPerSample": {
+          "type": "keyword"
+        },
+        "tiff:ImageLength": {
+          "type": "integer",
+          "ignore_malformed": true
+        },
+        "tiff:ImageWidth": {
+          "type": "integer",
+          "ignore_malformed": true
+        },
+        "tiff:Make": {
+          "type": "keyword"
+        },
+        "tiff:Model": {
+          "type": "keyword"
+        },
+        "tiff:Orientation": {
+          "type": "keyword"
+        },
+        "tiff:ResolutionUnit": {
+          "type": "keyword"
+        },
+        "tiff:SamplesPerPixel": {
+          "type": "keyword"
+        },
+        "tiff:XResolution": {
+          "type": "keyword"
+        },
+        "tiff:YResolution": {
+          "type": "keyword"
+        },
+        "w:comments": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "content"
+          ]
+        },
+        "xmpMM:DerivedFrom:DocumentID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "xmpMM:DerivedFrom:InstanceID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "xmpMM:DocumentID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        }
+      }
+    },
+    "nsfw": {
+      "properties": {
+        "classification": {
+          "properties": {
+            "drawing": {
+              "type": "float"
+            },
+            "hentai": {
+              "type": "float"
+            },
+            "neutral": {
+              "type": "float"
+            },
+            "porn": {
+              "type": "float"
+            },
+            "sexy": {
+              "type": "float"
+            }
+          }
+        },
+        "modelCid": {
+          "type": "keyword"
+        },
+        "nsfwServerVersion": {
+          "type": "keyword"
+        }
+      }
+    },
+    "references": {
+      "properties": {
+        "hash": {
+          "type": "keyword"
+        },
+        "name": {
+          "type": "text"
+        },
+        "parent_hash": {
+          "type": "keyword"
+        }
+      }
+    },
+    "size": {
+      "type": "long"
+    },
+    "urls": {
+      "type": "object",
+      "enabled": false
+    }
+  }
+}

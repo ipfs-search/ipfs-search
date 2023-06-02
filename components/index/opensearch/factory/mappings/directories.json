@@ -1,0 +1,48 @@
+{
+  "dynamic": "strict",
+  "properties": {
+    "first-seen": {
+      "type": "date",
+      "format": "date_time_no_millis"
+    },
+    "last-seen": {
+      "type": "date",
+      "format": "date_time_no_millis"
+    },
+    "links": {
+      "dynamic": "true",
+      "properties": {
+        "Hash": {
+          "type": "keyword"
+        },
+        "Name": {
+          "type": "text"
+        },
+        "Size": {
+          "type": "long",
+          "ignore_malformed": true
+        },
+        "Type": {
+          "type": "keyword"
+        }
+      }
+    },
+    "references": {
+      "properties": {
+        "hash": {
+          "type": "keyword"
+        },
+        "name": {
+          "type": "text"
+        },
+        "parent_hash": {
+          "type": "keyword"
+        }
+      }
+    },
+    "size": {
+      "type": "long",
+      "ignore_malformed": true
+    }
+  }
+}

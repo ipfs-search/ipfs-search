@@ -1,0 +1,16 @@
+"dynamic": "strict",
+"properties": {
+  "from": {
+    "type": "keyword"
+  },
+  "name": {
+    "type": "text"
+  },
+  "seen": {
+    "type": "date",
+    "format": "date_time_no_millis"
+  },
+  "to": {
+    "type": "keyword"
+  }
+}

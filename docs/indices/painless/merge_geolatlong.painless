@@ -1,0 +1,26 @@
+String nestedKey = 'metadata';
+String latFieldName = 'geo:lat';
+String longFieldName = 'geo:long';
+String dstMapName = 'geo';
+String dstFieldName = 'position';
+
+if (!(ctx.containsKey(nestedKey) && ctx[nestedKey] instanceof HashMap)) return;
+
+HashMap nestedCtx = ctx[nestedKey];
+
+if (!(
+  nestedCtx.containsKey(latFieldName) &&
+  nestedCtx.containsKey(longFieldName) &&
+  nestedCtx[latFieldName] instanceof float &&
+  nestedCtx[longFieldName] instanceof float
+)) return;
+
+float[] combinedField = new float[] {nestedCtx[latFieldName], nestedCtx[longFieldName]};
+
+if (!nestedCtx.containsKey(dstMapName)) {
+  nestedCtx[dstMapName] = new HashMap();
+} else {
+  if (!nestedCtx[dstMapName] instanceof HashMap) return;
+}
+
+nestedCtx[dstMapName][dstFieldName] = combinedField;

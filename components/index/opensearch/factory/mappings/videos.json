@@ -1,0 +1,225 @@
+{
+  "dynamic": "strict",
+  "properties": {
+    "cid": {
+      "type": "keyword"
+    },
+    "content": {
+      "type": "text"
+    },
+    "content:character-count": {
+      "type": "integer",
+      "index": false
+    },
+    "first-seen": {
+      "type": "date",
+      "format": "strict_date_time"
+    },
+    "ipfs_tika_version": {
+      "type": "keyword",
+      "index": false
+    },
+    "language": {
+      "properties": {
+        "confidence": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false
+        },
+        "language": {
+          "type": "keyword"
+        },
+        "rawScore": {
+          "type": "double"
+        }
+      }
+    },
+    "last-seen": {
+      "type": "date",
+      "format": "strict_date_time"
+    },
+    "metadata": {
+      "dynamic": "false",
+      "properties": {
+        "Content Identifier": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "Content-Type": {
+          "type": "keyword"
+        },
+        "X-TIKA:Parsed-By": {
+          "type": "keyword",
+          "index": false
+        },
+        "article:author": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "audiocodecid": {
+          "type": "keyword"
+        },
+        "dc:contributor": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "dc:creator": {
+          "type": "text"
+        },
+        "dc:description": {
+          "type": "text"
+        },
+        "dc:identifier": {
+          "type": "keyword"
+        },
+        "dc:language": {
+          "type": "keyword"
+        },
+        "dc:publisher": {
+          "type": "keyword"
+        },
+        "dc:subject": {
+          "type": "text",
+          "copy_to": [
+            "metadata.dc:description"
+          ]
+        },
+        "dc:title": {
+          "type": "text"
+        },
+        "dcterms:created": {
+          "type": "date",
+          "index": false,
+          "format": "date_optional_time",
+          "ignore_malformed": true
+        },
+        "dcterms:modified": {
+          "type": "date",
+          "index": false,
+          "format": "date_optional_time",
+          "ignore_malformed": true
+        },
+        "keyframes": {
+          "type": "integer",
+          "ignore_malformed": true
+        },
+        "meta:last-author": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "metadata.dc:creator"
+          ]
+        },
+        "metadata": {
+          "properties": {
+            "meta:keyword": {
+              "type": "text",
+              "copy_to": [
+                "metadata.dc:description"
+              ]
+            }
+          }
+        },
+        "mime:subtype": {
+          "type": "keyword"
+        },
+        "mime:type": {
+          "type": "keyword"
+        },
+        "tiff:ImageLength": {
+          "type": "integer",
+          "ignore_malformed": true
+        },
+        "tiff:ImageWidth": {
+          "type": "integer",
+          "ignore_malformed": true
+        },
+        "videocodecid": {
+          "type": "keyword"
+        },
+        "w:comments": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "content"
+          ]
+        },
+        "xmpDM:audioChannelType": {
+          "type": "keyword"
+        },
+        "xmpDM:audioSampleRate": {
+          "type": "keyword"
+        },
+        "xmpDM:duration": {
+          "type": "half_float",
+          "ignore_malformed": true
+        },
+        "xmpDM:logComment": {
+          "type": "text",
+          "index": false,
+          "copy_to": [
+            "content"
+          ]
+        },
+        "xmpDM:releaseDate": {
+          "type": "short",
+          "ignore_malformed": true
+        },
+        "xmpMM:DerivedFrom:DocumentID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "xmpMM:DerivedFrom:InstanceID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        },
+        "xmpMM:DocumentID": {
+          "type": "keyword",
+          "index": false,
+          "doc_values": false,
+          "copy_to": [
+            "metadata.dc:identifier"
+          ]
+        }
+      }
+    },
+    "references": {
+      "properties": {
+        "hash": {
+          "type": "keyword"
+        },
+        "name": {
+          "type": "text"
+        },
+        "parent_hash": {
+          "type": "keyword"
+        }
+      }
+    },
+    "size": {
+      "type": "long"
+    },
+    "urls": {
+      "type": "object",
+      "enabled": false
+    }
+  }
+}

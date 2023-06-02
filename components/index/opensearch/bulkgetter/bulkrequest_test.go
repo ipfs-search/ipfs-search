@@ -3,13 +3,12 @@ package bulkgetter
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"net/http"
 	"strings"
 	"testing"
 
-	"github.com/dankinder/httpmock"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/aliasresolver"
+	"github.com/ipfs-search/ipfs-search/components/index/opensearch/testsuite"
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	"github.com/stretchr/testify/mock"
@@ -17,15 +16,11 @@ import (
 )
 
 type BulkRequestTestSuite struct {
-	suite.Suite
+	testsuite.Suite
 
-	ctx    context.Context
-	client *opensearch.Client
-
-	// Mock search
-	mockAPIHandler *httpmock.MockHandler
-	mockAPIServer  *httpmock.Server
-	responseHeader http.Header
+	ctx       context.Context
+	client    *opensearch.Client
+	aResolver *aliasresolver.Mock
 
 	req1   *GetRequest
 	rChan1 chan GetResponse
@@ -41,65 +36,20 @@ type BulkRequestTestSuite struct {
 	reqresp2 reqresp
 }
 
-func (s *BulkRequestTestSuite) expectHelloWorld() {
-	testJSON := []byte(`{
-	  "name" : "0fc08b13cdab",
-	  "cluster_name" : "docker-cluster",
-	  "cluster_uuid" : "T9t1q7kFRSyL15qVkIlWZQ",
-	  "version" : {
-	    "number" : "7.8.1",
-	    "build_flavor" : "oss",
-	    "build_type" : "docker",
-	    "build_hash" : "b5ca9c58fb664ca8bf9e4057fc229b3396bf3a89",
-	    "build_date" : "2020-07-21T16:40:44.668009Z",
-	    "build_snapshot" : false,
-	    "lucene_version" : "8.5.1",
-	    "minimum_wire_compatibility_version" : "6.8.0",
-	    "minimum_index_compatibility_version" : "6.0.0-beta1"
-	  },
-	  "tagline" : "You Know, for Search"
-	}`)
-	s.mockAPIHandler.
-		On("Handle", "GET", "/", mock.Anything).
-		Return(httpmock.Response{
-			Body: testJSON,
-		}).
-		Once()
-
-}
-
 func (s *BulkRequestTestSuite) expectResolveAlias(from string, to string) {
-	testJSON := []byte(`{
-		"` + to + `": {
-			"aliases": {
-				"` + from + `": {}
-			}
-		}
-	}`)
-
-	url := fmt.Sprintf("/%s/_alias?allow_no_indices=true&expand_wildcards=none", from)
-
-	s.mockAPIHandler.
-		On("Handle", "GET", url, mock.Anything).
-		Return(httpmock.Response{
-			Body: testJSON,
-		})
+	s.aResolver.On("GetAlias", mock.Anything, from).Return(to, nil)
 }
 
 func (s *BulkRequestTestSuite) SetupTest() {
+	s.SetupSearchMock()
+
 	s.ctx = context.Background()
 
-	// Setup mock search API
-	s.mockAPIHandler = &httpmock.MockHandler{}
-	s.mockAPIServer = httpmock.NewServer(s.mockAPIHandler)
-	s.responseHeader = http.Header{
-		"Content-Type": []string{"application/json"},
-	}
 	s.client, _ = opensearch.NewClient(opensearch.Config{
-		Addresses: []string{s.mockAPIServer.URL()},
+		Addresses: []string{s.MockAPIServer.URL()},
 	})
 
-	s.expectHelloWorld()
+	s.aResolver = &aliasresolver.Mock{}
 
 	s.req1 = &GetRequest{
 		Index:      "test1",
@@ -118,11 +68,15 @@ func (s *BulkRequestTestSuite) SetupTest() {
 	s.reqresp2 = reqresp{s.ctx, s.req2, s.rChan2, &s.dst2}
 }
 
+func (s *BulkRequestTestSuite) TeardownTest() {
+	s.TeardownSearchMock()
+}
+
 func (s *BulkRequestTestSuite) TestGetRequest() {
 	s.expectResolveAlias("test1", "test1")
 	s.expectResolveAlias("test2", "test2")
 
-	br := newBulkRequest(s.ctx, s.client, 2)
+	br := newBulkRequest(s.ctx, s.client, s.aResolver, 2)
 
 	err := br.add(s.reqresp1)
 	s.NoError(err)
@@ -163,7 +117,7 @@ func (s *BulkRequestTestSuite) TestProcessResponseFound() {
 	s.expectResolveAlias("test1", "test1")
 	s.expectResolveAlias("test2", "test2")
 
-	br := newBulkRequest(s.ctx, s.client, 2)
+	br := newBulkRequest(s.ctx, s.client, s.aResolver, 2)
 
 	err := br.add(s.reqresp1)
 	s.NoError(err)
@@ -218,7 +172,7 @@ func (s *BulkRequestTestSuite) TestProcessResponseFound() {
 func (s *BulkRequestTestSuite) TestResolveIndex() {
 	s.expectResolveAlias("test1", "actual_index")
 
-	br := newBulkRequest(s.ctx, s.client, 1)
+	br := newBulkRequest(s.ctx, s.client, s.aResolver, 1)
 	s.NoError(br.add(s.reqresp1))
 
 	respStr := `{

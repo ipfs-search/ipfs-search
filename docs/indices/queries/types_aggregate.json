@@ -1,0 +1,17 @@
+{
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "aggs": {
+        "field_count": {
+            "scripted_metric": {
+                "init_script": "state.field_count = new HashMap()",
+                "map_script": "",
+                "combine_script": "field_count = 0; for (t in _agg.transactions) { field_count += t }; return field_count",
+                "reduce_script": "field_count = 0; for (a in _aggs) { field_count += a }; return field_count"
+            }
+        }
+    }
+  }
+}

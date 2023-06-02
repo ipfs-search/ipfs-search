@@ -1,0 +1,155 @@
+void harmonizeField(HashMap ctx, String srcFieldName, String dstFieldName) {
+    if (ctx.containsKey(srcFieldName)) {
+        ArrayList srcValues = ctx[srcFieldName];
+
+        if (ctx.containsKey(dstFieldName)) {
+            ArrayList dstValues = ctx[dstFieldName];
+
+            if (srcValues == dstValues) {
+                // src and dst values are equal, remove src
+                ctx.remove(srcFieldName);
+            }
+
+            return;
+        }
+
+        ctx[dstFieldName] = srcValues;
+        ctx.remove(srcFieldName);
+    }
+}
+
+String nestedKey = 'metadata';
+Map remapFields = [
+    // Dublin Core All The Things!
+    'format': 'dc:format',
+    'identifier': 'dc:identifier',
+    'modified': 'dcterms:modified',
+    'contributor': 'dc:contributor',
+    'coverage': 'dc:coverage',
+    'creator': 'dc:creator',
+    'created': 'dcterms:created',
+    //'date': 'dc:date', // Date is interpreted as created, by default.
+    'description': 'dc:description',
+    'language': 'dc:language',
+    'publisher': 'dc:publisher',
+    'relation': 'dc:relation',
+    'rights': 'dc:rights',
+    'source': 'dc:source',
+    'subject': 'dc:subject',
+    'title': 'dc:title',
+    'type': 'dc:type',
+
+    'Source': 'dc:source',
+    'pdf:docinfo:custom:Source': 'dc:source',
+
+    'w:comments': 'w:Comments',
+    'comment': 'w:Comments',
+    'Comments': 'w:Comments',
+    'JPEG Comment': 'w:Comments',
+    'Exif SubIFD:User Comment': 'w:Comments',
+    'User Comment': 'w:Comments',
+
+    // General and documents
+    'og:title': 'dc:title',
+    'twitter:title': 'dc:title',
+    'pdf:docinfo:title': 'dc:title',
+
+    'og:description': 'dc:description',
+    'twitter:description': 'dc:description',
+    'Description': 'dc:description',
+
+    'Creation-Date': 'dcterms:created',
+    'meta:creation-date': 'dcterms:created',
+    'date': 'dcterms:created',
+    'dc:date': 'dcterms:created',
+
+    'Last-Modified': 'dcterms:modified',
+    'pdf:docinfo:modified': 'dcterms:modified',
+
+    'cp:subject': 'dc:subject',
+    'pdf:docinfo:subject': 'dc:subject',
+
+    'keywords': 'meta:keyword',
+    'Keywords': 'meta:keyword',
+    'pdf:docinfo:keywords': 'meta:keyword',
+
+    'Author': 'dc:creator',
+    'meta:author': 'dc:creator',
+    'author': 'dc:creator',
+
+    'Last-Save-Date': 'meta:save-date',
+    'Last-Author': 'meta:last-author',
+
+    'pdf:docinfo:creator_tool': 'xmp:CreatorTool',
+
+    // Documents
+    'pdf:docinfo:custom:doi': 'doi',
+    'pdf:docinfo:custom:WPS-JOURNALDOI': 'WPS-JOURNALDOI',
+
+    'pdf:docinfo:creator': 'dc:creator',
+    'pdf:docinfo:created': 'dcterms:created',
+
+    'producer': 'pdf:docinfo:producer',
+
+    'twitter:image': 'og:image',
+    'twitter:image:src': 'og:image',
+
+    'Page-Count': 'xmpTPg:NPages',
+    'meta:page-count': 'xmpTPg:NPages',
+
+    'Character Count': 'meta:character-count',
+    'Word-Count': 'meta:word-count',
+
+    // Images
+    'height': 'tiff:ImageLength',
+    'width': 'tiff:ImageWidth',
+
+    'exif:DateTimeOriginal': 'dcterms:created',
+    'xmp:CreateDate': 'dcterms:created',
+
+    'xmp:ModifyDate': 'dcterms:modified',
+    'xmp:MetadataDate': 'dcterms:modified',
+
+    // Audio
+    'xmpDM:artist': 'dc:creator',
+    'year': 'xmpDM:releaseDate',
+    'samplerate': 'xmpDM:audioSampleRate',
+    'composer': 'xmpDM:composer',
+    'compilation': 'xmpDM:compilation',
+    'albumartist': 'xmpDM:albumArtist',
+    'discnumber': 'xmpDM:discNumber',
+    'disc': 'xmpDM:discNumber',
+    'track': 'xmpDM:trackNumber',
+
+    'xmpDM:logComment': 'w:Comments',
+    'musicbrainz_albumcomment': 'w:Comments',
+    'id3v1 comment': 'w:Comments',
+
+    // Video
+    'duration': 'xmpDM:duration',
+
+    // Tika 2 metadata upgrade
+    // https://github.com/apache/tika/commit/10a8eec119c7a77be76000b30aaffb96a552cc44
+    'X-Parsed-By': 'X-TIKA:Parsed-By',
+    'X-TIKA:EXCEPTION:runtime': 'X-TIKA:EXCEPTION:container_exception',
+
+    'Company': 'extended-properties:Company',
+    'Application-Name': 'extended-properties:Application',
+    'Application-Version': 'extended-properties:AppVersion',
+    'Edit-Time': 'extended-properties:TotalTime',
+    'Template': 'extended-properties:Template',
+    'Revision-Number': 'cp:revision'
+];
+
+if (!ctx.containsKey(nestedKey)) return;
+
+HashMap nestedCtx = ctx[nestedKey];
+
+if (nestedCtx == null) return;
+
+for (entry in remapFields.entrySet()) {
+    String srcFieldName = entry.getKey();
+    String dstFieldName = entry.getValue();
+
+    harmonizeField(nestedCtx, srcFieldName, dstFieldName);
+}

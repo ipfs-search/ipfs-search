@@ -1,0 +1,15 @@
+String cropValue(String value) {
+  int cropLength = 1024*1024;
+
+  int len = value.length();
+  if (len <= cropLength) return value;
+
+  return value.substring(0, cropLength);
+}
+
+String cropField = 'content';
+
+if (!ctx.containsKey(cropField) || !(ctx[cropField] instanceof String)) return;
+if (ctx[cropField] == null) return;
+
+ctx[cropField] = cropValue(ctx[cropField]);

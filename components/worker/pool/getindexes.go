@@ -9,7 +9,9 @@ import (
 	"github.com/ipfs-search/ipfs-search/components/crawler"
 	"github.com/ipfs-search/ipfs-search/components/index"
 	"github.com/ipfs-search/ipfs-search/components/index/cache"
-	"github.com/ipfs-search/ipfs-search/components/index/opensearch"
+	os_client "github.com/ipfs-search/ipfs-search/components/index/opensearch/client"
+	os_factory "github.com/ipfs-search/ipfs-search/components/index/opensearch/factory"
+	os_index "github.com/ipfs-search/ipfs-search/components/index/opensearch/index"
 	"github.com/ipfs-search/ipfs-search/components/index/redis"
 	indexTypes "github.com/ipfs-search/ipfs-search/components/index/types"
 	"github.com/ipfs-search/ipfs-search/utils"
@@ -31,8 +33,8 @@ func osWorkLoop(ctx context.Context, workFunc func(context.Context) error) {
 	}
 }
 
-func (w *Pool) getOpenSearchClient() (*opensearch.Client, error) {
-	config := &opensearch.ClientConfig{
+func (w *Pool) getOpenSearchClient() (*os_client.Client, error) {
+	config := &os_client.Config{
 		URL:       w.config.OpenSearch.URL,
 		Transport: utils.GetHTTPTransport(w.dialer.DialContext, 100),
 		Debug:     false,
@@ -44,7 +46,7 @@ func (w *Pool) getOpenSearchClient() (*opensearch.Client, error) {
 		BulkGetterBatchTimeout:  w.config.OpenSearch.BulkGetterBatchTimeout,
 	}
 
-	return opensearch.NewClient(config, w.Instrumentation)
+	return os_client.New(config, w.Instrumentation)
 }
 
 func (w *Pool) getRedisClient() (*redis.Client, error) {
@@ -66,10 +68,10 @@ func getCachingFields() []string {
 	return cachingFields
 }
 
-func getOsIndex(c *opensearch.Client, name string) index.Index {
-	return opensearch.New(
+func getOsIndex(c *os_client.Client, name string) index.Index {
+	return os_index.New(
 		c,
-		&opensearch.Config{Name: name},
+		&os_index.Config{Name: name},
 	)
 }
 
@@ -97,27 +99,46 @@ func (w *Pool) getIndexes(ctx context.Context) (*crawler.Indexes, error) {
 
 	cfg := w.config.Indexes
 
+	// TODO: Refactor/cleanup.
+	osFactory := os_factory.New(os)
+	fileOSIndex, err := osFactory.NewIndex(ctx, cfg.Files.Name)
+	if err != nil {
+		return nil, err
+	}
+	dirOSIndex, err := osFactory.NewIndex(ctx, cfg.Directories.Name)
+	if err != nil {
+		return nil, err
+	}
+	invalidOSIndex, err := osFactory.NewIndex(ctx, cfg.Invalids.Name)
+	if err != nil {
+		return nil, err
+	}
+	partialOSIndex, err := osFactory.NewIndex(ctx, cfg.Partials.Name)
+	if err != nil {
+		return nil, err
+	}
+
 	return &crawler.Indexes{
 		Files: cache.New(
-			os.NewIndex(cfg.Files.Name),
+			fileOSIndex,
 			redis.NewIndex(cfg.Files.Name, cfg.Files.Prefix, false),
 			indexTypes.Update{},
 			w.Instrumentation,
 		),
 		Directories: cache.New(
-			os.NewIndex(cfg.Directories.Name),
+			dirOSIndex,
 			redis.NewIndex(cfg.Directories.Name, cfg.Directories.Prefix, false),
 			indexTypes.Update{},
 			w.Instrumentation,
 		),
 		Invalids: cache.New(
-			os.NewIndex(cfg.Invalids.Name),
+			invalidOSIndex,
 			redis.NewIndex(cfg.Invalids.Name, cfg.Invalids.Prefix, true),
 			struct{}{},
 			w.Instrumentation,
 		),
 		Partials: cache.New(
-			os.NewIndex(cfg.Partials.Name),
+			partialOSIndex,
 			redis.NewIndex(cfg.Partials.Name, cfg.Partials.Prefix, true),
 			struct{}{},
 			w.Instrumentation,
