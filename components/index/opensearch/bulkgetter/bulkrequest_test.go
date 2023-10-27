@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -197,7 +197,7 @@ func (s *BulkRequestTestSuite) TestProcessResponseFound() {
 
 	resp := opensearchapi.Response{
 		StatusCode: 200,
-		Body:       ioutil.NopCloser(strings.NewReader(respStr)),
+		Body:       io.NopCloser(strings.NewReader(respStr)),
 	}
 
 	err = br.processResponse(&resp)
@@ -240,7 +240,7 @@ func (s *BulkRequestTestSuite) TestResolveIndex() {
 
 	resp := opensearchapi.Response{
 		StatusCode: 200,
-		Body:       ioutil.NopCloser(strings.NewReader(respStr)),
+		Body:       io.NopCloser(strings.NewReader(respStr)),
 	}
 
 	s.NoError(br.processResponse(&resp))

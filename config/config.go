@@ -27,7 +27,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -64,7 +63,7 @@ func (c *Config) String() string {
 
 // ReadFromFile reads configuration options from specified YAML file
 func (c *Config) ReadFromFile(filename string) error {
-	yamlFile, err := ioutil.ReadFile(filename)
+	yamlFile, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
@@ -110,7 +109,7 @@ func (c *Config) Write(configFile string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(configFile, bytes, 0644)
+	err = os.WriteFile(configFile, bytes, 0644)
 	if err != nil {
 		return err
 	}
